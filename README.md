@@ -2,6 +2,8 @@
 
 A mobile-first, build-focused text RPG made with React, TypeScript, and Vite.
 
+Requires Node.js 18 or newer. Node.js 20 is recommended and selected by `.nvmrc`.
+
 ## Run locally
 
 ```bash
