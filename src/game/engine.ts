@@ -83,6 +83,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     procUsage: {},
     damagedTargets: [],
     attackingActorId: null,
+    attackAnimationId: 0,
     playerHp: Math.min(carryHp ?? derived.maxHp, derived.maxHp),
     playerMaxHp: derived.maxHp,
     energy: derived.maxEnergy,
@@ -107,11 +108,11 @@ function statusInfo(status: StatusEffect): InspectableInfo {
   return { title: status.name, description: status.description, category: "status" };
 }
 
-function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number): void {
+function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number, attackerId?: "player" | string): void {
   const eventIndex = events.length;
   events.push(text);
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage, attackerId });
 }
 
 function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false): void {
@@ -186,6 +187,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       playerActed: combat.playerActed ?? false,
       damagedTargets: combat.damagedTargets ?? [],
       attackingActorId: combat.attackingActorId ?? null,
+      attackAnimationId: combat.attackAnimationId ?? 0,
       pendingEffects: combat.pendingEffects ?? [],
       procUsage: combat.procUsage ?? {},
     };
@@ -204,6 +206,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     procUsage: {},
     damagedTargets: [],
     attackingActorId: null,
+    attackAnimationId: combat.attackAnimationId ?? 0,
   };
 }
 
@@ -346,7 +349,7 @@ function applyPlayerProcs(
         } else {
           enemyTargets.forEach((target) => {
             enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy);
-            queueDamage(events, pendingEffects, `It deals ${damage} damage to ${target.name}.`, target.instanceId, damage);
+            queueDamage(events, pendingEffects, `It deals ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
           });
         }
       }
@@ -468,7 +471,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damage = Math.max(1, Math.round((raw - Math.max(0, target.armor - ignoresArmor)) * vulnerable * (critical ? 1.6 : 1)));
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
-      queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage to ${target.name}.`, target.instanceId, damage);
+      queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
       if (ability.effect === "bleed") {
         const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 3 damage per stack when its turn begins. Lasts 3 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, bleed) } : enemy);
@@ -523,7 +526,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
     const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
-    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, playerActed: true, attackingActorId: ability.target === "self" ? null : "player", log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, playerActed: true, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
   }
 
   const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId ?? "";
@@ -540,7 +543,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     energy,
     procUsage,
     playerActed: true,
-    attackingActorId: ability.target === "self" ? null : "player",
+    attackingActorId: null,
     selectedEnemyId: nextSelected,
     log: [...logs, ...combat.log].slice(0, 24),
   };
@@ -584,7 +587,6 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
   let procUsage = { ...(combat.procUsage ?? {}) };
-  let attackingActorId: string | null = null;
   const enemyIndex = enemies.findIndex((enemy) => enemy.instanceId === activeActor.actorId);
   if (enemyIndex < 0) return moveToNextActor(combat, character, logs, events, pendingEffects);
 
@@ -608,7 +610,6 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     logs.push(makeLog(`${enemy.name} gathers Energy.`));
     events.push(`${enemy.name} gathers Energy.`);
   } else {
-    attackingActorId = enemy.instanceId;
     const guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
     const incoming = Math.max(1, enemy.power - Math.floor(derived.armor * 0.35));
     const blocked = Math.min(guard, incoming);
@@ -620,7 +621,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
     logs.push(makeLog(`${enemy.name} uses ${attackName} for ${damage}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
     events.push(`${enemy.name} uses ${attackName}.`);
-    queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage);
+    queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
     if (damage > 0 && enemy.onHitEffect === "bleed") {
       const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
       playerStatuses = addStatus(playerStatuses, bleed);
@@ -669,7 +670,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     floatingEvents: events,
     pendingEffects,
     damagedTargets,
-    attackingActorId,
+    attackingActorId: null,
     log: [...logs, ...combat.log].slice(0, 24),
   };
 }
@@ -687,6 +688,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let playerActed = combat.playerActed;
   let energy = combat.energy;
   let attackingActorId = combat.attackingActorId;
+  let attackAnimationId = combat.attackAnimationId ?? 0;
   const damagedTargets: string[] = [];
   matchingEffects.forEach((effect) => {
     if (effect.type === "status") {
@@ -709,9 +711,17 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       return;
     }
     if (effect.targetId === "player") {
+      if (effect.attackerId) {
+        attackingActorId = effect.attackerId;
+        attackAnimationId += 1;
+      }
       playerHp = Math.max(0, playerHp - effect.damage);
       if (effect.damage > 0) damagedTargets.push("player");
       return;
+    }
+    if (effect.attackerId) {
+      attackingActorId = effect.attackerId;
+      attackAnimationId += 1;
     }
     enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId ? { ...enemy, hp: Math.max(0, enemy.hp - effect.damage) } : enemy);
     if (effect.damage > 0) damagedTargets.push(effect.targetId);
@@ -723,7 +733,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId
     ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId
     ?? "";
-  return { ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, attackingActorId, pendingEffects, damagedTargets, selectedEnemyId, outcome };
+  return { ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, attackingActorId, attackAnimationId, pendingEffects, damagedTargets, selectedEnemyId, outcome };
 }
 
 export function getLoot(nodeIndex: number): GearItem {

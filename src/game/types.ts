@@ -157,7 +157,7 @@ export interface TurnOrderEntry {
 }
 
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number };
 
@@ -173,6 +173,7 @@ export interface CombatState {
   procUsage: Record<string, { lastTriggeredTurn: number }>;
   damagedTargets: string[];
   attackingActorId: "player" | string | null;
+  attackAnimationId: number;
   playerHp: number;
   playerMaxHp: number;
   energy: number;
