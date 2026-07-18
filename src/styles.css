@@ -373,11 +373,14 @@ main { min-height: calc(100vh - 68px); }
 .combat-log-term { display: inline; margin: 0; padding: 0; color: #d2b56f; border: 0; background: transparent; font: inherit; line-height: inherit; text-decoration: underline; text-decoration-color: rgba(201,168,103,.45); text-underline-offset: 3px; cursor: pointer; }
 .combat-log-term:hover, .combat-log-term:focus-visible { color: var(--gold-bright); }
 
-.status-badge.inspectable { font: inherit; cursor: pointer; }
-.status-badge.inspectable:hover, .status-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
+.status-badge.inspectable, .armor-badge.inspectable { font: inherit; cursor: pointer; }
+.status-badge.inspectable:hover, .status-badge.inspectable:focus-visible, .armor-badge.inspectable:hover, .armor-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
+.armor-indicator { gap: .28rem; text-transform: none; }
+.armor-indicator b { color: #d7eadc; font-size: .68rem; line-height: 1; }
+.armor-indicator span { font-size: .5rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .status-badge.status-icon { width: 27px; height: 27px; position: relative; display: inline-grid; flex: 0 0 27px; place-items: center; padding: 0; }
 .status-badge.status-icon svg { width: 14px; height: 14px; }
-.status-badge.status-icon b { min-width: 13px; height: 13px; position: absolute; right: -5px; bottom: -5px; display: grid; place-items: center; padding: 0 2px; color: #f0e8d6; border: 1px solid #665b45; border-radius: 7px; background: #17130e; font-size: .46rem; line-height: 1; }
+.status-badge.status-icon b { min-width: 18px; height: 18px; position: absolute; right: -7px; bottom: -7px; display: grid; place-items: center; padding: 0 3px; color: #fff5df; border: 1px solid #8d794e; border-radius: 9px; background: #17130e; box-shadow: 0 2px 6px rgba(0,0,0,.65); font-size: .67rem; font-weight: 900; line-height: 1; }
 
 .inspect-info-modal { position: fixed; z-index: 150; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.84); backdrop-filter: blur(6px); }
 .inspect-info-card { width: min(370px, 100%); padding: 1.35rem; border: 1px solid #66583b; background: #121613; box-shadow: 0 24px 70px rgba(0,0,0,.75); }
@@ -483,7 +486,7 @@ main { min-height: calc(100vh - 68px); }
   .compact-combatant .health-bar, .compact-combatant .energy-bar, .compact-combatant .energy-segments { height: 6px; }
   .compact-status-row { min-height: 21px; max-height: 42px; gap: 2px; margin-top: .38rem; }
   .compact-status-row .status-badge, .compact-status-row .armor-badge { padding: .18rem .28rem; font-size: .46rem; }
-  .compact-status-row .status-badge.status-icon { width: 23px; height: 23px; flex-basis: 23px; padding: 0; }.compact-status-row .status-badge.status-icon svg { width: 12px; height: 12px; }
+  .compact-status-row .status-badge.status-icon { width: 26px; height: 26px; flex-basis: 26px; padding: 0; }.compact-status-row .status-badge.status-icon svg { width: 13px; height: 13px; }
   .no-status { font-size: .46rem; }
   .energy-label { margin-top: .45rem; }
   .compact-ability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 4px; }

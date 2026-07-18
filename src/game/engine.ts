@@ -642,12 +642,13 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
     logs.push(makeLog(`${enemy.name} uses ${attackName} for ${damage}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
     events.push(`${enemy.name} uses ${attackName}.`);
-    queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
+    const damageEventIndex = queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
     if (damage > 0 && enemy.onHitEffect === "bleed") {
       const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
       playerStatuses = addStatus(playerStatuses, bleed);
       logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
-      queueStatus(events, pendingEffects, "You are Bleeding.", "player", bleed);
+      events[damageEventIndex] = `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""} and applies Bleed.`;
+      queueStatus(events, pendingEffects, "You are Bleeding.", "player", bleed, false, damageEventIndex);
     }
     if (damage > 0) {
       const result = runPlayerTriggerEvent(

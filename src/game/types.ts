@@ -192,7 +192,7 @@ export interface CombatState {
 export interface InspectableInfo {
   title: string;
   description: string;
-  category: "ability" | "status";
+  category: "ability" | "status" | "stat";
 }
 
 export interface CombatLogEntry {
