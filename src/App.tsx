@@ -819,9 +819,29 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
           : id === "guard" ? <Shield />
             : <Sparkles />;
   const label = `${name}, ${stacks} ${stacks === 1 ? "stack" : "stacks"}, ${duration} ${duration === 1 ? "turn" : "turns"} remaining`;
-  const counters = <><small className="status-duration-count" aria-hidden="true">{duration}T</small><b className="status-stack-count" aria-hidden="true">×{stacks}</b></>;
-  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{icon}{counters}</span>;
-  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} data-game-tooltip={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{icon}{counters}</button>;
+  const safeDuration = Math.max(1, duration);
+  const gap = Math.min(6, 18 / safeDuration);
+  const segmentLength = Math.max(2, 100 / safeDuration - gap);
+  const ring = (
+    <svg className="status-duration-ring" viewBox="0 0 40 40" aria-hidden="true">
+      {Array.from({ length: safeDuration }, (_, index) => (
+        <circle
+          key={index}
+          cx="20"
+          cy="20"
+          r="17"
+          pathLength="100"
+          style={{
+            strokeDasharray: `${segmentLength} ${100 - segmentLength}`,
+            strokeDashoffset: -(index * 100 / safeDuration + gap / 2),
+          }}
+        />
+      ))}
+    </svg>
+  );
+  const stackCounter = <b className="status-stack-count" aria-hidden="true">{stacks}</b>;
+  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{ring}{icon}{stackCounter}</span>;
+  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} data-game-tooltip={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{ring}{icon}{stackCounter}</button>;
 }
 
 function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {
