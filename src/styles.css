@@ -366,6 +366,9 @@ main { min-height: calc(100vh - 68px); }
 
 .status-badge.inspectable { font: inherit; cursor: pointer; }
 .status-badge.inspectable:hover, .status-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
+.status-badge.status-icon { width: 27px; height: 27px; position: relative; display: inline-grid; flex: 0 0 27px; place-items: center; padding: 0; }
+.status-badge.status-icon svg { width: 14px; height: 14px; }
+.status-badge.status-icon b { min-width: 13px; height: 13px; position: absolute; right: -5px; bottom: -5px; display: grid; place-items: center; padding: 0 2px; color: #f0e8d6; border: 1px solid #665b45; border-radius: 7px; background: #17130e; font-size: .46rem; line-height: 1; }
 
 .inspect-info-modal { position: fixed; z-index: 150; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.84); backdrop-filter: blur(6px); }
 .inspect-info-card { width: min(370px, 100%); padding: 1.35rem; border: 1px solid #66583b; background: #121613; box-shadow: 0 24px 70px rgba(0,0,0,.75); }
@@ -377,8 +380,12 @@ main { min-height: calc(100vh - 68px); }
 .floating-combat-text span { padding: .65rem .9rem; color: #e8e5dc; text-align: center; border: 1px solid #555b56; background: rgba(10,12,11,.91); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-family: Georgia, serif; font-size: clamp(.84rem, 2.5vw, 1.05rem); animation: combat-float 1.8s ease both; }
 .floating-combat-text.damage span { color: #ef9d8e; border-color: #6f3f37; }.floating-combat-text.positive span { color: #e4c57f; border-color: #6c5937; }
 @keyframes combat-float { 0% { opacity: 0; transform: translateY(12px) scale(.96); } 8%, 83% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-13px) scale(.98); } }
-@keyframes damage-hit { 0%, 100% { transform: translateX(0); } 14% { transform: translateX(-6px); background-color: rgba(126,31,25,.62); box-shadow: inset 0 0 0 1px #b95043, 0 0 20px rgba(177,55,43,.3); } 30% { transform: translateX(5px); } 46% { transform: translateX(-4px); background-color: rgba(91,27,23,.42); } 64% { transform: translateX(2px); } }
-.compact-combatant.damaged:not(.dead) { animation: damage-hit .58s ease-out; }
+@keyframes player-ram { 0%, 100% { z-index: 6; transform: translateX(0) rotate(0) scale(1); } 18% { transform: translateX(5%) rotate(1deg) scale(1.01); } 43% { transform: translateX(30%) rotate(3deg) scale(1.035); } 58% { transform: translateX(25%) rotate(2deg) scale(1.025); } }
+@keyframes enemy-ram { 0%, 100% { z-index: 6; transform: translateX(0) rotate(0) scale(1); } 18% { transform: translateX(-5%) rotate(-1deg) scale(1.01); } 43% { transform: translateX(-30%) rotate(-3deg) scale(1.035); } 58% { transform: translateX(-25%) rotate(-2deg) scale(1.025); } }
+.compact-combatant.attacking-right:not(.dead) { animation: player-ram .9s cubic-bezier(.2,.75,.2,1); }
+.compact-combatant.attacking-left:not(.dead) { animation: enemy-ram .9s cubic-bezier(.2,.75,.2,1); }
+@keyframes damage-hit { 0%, 100% { transform: translateX(0) rotate(0); filter: brightness(1); } 10% { transform: translateX(-11px) rotate(-1.4deg); filter: brightness(1.65) saturate(1.5); background-color: rgba(155,35,27,.9); box-shadow: inset 0 0 0 2px #e06150, inset 0 0 42px rgba(207,48,35,.72), 0 0 38px rgba(211,55,42,.58); } 23% { transform: translateX(10px) rotate(1deg); background-color: rgba(124,25,20,.78); } 38% { transform: translateX(-8px) rotate(-.7deg); filter: brightness(1.35) saturate(1.35); } 55% { transform: translateX(6px) rotate(.5deg); background-color: rgba(100,25,21,.58); } 72% { transform: translateX(-3px); } }
+.compact-combatant.damaged:not(.dead) { animation: damage-hit .82s cubic-bezier(.2,.8,.2,1); }
 @keyframes enemy-death { 0% { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1); } 20% { transform: translateX(-5px) scale(1.02); filter: brightness(2) sepia(1); } 40% { transform: translateX(6px) scale(.98); } 100% { opacity: .42; transform: translateX(0) scale(.98); filter: grayscale(1); } }
 .enemy-combatant.dead { pointer-events: none; color: #747873; border-color: #3a3d3a; background: #111311; animation: enemy-death .8s cubic-bezier(.2,.8,.2,1) forwards; }
 
@@ -408,6 +415,7 @@ main { min-height: calc(100vh - 68px); }
   .compact-combatant .health-bar, .compact-combatant .energy-bar, .compact-combatant .energy-segments { height: 6px; }
   .compact-status-row { min-height: 21px; max-height: 42px; gap: 2px; margin-top: .38rem; }
   .compact-status-row .status-badge, .compact-status-row .armor-badge { padding: .18rem .28rem; font-size: .46rem; }
+  .compact-status-row .status-badge.status-icon { width: 23px; height: 23px; flex-basis: 23px; padding: 0; }.compact-status-row .status-badge.status-icon svg { width: 12px; height: 12px; }
   .no-status { font-size: .46rem; }
   .energy-label { margin-top: .45rem; }
   .compact-ability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 4px; }

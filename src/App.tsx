@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Backpack, BookOpen, ChevronRight, CircleDot, Coins, Footprints, Gem,
-  Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound,
+  Backpack, BookOpen, ChevronRight, CircleDot, Coins, Droplets, FlaskConical, Footprints, Gem,
+  Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound, Zap,
 } from "lucide-react";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -467,14 +467,14 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       <div className="compact-arena">
         <article
           key={`player-${damagedTargets.includes("player") ? combat.eventId : "idle"}`}
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""}`}
         >
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
           <div className="compact-status-row">
             <span className="armor-badge"><Shield size={11} /> {derived.armor}</span>
-            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
           <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} />
@@ -488,7 +488,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               tabIndex={enemy.hp > 0 ? 0 : -1}
               aria-disabled={enemy.hp <= 0}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? "attacking-left" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => enemy.hp > 0 && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -504,7 +504,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               <HealthBar value={enemy.hp} max={enemy.maxHp} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
-                {enemy.statuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
               </div>
               <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy ?? 10}/{enemy.maxEnergy ?? 10}</b></div>
               <EnergySegments value={enemy.energy ?? 10} max={enemy.maxEnergy ?? 10} regen={1} />
@@ -629,10 +629,16 @@ function EnergySegments({ value, max, regen }: { value: number; max: number; reg
   );
 }
 
-function StatusBadge({ name, stacks, kind, onInspect }: { name: string; stacks: number; kind: string; onInspect?: () => void }) {
-  const label = `${name}${stacks > 1 ? ` ${stacks}` : ""}`;
-  if (!onInspect) return <span className={`status-badge ${kind}`}>{label}</span>;
-  return <button type="button" className={`status-badge inspectable ${kind}`} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{label}</button>;
+function StatusBadge({ id, name, stacks, kind, onInspect }: { id: string; name: string; stacks: number; kind: string; onInspect?: () => void }) {
+  const icon = id === "bleed" ? <Droplets />
+    : id === "poison" ? <FlaskConical />
+      : id === "stunned" ? <Zap />
+        : id === "vulnerable" ? <Target />
+          : id === "guard" ? <Shield />
+            : <Sparkles />;
+  const label = `${name}${stacks > 1 ? `, ${stacks} stacks` : ""}`;
+  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} title={label}>{icon}{stacks > 1 && <b>{stacks}</b>}</span>;
+  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} title={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{icon}{stacks > 1 && <b>{stacks}</b>}</button>;
 }
 
 function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {

@@ -82,6 +82,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     pendingEffects: [],
     procUsage: {},
     damagedTargets: [],
+    attackingActorId: null,
     playerHp: Math.min(carryHp ?? derived.maxHp, derived.maxHp),
     playerMaxHp: derived.maxHp,
     energy: derived.maxEnergy,
@@ -110,7 +111,21 @@ function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], te
   const eventIndex = events.length;
   events.push(text);
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, targetId, damage });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage });
+}
+
+function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false): void {
+  const eventIndex = events.length;
+  events.push(text);
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "status", targetId, status: { ...status }, stunned });
+}
+
+function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number): void {
+  const eventIndex = events.length;
+  events.push(text);
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, turn, playerActed, playerStatuses, energy });
 }
 
 function rollD100(): number {
@@ -167,6 +182,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       activeTurnIndex: Math.min(combat.activeTurnIndex ?? 0, combat.turnOrder.length - 1),
       playerActed: combat.playerActed ?? false,
       damagedTargets: combat.damagedTargets ?? [],
+      attackingActorId: combat.attackingActorId ?? null,
       pendingEffects: combat.pendingEffects ?? [],
       procUsage: combat.procUsage ?? {},
     };
@@ -184,6 +200,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     pendingEffects: [],
     procUsage: {},
     damagedTargets: [],
+    attackingActorId: null,
   };
 }
 
@@ -200,15 +217,13 @@ function tickEnemyStatuses(enemy: EnemyState, logs: CombatLogEntry[], events: st
       const damage = 3 * status.stacks;
       hp -= damage;
       logs.push(makeLog(`${enemy.name} bleeds for ${damage}.`, statusInfo(status)));
-      events.push(`Bleed triggers on ${enemy.name}.`);
-      queueDamage(events, pendingEffects, `It deals ${damage} damage.`, enemy.instanceId, damage);
+      queueDamage(events, pendingEffects, `${enemy.name} takes ${damage} damage from Bleed.`, enemy.instanceId, damage);
     }
     if (status.id === "poison") {
       const damage = 2 * status.stacks;
       hp -= damage;
       logs.push(makeLog(`Poison burns ${enemy.name} for ${damage}.`, statusInfo(status)));
-      events.push(`Poison triggers on ${enemy.name}.`);
-      queueDamage(events, pendingEffects, `It deals ${damage} damage.`, enemy.instanceId, damage);
+      queueDamage(events, pendingEffects, `${enemy.name} takes ${damage} damage from Poison.`, enemy.instanceId, damage);
     }
   });
   return { ...enemy, hp: Math.max(0, hp), statuses: enemy.statuses.map((status) => ({ ...status, duration: status.duration - 1 })).filter((status) => status.duration > 0) };
@@ -222,8 +237,7 @@ function tickPlayerStatuses(playerHp: number, statuses: StatusEffect[], logs: Co
       const damage = 2 * status.stacks;
       hp = Math.max(0, hp - damage);
       logs.push(makeLog(`Bleed deals ${damage} damage to you.`, statusInfo(status)));
-      events.push("Your Bleed triggers.");
-      queueDamage(events, pendingEffects, `It deals ${damage} damage.`, "player", damage);
+      queueDamage(events, pendingEffects, `You take ${damage} damage from Bleed.`, "player", damage);
     }
     const duration = status.duration - 1;
     if (duration > 0 && status.id !== "guard") nextStatuses.push({ ...status, duration });
@@ -257,10 +271,11 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
     }
   }
   const nextActor = combat.turnOrder[nextIndex];
+  const nextTurn = nextIndex <= combat.activeTurnIndex ? combat.turn + 1 : combat.turn;
   let next: CombatState = {
     ...combat,
     activeTurnIndex: nextIndex,
-    turn: nextIndex <= combat.activeTurnIndex ? combat.turn + 1 : combat.turn,
+    turn: nextTurn,
   };
 
   if (nextActor.kind === "player") {
@@ -276,13 +291,13 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
     if (next.playerHp <= 0) {
       events.push("You have fallen.");
       logs.push(makeLog("Your strength fails. The ash claims another name."));
-      return { ...next, outcome: "defeat" };
+      return { ...next, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn, outcome: "defeat" };
     }
-    events.push("Your turn.");
+    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy);
   } else {
-    events.push(`${nextActor.name}'s turn.`);
+    queueTurn(events, pendingEffects, `${nextActor.name}'s turn.`, nextIndex, nextTurn);
   }
-  return next;
+  return { ...next, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn };
 }
 
 interface ProcApplicationState {
@@ -338,12 +353,12 @@ function applyPlayerProcs(
         if (targetMode === "self") {
           playerStatuses = addStatus(playerStatuses, status);
           logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
-          events.push(`You gain ${status.name}.`);
+          queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status);
         } else {
           enemyTargets.forEach((target) => {
             enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, status) } : enemy);
             logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
-            events.push(`${target.name} gains ${status.name}.`);
+            queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status);
           });
         }
       }
@@ -365,7 +380,7 @@ function applyPlayerProcs(
         const guard: StatusEffect = { id: "guard", name: "Guard", kind: "buff", duration: effect.duration ?? 1, stacks: effect.amount, description: `Absorbs ${effect.amount} incoming damage.` };
         playerStatuses = addStatus(playerStatuses, guard);
         logs.push(makeLog(`You gain ${effect.amount} Guard.`, statusInfo(guard)));
-        events.push(`You gain ${effect.amount} Guard.`);
+        queueStatus(events, pendingEffects, `You gain ${effect.amount} Guard.`, "player", guard);
       }
     });
   });
@@ -400,7 +415,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const derived = getDerivedStats(character);
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
+  const displayedEnemyStatuses = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.statuses]));
   const displayedPlayerHp = combat.playerHp;
+  const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
   let procUsage = { ...(combat.procUsage ?? {}) };
@@ -436,7 +453,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       playerStatuses = addStatus(playerStatuses, { id: "guard", name: "Guard", kind: "buff", duration: 1, stacks: 6, description: "Absorbs incoming damage." });
       const guardStatus = playerStatuses.find((status) => status.id === "guard")!;
       logs.push(makeLog("You gain 6 Guard.", statusInfo(guardStatus)));
-      events.push("You gain 6 Guard.");
+      queueStatus(events, pendingEffects, "You gain 6 Guard.", "player", guardStatus);
     }
   } else {
     targets.forEach((target) => {
@@ -453,25 +470,25 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 3 damage per stack when its turn begins. Lasts 3 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, bleed) } : enemy);
         logs.push(makeLog(`${target.name} gains Bleed.`, statusInfo(bleed)));
-        events.push(`${target.name} is Bleeding.`);
+        queueStatus(events, pendingEffects, `${target.name} is Bleeding.`, target.instanceId, bleed);
       }
       if (ability.effect === "poison") {
         const poison: StatusEffect = { id: "poison", name: "Poison", kind: "debuff", duration: 4, stacks: 1, description: "Takes 2 damage per stack when its turn begins. Lasts 4 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, poison) } : enemy);
         logs.push(makeLog(`${target.name} gains Poison.`, statusInfo(poison)));
-        events.push(`${target.name} is Poisoned.`);
+        queueStatus(events, pendingEffects, `${target.name} is Poisoned.`, target.instanceId, poison);
       }
       if (ability.effect === "vulnerable") {
         const vulnerableStatus: StatusEffect = { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: 2, stacks: 1, description: "Takes 25% increased damage for 2 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, vulnerableStatus) } : enemy);
         logs.push(makeLog(`${target.name} becomes Vulnerable.`, statusInfo(vulnerableStatus)));
-        events.push(`${target.name} becomes Vulnerable.`);
+        queueStatus(events, pendingEffects, `${target.name} becomes Vulnerable.`, target.instanceId, vulnerableStatus);
       }
       if (ability.effect === "stun" && Math.random() < 0.45) {
         const stunned: StatusEffect = { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stacks: 1, description: "Cannot act on its next turn." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: true, statuses: addStatus(enemy.statuses, stunned) } : enemy);
         logs.push(makeLog(`${target.name} is Stunned.`, statusInfo(stunned)));
-        events.push(`${target.name} is Stunned.`);
+        queueStatus(events, pendingEffects, `${target.name} is Stunned.`, target.instanceId, stunned, true);
       }
 
       const triggerContext = {
@@ -502,12 +519,12 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
 
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
-    const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp }));
-    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses, energy, procUsage, playerActed: true, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
+    const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, playerActed: true, attackingActorId: ability.target === "self" ? null : "player", log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
   }
 
   const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId ?? "";
-  const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp }));
+  const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
   return {
     ...combat,
     eventId: (combat.eventId ?? 0) + 1,
@@ -516,10 +533,11 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     damagedTargets,
     enemies: displayedEnemies,
     playerHp: Math.max(displayedPlayerHp, playerHp),
-    playerStatuses,
+    playerStatuses: displayedPlayerStatuses,
     energy,
     procUsage,
     playerActed: true,
+    attackingActorId: ability.target === "self" ? null : "player",
     selectedEnemyId: nextSelected,
     log: [...logs, ...combat.log].slice(0, 24),
   };
@@ -540,6 +558,7 @@ export function endPlayerTurn(combat: CombatState, character: CharacterState): C
     floatingEvents: events,
     pendingEffects,
     damagedTargets,
+    attackingActorId: null,
     log: [...logs, ...combat.log].slice(0, 24),
   };
 }
@@ -557,10 +576,12 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
   const displayedPlayerHp = combat.playerHp;
+  const displayedPlayerStatuses = combat.playerStatuses;
   let visiblePlayerHealing = 0;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
   let procUsage = { ...(combat.procUsage ?? {}) };
+  let attackingActorId: string | null = null;
   const enemyIndex = enemies.findIndex((enemy) => enemy.instanceId === activeActor.actorId);
   if (enemyIndex < 0) return moveToNextActor(combat, character, logs, events, pendingEffects);
 
@@ -584,6 +605,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     logs.push(makeLog(`${enemy.name} gathers Energy.`));
     events.push(`${enemy.name} gathers Energy.`);
   } else {
+    attackingActorId = enemy.instanceId;
     const guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
     const incoming = Math.max(1, enemy.power - Math.floor(derived.armor * 0.35));
     const blocked = Math.min(guard, incoming);
@@ -600,7 +622,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
       playerStatuses = addStatus(playerStatuses, bleed);
       logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
-      events.push("You are Bleeding.");
+      queueStatus(events, pendingEffects, "You are Bleeding.", "player", bleed);
     }
     if (damage > 0) {
       const result = runPlayerTriggerEvent(
@@ -638,11 +660,13 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     ...next,
     outcome: pendingEffects.length > 0 ? "active" : next.outcome,
     playerHp: Math.min(combat.playerMaxHp, displayedPlayerHp + visiblePlayerHealing),
+    playerStatuses: displayedPlayerStatuses,
     enemies: displayedEnemies,
     eventId: (combat.eventId ?? 0) + 1,
     floatingEvents: events,
     pendingEffects,
     damagedTargets,
+    attackingActorId,
     log: [...logs, ...combat.log].slice(0, 24),
   };
 }
@@ -654,8 +678,33 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
 
   let playerHp = combat.playerHp;
   let enemies = combat.enemies;
+  let playerStatuses = combat.playerStatuses;
+  let activeTurnIndex = combat.activeTurnIndex;
+  let turn = combat.turn;
+  let playerActed = combat.playerActed;
+  let energy = combat.energy;
+  let attackingActorId = combat.attackingActorId;
   const damagedTargets: string[] = [];
   matchingEffects.forEach((effect) => {
+    if (effect.type === "status") {
+      if (effect.targetId === "player") {
+        playerStatuses = addStatus(playerStatuses, effect.status);
+      } else {
+        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
+          ? { ...enemy, statuses: addStatus(enemy.statuses, effect.status), stunned: effect.stunned ? true : enemy.stunned }
+          : enemy);
+      }
+      return;
+    }
+    if (effect.type === "turn") {
+      activeTurnIndex = effect.activeTurnIndex;
+      turn = effect.turn;
+      playerActed = effect.playerActed ?? playerActed;
+      playerStatuses = effect.playerStatuses ?? playerStatuses;
+      energy = effect.energy ?? energy;
+      attackingActorId = null;
+      return;
+    }
     if (effect.targetId === "player") {
       playerHp = Math.max(0, playerHp - effect.damage);
       if (effect.damage > 0) damagedTargets.push("player");
@@ -671,7 +720,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId
     ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId
     ?? "";
-  return { ...combat, playerHp, enemies, pendingEffects, damagedTargets, selectedEnemyId, outcome };
+  return { ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, attackingActorId, pendingEffects, damagedTargets, selectedEnemyId, outcome };
 }
 
 export function getLoot(nodeIndex: number): GearItem {
