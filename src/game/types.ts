@@ -151,6 +151,8 @@ export interface TurnOrderEntry {
   actorId: string;
   kind: "player" | "enemy";
   name: string;
+  roll: number;
+  bonus: number;
   initiative: number;
 }
 
@@ -163,6 +165,7 @@ export interface CombatState {
   turn: number;
   turnOrder: TurnOrderEntry[];
   activeTurnIndex: number;
+  initiativeRevealed: boolean;
   playerActed: boolean;
   eventId: number;
   floatingEvents: string[];

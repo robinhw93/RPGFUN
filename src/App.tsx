@@ -123,6 +123,14 @@ function App() {
     });
   };
 
+  const finishInitiativeRoll = () => {
+    setGame((current) => {
+      const combat = current.adventure.combat;
+      if (!combat || combat.initiativeRevealed) return current;
+      return { ...current, adventure: { ...current.adventure, combat: { ...combat, initiativeRevealed: true } } };
+    });
+  };
+
   const advanceJourney = () => {
     setGame((current) => {
       const adventure = current.adventure;
@@ -293,6 +301,7 @@ function App() {
             onEndTurn={finishPlayerTurn}
             onEnemyTurn={runEnemyTurn}
             onCombatEvent={revealCombatEvent}
+            onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
             onEvent={resolveEvent}
             onPermadeath={returnToCharacterCreation}
@@ -355,7 +364,7 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string) => void }) {
   );
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onContinue, onEvent, onPermadeath, onTalents }: {
+function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onInitiativeComplete, onContinue, onEvent, onPermadeath, onTalents }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   onBegin: () => void;
@@ -364,6 +373,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   onEndTurn: () => void;
   onEnemyTurn: (actorId: string) => void;
   onCombatEvent: (eventId: number, eventIndex: number) => void;
+  onInitiativeComplete: () => void;
   onContinue: () => void;
   onEvent: (choice: "rest" | "ember") => void;
   onPermadeath: () => void;
@@ -376,7 +386,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const combatEventId = adventure.combat?.eventId ?? 0;
   const floatingEventCount = adventure.combat?.floatingEvents?.length ?? 0;
   const sequenceEventId = useRef(combatEventId);
-  const sequencePending = sequencePlaying || sequenceEventId.current !== combatEventId;
+  const initiativePlaying = Boolean(adventure.combat && adventure.combat.outcome === "active" && !adventure.combat.initiativeRevealed);
+  const sequencePending = initiativePlaying || sequencePlaying || sequenceEventId.current !== combatEventId;
   const activeActor = adventure.combat?.turnOrder?.[adventure.combat.activeTurnIndex];
 
   useEffect(() => {
@@ -464,6 +475,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
     <section className="combat-page compact-combat">
       <ProgressHeader index={adventure.nodeIndex} />
       <TurnOrderBar combat={combat} />
+      {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
       <div className="compact-arena">
         <article
           key={`player-${damagedTargets.includes("player") ? combat.eventId : "idle"}`}
@@ -581,6 +593,62 @@ function RouteCard({ node, index }: { node: AdventureNode; index: number }) {
 function ProgressHeader({ index }: { index: number }) {
   const progress = ((index + 1) / ADVENTURE.length) * 100;
   return <div className="journey-progress"><span>The Ashen Road</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={ADVENTURE.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {ADVENTURE.length}</span></div>;
+}
+
+function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplete: () => void }) {
+  const [phase, setPhase] = useState<"rolling" | "results" | "order">("rolling");
+  const [displayedRolls, setDisplayedRolls] = useState<Record<string, number>>(() => Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
+  const neutralOrder = useMemo(() => {
+    const player = combat.turnOrder.find((actor) => actor.kind === "player");
+    const enemies = combat.enemies
+      .map((enemy) => combat.turnOrder.find((actor) => actor.actorId === enemy.instanceId))
+      .filter((actor): actor is CombatState["turnOrder"][number] => Boolean(actor));
+    return player ? [player, ...enemies] : enemies;
+  }, [combat.enemies, combat.turnOrder]);
+  const participants = phase === "order" ? combat.turnOrder : neutralOrder;
+
+  useEffect(() => {
+    const rollTimer = window.setInterval(() => {
+      setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
+    }, 70);
+    const resultTimer = window.setTimeout(() => {
+      window.clearInterval(rollTimer);
+      setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, actor.roll])));
+      setPhase("results");
+    }, 1800);
+    const orderTimer = window.setTimeout(() => setPhase("order"), 2850);
+    const completeTimer = window.setTimeout(onComplete, 4550);
+    return () => {
+      window.clearInterval(rollTimer);
+      window.clearTimeout(resultTimer);
+      window.clearTimeout(orderTimer);
+      window.clearTimeout(completeTimer);
+    };
+  }, [combat.eventId]);
+
+  return (
+    <div className={`initiative-overlay ${phase}`} role="dialog" aria-modal="true" aria-label="Rolling initiative">
+      <div className="initiative-panel">
+        <p className="eyebrow">Combat Begins</p>
+        <h2>{phase === "rolling" ? "Rolling Initiative" : phase === "results" ? "The Dice Have Spoken" : "Turn Order"}</h2>
+        <p className="initiative-caption" aria-live="polite">{phase === "rolling" ? "Every combatant rolls a D100." : phase === "results" ? "Bonuses are added to each roll." : "Highest initiative acts first."}</p>
+        <div className="initiative-contestants">
+          {participants.map((actor, index) => (
+            <article className={`initiative-contestant ${actor.kind}`} key={actor.actorId} style={{ "--initiative-delay": `${index * 110}ms` } as React.CSSProperties}>
+              {phase === "order" && <span className="initiative-rank">#{index + 1}</span>}
+              <strong>{actor.kind === "player" ? "You" : actor.name}</strong>
+              <div className={`d100-die ${phase === "rolling" ? "rolling" : "settled"}`} aria-label={`D100 roll ${displayedRolls[actor.actorId]}`}>
+                <i /><span>{displayedRolls[actor.actorId]}</span>
+              </div>
+              {phase === "rolling" ? <small>Rolling D100</small> : (
+                <div className="initiative-math"><span>D100 {actor.roll}{actor.bonus > 0 ? ` + ${actor.bonus}` : ""}</span><b>{actor.initiative}</b></div>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function TurnOrderBar({ combat }: { combat: CombatState }) {

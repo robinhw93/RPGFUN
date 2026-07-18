@@ -71,14 +71,14 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     stunned: false,
   }));
   const turnOrder = rollTurnOrder(character, enemies);
-  const firstActor = turnOrder[0];
   return {
     turn: 1,
     turnOrder,
     activeTurnIndex: 0,
+    initiativeRevealed: false,
     playerActed: false,
     eventId: 1,
-    floatingEvents: [firstActor.kind === "player" ? "You act first." : `${firstActor.name} acts first.`],
+    floatingEvents: [],
     pendingEffects: [],
     procUsage: {},
     damagedTargets: [],
@@ -134,19 +134,20 @@ function rollD100(): number {
 
 function rollTurnOrder(character: CharacterState, enemies: EnemyState[]): TurnOrderEntry[] {
   const derived = getDerivedStats(character);
+  const playerRoll = rollD100();
   return [
     {
       actorId: "player",
       kind: "player" as const,
       name: character.name,
-      initiative: rollD100() + derived.initiativeBonus,
+      roll: playerRoll,
+      bonus: derived.initiativeBonus,
+      initiative: playerRoll + derived.initiativeBonus,
     },
-    ...enemies.map((enemy) => ({
-      actorId: enemy.instanceId,
-      kind: "enemy" as const,
-      name: enemy.name,
-      initiative: rollD100(),
-    })),
+    ...enemies.map((enemy) => {
+      const roll = rollD100();
+      return { actorId: enemy.instanceId, kind: "enemy" as const, name: enemy.name, roll, bonus: 0, initiative: roll };
+    }),
   ].sort((left, right) => {
     const initiativeDifference = right.initiative - left.initiative;
     if (initiativeDifference !== 0) return initiativeDifference;
@@ -178,8 +179,10 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     return {
       ...combat,
       enemies,
+      turnOrder: combat.turnOrder.map((entry) => ({ ...entry, roll: entry.roll ?? entry.initiative, bonus: entry.bonus ?? 0 })),
       selectedEnemyId,
       activeTurnIndex: Math.min(combat.activeTurnIndex ?? 0, combat.turnOrder.length - 1),
+      initiativeRevealed: combat.initiativeRevealed ?? true,
       playerActed: combat.playerActed ?? false,
       damagedTargets: combat.damagedTargets ?? [],
       attackingActorId: combat.attackingActorId ?? null,
@@ -188,15 +191,15 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     };
   }
   const turnOrder = rollTurnOrder(character, enemies);
-  const firstActor = turnOrder[0];
   return {
     ...combat,
     enemies,
     turnOrder,
     activeTurnIndex: 0,
+    initiativeRevealed: false,
     playerActed: false,
     eventId: (combat.eventId ?? 0) + 1,
-    floatingEvents: [firstActor.kind === "player" ? "You act first." : `${firstActor.name} acts first.`],
+    floatingEvents: [],
     pendingEffects: [],
     procUsage: {},
     damagedTargets: [],
