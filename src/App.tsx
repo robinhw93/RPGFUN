@@ -456,7 +456,7 @@ function FloatingCombatText({ events, eventId }: { events: string[]; eventId: nu
   useEffect(() => setIndex(0), [eventId]);
   useEffect(() => {
     if (events.length === 0 || index >= events.length - 1) return;
-    const timer = window.setTimeout(() => setIndex((current) => current + 1), 850);
+    const timer = window.setTimeout(() => setIndex((current) => current + 1), 1800);
     return () => window.clearTimeout(timer);
   }, [events, eventId, index]);
 

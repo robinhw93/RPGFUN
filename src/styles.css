@@ -292,9 +292,9 @@ main { min-height: calc(100vh - 68px); }
 .combat-log-sheet > div:last-child { overflow-y: auto; padding: .5rem 1rem 1rem; }.combat-log-sheet p { margin: .6rem 0 0; padding-left: .7rem; color: #747b75; border-left: 1px solid #343a36; font-size: .72rem; line-height: 1.45; }.combat-log-sheet p.latest { color: #d0cdc4; border-color: var(--gold); }
 
 .floating-combat-text { position: absolute; z-index: 80; left: 50%; top: 46%; width: min(420px, 86vw); display: flex; justify-content: center; transform: translate(-50%, -50%); pointer-events: none; }
-.floating-combat-text span { padding: .65rem .9rem; color: #e8e5dc; text-align: center; border: 1px solid #555b56; background: rgba(10,12,11,.91); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-family: Georgia, serif; font-size: clamp(.84rem, 2.5vw, 1.05rem); animation: combat-float .85s ease both; }
+.floating-combat-text span { padding: .65rem .9rem; color: #e8e5dc; text-align: center; border: 1px solid #555b56; background: rgba(10,12,11,.91); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-family: Georgia, serif; font-size: clamp(.84rem, 2.5vw, 1.05rem); animation: combat-float 1.8s ease both; }
 .floating-combat-text.damage span { color: #ef9d8e; border-color: #6f3f37; }.floating-combat-text.positive span { color: #e4c57f; border-color: #6c5937; }
-@keyframes combat-float { 0% { opacity: 0; transform: translateY(12px) scale(.96); } 18%, 75% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-13px) scale(.98); } }
+@keyframes combat-float { 0% { opacity: 0; transform: translateY(12px) scale(.96); } 8%, 83% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-13px) scale(.98); } }
 @keyframes enemy-death { 0% { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1); } 20% { transform: translateX(-5px) scale(1.02); filter: brightness(2) sepia(1); } 40% { transform: translateX(6px) scale(.98); } 100% { opacity: .14; transform: translateX(18px) scale(.9); filter: grayscale(1) blur(1px); } }
 .enemy-combatant.dead { pointer-events: none; animation: enemy-death .8s cubic-bezier(.2,.8,.2,1) forwards; }
 
