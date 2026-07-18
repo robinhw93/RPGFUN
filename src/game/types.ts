@@ -80,6 +80,8 @@ export interface Ability {
   name: string;
   description: string;
   energyCost: number;
+  /** Player turns before this ability can be used again. */
+  cooldownTurns?: number;
   target: TargetType;
   damageType?: DamageType;
   power?: number;
@@ -167,6 +169,7 @@ export interface CombatState {
   activeTurnIndex: number;
   initiativeRevealed: boolean;
   playerActed: boolean;
+  abilityCooldowns: Record<string, number>;
   eventId: number;
   floatingEvents: string[];
   pendingEffects: CombatPendingEffect[];

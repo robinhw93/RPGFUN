@@ -3,7 +3,7 @@ import type { Ability, AdventureNode, EnemyTemplate, GearItem, GearSetBonusDefin
 export const ABILITIES: Record<string, Ability> = {
   strike: {
     id: "strike", name: "Strike", description: "A reliable weapon attack.", energyCost: 0,
-    target: "enemy", damageType: "physical", power: 5, scalingStat: "strength", icon: "⚔", branch: "core",
+    cooldownTurns: 1, target: "enemy", damageType: "physical", power: 5, scalingStat: "strength", icon: "⚔", branch: "core",
   },
   guard: {
     id: "guard", name: "Guard", description: "Gain 6 Guard until the next turn.", energyCost: 2,

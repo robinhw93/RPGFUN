@@ -18,9 +18,12 @@ An attack damage event has two phases:
 
 Status and turn effects continue to resolve when their own floating message appears. This keeps visible feedback and state changes synchronized.
 
+Player turns are explicitly ended with `endPlayerTurn`; using an ability never advances the active actor. `CombatState.abilityCooldowns` stores cooldowns in player turns, and the engine decrements them only when the next player turn begins. This lets a player chain any number of affordable, ready abilities without coupling action count to turn order.
+
 ## UI rules
 
 - Never use browser-native `alert`, `confirm`, or `prompt` dialogs.
 - Confirmations and destructive actions use components from `src/components/`.
 - Combat must remain usable without page scrolling at the mobile breakpoint.
+- Combatant cards keep stable React keys so resource bars can interpolate between values and local damage/heal feedback can animate without remounting the card.
 - Any animation that lands on persistent UI should measure the real destination geometry instead of assuming fixed widths.

@@ -319,8 +319,15 @@ function App() {
         />
       )}
       {travelTransition && (
-        <div className="travel-transition" role="status" aria-live="polite">
-          <span>{travelTransition.phase === "travel" ? `Continuing travels${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+        <div className={`travel-transition ${travelTransition.phase}`} role="status" aria-live="polite">
+          <div className="travel-transition-content">
+            {travelTransition.phase === "travel" && (
+              <div className="travel-footsteps" aria-hidden="true">
+                <Footprints /><Footprints />
+              </div>
+            )}
+            <span>{travelTransition.phase === "travel" ? `Following the ashen road${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+          </div>
         </div>
       )}
     </div>
@@ -479,7 +486,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
       <div className="compact-arena">
         <article
-          key={`player-${damagedTargets.includes("player") ? combat.eventId : "idle"}-${combat.attackingActorId === "player" ? combat.attackAnimationId : "rest"}`}
+          key="player"
           className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""}`}
         >
           <h2>{game.character.name}</h2>
@@ -496,7 +503,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
           {combat.enemies.map((enemy) => (
             <article
-              key={`${enemy.instanceId}-${enemy.hp <= 0 ? "dead" : damagedTargets.includes(enemy.instanceId) ? combat.eventId : "idle"}-${combat.attackingActorId === enemy.instanceId ? combat.attackAnimationId : "rest"}`}
+              key={enemy.instanceId}
               role="button"
               tabIndex={enemy.hp > 0 ? 0 : -1}
               aria-disabled={enemy.hp <= 0}
@@ -531,7 +538,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id, index) => {
           const ability = ABILITIES[id];
-          return <HoldAbilityButton key={id} ability={ability} index={index} disabled={sequencePending || !isPlayerTurn || combat.playerActed || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
+          const cooldown = combat.abilityCooldowns?.[id] ?? 0;
+          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={sequencePending || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -665,7 +673,13 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
   }, [combat.eventId]);
 
   return (
-    <div className={`initiative-overlay ${phase}`} role="dialog" aria-modal="true" aria-label="Rolling initiative">
+    <div
+      className={`initiative-overlay ${phase}`}
+      style={{ "--initiative-flight-duration": `${INITIATIVE_TIMING.flightMs}ms` } as React.CSSProperties}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Rolling initiative"
+    >
       <div className="initiative-panel">
         <p className="eyebrow">Combat Begins</p>
         <h2>{phase === "rolling" ? "Rolling Initiative" : phase === "landed" ? "Rolls Locked" : phase === "bonus" ? "Applying Bonuses" : "Turn Order"}</h2>
@@ -734,7 +748,25 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
 }
 
 function HealthBar({ value, max }: { value: number; max: number }) {
-  return <div className="health-bar"><i style={{ width: `${Math.max(0, value / max) * 100}%` }} /></div>;
+  const previousValue = useRef(value);
+  const [change, setChange] = useState<{ id: number; delta: number } | null>(null);
+
+  useEffect(() => {
+    const delta = value - previousValue.current;
+    previousValue.current = value;
+    if (delta !== 0) setChange({ id: Date.now(), delta });
+  }, [value]);
+
+  return (
+    <div className="health-bar-wrap">
+      <div className="health-bar"><i style={{ width: `${Math.max(0, value / max) * 100}%` }} /></div>
+      {change && (
+        <strong key={change.id} className={`health-change ${change.delta > 0 ? "heal" : "damage"}`} aria-hidden="true">
+          {change.delta > 0 ? "+" : "−"}{Math.abs(change.delta)}
+        </strong>
+      )}
+    </div>
+  );
 }
 
 function EnergySegments({ value, max, regen }: { value: number; max: number; regen: number }) {
@@ -779,7 +811,7 @@ function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: (
   );
 }
 
-function HoldAbilityButton({ ability, index, disabled, onUse }: { ability: Ability; index: number; disabled: boolean; onUse: () => void }) {
+function HoldAbilityButton({ ability, index, cooldown, disabled, onUse }: { ability: Ability; index: number; cooldown: number; disabled: boolean; onUse: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -821,13 +853,14 @@ function HoldAbilityButton({ ability, index, disabled, onUse }: { ability: Abili
       onPointerCancel={endHold}
       onPointerLeave={endHold}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`${ability.name}, ${ability.energyCost} Energy. Hold for details.`}
+      aria-label={`${ability.name}, ${ability.energyCost} Energy${cooldown > 0 ? `, ${cooldown} turn cooldown remaining` : ""}. Hold for details.`}
     >
       <span className="compact-ability-key">{index + 1}</span>
       <span className="compact-ability-icon">{ability.icon}</span>
       <strong>{ability.name}</strong>
       <span className="compact-ability-cost">{ability.energyCost}<Sparkles size={10} /></span>
-      {tooltipOpen && <span className="ability-hold-tooltip"><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy</em></span>}
+      {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true">{cooldown}</span>}
+      {tooltipOpen && <span className="ability-hold-tooltip"><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>}
     </button>
   );
 }

@@ -77,6 +77,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     activeTurnIndex: 0,
     initiativeRevealed: false,
     playerActed: false,
+    abilityCooldowns: {},
     eventId: 1,
     floatingEvents: [],
     pendingEffects: [],
@@ -186,6 +187,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       activeTurnIndex: Math.min(combat.activeTurnIndex ?? 0, combat.turnOrder.length - 1),
       initiativeRevealed: combat.initiativeRevealed ?? true,
       playerActed: combat.playerActed ?? false,
+      abilityCooldowns: combat.abilityCooldowns ?? {},
       damagedTargets: combat.damagedTargets ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
@@ -202,6 +204,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     activeTurnIndex: 0,
     initiativeRevealed: false,
     playerActed: false,
+    abilityCooldowns: {},
     eventId: (combat.eventId ?? 0) + 1,
     floatingEvents: [],
     pendingEffects: [],
@@ -296,6 +299,11 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
       playerStatuses: playerTick.playerStatuses,
       energy: Math.min(next.maxEnergy, next.energy + derived.energyRegen),
       playerActed: false,
+      abilityCooldowns: Object.fromEntries(
+        Object.entries(next.abilityCooldowns ?? {})
+          .map(([abilityId, turns]) => [abilityId, Math.max(0, turns - 1)] as const)
+          .filter(([, turns]) => turns > 0),
+      ),
     };
     if (next.playerHp <= 0) {
       events.push("You have fallen.");
@@ -420,7 +428,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   combat = ensureCombatState(combat, character);
   const ability = ABILITIES[abilityId];
   const activeActor = combat.turnOrder[combat.activeTurnIndex];
-  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || combat.playerActed || ability.energyCost > combat.energy) return combat;
+  const remainingCooldown = combat.abilityCooldowns?.[abilityId] ?? 0;
+  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0 || ability.energyCost > combat.energy) return combat;
   const derived = getDerivedStats(character);
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
@@ -435,6 +444,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const damagedTargets: string[] = [];
   const pendingEffects: CombatPendingEffect[] = [];
   let energy = combat.energy - ability.energyCost;
+  const abilityCooldowns = ability.cooldownTurns
+    ? { ...(combat.abilityCooldowns ?? {}), [ability.id]: ability.cooldownTurns }
+    : (combat.abilityCooldowns ?? {});
   const abilityInfo: InspectableInfo = { title: ability.name, description: `${ability.description} Costs ${ability.energyCost} Energy.`, category: "ability" };
   logs.push(makeLog(`You use ${ability.name}.`, abilityInfo));
   events.push(`You use ${ability.name}.`);
@@ -529,7 +541,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
     const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
-    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, playerActed: true, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, abilityCooldowns, playerActed: true, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
   }
 
   const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId ?? "";
@@ -545,6 +557,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     playerStatuses: displayedPlayerStatuses,
     energy,
     procUsage,
+    abilityCooldowns,
     playerActed: true,
     attackingActorId: null,
     selectedEnemyId: nextSelected,
