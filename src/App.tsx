@@ -504,7 +504,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
                 category: "stat",
               })}
             >
-              <Shield size={13} /><b>{derived.armor}</b><span>Armor</span>
+              <Shield size={13} /><b>{derived.armor}</b>
             </button>
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
