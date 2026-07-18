@@ -84,6 +84,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     damagedTargets: [],
     attackingActorId: null,
     attackAnimationId: 0,
+    attackEffectId: null,
     playerHp: Math.min(carryHp ?? derived.maxHp, derived.maxHp),
     playerMaxHp: derived.maxHp,
     energy: derived.maxEnergy,
@@ -188,6 +189,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       damagedTargets: combat.damagedTargets ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
+      attackEffectId: combat.attackEffectId ?? null,
       pendingEffects: combat.pendingEffects ?? [],
       procUsage: combat.procUsage ?? {},
     };
@@ -207,6 +209,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     damagedTargets: [],
     attackingActorId: null,
     attackAnimationId: combat.attackAnimationId ?? 0,
+    attackEffectId: null,
   };
 }
 
@@ -689,6 +692,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let energy = combat.energy;
   let attackingActorId = combat.attackingActorId;
   let attackAnimationId = combat.attackAnimationId ?? 0;
+  let attackEffectId = combat.attackEffectId ?? null;
   const damagedTargets: string[] = [];
   matchingEffects.forEach((effect) => {
     if (effect.type === "status") {
@@ -711,29 +715,35 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       return;
     }
     if (effect.targetId === "player") {
-      if (effect.attackerId) {
-        attackingActorId = effect.attackerId;
-        attackAnimationId += 1;
-      }
       playerHp = Math.max(0, playerHp - effect.damage);
       if (effect.damage > 0) damagedTargets.push("player");
       return;
-    }
-    if (effect.attackerId) {
-      attackingActorId = effect.attackerId;
-      attackAnimationId += 1;
     }
     enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId ? { ...enemy, hp: Math.max(0, enemy.hp - effect.damage) } : enemy);
     if (effect.damage > 0) damagedTargets.push(effect.targetId);
   });
 
   const consumedIds = new Set(matchingEffects.map((effect) => effect.id));
+  if (attackEffectId && consumedIds.has(attackEffectId)) attackEffectId = null;
   const pendingEffects = (combat.pendingEffects ?? []).filter((effect) => !consumedIds.has(effect.id));
   const outcome = playerHp <= 0 ? "defeat" : enemies.every((enemy) => enemy.hp <= 0) ? "victory" : combat.outcome;
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId
     ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId
     ?? "";
-  return { ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, attackingActorId, attackAnimationId, pendingEffects, damagedTargets, selectedEnemyId, outcome };
+  return { ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, selectedEnemyId, outcome };
+}
+
+export function primeCombatAttack(combat: CombatState, eventId: number, eventIndex: number): CombatState {
+  if (combat.eventId !== eventId) return combat;
+  const attackEffect = (combat.pendingEffects ?? []).find((effect): effect is Extract<CombatPendingEffect, { damage: number }> => effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId));
+  if (!attackEffect || combat.attackEffectId === attackEffect.id) return combat;
+  return {
+    ...combat,
+    attackingActorId: attackEffect.attackerId ?? null,
+    attackAnimationId: (combat.attackAnimationId ?? 0) + 1,
+    attackEffectId: attackEffect.id,
+    damagedTargets: [],
+  };
 }
 
 export function getLoot(nodeIndex: number): GearItem {

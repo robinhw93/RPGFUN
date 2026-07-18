@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, resolveCombatEvent, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, primeCombatAttack, resolveCombatEvent, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
 
 type View = "adventure" | "character" | "talents";
@@ -22,6 +22,8 @@ const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
   { key: "vitality", label: "Vitality", short: "VIT" },
   { key: "luck", label: "Luck", short: "LCK" },
 ];
+
+const ATTACK_IMPACT_DELAY_MS = 420;
 
 function cloneInitial(): GameState {
   return JSON.parse(JSON.stringify(INITIAL_GAME)) as GameState;
@@ -44,6 +46,7 @@ function App() {
   const [view, setView] = useState<View>("adventure");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
   const travelTimers = useRef<number[]>([]);
+  const combatImpactTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = ADVENTURE[game.adventure.nodeIndex];
@@ -62,6 +65,7 @@ function App() {
     return () => document.body.classList.remove("character-creation-open");
   }, [game.characterCreated]);
   useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
+  useEffect(() => () => combatImpactTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
   const navigate = (next: View) => {
     setView(next);
@@ -114,6 +118,28 @@ function App() {
   };
 
   const revealCombatEvent = (eventId: number, eventIndex: number) => {
+    const visibleCombat = game.adventure.combat;
+    const attackEffect = visibleCombat?.pendingEffects.find((effect) => effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId));
+    if (visibleCombat?.eventId === eventId && attackEffect) {
+      setGame((current) => {
+        const combat = current.adventure.combat;
+        if (!combat) return current;
+        const primed = primeCombatAttack(combat, eventId, eventIndex);
+        if (primed === combat) return current;
+        return { ...current, adventure: { ...current.adventure, combat: primed } };
+      });
+      const impactTimer = window.setTimeout(() => {
+        setGame((current) => {
+          const combat = current.adventure.combat;
+          if (!combat) return current;
+          const resolved = resolveCombatEvent(combat, eventId, eventIndex);
+          if (resolved === combat) return current;
+          return { ...current, adventure: { ...current.adventure, combat: resolved } };
+        });
+      }, ATTACK_IMPACT_DELAY_MS);
+      combatImpactTimers.current.push(impactTimer);
+      return;
+    }
     setGame((current) => {
       const combat = current.adventure.combat;
       if (!combat) return current;
@@ -599,6 +625,7 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
   const [phase, setPhase] = useState<"rolling" | "landed" | "bonus" | "order">("rolling");
   const [displayedRolls, setDisplayedRolls] = useState<Record<string, number>>(() => Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
   const [landingRect, setLandingRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [flightGeometry, setFlightGeometry] = useState<Record<string, { x: number; y: number; scaleX: number; scaleY: number }>>({});
   const neutralOrder = useMemo(() => {
     const player = combat.turnOrder.find((actor) => actor.kind === "player");
     const enemies = combat.enemies
@@ -633,7 +660,33 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, actor.initiative])));
       setPhase("bonus");
     }, 2200);
-    const orderTimer = window.setTimeout(() => setPhase("order"), 3100);
+    let orderFrame = 0;
+    const orderTimer = window.setTimeout(() => {
+      const targetContainer = document.querySelector<HTMLElement>(".turn-order-bar > div");
+      const targetCards = [...document.querySelectorAll<HTMLElement>(".turn-order-bar > div > span")];
+      const sourceCards = [...document.querySelectorAll<HTMLElement>(".initiative-overlay .initiative-contestant")];
+      const nextGeometry: Record<string, { x: number; y: number; scaleX: number; scaleY: number }> = {};
+      if (targetContainer) {
+        const rect = targetContainer.getBoundingClientRect();
+        setLandingRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+      }
+      sourceCards.forEach((sourceCard) => {
+        const actorId = sourceCard.dataset.initiativeActor;
+        const targetIndex = combat.turnOrder.findIndex((actor) => actor.actorId === actorId);
+        const targetCard = targetCards[targetIndex];
+        if (!actorId || !targetCard) return;
+        const source = sourceCard.getBoundingClientRect();
+        const target = targetCard.getBoundingClientRect();
+        nextGeometry[actorId] = {
+          x: source.left + source.width / 2 - (target.left + target.width / 2),
+          y: source.top + source.height / 2 - (target.top + target.height / 2),
+          scaleX: source.width / target.width,
+          scaleY: source.height / target.height,
+        };
+      });
+      setFlightGeometry(nextGeometry);
+      orderFrame = window.requestAnimationFrame(() => setPhase("order"));
+    }, 3100);
     const completeTimer = window.setTimeout(onComplete, 4650);
     return () => {
       window.clearInterval(rollTimer);
@@ -641,6 +694,7 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
       window.clearTimeout(bonusTimer);
       window.clearTimeout(orderTimer);
       window.clearTimeout(completeTimer);
+      window.cancelAnimationFrame(orderFrame);
     };
   }, [combat.eventId]);
 
@@ -657,9 +711,20 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
           "--initiative-target-height": `${landingRect.height}px`,
         } as React.CSSProperties : undefined}>
           {participants.map((actor, index) => {
-            const originalIndex = neutralOrder.findIndex((candidate) => candidate.actorId === actor.actorId);
+            const geometry = flightGeometry[actor.actorId];
             return (
-              <article className={`initiative-contestant ${actor.kind}`} key={actor.actorId} style={{ "--initiative-delay": `${index * 90}ms`, "--initiative-x": `${(originalIndex - index) * 105}%` } as React.CSSProperties}>
+              <article
+                className={`initiative-contestant ${actor.kind}`}
+                data-initiative-actor={actor.actorId}
+                key={actor.actorId}
+                style={{
+                  "--initiative-delay": `${index * 90}ms`,
+                  "--initiative-from-x": `${geometry?.x ?? 0}px`,
+                  "--initiative-from-y": `${geometry?.y ?? 0}px`,
+                  "--initiative-from-scale-x": geometry?.scaleX ?? 1,
+                  "--initiative-from-scale-y": geometry?.scaleY ?? 1,
+                } as React.CSSProperties}
+              >
                 <strong className="initiative-name">{actor.kind === "player" ? "You" : actor.name}</strong>
                 <div className={`initiative-counter ${phase}`} aria-label={`D100 result ${displayedRolls[actor.actorId]}`}>
                   <span>{displayedRolls[actor.actorId]}</span>
@@ -803,7 +868,9 @@ function HoldAbilityButton({ ability, index, disabled, onUse }: { ability: Abili
 
 function FloatingCombatText({ events, eventId, onEventShown }: { events: string[]; eventId: number; onEventShown: (eventId: number, eventIndex: number) => void }) {
   const [index, setIndex] = useState(0);
+  const eventCallback = useRef(onEventShown);
 
+  useEffect(() => { eventCallback.current = onEventShown; }, [onEventShown]);
   useEffect(() => setIndex(0), [eventId]);
   useEffect(() => {
     if (events.length === 0 || index >= events.length - 1) return;
@@ -813,8 +880,8 @@ function FloatingCombatText({ events, eventId, onEventShown }: { events: string[
 
   const message = events[index];
   useEffect(() => {
-    if (message) onEventShown(eventId, index);
-  }, [eventId, index, message, onEventShown]);
+    if (message) eventCallback.current(eventId, index);
+  }, [eventId, index, message]);
   if (!message) return null;
   const tone = /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
   return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`}>{message}</span></div>;

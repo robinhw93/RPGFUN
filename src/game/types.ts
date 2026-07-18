@@ -174,6 +174,7 @@ export interface CombatState {
   damagedTargets: string[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;
+  attackEffectId: string | null;
   playerHp: number;
   playerMaxHp: number;
   energy: number;
