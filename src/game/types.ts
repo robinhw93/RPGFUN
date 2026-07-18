@@ -98,6 +98,13 @@ export interface TurnOrderEntry {
   initiative: number;
 }
 
+export interface CombatPendingEffect {
+  id: string;
+  eventIndex: number;
+  targetId: "player" | string;
+  damage: number;
+}
+
 export interface CombatState {
   turn: number;
   turnOrder: TurnOrderEntry[];
@@ -105,6 +112,7 @@ export interface CombatState {
   playerActed: boolean;
   eventId: number;
   floatingEvents: string[];
+  pendingEffects: CombatPendingEffect[];
   damagedTargets: string[];
   playerHp: number;
   playerMaxHp: number;

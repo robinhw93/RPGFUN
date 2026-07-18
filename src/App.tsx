@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { ABILITIES, ADVENTURE, ENEMIES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, resolveCombatEvent, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
 
 type View = "adventure" | "character" | "talents";
@@ -103,6 +103,16 @@ function App() {
         ...current,
         adventure: { ...current.adventure, combat: takeEnemyTurn(current.adventure.combat, current.character, actorId) },
       };
+    });
+  };
+
+  const revealCombatEvent = (eventId: number, eventIndex: number) => {
+    setGame((current) => {
+      const combat = current.adventure.combat;
+      if (!combat) return current;
+      const resolved = resolveCombatEvent(combat, eventId, eventIndex);
+      if (resolved === combat) return current;
+      return { ...current, adventure: { ...current.adventure, combat: resolved } };
     });
   };
 
@@ -268,6 +278,7 @@ function App() {
             onAbility={castAbility}
             onEndTurn={finishPlayerTurn}
             onEnemyTurn={runEnemyTurn}
+            onCombatEvent={revealCombatEvent}
             onContinue={continueJourney}
             onEvent={resolveEvent}
             onRetry={retryCombat}
@@ -297,7 +308,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean; onClick:
   return <button className={active ? "nav-button active" : "nav-button"} onClick={onClick}>{icon}<span>{label}</span></button>;
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onContinue, onEvent, onRetry, onAbandon, onTalents }: {
+function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onContinue, onEvent, onRetry, onAbandon, onTalents }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   onBegin: () => void;
@@ -305,6 +316,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   onAbility: (id: string) => void;
   onEndTurn: () => void;
   onEnemyTurn: (actorId: string) => void;
+  onCombatEvent: (eventId: number, eventIndex: number) => void;
   onContinue: () => void;
   onEvent: (choice: "rest" | "ember") => void;
   onRetry: () => void;
@@ -455,7 +467,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         </div>
       </div>
 
-      <FloatingCombatText eventId={combat.eventId ?? 0} events={combat.floatingEvents ?? []} />
+      <FloatingCombatText key={combat.eventId ?? 0} eventId={combat.eventId ?? 0} events={combat.floatingEvents ?? []} onEventShown={onCombatEvent} />
 
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id, index) => {
@@ -639,7 +651,7 @@ function HoldAbilityButton({ ability, index, disabled, onUse }: { ability: Abili
   );
 }
 
-function FloatingCombatText({ events, eventId }: { events: string[]; eventId: number }) {
+function FloatingCombatText({ events, eventId, onEventShown }: { events: string[]; eventId: number; onEventShown: (eventId: number, eventIndex: number) => void }) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => setIndex(0), [eventId]);
@@ -650,6 +662,9 @@ function FloatingCombatText({ events, eventId }: { events: string[]; eventId: nu
   }, [events, eventId, index]);
 
   const message = events[index];
+  useEffect(() => {
+    if (message) onEventShown(eventId, index);
+  }, [eventId, index, message, onEventShown]);
   if (!message) return null;
   const tone = /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
   return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`}>{message}</span></div>;
