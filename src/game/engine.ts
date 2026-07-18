@@ -110,16 +110,17 @@ function statusInfo(status: StatusEffect): InspectableInfo {
   return { title: status.name, description: status.description, category: "status" };
 }
 
-function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number, attackerId?: "player" | string): void {
+function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number, attackerId?: "player" | string): number {
   const eventIndex = events.length;
   events.push(text);
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage, attackerId });
+  return eventIndex;
 }
 
-function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false): void {
-  const eventIndex = events.length;
-  events.push(text);
+function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false, attachedEventIndex?: number): void {
+  const eventIndex = attachedEventIndex ?? events.length;
+  if (attachedEventIndex === undefined) events.push(text);
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "status", targetId, status: { ...status }, stunned });
 }
@@ -486,30 +487,34 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damage = Math.max(1, Math.round((raw - Math.max(0, target.armor - ignoresArmor)) * vulnerable * (critical ? 1.6 : 1)));
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
-      queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
+      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
       if (ability.effect === "bleed") {
         const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 3 damage per stack when its turn begins. Lasts 3 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, bleed) } : enemy);
         logs.push(makeLog(`${target.name} gains Bleed.`, statusInfo(bleed)));
-        queueStatus(events, pendingEffects, `${target.name} is Bleeding.`, target.instanceId, bleed);
+        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Bleed.`;
+        queueStatus(events, pendingEffects, `${target.name} is Bleeding.`, target.instanceId, bleed, false, damageEventIndex);
       }
       if (ability.effect === "poison") {
         const poison: StatusEffect = { id: "poison", name: "Poison", kind: "debuff", duration: 4, stacks: 1, description: "Takes 2 damage per stack when its turn begins. Lasts 4 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, poison) } : enemy);
         logs.push(makeLog(`${target.name} gains Poison.`, statusInfo(poison)));
-        queueStatus(events, pendingEffects, `${target.name} is Poisoned.`, target.instanceId, poison);
+        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Poison.`;
+        queueStatus(events, pendingEffects, `${target.name} is Poisoned.`, target.instanceId, poison, false, damageEventIndex);
       }
       if (ability.effect === "vulnerable") {
         const vulnerableStatus: StatusEffect = { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: 2, stacks: 1, description: "Takes 25% increased damage for 2 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, vulnerableStatus) } : enemy);
         logs.push(makeLog(`${target.name} becomes Vulnerable.`, statusInfo(vulnerableStatus)));
-        queueStatus(events, pendingEffects, `${target.name} becomes Vulnerable.`, target.instanceId, vulnerableStatus);
+        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Vulnerable.`;
+        queueStatus(events, pendingEffects, `${target.name} becomes Vulnerable.`, target.instanceId, vulnerableStatus, false, damageEventIndex);
       }
       if (ability.effect === "stun" && Math.random() < 0.45) {
         const stunned: StatusEffect = { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stacks: 1, description: "Cannot act on its next turn." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: true, statuses: addStatus(enemy.statuses, stunned) } : enemy);
         logs.push(makeLog(`${target.name} is Stunned.`, statusInfo(stunned)));
-        queueStatus(events, pendingEffects, `${target.name} is Stunned.`, target.instanceId, stunned, true);
+        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Stun.`;
+        queueStatus(events, pendingEffects, `${target.name} is Stunned.`, target.instanceId, stunned, true, damageEventIndex);
       }
 
       const triggerContext = {
