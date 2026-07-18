@@ -492,16 +492,19 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               const item: CombatLogEntry = typeof entry === "string"
                 ? { id: `legacy-${index}`, text: entry }
                 : entry;
-              return item.info ? (
-                <button
-                  type="button"
-                  key={item.id}
-                  className={`combat-log-entry inspectable ${index === 0 ? "latest" : ""}`}
-                  onClick={() => setInspectedInfo(item.info ?? null)}
-                >
-                  {item.text}
-                </button>
-              ) : <p key={item.id} className={index === 0 ? "latest" : ""}>{item.text}</p>;
+              if (!item.info) return <p key={item.id} className={index === 0 ? "latest" : ""}>{item.text}</p>;
+              const termIndex = item.text.toLocaleLowerCase().indexOf(item.info.title.toLocaleLowerCase());
+              if (termIndex < 0) return <p key={item.id} className={index === 0 ? "latest" : ""}>{item.text}</p>;
+              const termEnd = termIndex + item.info.title.length;
+              return (
+                <p key={item.id} className={`combat-log-entry ${index === 0 ? "latest" : ""}`}>
+                  {item.text.slice(0, termIndex)}
+                  <button type="button" className="combat-log-term" onClick={() => setInspectedInfo(item.info ?? null)}>
+                    {item.text.slice(termIndex, termEnd)}
+                  </button>
+                  {item.text.slice(termEnd)}
+                </p>
+              );
             })}</div>
           </div>
         </div>
@@ -530,7 +533,8 @@ function RouteCard({ node, index }: { node: AdventureNode; index: number }) {
 }
 
 function ProgressHeader({ index }: { index: number }) {
-  return <div className="journey-progress"><span>The Ashen Road</span><div>{ADVENTURE.map((node, itemIndex) => <i key={node.id} className={itemIndex < index ? "done" : itemIndex === index ? "current" : ""} />)}</div><span>{index + 1} / {ADVENTURE.length}</span></div>;
+  const progress = ((index + 1) / ADVENTURE.length) * 100;
+  return <div className="journey-progress"><span>The Ashen Road</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={ADVENTURE.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {ADVENTURE.length}</span></div>;
 }
 
 function TurnOrderBar({ combat }: { combat: CombatState }) {
