@@ -3,10 +3,10 @@ import {
   Backpack, BookOpen, ChevronRight, CircleDot, Coins, Footprints, Gem,
   Heart, Home, RotateCcw, Shield, Sparkles, Swords, Target, Trophy, UserRound,
 } from "lucide-react";
-import { ABILITIES, ADVENTURE, TALENTS } from "./game/data";
+import { ABILITIES, ADVENTURE, ENEMIES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { createCombat, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, useAbility } from "./game/engine";
-import type { Ability, AdventureNode, CharacterState, GameState, GearItem, GearSlot, StatName, TalentBranch } from "./game/types";
+import type { Ability, AdventureNode, CharacterState, CombatLogEntry, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
 
 type View = "adventure" | "character" | "talents";
 
@@ -30,6 +30,8 @@ function cloneInitial(): GameState {
 function App() {
   const [game, setGame] = useState<GameState>(() => loadGame() ?? cloneInitial());
   const [view, setView] = useState<View>("adventure");
+  const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
+  const travelTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = ADVENTURE[game.adventure.nodeIndex];
@@ -40,6 +42,7 @@ function App() {
     document.body.classList.toggle("combat-open", isCombatScreen);
     return () => document.body.classList.remove("combat-open");
   }, [isCombatScreen]);
+  useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
   const navigate = (next: View) => {
     setView(next);
@@ -71,7 +74,7 @@ function App() {
     });
   };
 
-  const continueJourney = () => {
+  const advanceJourney = () => {
     setGame((current) => {
       const adventure = current.adventure;
       const currentNode = ADVENTURE[adventure.nodeIndex];
@@ -99,6 +102,31 @@ function App() {
         adventure: { ...adventure, nodeIndex: nextIndex, carryHp, combat, eventResolved: false, latestLoot: wonCombat ? getLoot(adventure.nodeIndex) : null },
       };
     });
+  };
+
+  const continueJourney = () => {
+    if (travelTransition) return;
+    if (game.adventure.nodeIndex >= ADVENTURE.length - 1) {
+      advanceJourney();
+      return;
+    }
+    const nextNode = ADVENTURE[game.adventure.nodeIndex + 1];
+    const message = nextNode.enemies
+        ? `You encounter ${nextNode.enemies.map((id) => ENEMIES[id].name).join(" and ")}.`
+        : `You discover ${nextNode.title}.`;
+    setTravelTransition({ phase: "travel", dots: 1, message });
+    const dotInterval = window.setInterval(() => {
+      setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
+    }, 500);
+    const encounterTimer = window.setTimeout(() => {
+      window.clearInterval(dotInterval);
+      setTravelTransition({ phase: "encounter", dots: 5, message });
+    }, 2500);
+    const completeTimer = window.setTimeout(() => {
+      advanceJourney();
+      setTravelTransition(null);
+    }, 4000);
+    travelTimers.current = [dotInterval, encounterTimer, completeTimer];
   };
 
   const resolveEvent = (choice: "rest" | "ember") => {
@@ -222,6 +250,11 @@ function App() {
         <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<Backpack size={19} />} label="Gear" />
         <NavButton active={view === "talents"} onClick={() => navigate("talents")} icon={<CircleDot size={19} />} label="Talents" />
       </nav>
+      {travelTransition && (
+        <div className="travel-transition" role="status" aria-live="polite">
+          <span>{travelTransition.phase === "travel" ? `Continuing travels${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -244,8 +277,27 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
 }) {
   const adventure = game.adventure;
   const [logOpen, setLogOpen] = useState(false);
+  const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
+  const [sequencePlaying, setSequencePlaying] = useState(Boolean(adventure.combat?.floatingEvents?.length));
+  const combatEventId = adventure.combat?.eventId ?? 0;
+  const floatingEventCount = adventure.combat?.floatingEvents?.length ?? 0;
+  const sequenceEventId = useRef(combatEventId);
+  const sequencePending = sequencePlaying || sequenceEventId.current !== combatEventId;
 
-  useEffect(() => setLogOpen(false), [adventure.nodeIndex]);
+  useEffect(() => {
+    setLogOpen(false);
+    setInspectedInfo(null);
+  }, [adventure.nodeIndex]);
+  useEffect(() => {
+    sequenceEventId.current = combatEventId;
+    if (floatingEventCount === 0) {
+      setSequencePlaying(false);
+      return;
+    }
+    setSequencePlaying(true);
+    const timer = window.setTimeout(() => setSequencePlaying(false), floatingEventCount * 1800);
+    return () => window.clearTimeout(timer);
+  }, [combatEventId, floatingEventCount]);
 
   if (adventure.completed) {
     return (
@@ -306,40 +358,55 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
   }
 
   const combat = adventure.combat!;
+  const damagedTargets = combat.damagedTargets ?? [];
   return (
     <section className="combat-page compact-combat">
       <ProgressHeader index={adventure.nodeIndex} />
       <div className="compact-arena">
-        <article className="compact-combatant player-combatant">
+        <article
+          key={`player-${damagedTargets.includes("player") ? combat.eventId : "idle"}`}
+          className={`compact-combatant player-combatant ${damagedTargets.includes("player") ? "damaged" : ""}`}
+        >
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
           <div className="compact-status-row">
             <span className="armor-badge"><Shield size={11} /> {derived.armor}</span>
-            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} />)}
+            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
-          <div className="energy-bar"><i style={{ width: `${(combat.energy / combat.maxEnergy) * 100}%` }} /></div>
+          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} />
         </article>
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
           {combat.enemies.map((enemy) => (
-            <button
-              key={enemy.instanceId}
+            <article
+              key={`${enemy.instanceId}-${enemy.hp <= 0 ? "dead" : damagedTargets.includes(enemy.instanceId) ? combat.eventId : "idle"}`}
+              role="button"
+              tabIndex={enemy.hp > 0 ? 0 : -1}
+              aria-disabled={enemy.hp <= 0}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""}`}
+              className={`compact-combatant enemy-combatant ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => enemy.hp > 0 && onSelectEnemy(enemy.instanceId)}
+              onKeyDown={(event) => {
+                if (event.target === event.currentTarget && enemy.hp > 0 && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  onSelectEnemy(enemy.instanceId);
+                }
+              }}
             >
               <span className="compact-target"><Target size={11} /></span>
-              <h2>{enemy.hp > 0 ? enemy.name : "Defeated"}</h2>
+              <h2>{enemy.name}</h2>
               <div className="compact-resource-label"><span>Health</span><b>{enemy.hp}/{enemy.maxHp}</b></div>
               <HealthBar value={enemy.hp} max={enemy.maxHp} />
               <div className="compact-status-row">
-                {enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
-                {enemy.statuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} />)}
+                {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
+                {enemy.statuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
               </div>
-            </button>
+              <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy ?? 10}/{enemy.maxEnergy ?? 10}</b></div>
+              <EnergySegments value={enemy.energy ?? 10} max={enemy.maxEnergy ?? 10} regen={1} />
+            </article>
           ))}
         </div>
       </div>
@@ -349,7 +416,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id, index) => {
           const ability = ABILITIES[id];
-          return <HoldAbilityButton key={id} ability={ability} index={index} disabled={combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} index={index} disabled={sequencePending || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -360,12 +427,28 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
         <div className="combat-log-modal" role="dialog" aria-modal="true" aria-label="Combat Log">
           <div className="combat-log-sheet">
             <div className="combat-log-title"><span><BookOpen size={16} /> Combat Log</span><button onClick={() => setLogOpen(false)} aria-label="Close combat log">×</button></div>
-            <div>{combat.log.map((line, index) => <p key={`${line}-${index}`} className={index === 0 ? "latest" : ""}>{line}</p>)}</div>
+            <div>{combat.log.map((entry, index) => {
+              const item: CombatLogEntry = typeof entry === "string"
+                ? { id: `legacy-${index}`, text: entry }
+                : entry;
+              return item.info ? (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={`combat-log-entry inspectable ${index === 0 ? "latest" : ""}`}
+                  onClick={() => setInspectedInfo(item.info ?? null)}
+                >
+                  {item.text}
+                </button>
+              ) : <p key={item.id} className={index === 0 ? "latest" : ""}>{item.text}</p>;
+            })}</div>
           </div>
         </div>
       )}
 
-      {combat.outcome !== "active" && (
+      {inspectedInfo && <InspectInfoModal info={inspectedInfo} onClose={() => setInspectedInfo(null)} />}
+
+      {combat.outcome !== "active" && !sequencePending && (
         <div className={`compact-outcome ${combat.outcome}`}>
           <div className="compact-outcome-card">
             {combat.outcome === "victory" ? <Trophy /> : <Heart />}
@@ -393,8 +476,40 @@ function HealthBar({ value, max }: { value: number; max: number }) {
   return <div className="health-bar"><i style={{ width: `${Math.max(0, value / max) * 100}%` }} /></div>;
 }
 
-function StatusBadge({ name, stacks, kind }: { name: string; stacks: number; kind: string }) {
-  return <span className={`status-badge ${kind}`}>{name}{stacks > 1 ? ` ${stacks}` : ""}</span>;
+function EnergySegments({ value, max, regen }: { value: number; max: number; regen: number }) {
+  const segmentCount = Math.max(1, Math.floor(max));
+  const filled = Math.max(0, Math.min(segmentCount, Math.floor(value)));
+  const projected = Math.min(segmentCount, filled + Math.max(0, Math.floor(regen)));
+  return (
+    <div
+      className="energy-segments"
+      style={{ gridTemplateColumns: `repeat(${segmentCount}, minmax(0, 1fr))` }}
+      aria-label={`${filled} of ${segmentCount} Energy. ${projected - filled} Energy will regenerate next round.`}
+    >
+      {Array.from({ length: segmentCount }, (_, index) => (
+        <i key={index} className={index < filled ? "filled" : index < projected ? "projected" : ""} />
+      ))}
+    </div>
+  );
+}
+
+function StatusBadge({ name, stacks, kind, onInspect }: { name: string; stacks: number; kind: string; onInspect?: () => void }) {
+  const label = `${name}${stacks > 1 ? ` ${stacks}` : ""}`;
+  if (!onInspect) return <span className={`status-badge ${kind}`}>{label}</span>;
+  return <button type="button" className={`status-badge inspectable ${kind}`} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{label}</button>;
+}
+
+function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {
+  return (
+    <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${info.title} details`} onClick={onClose}>
+      <div className="inspect-info-card" onClick={(event) => event.stopPropagation()}>
+        <p className="eyebrow">{info.category === "ability" ? "Attack" : "Status Effect"}</p>
+        <h2>{info.title}</h2>
+        <p>{info.description}</p>
+        <button type="button" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
 }
 
 function HoldAbilityButton({ ability, index, disabled, onUse }: { ability: Ability; index: number; disabled: boolean; onUse: () => void }) {

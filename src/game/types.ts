@@ -75,13 +75,18 @@ export interface EnemyTemplate {
   maxHp: number;
   power: number;
   armor: number;
+  energyCost: number;
   intentText: string;
+  attackDescription: string;
+  onHitEffect?: "bleed";
   accent: string;
 }
 
 export interface EnemyState extends EnemyTemplate {
   instanceId: string;
   hp: number;
+  energy: number;
+  maxEnergy: number;
   statuses: StatusEffect[];
   stunned: boolean;
 }
@@ -90,6 +95,7 @@ export interface CombatState {
   turn: number;
   eventId: number;
   floatingEvents: string[];
+  damagedTargets: string[];
   playerHp: number;
   playerMaxHp: number;
   energy: number;
@@ -97,8 +103,20 @@ export interface CombatState {
   selectedEnemyId: string;
   enemies: EnemyState[];
   playerStatuses: StatusEffect[];
-  log: string[];
+  log: Array<CombatLogEntry | string>;
   outcome: "active" | "victory" | "defeat";
+}
+
+export interface InspectableInfo {
+  title: string;
+  description: string;
+  category: "ability" | "status";
+}
+
+export interface CombatLogEntry {
+  id: string;
+  text: string;
+  info?: InspectableInfo;
 }
 
 export interface CharacterState {

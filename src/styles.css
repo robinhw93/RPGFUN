@@ -270,6 +270,10 @@ main { min-height: calc(100vh - 68px); }
 .no-status { color: #515752; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; }
 .energy-label { margin-top: .65rem; }.energy-label span { color: var(--gold); }
 .energy-bar { width: 100%; height: 7px; overflow: hidden; border: 1px solid #3b392f; background: #292821; }.energy-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8d6b36, #e2bd69); box-shadow: 0 0 9px rgba(218,180,102,.2); transition: width .3s ease; }
+.energy-segments { width: 100%; height: 8px; display: grid; gap: 2px; }
+.energy-segments i { min-width: 0; border: 1px solid #38372f; background: #22241f; transition: background .25s ease, border-color .25s ease, box-shadow .25s ease; }
+.energy-segments i.filled { border-color: #907541; background: linear-gradient(180deg, #e4c674, #a77a32); box-shadow: 0 0 7px rgba(224,188,103,.25); }
+.energy-segments i.projected { border-color: #655b3d; background: rgba(226,196,112,.22); box-shadow: inset 0 0 4px rgba(242,215,140,.1); }
 
 .compact-ability-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .45rem; }
 .compact-ability, .compact-ability-empty { min-width: 0; min-height: 72px; position: relative; border: 1px solid #39403b; background: #171c19; }
@@ -289,17 +293,36 @@ main { min-height: calc(100vh - 68px); }
 .combat-log-modal { position: fixed; z-index: 120; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(5,7,6,.82); backdrop-filter: blur(5px); }
 .combat-log-sheet { width: min(520px, 100%); max-height: min(70dvh, 520px); display: grid; grid-template-rows: auto minmax(0, 1fr); border: 1px solid #4a4e49; background: #111513; box-shadow: 0 24px 70px rgba(0,0,0,.7); }
 .combat-log-title { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1rem; border-bottom: 1px solid var(--line); }.combat-log-title > span { display: flex; align-items: center; gap: .45rem; font-family: Georgia, serif; }.combat-log-title button { width: 32px; height: 32px; color: var(--muted); border: 1px solid var(--line); background: transparent; font-size: 1.2rem; cursor: pointer; }
-.combat-log-sheet > div:last-child { overflow-y: auto; padding: .5rem 1rem 1rem; }.combat-log-sheet p { margin: .6rem 0 0; padding-left: .7rem; color: #747b75; border-left: 1px solid #343a36; font-size: .72rem; line-height: 1.45; }.combat-log-sheet p.latest { color: #d0cdc4; border-color: var(--gold); }
+.combat-log-sheet > div:last-child { overflow-y: auto; padding: .5rem 1rem 1rem; }
+.combat-log-sheet p, .combat-log-entry { width: 100%; display: block; margin: .6rem 0 0; padding: 0 0 0 .7rem; color: #747b75; border: 0; border-left: 1px solid #343a36; background: transparent; font-size: .72rem; line-height: 1.45; text-align: left; }
+.combat-log-sheet p.latest, .combat-log-entry.latest { color: #d0cdc4; border-color: var(--gold); }
+.combat-log-entry.inspectable { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(201,168,103,.35); text-underline-offset: 3px; }
+.combat-log-entry.inspectable:hover, .combat-log-entry.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
+
+.status-badge.inspectable { font: inherit; cursor: pointer; }
+.status-badge.inspectable:hover, .status-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
+
+.inspect-info-modal { position: fixed; z-index: 150; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.84); backdrop-filter: blur(6px); }
+.inspect-info-card { width: min(370px, 100%); padding: 1.35rem; border: 1px solid #66583b; background: #121613; box-shadow: 0 24px 70px rgba(0,0,0,.75); }
+.inspect-info-card h2 { margin-bottom: .65rem; color: var(--gold-bright); }
+.inspect-info-card > p:not(.eyebrow) { margin-bottom: 1.2rem; color: #bbbcb5; font-size: .78rem; line-height: 1.55; }
+.inspect-info-card > button { width: 100%; min-height: 40px; color: var(--text); border: 1px solid #4b514d; background: #1a1e1b; cursor: pointer; }
 
 .floating-combat-text { position: absolute; z-index: 80; left: 50%; top: 46%; width: min(420px, 86vw); display: flex; justify-content: center; transform: translate(-50%, -50%); pointer-events: none; }
 .floating-combat-text span { padding: .65rem .9rem; color: #e8e5dc; text-align: center; border: 1px solid #555b56; background: rgba(10,12,11,.91); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-family: Georgia, serif; font-size: clamp(.84rem, 2.5vw, 1.05rem); animation: combat-float 1.8s ease both; }
 .floating-combat-text.damage span { color: #ef9d8e; border-color: #6f3f37; }.floating-combat-text.positive span { color: #e4c57f; border-color: #6c5937; }
 @keyframes combat-float { 0% { opacity: 0; transform: translateY(12px) scale(.96); } 8%, 83% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-13px) scale(.98); } }
-@keyframes enemy-death { 0% { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1); } 20% { transform: translateX(-5px) scale(1.02); filter: brightness(2) sepia(1); } 40% { transform: translateX(6px) scale(.98); } 100% { opacity: .14; transform: translateX(18px) scale(.9); filter: grayscale(1) blur(1px); } }
-.enemy-combatant.dead { pointer-events: none; animation: enemy-death .8s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes damage-hit { 0%, 100% { transform: translateX(0); } 14% { transform: translateX(-6px); background-color: rgba(126,31,25,.62); box-shadow: inset 0 0 0 1px #b95043, 0 0 20px rgba(177,55,43,.3); } 30% { transform: translateX(5px); } 46% { transform: translateX(-4px); background-color: rgba(91,27,23,.42); } 64% { transform: translateX(2px); } }
+.compact-combatant.damaged:not(.dead) { animation: damage-hit .58s ease-out; }
+@keyframes enemy-death { 0% { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1); } 20% { transform: translateX(-5px) scale(1.02); filter: brightness(2) sepia(1); } 40% { transform: translateX(6px) scale(.98); } 100% { opacity: .42; transform: translateX(0) scale(.98); filter: grayscale(1); } }
+.enemy-combatant.dead { pointer-events: none; color: #747873; border-color: #3a3d3a; background: #111311; animation: enemy-death .8s cubic-bezier(.2,.8,.2,1) forwards; }
 
 .compact-outcome { position: fixed; z-index: 130; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(5,7,6,.84); backdrop-filter: blur(7px); }
 .compact-outcome-card { width: min(380px, 100%); padding: 1.5rem; text-align: center; border: 1px solid #46604e; background: #121814; box-shadow: 0 25px 70px rgba(0,0,0,.7); }.compact-outcome.defeat .compact-outcome-card { border-color: #68413a; background: #191210; }.compact-outcome-card > svg { margin-bottom: .8rem; color: #83ad8e; }.compact-outcome.defeat svg { color: #ca6b5e; }.compact-outcome-card h2 { margin-bottom: .4rem; }.compact-outcome-card p:not(.eyebrow) { margin-bottom: 1rem; font-size: .78rem; }.compact-outcome-card .primary-button { width: 100%; }
+
+.travel-transition { position: fixed; z-index: 200; inset: 0; display: grid; place-items: center; padding: 1.5rem; color: #e8e5dc; background: #000; text-align: center; }
+.travel-transition span { font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.05rem, 4vw, 1.45rem); letter-spacing: .025em; animation: travel-message .45s ease both; }
+@keyframes travel-message { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 760px) {
   body.combat-open { height: 100dvh; padding-bottom: 0; overflow: hidden; }
@@ -316,7 +339,7 @@ main { min-height: calc(100vh - 68px); }
   .compact-enemy-stack { gap: 5px; }
   .enemy-combatant { max-height: none; padding: .52rem; border-right-width: 2px; }
   .compact-resource-label { margin-bottom: .2rem; font-size: .48rem; }.compact-resource-label b { font-size: .52rem; }
-  .compact-combatant .health-bar, .compact-combatant .energy-bar { height: 6px; }
+  .compact-combatant .health-bar, .compact-combatant .energy-bar, .compact-combatant .energy-segments { height: 6px; }
   .compact-status-row { min-height: 21px; max-height: 42px; gap: 2px; margin-top: .38rem; }
   .compact-status-row .status-badge, .compact-status-row .armor-badge { padding: .18rem .28rem; font-size: .46rem; }
   .no-status { font-size: .46rem; }
