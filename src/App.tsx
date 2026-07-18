@@ -278,7 +278,7 @@ function App() {
         <div className="resources">
           <span><Coins size={15} /> {game.character.gold}</span>
           <span><Sparkles size={15} /> {game.character.talentPoints}</span>
-          <button className="icon-button" onClick={() => setResetDialogOpen(true)} title="Reset save" aria-label="Reset save"><RotateCcw size={15} /></button>
+          <button className="icon-button" onClick={() => setResetDialogOpen(true)} data-game-tooltip="Reset save" data-tooltip-placement="bottom" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
       </header>
 
@@ -497,7 +497,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               type="button"
               className="armor-badge inspectable armor-indicator"
               aria-label={`${derived.armor} Armor. Show details.`}
-              title={`${derived.armor} Armor`}
+              data-game-tooltip={`${derived.armor} Armor`}
               onClick={() => setInspectedInfo({
                 title: "Armor",
                 description: `You have ${derived.armor} Armor. Enemy attacks reduce their damage by 35% of your Armor, rounded down.`,
@@ -747,7 +747,8 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
             <span
               key={actor.actorId}
               className={`${index === combat.activeTurnIndex ? "active" : ""} ${defeated ? "defeated" : ""} ${actor.kind}`}
-              title={`${actor.name}: ${actor.initiative} Initiative`}
+              data-game-tooltip={`${actor.name}: ${actor.initiative} Initiative`}
+              data-tooltip-placement="bottom"
             >
               <b>{actor.kind === "player" ? "You" : actor.name}</b>
               <small>{actor.initiative}</small>
@@ -818,8 +819,8 @@ function StatusBadge({ id, name, stacks, kind, onInspect }: { id: string; name: 
           : id === "guard" ? <Shield />
             : <Sparkles />;
   const label = `${name}${stacks > 1 ? `, ${stacks} stacks` : ""}`;
-  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} title={label}>{icon}{stacks > 1 && <b>{stacks}</b>}</span>;
-  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} title={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{icon}{stacks > 1 && <b>{stacks}</b>}</button>;
+  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{icon}{stacks > 1 && <b>{stacks}</b>}</span>;
+  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} data-game-tooltip={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{icon}{stacks > 1 && <b>{stacks}</b>}</button>;
 }
 
 function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {
@@ -884,7 +885,7 @@ function HoldAbilityButton({ ability, index, cooldown, disabled, onUse }: { abil
       <strong>{ability.name}</strong>
       <span className="compact-ability-cost">{ability.energyCost}<Sparkles size={10} /></span>
       {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true">{cooldown}</span>}
-      {tooltipOpen && <span className="ability-hold-tooltip"><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>}
+      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>
     </button>
   );
 }
@@ -926,7 +927,7 @@ function CharacterView({ character, locked, onEquip }: { character: CharacterSta
           <div className="stats-list">
             {STAT_LABELS.map((stat) => <div key={stat.key}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical power" : stat.key === "agility" ? "Finesse & precision" : stat.key === "intelligence" ? "Arcane potency" : stat.key === "vitality" ? "Health & resilience" : "Critical fortune"}</small></span><b>{derived[stat.key]}</b></div>)}
           </div>
-          <div className="derived-grid"><span><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span><span><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span><span><Target /> <small>Critical</small><strong>{Math.round(derived.critChance * 100)}%</strong></span><span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span><span title="d100 + Agility + half Intelligence"><Footprints /> <small>Initiative</small><strong>+{derived.initiativeBonus}</strong></span></div>
+          <div className="derived-grid"><span><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span><span><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span><span><Target /> <small>Critical</small><strong>{Math.round(derived.critChance * 100)}%</strong></span><span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span><span data-game-tooltip="D100 + Agility + half Intelligence"><Footprints /> <small>Initiative</small><strong>+{derived.initiativeBonus}</strong></span></div>
         </div>
 
         <div className="paper-panel equipment-panel">
@@ -971,7 +972,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       <div className="loadout-panel paper-panel">
         <div><p className="eyebrow">Active Loadout</p><h3>Equipped Abilities</h3></div>
-        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} title={ability && ability.id !== "strike" && ability.id !== "guard" ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
+        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} data-game-tooltip={ability && ability.id !== "strike" && ability.id !== "guard" ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
       </div>
 
       <div className="talent-tree" aria-label="Talent tree">

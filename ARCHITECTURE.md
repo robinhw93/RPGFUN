@@ -23,6 +23,7 @@ Player turns are explicitly ended with `endPlayerTurn`; using an ability never a
 ## UI rules
 
 - Never use browser-native `alert`, `confirm`, or `prompt` dialogs.
+- Never use HTML `title` attributes for tooltips. Hover and keyboard hints use the game-owned `data-game-tooltip` UI; detailed touch interactions use game-owned modals.
 - Confirmations and destructive actions use components from `src/components/`.
 - Combat must remain usable without page scrolling at the mobile breakpoint.
 - Combatant cards keep stable React keys so resource bars can interpolate between values and local damage/heal feedback can animate without remounting the card.
