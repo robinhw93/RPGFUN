@@ -5,8 +5,8 @@ import {
 } from "lucide-react";
 import { ABILITIES, ADVENTURE, ENEMIES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { createCombat, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, useAbility } from "./game/engine";
-import type { Ability, AdventureNode, CharacterState, CombatLogEntry, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
+import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
+import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
 
 type View = "adventure" | "character" | "talents";
 
@@ -27,8 +27,20 @@ function cloneInitial(): GameState {
   return JSON.parse(JSON.stringify(INITIAL_GAME)) as GameState;
 }
 
+function loadInitialGame(): GameState {
+  const loaded = loadGame() ?? cloneInitial();
+  if (!loaded.adventure.combat) return loaded;
+  return {
+    ...loaded,
+    adventure: {
+      ...loaded.adventure,
+      combat: ensureCombatState(loaded.adventure.combat, loaded.character),
+    },
+  };
+}
+
 function App() {
-  const [game, setGame] = useState<GameState>(() => loadGame() ?? cloneInitial());
+  const [game, setGame] = useState<GameState>(loadInitialGame);
   const [view, setView] = useState<View>("adventure");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
   const travelTimers = useRef<number[]>([]);
@@ -70,6 +82,26 @@ function App() {
       return {
         ...current,
         adventure: { ...current.adventure, combat: useAbility(current.adventure.combat, current.character, abilityId) },
+      };
+    });
+  };
+
+  const finishPlayerTurn = () => {
+    setGame((current) => {
+      if (!current.adventure.combat) return current;
+      return {
+        ...current,
+        adventure: { ...current.adventure, combat: endPlayerTurn(current.adventure.combat, current.character) },
+      };
+    });
+  };
+
+  const runEnemyTurn = (actorId: string) => {
+    setGame((current) => {
+      if (!current.adventure.combat) return current;
+      return {
+        ...current,
+        adventure: { ...current.adventure, combat: takeEnemyTurn(current.adventure.combat, current.character, actorId) },
       };
     });
   };
@@ -234,6 +266,8 @@ function App() {
             onBegin={beginAdventure}
             onSelectEnemy={selectEnemy}
             onAbility={castAbility}
+            onEndTurn={finishPlayerTurn}
+            onEnemyTurn={runEnemyTurn}
             onContinue={continueJourney}
             onEvent={resolveEvent}
             onRetry={retryCombat}
@@ -263,12 +297,14 @@ function NavButton({ active, onClick, icon, label }: { active: boolean; onClick:
   return <button className={active ? "nav-button active" : "nav-button"} onClick={onClick}>{icon}<span>{label}</span></button>;
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onContinue, onEvent, onRetry, onAbandon, onTalents }: {
+function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onContinue, onEvent, onRetry, onAbandon, onTalents }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   onBegin: () => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
+  onEndTurn: () => void;
+  onEnemyTurn: (actorId: string) => void;
   onContinue: () => void;
   onEvent: (choice: "rest" | "ember") => void;
   onRetry: () => void;
@@ -283,6 +319,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
   const floatingEventCount = adventure.combat?.floatingEvents?.length ?? 0;
   const sequenceEventId = useRef(combatEventId);
   const sequencePending = sequencePlaying || sequenceEventId.current !== combatEventId;
+  const activeActor = adventure.combat?.turnOrder?.[adventure.combat.activeTurnIndex];
 
   useEffect(() => {
     setLogOpen(false);
@@ -298,6 +335,11 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
     const timer = window.setTimeout(() => setSequencePlaying(false), floatingEventCount * 1800);
     return () => window.clearTimeout(timer);
   }, [combatEventId, floatingEventCount]);
+  useEffect(() => {
+    if (!adventure.combat || adventure.combat.outcome !== "active" || sequencePending || logOpen || inspectedInfo || activeActor?.kind !== "enemy") return;
+    const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
+    return () => window.clearTimeout(timer);
+  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
 
   if (adventure.completed) {
     return (
@@ -359,13 +401,15 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
 
   const combat = adventure.combat!;
   const damagedTargets = combat.damagedTargets ?? [];
+  const isPlayerTurn = activeActor?.kind === "player";
   return (
     <section className="combat-page compact-combat">
       <ProgressHeader index={adventure.nodeIndex} />
+      <TurnOrderBar combat={combat} />
       <div className="compact-arena">
         <article
           key={`player-${damagedTargets.includes("player") ? combat.eventId : "idle"}`}
-          className={`compact-combatant player-combatant ${damagedTargets.includes("player") ? "damaged" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""}`}
         >
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
@@ -386,7 +430,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
               tabIndex={enemy.hp > 0 ? 0 : -1}
               aria-disabled={enemy.hp <= 0}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => enemy.hp > 0 && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -416,12 +460,17 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id, index) => {
           const ability = ABILITIES[id];
-          return <HoldAbilityButton key={id} ability={ability} index={index} disabled={sequencePending || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} index={index} disabled={sequencePending || !isPlayerTurn || combat.playerActed || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
 
-      <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
+      <div className="combat-footer-controls">
+        <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
+        <button className="end-turn-button" disabled={sequencePending || !isPlayerTurn || combat.outcome !== "active"} onClick={onEndTurn}>
+          {isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
+        </button>
+      </div>
 
       {logOpen && (
         <div className="combat-log-modal" role="dialog" aria-modal="true" aria-label="Combat Log">
@@ -470,6 +519,31 @@ function RouteCard({ node, index }: { node: AdventureNode; index: number }) {
 
 function ProgressHeader({ index }: { index: number }) {
   return <div className="journey-progress"><span>The Ashen Road</span><div>{ADVENTURE.map((node, itemIndex) => <i key={node.id} className={itemIndex < index ? "done" : itemIndex === index ? "current" : ""} />)}</div><span>{index + 1} / {ADVENTURE.length}</span></div>;
+}
+
+function TurnOrderBar({ combat }: { combat: CombatState }) {
+  return (
+    <div className="turn-order-bar" aria-label={`Turn order, round ${combat.turn}`}>
+      <span className="round-label">Round {combat.turn}</span>
+      <div>
+        {combat.turnOrder.map((actor, index) => {
+          const defeated = actor.kind === "player"
+            ? combat.playerHp <= 0
+            : (combat.enemies.find((enemy) => enemy.instanceId === actor.actorId)?.hp ?? 0) <= 0;
+          return (
+            <span
+              key={actor.actorId}
+              className={`${index === combat.activeTurnIndex ? "active" : ""} ${defeated ? "defeated" : ""} ${actor.kind}`}
+              title={`${actor.name}: ${actor.initiative} Initiative`}
+            >
+              <b>{actor.kind === "player" ? "You" : actor.name}</b>
+              <small>{actor.initiative}</small>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function HealthBar({ value, max }: { value: number; max: number }) {
@@ -597,7 +671,7 @@ function CharacterView({ character, locked, onEquip }: { character: CharacterSta
           <div className="stats-list">
             {STAT_LABELS.map((stat) => <div key={stat.key}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical power" : stat.key === "agility" ? "Finesse & precision" : stat.key === "intelligence" ? "Arcane potency" : stat.key === "vitality" ? "Health & resilience" : "Critical fortune"}</small></span><b>{derived[stat.key]}</b></div>)}
           </div>
-          <div className="derived-grid"><span><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span><span><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span><span><Target /> <small>Critical</small><strong>{Math.round(derived.critChance * 100)}%</strong></span><span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span></div>
+          <div className="derived-grid"><span><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span><span><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span><span><Target /> <small>Critical</small><strong>{Math.round(derived.critChance * 100)}%</strong></span><span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span><span title="d100 + Agility + half Intelligence"><Footprints /> <small>Initiative</small><strong>+{derived.initiativeBonus}</strong></span></div>
         </div>
 
         <div className="paper-panel equipment-panel">

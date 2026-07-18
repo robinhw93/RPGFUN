@@ -91,8 +91,18 @@ export interface EnemyState extends EnemyTemplate {
   stunned: boolean;
 }
 
+export interface TurnOrderEntry {
+  actorId: string;
+  kind: "player" | "enemy";
+  name: string;
+  initiative: number;
+}
+
 export interface CombatState {
   turn: number;
+  turnOrder: TurnOrderEntry[];
+  activeTurnIndex: number;
+  playerActed: boolean;
   eventId: number;
   floatingEvents: string[];
   damagedTargets: string[];

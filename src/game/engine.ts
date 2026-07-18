@@ -1,5 +1,5 @@
 import { ABILITIES, ADVENTURE, ENEMIES, ITEMS, TALENTS } from "./data";
-import type { CharacterState, CombatLogEntry, CombatState, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, Stats, StatusEffect } from "./types";
+import type { CharacterState, CombatLogEntry, CombatState, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, Stats, StatusEffect, TurnOrderEntry } from "./types";
 
 export const INITIAL_CHARACTER: CharacterState = {
   name: "The Wayfarer",
@@ -23,7 +23,7 @@ export const INITIAL_GAME: GameState = {
   adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, completed: false },
 };
 
-export function getDerivedStats(character: CharacterState): Stats & { armor: number; power: number; maxHp: number; maxEnergy: number; energyRegen: number; critChance: number } {
+export function getDerivedStats(character: CharacterState): Stats & { armor: number; power: number; maxHp: number; maxEnergy: number; energyRegen: number; critChance: number; initiativeBonus: number } {
   const stats = { ...character.baseStats };
   let armor = 0;
   let power = 0;
@@ -51,7 +51,7 @@ export function getDerivedStats(character: CharacterState): Stats & { armor: num
     energyRegen += passive.energyRegen ?? 0;
     critChance += passive.critChance ?? 0;
   });
-  return { ...stats, armor, power, maxHp: 42 + stats.vitality * 6 + bonusHp, maxEnergy, energyRegen, critChance };
+  return { ...stats, armor, power, maxHp: 42 + stats.vitality * 6 + bonusHp, maxEnergy, energyRegen, critChance, initiativeBonus: stats.agility + Math.floor(stats.intelligence / 2) };
 }
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
@@ -65,10 +65,15 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     statuses: [],
     stunned: false,
   }));
+  const turnOrder = rollTurnOrder(character, enemies);
+  const firstActor = turnOrder[0];
   return {
     turn: 1,
+    turnOrder,
+    activeTurnIndex: 0,
+    playerActed: false,
     eventId: 1,
-    floatingEvents: ["Your turn."],
+    floatingEvents: [firstActor.kind === "player" ? "You act first." : `${firstActor.name} acts first.`],
     damagedTargets: [],
     playerHp: Math.min(carryHp ?? derived.maxHp, derived.maxHp),
     playerMaxHp: derived.maxHp,
@@ -91,6 +96,76 @@ function makeLog(text: string, info?: InspectableInfo): CombatLogEntry {
 
 function statusInfo(status: StatusEffect): InspectableInfo {
   return { title: status.name, description: status.description, category: "status" };
+}
+
+function rollD100(): number {
+  return Math.floor(Math.random() * 100) + 1;
+}
+
+function rollTurnOrder(character: CharacterState, enemies: EnemyState[]): TurnOrderEntry[] {
+  const derived = getDerivedStats(character);
+  return [
+    {
+      actorId: "player",
+      kind: "player" as const,
+      name: character.name,
+      initiative: rollD100() + derived.initiativeBonus,
+    },
+    ...enemies.map((enemy) => ({
+      actorId: enemy.instanceId,
+      kind: "enemy" as const,
+      name: enemy.name,
+      initiative: rollD100(),
+    })),
+  ].sort((left, right) => {
+    const initiativeDifference = right.initiative - left.initiative;
+    if (initiativeDifference !== 0) return initiativeDifference;
+    if (left.kind !== right.kind) return left.kind === "player" ? -1 : 1;
+    return left.actorId.localeCompare(right.actorId);
+  });
+}
+
+function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
+  return enemies.map((enemy) => ({
+    ...ENEMIES[enemy.id],
+    ...enemy,
+    energy: enemy.energy ?? 10,
+    maxEnergy: enemy.maxEnergy ?? 10,
+    energyCost: enemy.energyCost ?? ENEMIES[enemy.id].energyCost,
+    attackDescription: enemy.attackDescription ?? ENEMIES[enemy.id].attackDescription,
+    onHitEffect: enemy.onHitEffect ?? ENEMIES[enemy.id].onHitEffect,
+    statuses: [...(enemy.statuses ?? [])],
+    stunned: enemy.stunned ?? false,
+  }));
+}
+
+export function ensureCombatState(combat: CombatState, character: CharacterState): CombatState {
+  const enemies = normalizeEnemies(combat.enemies);
+  if (Array.isArray(combat.turnOrder) && combat.turnOrder.length > 0) {
+    const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId
+      ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId
+      ?? "";
+    return {
+      ...combat,
+      enemies,
+      selectedEnemyId,
+      activeTurnIndex: Math.min(combat.activeTurnIndex ?? 0, combat.turnOrder.length - 1),
+      playerActed: combat.playerActed ?? false,
+      damagedTargets: combat.damagedTargets ?? [],
+    };
+  }
+  const turnOrder = rollTurnOrder(character, enemies);
+  const firstActor = turnOrder[0];
+  return {
+    ...combat,
+    enemies,
+    turnOrder,
+    activeTurnIndex: 0,
+    playerActed: false,
+    eventId: (combat.eventId ?? 0) + 1,
+    floatingEvents: [firstActor.kind === "player" ? "You act first." : `${firstActor.name} acts first.`],
+    damagedTargets: [],
+  };
 }
 
 function addStatus(statuses: StatusEffect[], status: StatusEffect): StatusEffect[] {
@@ -137,33 +212,71 @@ function tickPlayerStatuses(playerHp: number, statuses: StatusEffect[], logs: Co
   return { playerHp: hp, playerStatuses: nextStatuses };
 }
 
+function isActorAlive(combat: CombatState, actor: TurnOrderEntry): boolean {
+  if (actor.kind === "player") return combat.playerHp > 0;
+  return Boolean(combat.enemies.find((enemy) => enemy.instanceId === actor.actorId && enemy.hp > 0));
+}
+
+function moveToNextActor(combat: CombatState, character: CharacterState, logs: CombatLogEntry[], events: string[], damagedTargets: string[]): CombatState {
+  if (combat.playerHp <= 0) {
+    events.push("You have fallen.");
+    logs.push(makeLog("Your strength fails. The ash claims another name."));
+    return { ...combat, outcome: "defeat" };
+  }
+  if (combat.enemies.every((enemy) => enemy.hp <= 0)) {
+    events.push("Victory.");
+    logs.push(makeLog("Victory. The last enemy falls."));
+    return { ...combat, outcome: "victory" };
+  }
+
+  let nextIndex = combat.activeTurnIndex;
+  for (let offset = 1; offset <= combat.turnOrder.length; offset += 1) {
+    const candidateIndex = (combat.activeTurnIndex + offset) % combat.turnOrder.length;
+    if (isActorAlive(combat, combat.turnOrder[candidateIndex])) {
+      nextIndex = candidateIndex;
+      break;
+    }
+  }
+  const nextActor = combat.turnOrder[nextIndex];
+  let next: CombatState = {
+    ...combat,
+    activeTurnIndex: nextIndex,
+    turn: nextIndex <= combat.activeTurnIndex ? combat.turn + 1 : combat.turn,
+  };
+
+  if (nextActor.kind === "player") {
+    const derived = getDerivedStats(character);
+    const playerTick = tickPlayerStatuses(next.playerHp, next.playerStatuses, logs, events, damagedTargets);
+    next = {
+      ...next,
+      playerHp: playerTick.playerHp,
+      playerStatuses: playerTick.playerStatuses,
+      energy: Math.min(next.maxEnergy, next.energy + derived.energyRegen),
+      playerActed: false,
+    };
+    if (next.playerHp <= 0) {
+      events.push("You have fallen.");
+      logs.push(makeLog("Your strength fails. The ash claims another name."));
+      return { ...next, outcome: "defeat" };
+    }
+    events.push("Your turn.");
+  } else {
+    events.push(`${nextActor.name}'s turn.`);
+  }
+  return next;
+}
+
 export function useAbility(combat: CombatState, character: CharacterState, abilityId: string): CombatState {
+  combat = ensureCombatState(combat, character);
   const ability = ABILITIES[abilityId];
-  if (!ability || combat.outcome !== "active" || ability.energyCost > combat.energy) return combat;
+  const activeActor = combat.turnOrder[combat.activeTurnIndex];
+  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || combat.playerActed || ability.energyCost > combat.energy) return combat;
   const derived = getDerivedStats(character);
-  let enemies: EnemyState[] = combat.enemies.map((enemy) => ({
-    ...ENEMIES[enemy.id],
-    ...enemy,
-    energy: enemy.energy ?? 10,
-    maxEnergy: enemy.maxEnergy ?? 10,
-    energyCost: enemy.energyCost ?? ENEMIES[enemy.id].energyCost,
-    attackDescription: enemy.attackDescription ?? ENEMIES[enemy.id].attackDescription,
-    onHitEffect: enemy.onHitEffect ?? ENEMIES[enemy.id].onHitEffect,
-    statuses: [...enemy.statuses],
-  }));
-  let playerHp = combat.playerHp;
+  let enemies = normalizeEnemies(combat.enemies);
   let playerStatuses = [...combat.playerStatuses];
   const logs: CombatLogEntry[] = [];
   const events: string[] = [];
   const damagedTargets: string[] = [];
-  const playerTick = tickPlayerStatuses(playerHp, playerStatuses, logs, events, damagedTargets);
-  playerHp = playerTick.playerHp;
-  playerStatuses = playerTick.playerStatuses;
-  if (playerHp <= 0) {
-    events.push("You have fallen.");
-    return { ...combat, turn: combat.turn + 1, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, damagedTargets, playerHp, playerStatuses, log: [...logs, ...combat.log].slice(0, 24), outcome: "defeat" };
-  }
-
   let energy = combat.energy - ability.energyCost;
   const abilityInfo: InspectableInfo = { title: ability.name, description: `${ability.description} Costs ${ability.energyCost} Energy.`, category: "ability" };
   logs.push(makeLog(`You use ${ability.name}.`, abilityInfo));
@@ -225,30 +338,83 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
 
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
-    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, damagedTargets, enemies, playerHp, playerStatuses, energy, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "victory" };
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, damagedTargets, enemies, playerStatuses, energy, playerActed: true, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "victory" };
   }
 
-  let guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
-  enemies = enemies.map((enemy) => {
-    if (enemy.hp <= 0) return enemy;
-    const maxEnemyEnergy = enemy.maxEnergy ?? 10;
-    const regeneratedEnergy = Math.min(maxEnemyEnergy, (enemy.energy ?? 10) + 1);
-    if (enemy.stunned) {
-      const stunned = enemy.statuses.find((status) => status.id === "stunned");
-      logs.push(makeLog(`${enemy.name} is stunned and cannot act.`, stunned ? statusInfo(stunned) : undefined));
-      events.push(`${enemy.name} is Stunned.`);
-      return { ...enemy, energy: regeneratedEnergy, maxEnergy: maxEnemyEnergy, stunned: false };
-    }
-    if (regeneratedEnergy < enemy.energyCost) {
-      logs.push(makeLog(`${enemy.name} gathers Energy.`));
-      events.push(`${enemy.name} gathers Energy.`);
-      return { ...enemy, energy: regeneratedEnergy, maxEnergy: maxEnemyEnergy };
-    }
+  const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId ?? "";
+  return {
+    ...combat,
+    eventId: (combat.eventId ?? 0) + 1,
+    floatingEvents: events,
+    damagedTargets,
+    enemies,
+    playerStatuses,
+    energy,
+    playerActed: true,
+    selectedEnemyId: nextSelected,
+    log: [...logs, ...combat.log].slice(0, 24),
+  };
+}
+
+export function endPlayerTurn(combat: CombatState, character: CharacterState): CombatState {
+  combat = ensureCombatState(combat, character);
+  const activeActor = combat.turnOrder[combat.activeTurnIndex];
+  if (combat.outcome !== "active" || activeActor?.kind !== "player") return combat;
+  const logs: CombatLogEntry[] = [makeLog("You end your turn.")];
+  const events = ["You end your turn."];
+  const damagedTargets: string[] = [];
+  const next = moveToNextActor(combat, character, logs, events, damagedTargets);
+  return {
+    ...next,
+    eventId: (combat.eventId ?? 0) + 1,
+    floatingEvents: events,
+    damagedTargets,
+    log: [...logs, ...combat.log].slice(0, 24),
+  };
+}
+
+export function takeEnemyTurn(combat: CombatState, character: CharacterState, expectedActorId?: string): CombatState {
+  combat = ensureCombatState(combat, character);
+  const activeActor = combat.turnOrder[combat.activeTurnIndex];
+  if (combat.outcome !== "active" || activeActor?.kind !== "enemy" || (expectedActorId && activeActor.actorId !== expectedActorId)) return combat;
+
+  const derived = getDerivedStats(character);
+  const logs: CombatLogEntry[] = [];
+  const events: string[] = [];
+  const damagedTargets: string[] = [];
+  let enemies = normalizeEnemies(combat.enemies);
+  let playerHp = combat.playerHp;
+  let playerStatuses = [...combat.playerStatuses];
+  const enemyIndex = enemies.findIndex((enemy) => enemy.instanceId === activeActor.actorId);
+  if (enemyIndex < 0) return moveToNextActor(combat, character, logs, events, damagedTargets);
+
+  const originalEnemy = enemies[enemyIndex];
+  const stunnedStatus = originalEnemy.statuses.find((status) => status.id === "stunned");
+  let enemy = tickEnemyStatuses(originalEnemy, logs, events, damagedTargets);
+  const regeneratedEnergy = Math.min(enemy.maxEnergy, enemy.energy + 1);
+  enemy = { ...enemy, energy: regeneratedEnergy };
+  enemies[enemyIndex] = enemy;
+  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses };
+
+  if (enemy.hp <= 0) {
+    logs.push(makeLog(`${enemy.name} falls.`));
+    events.push(`${enemy.name} falls.`);
+  } else if (enemy.stunned) {
+    logs.push(makeLog(`${enemy.name} is stunned and cannot act.`, stunnedStatus ? statusInfo(stunnedStatus) : undefined));
+    events.push(`${enemy.name} is Stunned.`);
+    enemies[enemyIndex] = { ...enemy, stunned: false };
+    nextBase = { ...nextBase, enemies };
+  } else if (enemy.energy < enemy.energyCost) {
+    logs.push(makeLog(`${enemy.name} gathers Energy.`));
+    events.push(`${enemy.name} gathers Energy.`);
+  } else {
+    const guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
     const incoming = Math.max(1, enemy.power - Math.floor(derived.armor * 0.35));
     const blocked = Math.min(guard, incoming);
-    guard -= blocked;
     const damage = incoming - blocked;
     playerHp = Math.max(0, playerHp - damage);
+    const remainingGuard = guard - blocked;
+    playerStatuses = playerStatuses.flatMap((status) => status.id !== "guard" ? [status] : remainingGuard > 0 ? [{ ...status, stacks: remainingGuard }] : []);
     const attackName = enemy.intentText.split(" · ")[0];
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
     logs.push(makeLog(`${enemy.name} uses ${attackName} for ${damage}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
@@ -260,19 +426,22 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
       events.push("You are Bleeding.");
     }
-    return { ...enemy, energy: regeneratedEnergy - enemy.energyCost, maxEnergy: maxEnemyEnergy };
-  });
+    enemies[enemyIndex] = { ...enemy, energy: enemy.energy - enemy.energyCost };
+    nextBase = { ...nextBase, enemies, playerHp, playerStatuses };
+  }
 
-  enemies = enemies.map((enemy) => tickEnemyStatuses(enemy, logs, events, damagedTargets));
-  const allDeadAfterTicks = enemies.every((enemy) => enemy.hp <= 0);
-  playerStatuses = playerStatuses.filter((status) => status.id !== "guard");
-  const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId ?? "";
-  const nextEnergy = Math.min(combat.maxEnergy, energy + derived.energyRegen);
-  const outcome = playerHp <= 0 ? "defeat" : allDeadAfterTicks ? "victory" : "active";
-  if (outcome === "victory") logs.push(makeLog("Victory. The last enemy falls."));
-  if (outcome === "defeat") logs.push(makeLog("Your strength fails. The ash claims another name."));
-  events.push(outcome === "victory" ? "Victory." : outcome === "defeat" ? "You have fallen." : "Your turn.");
-  return { ...combat, turn: combat.turn + 1, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, damagedTargets, enemies, playerHp, playerStatuses, energy: nextEnergy, selectedEnemyId: nextSelected, log: [...logs, ...combat.log].slice(0, 24), outcome };
+  const selectedEnemyId = enemies.find((candidate) => candidate.instanceId === nextBase.selectedEnemyId && candidate.hp > 0)?.instanceId
+    ?? enemies.find((candidate) => candidate.hp > 0)?.instanceId
+    ?? "";
+  nextBase = { ...nextBase, selectedEnemyId };
+  const next = moveToNextActor(nextBase, character, logs, events, damagedTargets);
+  return {
+    ...next,
+    eventId: (combat.eventId ?? 0) + 1,
+    floatingEvents: events,
+    damagedTargets,
+    log: [...logs, ...combat.log].slice(0, 24),
+  };
 }
 
 export function getLoot(nodeIndex: number): GearItem {
