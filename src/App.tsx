@@ -506,7 +506,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
             >
               <Shield size={13} /><b>{derived.armor}</b>
             </button>
-            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
           <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} showGain />
@@ -536,7 +536,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               <HealthBar value={enemy.hp} max={enemy.maxHp} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
-                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
               </div>
               <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy ?? 10}/{enemy.maxEnergy ?? 10}</b></div>
               <EnergySegments value={enemy.energy ?? 10} max={enemy.maxEnergy ?? 10} regen={1} />
@@ -811,16 +811,17 @@ function EnergySegments({ value, max, regen, showGain = false }: { value: number
   );
 }
 
-function StatusBadge({ id, name, stacks, kind, onInspect }: { id: string; name: string; stacks: number; kind: string; onInspect?: () => void }) {
+function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: string; name: string; stacks: number; duration: number; kind: string; onInspect?: () => void }) {
   const icon = id === "bleed" ? <Droplets />
     : id === "poison" ? <FlaskConical />
       : id === "stunned" ? <Zap />
         : id === "vulnerable" ? <Target />
           : id === "guard" ? <Shield />
             : <Sparkles />;
-  const label = `${name}${stacks > 1 ? `, ${stacks} stacks` : ""}`;
-  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{icon}{stacks > 1 && <b>{stacks}</b>}</span>;
-  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} data-game-tooltip={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{icon}{stacks > 1 && <b>{stacks}</b>}</button>;
+  const label = `${name}, ${stacks} ${stacks === 1 ? "stack" : "stacks"}, ${duration} ${duration === 1 ? "turn" : "turns"} remaining`;
+  const counters = <><small className="status-duration-count" aria-hidden="true">{duration}T</small><b className="status-stack-count" aria-hidden="true">×{stacks}</b></>;
+  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{icon}{counters}</span>;
+  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} data-game-tooltip={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{icon}{counters}</button>;
 }
 
 function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {
