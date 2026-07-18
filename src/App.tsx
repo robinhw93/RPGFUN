@@ -3,10 +3,14 @@ import {
   Backpack, BookOpen, ChevronRight, CircleDot, Coins, Droplets, FlaskConical, Footprints, Gem,
   Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound, Zap,
 } from "lucide-react";
+import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
+import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, primeCombatAttack, resolveCombatEvent, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
+import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
+import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
 type View = "adventure" | "character" | "talents";
 
@@ -22,8 +26,6 @@ const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
   { key: "vitality", label: "Vitality", short: "VIT" },
   { key: "luck", label: "Luck", short: "LCK" },
 ];
-
-const ATTACK_IMPACT_DELAY_MS = 420;
 
 function cloneInitial(): GameState {
   return JSON.parse(JSON.stringify(INITIAL_GAME)) as GameState;
@@ -45,9 +47,10 @@ function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
   const [view, setView] = useState<View>("adventure");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const travelTimers = useRef<number[]>([]);
-  const combatImpactTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
+  const revealCombatEvent = useCombatEventSequencer(game, setGame);
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = ADVENTURE[game.adventure.nodeIndex];
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
@@ -65,7 +68,6 @@ function App() {
     return () => document.body.classList.remove("character-creation-open");
   }, [game.characterCreated]);
   useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
-  useEffect(() => () => combatImpactTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
   const navigate = (next: View) => {
     setView(next);
@@ -114,38 +116,6 @@ function App() {
         ...current,
         adventure: { ...current.adventure, combat: takeEnemyTurn(current.adventure.combat, current.character, actorId) },
       };
-    });
-  };
-
-  const revealCombatEvent = (eventId: number, eventIndex: number) => {
-    const visibleCombat = game.adventure.combat;
-    const attackEffect = visibleCombat?.pendingEffects.find((effect) => effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId));
-    if (visibleCombat?.eventId === eventId && attackEffect) {
-      setGame((current) => {
-        const combat = current.adventure.combat;
-        if (!combat) return current;
-        const primed = primeCombatAttack(combat, eventId, eventIndex);
-        if (primed === combat) return current;
-        return { ...current, adventure: { ...current.adventure, combat: primed } };
-      });
-      const impactTimer = window.setTimeout(() => {
-        setGame((current) => {
-          const combat = current.adventure.combat;
-          if (!combat) return current;
-          const resolved = resolveCombatEvent(combat, eventId, eventIndex);
-          if (resolved === combat) return current;
-          return { ...current, adventure: { ...current.adventure, combat: resolved } };
-        });
-      }, ATTACK_IMPACT_DELAY_MS);
-      combatImpactTimers.current.push(impactTimer);
-      return;
-    }
-    setGame((current) => {
-      const combat = current.adventure.combat;
-      if (!combat) return current;
-      const resolved = resolveCombatEvent(combat, eventId, eventIndex);
-      if (resolved === combat) return current;
-      return { ...current, adventure: { ...current.adventure, combat: resolved } };
     });
   };
 
@@ -279,6 +249,7 @@ function App() {
     setGame(cloneInitial());
     setView("adventure");
     setTravelTransition(null);
+    setResetDialogOpen(false);
   };
 
   const createCharacter = (name: string) => {
@@ -290,15 +261,10 @@ function App() {
     setView("adventure");
   };
 
-  const resetGame = () => {
-    if (!window.confirm("Permanently erase this character and begin again?")) return;
-    returnToCharacterCreation();
-  };
-
   if (!game.characterCreated) return <CharacterCreation onCreate={createCharacter} />;
 
   return (
-    <div className={`app-shell ${isCombatScreen ? "in-combat" : ""}`}>
+    <div className={`app-shell ${isCombatScreen ? "in-combat" : ""}`} style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs}ms` } as React.CSSProperties}>
       <header className="topbar">
         <button className="brand" onClick={() => navigate("adventure")} aria-label="Go to adventure">
           <span className="brand-mark"><Sparkles size={17} /></span>
@@ -312,7 +278,7 @@ function App() {
         <div className="resources">
           <span><Coins size={15} /> {game.character.gold}</span>
           <span><Sparkles size={15} /> {game.character.talentPoints}</span>
-          <button className="icon-button" onClick={resetGame} title="Reset save"><RotateCcw size={15} /></button>
+          <button className="icon-button" onClick={() => setResetDialogOpen(true)} title="Reset save" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
       </header>
 
@@ -343,6 +309,15 @@ function App() {
         <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<Backpack size={19} />} label="Gear" />
         <NavButton active={view === "talents"} onClick={() => navigate("talents")} icon={<CircleDot size={19} />} label="Talents" />
       </nav>
+      {resetDialogOpen && (
+        <GameConfirmDialog
+          title="Erase this character?"
+          description="This permanently deletes the character, equipment, talents, and adventure progress. This cannot be undone."
+          confirmLabel="Erase & Begin Again"
+          onCancel={() => setResetDialogOpen(false)}
+          onConfirm={returnToCharacterCreation}
+        />
+      )}
       {travelTransition && (
         <div className="travel-transition" role="status" aria-live="polite">
           <span>{travelTransition.phase === "travel" ? `Continuing travels${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
@@ -427,7 +402,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       return;
     }
     setSequencePlaying(true);
-    const timer = window.setTimeout(() => setSequencePlaying(false), floatingEventCount * 1800);
+    const timer = window.setTimeout(() => setSequencePlaying(false), floatingEventCount * COMBAT_TIMING.floatingMessageMs);
     return () => window.clearTimeout(timer);
   }, [combatEventId, floatingEventCount]);
   useEffect(() => {
@@ -637,10 +612,9 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
 
   useEffect(() => {
     const captureLandingRect = () => {
-      const turnOrder = document.querySelector<HTMLElement>(".turn-order-bar > div");
-      if (!turnOrder) return;
-      const rect = turnOrder.getBoundingClientRect();
-      setLandingRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+      const targetCards = [...document.querySelectorAll<HTMLElement>(".turn-order-bar > div > span")];
+      const bounds = getInitiativeRowBounds(targetCards.map((card) => card.getBoundingClientRect()));
+      if (bounds) setLandingRect(bounds);
     };
     captureLandingRect();
     window.addEventListener("resize", captureLandingRect);
@@ -650,26 +624,23 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
   useEffect(() => {
     const rollTimer = window.setInterval(() => {
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
-    }, 45);
+    }, INITIATIVE_TIMING.rollTickMs);
     const landedTimer = window.setTimeout(() => {
       window.clearInterval(rollTimer);
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, actor.roll])));
       setPhase("landed");
-    }, 1550);
+    }, INITIATIVE_TIMING.rawRollMs);
     const bonusTimer = window.setTimeout(() => {
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, actor.initiative])));
       setPhase("bonus");
-    }, 2200);
+    }, INITIATIVE_TIMING.bonusMs);
     let orderFrame = 0;
     const orderTimer = window.setTimeout(() => {
-      const targetContainer = document.querySelector<HTMLElement>(".turn-order-bar > div");
       const targetCards = [...document.querySelectorAll<HTMLElement>(".turn-order-bar > div > span")];
       const sourceCards = [...document.querySelectorAll<HTMLElement>(".initiative-overlay .initiative-contestant")];
       const nextGeometry: Record<string, { x: number; y: number; scaleX: number; scaleY: number }> = {};
-      if (targetContainer) {
-        const rect = targetContainer.getBoundingClientRect();
-        setLandingRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-      }
+      const bounds = getInitiativeRowBounds(targetCards.map((card) => card.getBoundingClientRect()));
+      if (bounds) setLandingRect(bounds);
       sourceCards.forEach((sourceCard) => {
         const actorId = sourceCard.dataset.initiativeActor;
         const targetIndex = combat.turnOrder.findIndex((actor) => actor.actorId === actorId);
@@ -677,17 +648,12 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
         if (!actorId || !targetCard) return;
         const source = sourceCard.getBoundingClientRect();
         const target = targetCard.getBoundingClientRect();
-        nextGeometry[actorId] = {
-          x: source.left + source.width / 2 - (target.left + target.width / 2),
-          y: source.top + source.height / 2 - (target.top + target.height / 2),
-          scaleX: source.width / target.width,
-          scaleY: source.height / target.height,
-        };
+        nextGeometry[actorId] = calculateInitiativeFlight(source, target);
       });
       setFlightGeometry(nextGeometry);
       orderFrame = window.requestAnimationFrame(() => setPhase("order"));
-    }, 3100);
-    const completeTimer = window.setTimeout(onComplete, 4650);
+    }, INITIATIVE_TIMING.orderMs);
+    const completeTimer = window.setTimeout(onComplete, INITIATIVE_TIMING.completeMs);
     return () => {
       window.clearInterval(rollTimer);
       window.clearTimeout(landedTimer);
@@ -874,7 +840,7 @@ function FloatingCombatText({ events, eventId, onEventShown }: { events: string[
   useEffect(() => setIndex(0), [eventId]);
   useEffect(() => {
     if (events.length === 0 || index >= events.length - 1) return;
-    const timer = window.setTimeout(() => setIndex((current) => current + 1), 1800);
+    const timer = window.setTimeout(() => setIndex((current) => current + 1), COMBAT_TIMING.floatingMessageMs);
     return () => window.clearTimeout(timer);
   }, [events, eventId, index]);
 
@@ -884,7 +850,7 @@ function FloatingCombatText({ events, eventId, onEventShown }: { events: string[
   }, [eventId, index, message]);
   if (!message) return null;
   const tone = /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
-  return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`}>{message}</span></div>;
+  return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`} style={{ animationDuration: `${COMBAT_TIMING.floatingMessageMs}ms` }}>{message}</span></div>;
 }
 
 function CharacterView({ character, locked, onEquip }: { character: CharacterState; locked: boolean; onEquip: (item: GearItem) => void }) {

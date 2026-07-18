@@ -31,3 +31,5 @@ The production files are written to `dist`. The included `netlify.toml` configur
 - Automatic local browser save
 
 Game content lives in `src/game/data.ts`, while combat calculations are kept in `src/game/engine.ts`.
+
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for module boundaries, combat timing contracts, and UI rules.
