@@ -570,7 +570,7 @@ export function endPlayerTurn(combat: CombatState, character: CharacterState): C
   const activeActor = combat.turnOrder[combat.activeTurnIndex];
   if (combat.outcome !== "active" || activeActor?.kind !== "player") return combat;
   const logs: CombatLogEntry[] = [makeLog("You end your turn.")];
-  const events = ["You end your turn."];
+  const events: string[] = [];
   const damagedTargets: string[] = [];
   const pendingEffects: CombatPendingEffect[] = [];
   const next = moveToNextActor(combat, character, logs, events, pendingEffects);
