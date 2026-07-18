@@ -293,11 +293,11 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
   if (nextActor.kind === "player") {
     const derived = getDerivedStats(character);
     const playerTick = tickPlayerStatuses(next.playerHp, next.playerStatuses, logs, events, pendingEffects);
+    const regeneratedEnergy = Math.min(next.maxEnergy, next.energy + derived.energyRegen);
     next = {
       ...next,
       playerHp: playerTick.playerHp,
       playerStatuses: playerTick.playerStatuses,
-      energy: Math.min(next.maxEnergy, next.energy + derived.energyRegen),
       playerActed: false,
       abilityCooldowns: Object.fromEntries(
         Object.entries(next.abilityCooldowns ?? {})
@@ -310,7 +310,7 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
       logs.push(makeLog("Your strength fails. The ash claims another name."));
       return { ...next, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn, outcome: "defeat" };
     }
-    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy);
+    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, regeneratedEnergy);
   } else {
     queueTurn(events, pendingEffects, `${nextActor.name}'s turn.`, nextIndex, nextTurn);
   }

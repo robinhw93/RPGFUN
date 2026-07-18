@@ -497,7 +497,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
-          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} />
+          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} showGain />
         </article>
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
@@ -769,19 +769,31 @@ function HealthBar({ value, max }: { value: number; max: number }) {
   );
 }
 
-function EnergySegments({ value, max, regen }: { value: number; max: number; regen: number }) {
+function EnergySegments({ value, max, regen, showGain = false }: { value: number; max: number; regen: number; showGain?: boolean }) {
+  const previousValue = useRef(value);
+  const [gain, setGain] = useState<{ id: number; amount: number } | null>(null);
   const segmentCount = Math.max(1, Math.floor(max));
   const filled = Math.max(0, Math.min(segmentCount, Math.floor(value)));
   const projected = Math.min(segmentCount, filled + Math.max(0, Math.floor(regen)));
+
+  useEffect(() => {
+    const delta = value - previousValue.current;
+    previousValue.current = value;
+    if (showGain && delta > 0) setGain({ id: Date.now(), amount: delta });
+  }, [showGain, value]);
+
   return (
-    <div
-      className="energy-segments"
-      style={{ gridTemplateColumns: `repeat(${segmentCount}, minmax(0, 1fr))` }}
-      aria-label={`${filled} of ${segmentCount} Energy. ${projected - filled} Energy will regenerate next round.`}
-    >
-      {Array.from({ length: segmentCount }, (_, index) => (
-        <i key={index} className={index < filled ? "filled" : index < projected ? "projected" : ""} />
-      ))}
+    <div className="energy-segments-wrap">
+      <div
+        className="energy-segments"
+        style={{ gridTemplateColumns: `repeat(${segmentCount}, minmax(0, 1fr))` }}
+        aria-label={`${filled} of ${segmentCount} Energy. ${projected - filled} Energy will regenerate next round.`}
+      >
+        {Array.from({ length: segmentCount }, (_, index) => (
+          <i key={index} className={index < filled ? "filled" : index < projected ? "projected" : ""} />
+        ))}
+      </div>
+      {gain && <strong key={gain.id} className="energy-change" aria-hidden="true">+{gain.amount} Energy</strong>}
     </div>
   );
 }
