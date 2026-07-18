@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Backpack, BookOpen, ChevronRight, CircleDot, Coins, Footprints, Gem,
   Heart, Home, RotateCcw, Shield, Sparkles, Swords, Target, Trophy, UserRound,
@@ -6,7 +6,7 @@ import {
 import { ABILITIES, ADVENTURE, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { createCombat, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, useAbility } from "./game/engine";
-import type { AdventureNode, CharacterState, GameState, GearItem, GearSlot, StatName, TalentBranch } from "./game/types";
+import type { Ability, AdventureNode, CharacterState, GameState, GearItem, GearSlot, StatName, TalentBranch } from "./game/types";
 
 type View = "adventure" | "character" | "talents";
 
@@ -32,8 +32,14 @@ function App() {
   const [view, setView] = useState<View>("adventure");
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatLocked = game.adventure.combat?.outcome === "active";
+  const activeNode = ADVENTURE[game.adventure.nodeIndex];
+  const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
 
   useEffect(() => saveGame(game), [game]);
+  useEffect(() => {
+    document.body.classList.toggle("combat-open", isCombatScreen);
+    return () => document.body.classList.remove("combat-open");
+  }, [isCombatScreen]);
 
   const navigate = (next: View) => {
     setView(next);
@@ -174,7 +180,7 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isCombatScreen ? "in-combat" : ""}`}>
       <header className="topbar">
         <button className="brand" onClick={() => navigate("adventure")} aria-label="Go to adventure">
           <span className="brand-mark"><Sparkles size={17} /></span>
@@ -237,6 +243,9 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
   onTalents: () => void;
 }) {
   const adventure = game.adventure;
+  const [logOpen, setLogOpen] = useState(false);
+
+  useEffect(() => setLogOpen(false), [adventure.nodeIndex]);
 
   if (adventure.completed) {
     return (
@@ -298,68 +307,73 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onCon
 
   const combat = adventure.combat!;
   return (
-    <section className="combat-page">
+    <section className="combat-page compact-combat">
       <ProgressHeader index={adventure.nodeIndex} />
-      <div className="combat-heading">
-        <div><p className="eyebrow">{node.eyebrow} · Turn {combat.turn}</p><h1>{node.title}</h1><p>{node.description}</p></div>
-        <button className="text-button abandon" onClick={onAbandon}>Abandon</button>
-      </div>
+      <div className="compact-arena">
+        <article className="compact-combatant player-combatant">
+          <h2>{game.character.name}</h2>
+          <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
+          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
+          <div className="compact-status-row">
+            <span className="armor-badge"><Shield size={11} /> {derived.armor}</span>
+            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} />)}
+          </div>
+          <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
+          <div className="energy-bar"><i style={{ width: `${(combat.energy / combat.maxEnergy) * 100}%` }} /></div>
+        </article>
 
-      <div className={`enemy-grid count-${combat.enemies.length}`}>
-        {combat.enemies.map((enemy) => (
-          <button
-            key={enemy.instanceId}
-            className={`enemy-card ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""}`}
-            style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
-            onClick={() => enemy.hp > 0 && onSelectEnemy(enemy.instanceId)}
-          >
-            <span className="target-marker"><Target size={14} /> Target</span>
-            <span className="enemy-orb"><span>{enemy.name.charAt(0)}</span></span>
-            <span className="enemy-title">{enemy.title}</span>
-            <strong>{enemy.name}</strong>
-            <HealthBar value={enemy.hp} max={enemy.maxHp} />
-            <span className="hp-label">{enemy.hp} / {enemy.maxHp} HP</span>
-            <span className="intent"><Swords size={14} /><span><small>Intent</small>{enemy.hp > 0 ? enemy.intentText : "Defeated"}</span></span>
-            <span className="status-row">{enemy.statuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} />)}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="combat-console">
-        <div className="player-panel">
-          <div className="player-identity"><span className="portrait">W</span><span><small>Level {game.character.level}</small><strong>{game.character.name}</strong></span></div>
-          <div className="vital-block"><span><Heart size={15} /> Health <b>{combat.playerHp}/{combat.playerMaxHp}</b></span><HealthBar value={combat.playerHp} max={combat.playerMaxHp} /></div>
-          <div className="vital-block energy"><span><Sparkles size={15} /> Energy <b>{combat.energy}/{combat.maxEnergy}</b></span><div className="energy-pips">{Array.from({ length: combat.maxEnergy }).map((_, index) => <i key={index} className={index < combat.energy ? "filled" : ""} />)}</div></div>
-          <div className="status-row player-statuses"><span className="armor-badge"><Shield size={13} /> {derived.armor} Armor</span>{combat.playerStatuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} />)}</div>
+        <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
+          {combat.enemies.map((enemy) => (
+            <button
+              key={enemy.instanceId}
+              aria-label={`Target ${enemy.name}`}
+              className={`compact-combatant enemy-combatant ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""}`}
+              style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
+              onClick={() => enemy.hp > 0 && onSelectEnemy(enemy.instanceId)}
+            >
+              <span className="compact-target"><Target size={11} /></span>
+              <h2>{enemy.hp > 0 ? enemy.name : "Defeated"}</h2>
+              <div className="compact-resource-label"><span>Health</span><b>{enemy.hp}/{enemy.maxHp}</b></div>
+              <HealthBar value={enemy.hp} max={enemy.maxHp} />
+              <div className="compact-status-row">
+                {enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
+                {enemy.statuses.map((status) => <StatusBadge key={status.id} name={status.name} stacks={status.stacks} kind={status.kind} />)}
+              </div>
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div className="action-panel">
-          <div className="panel-title"><span><Swords size={16} /> Abilities</span><small>Energy regenerates each turn</small></div>
-          <div className="ability-grid">
-            {game.character.equippedAbilities.map((id, index) => {
-              const ability = ABILITIES[id];
-              const disabled = combat.outcome !== "active" || ability.energyCost > combat.energy;
-              return (
-                <button key={id} className={`ability-button ${ability.branch}`} disabled={disabled} onClick={() => onAbility(id)} title={ability.description}>
-                  <span className="ability-key">{index + 1}</span><span className="ability-icon">{ability.icon}</span><span className="ability-copy"><strong>{ability.name}</strong><small>{ability.description}</small></span><span className="ability-cost">{ability.energyCost}<Sparkles size={12} /></span>
-                </button>
-              );
-            })}
-            {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="ability-empty" key={index}>Empty slot</div>)}
+      <FloatingCombatText eventId={combat.eventId ?? 0} events={combat.floatingEvents ?? []} />
+
+      <div className="compact-ability-grid">
+        {game.character.equippedAbilities.map((id, index) => {
+          const ability = ABILITIES[id];
+          return <HoldAbilityButton key={id} ability={ability} index={index} disabled={combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
+        })}
+        {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
+      </div>
+
+      <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
+
+      {logOpen && (
+        <div className="combat-log-modal" role="dialog" aria-modal="true" aria-label="Combat Log">
+          <div className="combat-log-sheet">
+            <div className="combat-log-title"><span><BookOpen size={16} /> Combat Log</span><button onClick={() => setLogOpen(false)} aria-label="Close combat log">×</button></div>
+            <div>{combat.log.map((line, index) => <p key={`${line}-${index}`} className={index === 0 ? "latest" : ""}>{line}</p>)}</div>
           </div>
         </div>
-
-        <details className="combat-log" open>
-          <summary><BookOpen size={15} /> Combat Log</summary>
-          <div>{combat.log.map((line, index) => <p key={`${line}-${index}`} className={index === 0 ? "latest" : ""}>{line}</p>)}</div>
-        </details>
-      </div>
+      )}
 
       {combat.outcome !== "active" && (
-        <div className={`combat-outcome ${combat.outcome}`}>
-          <div>{combat.outcome === "victory" ? <Trophy /> : <Heart />}</div>
-          <span><p className="eyebrow">Combat {combat.outcome}</p><h2>{combat.outcome === "victory" ? "The road is yours" : "Fallen in ash"}</h2><p>{combat.outcome === "victory" ? `Claim ${getLoot(adventure.nodeIndex).name} and continue.` : "Rise again and reconsider your build."}</p></span>
-          {combat.outcome === "victory" ? <button className="primary-button" onClick={onContinue}>{adventure.nodeIndex === ADVENTURE.length - 1 ? "Claim Victory" : "Claim & Continue"}<ChevronRight size={17} /></button> : <div className="outcome-actions"><button className="primary-button" onClick={onRetry}>Try Again</button><button className="text-button" onClick={onAbandon}>Return</button></div>}
+        <div className={`compact-outcome ${combat.outcome}`}>
+          <div className="compact-outcome-card">
+            {combat.outcome === "victory" ? <Trophy /> : <Heart />}
+            <p className="eyebrow">Combat {combat.outcome}</p>
+            <h2>{combat.outcome === "victory" ? "The road is yours" : "Fallen in ash"}</h2>
+            <p>{combat.outcome === "victory" ? `Claim ${getLoot(adventure.nodeIndex).name}.` : "Reconsider your approach and rise again."}</p>
+            {combat.outcome === "victory" ? <button className="primary-button" onClick={onContinue}>{adventure.nodeIndex === ADVENTURE.length - 1 ? "Claim Victory" : "Claim & Continue"}<ChevronRight size={17} /></button> : <div className="outcome-actions"><button className="primary-button" onClick={onRetry}>Try Again</button><button className="text-button" onClick={onAbandon}>Return</button></div>}
+          </div>
         </div>
       )}
     </section>
@@ -381,6 +395,75 @@ function HealthBar({ value, max }: { value: number; max: number }) {
 
 function StatusBadge({ name, stacks, kind }: { name: string; stacks: number; kind: string }) {
   return <span className={`status-badge ${kind}`}>{name}{stacks > 1 ? ` ${stacks}` : ""}</span>;
+}
+
+function HoldAbilityButton({ ability, index, disabled, onUse }: { ability: Ability; index: number; disabled: boolean; onUse: () => void }) {
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const holdTimer = useRef<number | null>(null);
+  const longPressed = useRef(false);
+
+  const beginHold = () => {
+    longPressed.current = false;
+    holdTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      setTooltipOpen(true);
+    }, 420);
+  };
+
+  const endHold = () => {
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+    setTooltipOpen(false);
+    window.setTimeout(() => { longPressed.current = false; }, 250);
+  };
+
+  const activate = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (longPressed.current) {
+      event.preventDefault();
+      return;
+    }
+    onUse();
+  };
+
+  useEffect(() => () => {
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+  }, []);
+
+  return (
+    <button
+      className={`compact-ability ${ability.branch}`}
+      disabled={disabled}
+      onClick={activate}
+      onPointerDown={beginHold}
+      onPointerUp={endHold}
+      onPointerCancel={endHold}
+      onPointerLeave={endHold}
+      onContextMenu={(event) => event.preventDefault()}
+      aria-label={`${ability.name}, ${ability.energyCost} Energy. Hold for details.`}
+    >
+      <span className="compact-ability-key">{index + 1}</span>
+      <span className="compact-ability-icon">{ability.icon}</span>
+      <strong>{ability.name}</strong>
+      <span className="compact-ability-cost">{ability.energyCost}<Sparkles size={10} /></span>
+      {tooltipOpen && <span className="ability-hold-tooltip"><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy</em></span>}
+    </button>
+  );
+}
+
+function FloatingCombatText({ events, eventId }: { events: string[]; eventId: number }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => setIndex(0), [eventId]);
+  useEffect(() => {
+    if (events.length === 0 || index >= events.length - 1) return;
+    const timer = window.setTimeout(() => setIndex((current) => current + 1), 850);
+    return () => window.clearTimeout(timer);
+  }, [events, eventId, index]);
+
+  const message = events[index];
+  if (!message) return null;
+  const tone = /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
+  return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`}>{message}</span></div>;
 }
 
 function CharacterView({ character, locked, onEquip }: { character: CharacterState; locked: boolean; onEquip: (item: GearItem) => void }) {

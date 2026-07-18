@@ -243,6 +243,102 @@ main { min-height: calc(100vh - 68px); }
   .talent-line { grid-template-columns: 1fr; }.talent-node { min-height: 170px; }.talent-node p { min-height: auto; }
 }
 
+/* Compact combat board */
+.compact-combat {
+  height: calc(100vh - 68px);
+  height: calc(100dvh - 68px);
+  display: grid;
+  grid-template-rows: auto minmax(260px, 1fr) auto 36px;
+  gap: .65rem;
+  padding: 1rem 0;
+  overflow: hidden;
+}
+.compact-combat > .journey-progress { margin: 0; }
+.compact-arena { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: clamp(.7rem, 3vw, 2rem); }
+.compact-combatant { min-width: 0; position: relative; padding: 1rem; color: var(--text); border: 1px solid #343a36; background: linear-gradient(145deg, #171b19, #101311); }
+.compact-combatant h2 { margin: 0 0 1rem; overflow: hidden; font-size: clamp(1rem, 2.4vw, 1.45rem); text-overflow: ellipsis; white-space: nowrap; }
+.player-combatant { width: 100%; max-width: 470px; align-self: center; justify-self: end; border-left: 2px solid var(--gold); }
+.compact-enemy-stack { min-height: 0; display: grid; grid-template-rows: repeat(var(--enemy-count, 1), minmax(0, 1fr)); gap: .55rem; }
+.compact-enemy-stack.count-1 { --enemy-count: 1; align-content: center; }.compact-enemy-stack.count-2 { --enemy-count: 2; }.compact-enemy-stack.count-3 { --enemy-count: 3; }
+.enemy-combatant { width: 100%; max-width: 470px; display: block; text-align: left; border-right: 2px solid var(--enemy-accent); cursor: pointer; transition: border-color .2s, background .2s, transform .2s, opacity .2s; }
+.enemy-combatant:hover:not(.dead) { border-color: var(--enemy-accent); background: color-mix(in srgb, var(--enemy-accent) 7%, #141816); }
+.enemy-combatant.selected { border-color: var(--enemy-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--enemy-accent) 35%, transparent), 0 0 20px color-mix(in srgb, var(--enemy-accent) 8%, transparent); }
+.compact-target { position: absolute; right: .55rem; top: .55rem; display: none; color: var(--enemy-accent); }.enemy-combatant.selected .compact-target { display: block; }
+.compact-resource-label { display: flex; justify-content: space-between; margin-bottom: .3rem; color: var(--dim); font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; }.compact-resource-label b { color: #c6c3bb; font-weight: 600; }
+.compact-status-row { min-height: 25px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: .25rem; margin-top: .55rem; overflow: hidden; }
+.compact-status-row .status-badge, .compact-status-row .armor-badge { margin: 0; padding: .22rem .36rem; }
+.no-status { color: #515752; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; }
+.energy-label { margin-top: .65rem; }.energy-label span { color: var(--gold); }
+.energy-bar { width: 100%; height: 7px; overflow: hidden; border: 1px solid #3b392f; background: #292821; }.energy-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8d6b36, #e2bd69); box-shadow: 0 0 9px rgba(218,180,102,.2); transition: width .3s ease; }
+
+.compact-ability-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .45rem; }
+.compact-ability, .compact-ability-empty { min-width: 0; min-height: 72px; position: relative; border: 1px solid #39403b; background: #171c19; }
+.compact-ability { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: .55rem; padding: .55rem; color: var(--text); text-align: left; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+.compact-ability.brute { border-color: #5b4438; }.compact-ability.shadow { border-color: #4d3c51; }.compact-ability.arcanist { border-color: #38435d; }
+.compact-ability:hover:not(:disabled), .compact-ability:focus-visible { border-color: var(--gold); background: #1d211e; }
+.compact-ability:disabled { opacity: .38; cursor: not-allowed; }
+.compact-ability-key { position: absolute; left: 4px; top: 2px; color: var(--dim); font-size: .5rem; }
+.compact-ability-icon { width: 34px; height: 34px; display: grid; place-items: center; color: var(--gold); border: 1px solid #4b422f; background: #1a1914; font-size: 1.05rem; }
+.compact-ability strong { min-width: 0; overflow: hidden; font-family: Georgia, serif; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
+.compact-ability-cost { position: absolute; right: .3rem; top: .25rem; display: flex; align-items: center; color: var(--gold); font-size: .56rem; }
+.compact-ability-empty { display: grid; place-items: center; color: #485049; border-style: dashed; font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; }
+.ability-hold-tooltip { width: min(310px, calc(100vw - 2rem)); position: fixed; z-index: 110; left: 50%; bottom: max(9rem, calc(env(safe-area-inset-bottom) + 8rem)); display: flex; flex-direction: column; gap: .35rem; padding: .9rem 1rem; color: var(--text); border: 1px solid var(--gold); background: rgba(15,17,16,.98); box-shadow: 0 14px 50px rgba(0,0,0,.65); transform: translateX(-50%); pointer-events: none; }
+.ability-hold-tooltip b { color: var(--gold-bright); font-family: Georgia, serif; }.ability-hold-tooltip small { color: #c0beb7; font-size: .72rem; line-height: 1.4; }.ability-hold-tooltip em { color: var(--gold); font-size: .6rem; font-style: normal; letter-spacing: .08em; text-transform: uppercase; }
+
+.combat-log-button { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: .45rem; color: #a9ada8; border: 1px solid var(--line); background: #121613; font-size: .63rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }.combat-log-button:hover { color: var(--gold-bright); border-color: #554b37; }
+.combat-log-modal { position: fixed; z-index: 120; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(5,7,6,.82); backdrop-filter: blur(5px); }
+.combat-log-sheet { width: min(520px, 100%); max-height: min(70dvh, 520px); display: grid; grid-template-rows: auto minmax(0, 1fr); border: 1px solid #4a4e49; background: #111513; box-shadow: 0 24px 70px rgba(0,0,0,.7); }
+.combat-log-title { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1rem; border-bottom: 1px solid var(--line); }.combat-log-title > span { display: flex; align-items: center; gap: .45rem; font-family: Georgia, serif; }.combat-log-title button { width: 32px; height: 32px; color: var(--muted); border: 1px solid var(--line); background: transparent; font-size: 1.2rem; cursor: pointer; }
+.combat-log-sheet > div:last-child { overflow-y: auto; padding: .5rem 1rem 1rem; }.combat-log-sheet p { margin: .6rem 0 0; padding-left: .7rem; color: #747b75; border-left: 1px solid #343a36; font-size: .72rem; line-height: 1.45; }.combat-log-sheet p.latest { color: #d0cdc4; border-color: var(--gold); }
+
+.floating-combat-text { position: absolute; z-index: 80; left: 50%; top: 46%; width: min(420px, 86vw); display: flex; justify-content: center; transform: translate(-50%, -50%); pointer-events: none; }
+.floating-combat-text span { padding: .65rem .9rem; color: #e8e5dc; text-align: center; border: 1px solid #555b56; background: rgba(10,12,11,.91); box-shadow: 0 10px 30px rgba(0,0,0,.45); font-family: Georgia, serif; font-size: clamp(.84rem, 2.5vw, 1.05rem); animation: combat-float .85s ease both; }
+.floating-combat-text.damage span { color: #ef9d8e; border-color: #6f3f37; }.floating-combat-text.positive span { color: #e4c57f; border-color: #6c5937; }
+@keyframes combat-float { 0% { opacity: 0; transform: translateY(12px) scale(.96); } 18%, 75% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-13px) scale(.98); } }
+@keyframes enemy-death { 0% { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1); } 20% { transform: translateX(-5px) scale(1.02); filter: brightness(2) sepia(1); } 40% { transform: translateX(6px) scale(.98); } 100% { opacity: .14; transform: translateX(18px) scale(.9); filter: grayscale(1) blur(1px); } }
+.enemy-combatant.dead { pointer-events: none; animation: enemy-death .8s cubic-bezier(.2,.8,.2,1) forwards; }
+
+.compact-outcome { position: fixed; z-index: 130; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(5,7,6,.84); backdrop-filter: blur(7px); }
+.compact-outcome-card { width: min(380px, 100%); padding: 1.5rem; text-align: center; border: 1px solid #46604e; background: #121814; box-shadow: 0 25px 70px rgba(0,0,0,.7); }.compact-outcome.defeat .compact-outcome-card { border-color: #68413a; background: #191210; }.compact-outcome-card > svg { margin-bottom: .8rem; color: #83ad8e; }.compact-outcome.defeat svg { color: #ca6b5e; }.compact-outcome-card h2 { margin-bottom: .4rem; }.compact-outcome-card p:not(.eyebrow) { margin-bottom: 1rem; font-size: .78rem; }.compact-outcome-card .primary-button { width: 100%; }
+
+@media (max-width: 760px) {
+  body.combat-open { height: 100dvh; padding-bottom: 0; overflow: hidden; }
+  .app-shell.in-combat { height: 100dvh; overflow: hidden; }
+  .app-shell.in-combat .topbar, .app-shell.in-combat .mobile-nav { display: none; }
+  .app-shell.in-combat main { height: 100dvh; min-height: 0; }
+  .combat-page.compact-combat { width: 100%; height: 100vh; height: 100dvh; grid-template-rows: 29px minmax(0, 1fr) 122px 34px; gap: 6px; margin: 0; padding: max(6px, env(safe-area-inset-top)) 7px max(6px, env(safe-area-inset-bottom)); overflow: hidden; }
+  .compact-combat .journey-progress { grid-template-columns: minmax(90px, 1fr) minmax(90px, 1.2fr) auto; grid-template-rows: 1fr; gap: .55rem; margin: 0; font-size: .55rem; }
+  .compact-combat .journey-progress > div { grid-column: 2; grid-row: 1; }.compact-combat .journey-progress > span:last-child { grid-column: 3; grid-row: 1; }
+  .compact-arena { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+  .compact-combatant { padding: .6rem; }
+  .compact-combatant h2 { margin: 0 1rem .55rem 0; font-size: .86rem; }
+  .player-combatant { align-self: center; border-left-width: 2px; }
+  .compact-enemy-stack { gap: 5px; }
+  .enemy-combatant { max-height: none; padding: .52rem; border-right-width: 2px; }
+  .compact-resource-label { margin-bottom: .2rem; font-size: .48rem; }.compact-resource-label b { font-size: .52rem; }
+  .compact-combatant .health-bar, .compact-combatant .energy-bar { height: 6px; }
+  .compact-status-row { min-height: 21px; max-height: 42px; gap: 2px; margin-top: .38rem; }
+  .compact-status-row .status-badge, .compact-status-row .armor-badge { padding: .18rem .28rem; font-size: .46rem; }
+  .no-status { font-size: .46rem; }
+  .energy-label { margin-top: .45rem; }
+  .compact-ability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  .compact-ability, .compact-ability-empty { min-height: 0; }
+  .compact-ability { grid-template-columns: 27px minmax(0, 1fr); gap: .38rem; padding: .38rem; }
+  .compact-ability-icon { width: 27px; height: 27px; font-size: .9rem; }.compact-ability strong { font-size: .65rem; }.compact-ability-cost { font-size: .5rem; }.compact-ability-key { font-size: .46rem; }
+  .compact-ability-empty { font-size: .5rem; }
+  .combat-log-button { min-height: 0; }
+  .floating-combat-text { top: 43%; width: 88vw; }.floating-combat-text span { padding: .55rem .7rem; font-size: .82rem; }
+  .ability-hold-tooltip { bottom: calc(max(6px, env(safe-area-inset-bottom)) + 10.3rem); }
+}
+
+@media (max-width: 760px) and (max-height: 650px) {
+  .combat-page.compact-combat { grid-template-rows: 25px minmax(0, 1fr) 104px 30px; gap: 4px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+  .compact-combatant { padding: .42rem; }.compact-combatant h2 { margin-bottom: .35rem; font-size: .75rem; }
+  .compact-status-row { min-height: 18px; max-height: 34px; margin-top: .28rem; }.energy-label { margin-top: .3rem; }
+  .compact-ability { grid-template-columns: 24px minmax(0, 1fr); padding: .25rem; }.compact-ability-icon { width: 24px; height: 24px; }.compact-ability strong { font-size: .59rem; }
+  .ability-hold-tooltip { bottom: calc(max(4px, env(safe-area-inset-bottom)) + 8.6rem); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }

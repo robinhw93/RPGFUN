@@ -88,6 +88,8 @@ export interface EnemyState extends EnemyTemplate {
 
 export interface CombatState {
   turn: number;
+  eventId: number;
+  floatingEvents: string[];
   playerHp: number;
   playerMaxHp: number;
   energy: number;

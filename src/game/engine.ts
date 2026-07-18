@@ -65,6 +65,8 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
   }));
   return {
     turn: 1,
+    eventId: 1,
+    floatingEvents: ["Your turn."],
     playerHp: Math.min(carryHp ?? derived.maxHp, derived.maxHp),
     playerMaxHp: derived.maxHp,
     energy: derived.maxEnergy,
@@ -83,18 +85,20 @@ function addStatus(statuses: StatusEffect[], status: StatusEffect): StatusEffect
   return statuses.map((item) => item.id === status.id ? { ...item, duration: Math.max(item.duration, status.duration), stacks: item.stacks + status.stacks } : item);
 }
 
-function tickEnemyStatuses(enemy: EnemyState, logs: string[]): EnemyState {
+function tickEnemyStatuses(enemy: EnemyState, logs: string[], events: string[]): EnemyState {
   let hp = enemy.hp;
   enemy.statuses.forEach((status) => {
     if (status.id === "bleed") {
       const damage = 3 * status.stacks;
       hp -= damage;
       logs.push(`${enemy.name} bleeds for ${damage}.`);
+      events.push(`Bleed deals ${damage} damage to ${enemy.name}.`);
     }
     if (status.id === "poison") {
       const damage = 2 * status.stacks;
       hp -= damage;
       logs.push(`Poison burns ${enemy.name} for ${damage}.`);
+      events.push(`Poison deals ${damage} damage to ${enemy.name}.`);
     }
   });
   return { ...enemy, hp: Math.max(0, hp), statuses: enemy.statuses.map((status) => ({ ...status, duration: status.duration - 1 })).filter((status) => status.duration > 0) };
@@ -109,6 +113,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   let playerStatuses = [...combat.playerStatuses];
   let energy = combat.energy - ability.energyCost;
   const logs: string[] = [`You use ${ability.name}.`];
+  const events: string[] = [];
   const targets = ability.target === "all_enemies"
     ? enemies.filter((enemy) => enemy.hp > 0)
     : enemies.filter((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0);
@@ -117,6 +122,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     if (ability.effect === "guard") {
       playerStatuses = addStatus(playerStatuses, { id: "guard", name: "Guard", kind: "buff", duration: 1, stacks: 6, description: "Absorbs incoming damage." });
       logs.push("You brace behind 6 Guard.");
+      events.push("You use Guard and gain 6 Guard.");
     }
   } else {
     targets.forEach((target) => {
@@ -128,19 +134,34 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damage = Math.max(1, Math.round((raw - Math.max(0, target.armor - ignoresArmor)) * vulnerable * (critical ? 1.6 : 1)));
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy);
       logs.push(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`);
-      if (ability.effect === "bleed") enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 3 damage at the end of each turn." }) } : enemy);
-      if (ability.effect === "poison") enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, { id: "poison", name: "Poison", kind: "debuff", duration: 4, stacks: 1, description: "Takes increasing poison damage." }) } : enemy);
-      if (ability.effect === "vulnerable") enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: 2, stacks: 1, description: "Takes 25% increased damage." }) } : enemy);
-      if (ability.effect === "stun" && Math.random() < 0.45) enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: true, statuses: addStatus(enemy.statuses, { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stacks: 1, description: "Cannot act this turn." }) } : enemy);
+      events.push(`You use ${ability.name} and deal ${damage}${critical ? " critical" : ""} damage to ${target.name}.`);
+      if (ability.effect === "bleed") {
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 3 damage at the end of each turn." }) } : enemy);
+        events.push(`${target.name} gains Bleed.`);
+      }
+      if (ability.effect === "poison") {
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, { id: "poison", name: "Poison", kind: "debuff", duration: 4, stacks: 1, description: "Takes increasing poison damage." }) } : enemy);
+        events.push(`${target.name} gains Poison.`);
+      }
+      if (ability.effect === "vulnerable") {
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: 2, stacks: 1, description: "Takes 25% increased damage." }) } : enemy);
+        events.push(`${target.name} becomes Vulnerable.`);
+      }
+      if (ability.effect === "stun" && Math.random() < 0.45) {
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: true, statuses: addStatus(enemy.statuses, { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stacks: 1, description: "Cannot act this turn." }) } : enemy);
+        events.push(`${target.name} is Stunned.`);
+      }
     });
     if (ability.effect === "energy") {
       energy = Math.min(combat.maxEnergy, energy + 2);
       logs.push("You reclaim 2 Energy.");
+      events.push("You reclaim 2 Energy.");
     }
   }
 
   if (enemies.every((enemy) => enemy.hp <= 0)) {
-    return { ...combat, enemies, playerHp, playerStatuses, energy, log: [...logs, "Victory. The path ahead is clear.", ...combat.log].slice(0, 16), outcome: "victory" };
+    events.push("Victory.");
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, enemies, playerHp, playerStatuses, energy, log: [...logs, "Victory. The path ahead is clear.", ...combat.log].slice(0, 16), outcome: "victory" };
   }
 
   let guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
@@ -148,6 +169,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     if (enemy.hp <= 0) return enemy;
     if (enemy.stunned) {
       logs.push(`${enemy.name} is stunned and cannot act.`);
+      events.push(`${enemy.name} is Stunned.`);
       return { ...enemy, stunned: false };
     }
     const incoming = Math.max(1, enemy.power - Math.floor(derived.armor * 0.35));
@@ -156,10 +178,12 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     const damage = incoming - blocked;
     playerHp = Math.max(0, playerHp - damage);
     logs.push(`${enemy.name} attacks for ${damage}${blocked ? ` (${blocked} blocked)` : ""}.`);
+    const attackName = enemy.intentText.split(" · ")[0];
+    events.push(`${enemy.name} uses ${attackName} and deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`);
     return enemy;
   });
 
-  enemies = enemies.map((enemy) => tickEnemyStatuses(enemy, logs));
+  enemies = enemies.map((enemy) => tickEnemyStatuses(enemy, logs, events));
   const allDeadAfterTicks = enemies.every((enemy) => enemy.hp <= 0);
   playerStatuses = playerStatuses.map((status) => ({ ...status, duration: status.duration - 1 })).filter((status) => status.duration > 0);
   const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0)?.instanceId ?? enemies.find((enemy) => enemy.hp > 0)?.instanceId ?? "";
@@ -167,7 +191,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const outcome = playerHp <= 0 ? "defeat" : allDeadAfterTicks ? "victory" : "active";
   if (outcome === "victory") logs.push("Victory. The last enemy falls.");
   if (outcome === "defeat") logs.push("Your strength fails. The ash claims another name.");
-  return { ...combat, turn: combat.turn + 1, enemies, playerHp, playerStatuses, energy: nextEnergy, selectedEnemyId: nextSelected, log: [...logs, ...combat.log].slice(0, 16), outcome };
+  events.push(outcome === "victory" ? "Victory." : outcome === "defeat" ? "You have fallen." : "Your turn.");
+  return { ...combat, turn: combat.turn + 1, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, enemies, playerHp, playerStatuses, energy: nextEnergy, selectedEnemyId: nextSelected, log: [...logs, ...combat.log].slice(0, 16), outcome };
 }
 
 export function getLoot(nodeIndex: number): GearItem {
