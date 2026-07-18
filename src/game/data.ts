@@ -37,15 +37,9 @@ export const ABILITIES: Record<string, Ability> = {
 
 export const TALENTS: Talent[] = [
   { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", tier: 0, cost: 0, requires: [] },
-  { id: "brute_1", name: "Iron Grip", description: "+2 Strength. Unlocks Crushing Blow.", branch: "brute", tier: 1, cost: 1, requires: ["origin"], abilityId: "crushingBlow", combat: { passive: { stats: { strength: 2 } } } },
-  { id: "brute_2", name: "Unbroken", description: "+12 maximum HP.", branch: "brute", tier: 2, cost: 1, requires: ["brute_1"], combat: { passive: { maxHp: 12 } } },
-  { id: "brute_3", name: "Earthshaker", description: "Unlocks Ground Slam.", branch: "brute", tier: 3, cost: 2, requires: ["brute_2"], abilityId: "groundSlam" },
-  { id: "shadow_1", name: "Quick Hands", description: "+2 Agility. Unlocks Sever.", branch: "shadow", tier: 1, cost: 1, requires: ["origin"], abilityId: "sever", combat: { passive: { stats: { agility: 2 } } } },
-  { id: "shadow_2", name: "Killer's Instinct", description: "+5% critical strike chance.", branch: "shadow", tier: 2, cost: 1, requires: ["shadow_1"], combat: { passive: { critChance: 0.05 } } },
-  { id: "shadow_3", name: "Serpent's Kiss", description: "Unlocks Venom Edge.", branch: "shadow", tier: 3, cost: 2, requires: ["shadow_2"], abilityId: "venom" },
-  { id: "arcanist_1", name: "Inner Flame", description: "+2 Intelligence. Unlocks Arcane Bolt.", branch: "arcanist", tier: 1, cost: 1, requires: ["origin"], abilityId: "arcaneBolt", combat: { passive: { stats: { intelligence: 2 } } } },
-  { id: "arcanist_2", name: "Deep Reserves", description: "+2 maximum Energy.", branch: "arcanist", tier: 2, cost: 1, requires: ["arcanist_1"], combat: { passive: { maxEnergy: 2 } } },
-  { id: "arcanist_3", name: "Essence Weaver", description: "Unlocks Essence Siphon.", branch: "arcanist", tier: 3, cost: 2, requires: ["arcanist_2"], abilityId: "siphon" },
+  { id: "brute_1", name: "Brute", description: "+2 Strength.", branch: "brute", tier: 1, cost: 1, requires: ["origin"], combat: { passive: { stats: { strength: 2 } } } },
+  { id: "shadow_1", name: "Shadow", description: "+2 Agility.", branch: "shadow", tier: 1, cost: 1, requires: ["origin"], combat: { passive: { stats: { agility: 2 } } } },
+  { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence.", branch: "arcanist", tier: 1, cost: 1, requires: ["origin"], combat: { passive: { stats: { intelligence: 2 } } } },
 ];
 
 export const ENEMIES: Record<string, EnemyTemplate> = {

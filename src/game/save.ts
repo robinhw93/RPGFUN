@@ -1,11 +1,37 @@
 import type { GameState } from "./types";
+import { TALENTS } from "./data";
 
 const SAVE_KEY = "emberfall-save-v1";
+const REMOVED_TALENT_COSTS: Record<string, number> = {
+  brute_2: 1,
+  brute_3: 2,
+  shadow_2: 1,
+  shadow_3: 2,
+  arcanist_2: 1,
+  arcanist_3: 2,
+};
 
 export function loadGame(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    return raw ? JSON.parse(raw) as GameState : null;
+    if (!raw) return null;
+    const state = JSON.parse(raw) as GameState;
+    const validTalentIds = new Set(TALENTS.map((talent) => talent.id));
+    const removedTalents = state.character.unlockedTalents.filter((id) => !validTalentIds.has(id));
+    const unlockedTalents = state.character.unlockedTalents.filter((id) => validTalentIds.has(id));
+    const talentAbilities = TALENTS
+      .filter((talent) => unlockedTalents.includes(talent.id) && talent.abilityId)
+      .map((talent) => talent.abilityId!);
+    const validAbilities = new Set(["strike", "guard", ...talentAbilities]);
+    return {
+      ...state,
+      character: {
+        ...state.character,
+        talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
+        unlockedTalents,
+        equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),
+      },
+    };
   } catch {
     return null;
   }

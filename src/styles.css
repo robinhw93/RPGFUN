@@ -202,6 +202,39 @@ main { min-height: calc(100vh - 68px); }
 .branch-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }.talent-branch { padding: 1rem; border: 1px solid var(--line); background: #111513; }.talent-branch.brute { --branch: #b06f4d; }.talent-branch.shadow { --branch: #9a6b9d; }.talent-branch.arcanist { --branch: #7388c0; }.branch-heading { display: flex; align-items: center; gap: .7rem; padding: .5rem .5rem 1rem; border-bottom: 1px solid var(--line); }.branch-heading > span { width: 40px; height: 40px; display: grid; place-items: center; color: var(--branch); border: 1px solid color-mix(in srgb, var(--branch) 55%, #333); }.branch-heading h2 { margin: 0; font-size: 1.4rem; }.branch-heading small { color: var(--dim); font-size: .6rem; text-transform: uppercase; letter-spacing: .08em; }
 .talent-line { display: flex; flex-direction: column; gap: .7rem; padding-top: 1rem; }.talent-node { position: relative; min-height: 190px; padding: 1rem; border: 1px solid #303632; background: #151a17; }.talent-node::before { content: ""; position: absolute; left: 50%; top: -.75rem; height: .75rem; border-left: 1px solid #3f4641; }.talent-node.unlocked { border-color: color-mix(in srgb, var(--branch) 65%, #333); background: linear-gradient(135deg, color-mix(in srgb, var(--branch) 7%, #151a17), #131714); }.talent-node.available { border-color: #555d57; }.talent-node.locked { opacity: .48; }.talent-icon { float: left; width: 36px; height: 36px; display: grid; place-items: center; margin: 0 .65rem .35rem 0; color: var(--branch); border: 1px solid color-mix(in srgb, var(--branch) 45%, #353535); background: #111412; }.talent-node .tier { color: var(--dim); font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; }.talent-node h3 { margin: .18rem 0 .65rem; }.talent-node p { min-height: 42px; clear: both; margin-bottom: .8rem; font-size: .68rem; line-height: 1.45; }.unlock-button { width: 100%; min-height: 34px; color: var(--text); border: 1px solid color-mix(in srgb, var(--branch) 50%, #333); background: color-mix(in srgb, var(--branch) 8%, #171a18); font-size: .62rem; text-transform: uppercase; letter-spacing: .07em; cursor: pointer; }.unlock-button:disabled { color: var(--dim); border-color: var(--line); cursor: not-allowed; }.talent-owned { display: flex; align-items: center; justify-content: space-between; color: #83a98c; font-size: .6rem; text-transform: uppercase; letter-spacing: .08em; }.talent-owned button { padding: .3rem .5rem; color: var(--gold); border: 1px solid #4d4432; background: transparent; font-size: .55rem; cursor: pointer; }
 
+/* Radial class tree: each path can be extended outward with more nodes later. */
+.talent-tree { padding: 1rem 0 0; overflow: hidden; }
+.talent-tree::before { content: none; }
+.talent-map { --tree-gap: clamp(.65rem, 3vw, 2.5rem); display: grid; grid-template-columns: repeat(3, minmax(100px, 156px)); grid-template-rows: repeat(2, minmax(100px, 156px)); justify-content: center; align-items: center; gap: var(--tree-gap); min-height: 400px; padding: 1rem; }
+.origin-node, .class-talent-node { width: 100%; max-width: 156px; aspect-ratio: 1; box-sizing: border-box; }
+.origin-node { grid-column: 2; grid-row: 2; height: auto; z-index: 2; margin: 0; padding: .8rem; transform: none; text-align: center; border: 1px solid #8a7145; background: radial-gradient(circle, #292318, #111512 72%); box-shadow: 0 0 42px rgba(201,168,103,.1); }
+.origin-node > * { transform: none; }
+.origin-node > span { font-size: 1.55rem; }
+.origin-node strong { font-size: .9rem; line-height: 1.15; }
+.origin-node small { font-size: .56rem; letter-spacing: .08em; text-transform: uppercase; }
+.talent-path { position: relative; z-index: 1; width: 100%; max-width: 156px; }
+.talent-path::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-color: #4b493e; }
+.talent-path.arcanist { grid-column: 2; grid-row: 1; }
+.talent-path.brute { grid-column: 1; grid-row: 2; }
+.talent-path.shadow { grid-column: 3; grid-row: 2; }
+.talent-path.arcanist::after { top: 100%; left: 50%; height: var(--tree-gap); border-left: 1px solid #4b493e; }
+.talent-path.brute::after { top: 50%; left: 100%; width: var(--tree-gap); border-top: 1px solid #4b493e; }
+.talent-path.shadow::after { top: 50%; right: 100%; width: var(--tree-gap); border-top: 1px solid #4b493e; }
+.class-talent-node { --branch: #807b6e; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; padding: .7rem; color: var(--text); text-align: center; border: 1px solid color-mix(in srgb, var(--branch) 58%, #333); background: linear-gradient(145deg, color-mix(in srgb, var(--branch) 8%, #171a18), #111412); cursor: pointer; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease; }
+.class-talent-node.brute { --branch: #b06f4d; }
+.class-talent-node.shadow { --branch: #9a6b9d; }
+.class-talent-node.arcanist { --branch: #7388c0; }
+.class-talent-node.available:hover { transform: translateY(-2px); border-color: var(--branch); box-shadow: 0 0 24px color-mix(in srgb, var(--branch) 16%, transparent); }
+.class-talent-node.unlocked { border-color: var(--branch); background: linear-gradient(145deg, color-mix(in srgb, var(--branch) 18%, #171a18), #111412); box-shadow: inset 0 0 22px color-mix(in srgb, var(--branch) 8%, transparent); }
+.class-talent-node.locked { opacity: .48; }
+.class-talent-node:disabled { cursor: default; }
+.class-node-symbol { color: var(--branch); font-size: 1.35rem; line-height: 1; }
+.class-talent-node small { color: var(--dim); font-size: .5rem; letter-spacing: .12em; text-transform: uppercase; }
+.class-talent-node strong { font-family: Georgia, serif; font-size: 1rem; }
+.class-node-effect { color: #c4c7bf; font-size: .63rem; }
+.class-talent-node em { margin-top: .2rem; color: var(--gold); font-size: .52rem; font-style: normal; letter-spacing: .07em; text-transform: uppercase; }
+.class-talent-node.unlocked em { color: #8fbc98; }
+
 @media (max-width: 980px) {
   .combat-console { grid-template-columns: 240px 1fr; }.combat-log { grid-column: 1 / -1; }.combat-log > div { max-height: 100px; }
   .ability-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
@@ -228,7 +261,7 @@ main { min-height: calc(100vh - 68px); }
   .page-title { align-items: flex-start; }.page-title > div:first-child p:last-child { display: none; }.power-seal, .talent-points { min-width: auto; padding: .55rem .65rem; }.power-seal > svg, .talent-points > svg { width: 17px; }.power-seal strong, .talent-points strong { font-size: .9rem; }
   .equipment-grid { grid-template-columns: 1fr; }.inventory-grid { grid-template-columns: 1fr 1fr; }.item-card { min-height: 210px; padding: .8rem; }
   .loadout-panel { grid-template-columns: 1fr; gap: 1rem; }.loadout-slots { gap: .25rem; }.loadout-slots button { min-width: 0; min-height: 58px; }.loadout-slots button small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .talent-tree::before { display: none; }.origin-node { width: 140px; height: 140px; margin-bottom: 2.5rem; }.origin-node strong { font-size: .85rem; }.branch-grid { grid-template-columns: 1fr; gap: 1rem; }.talent-branch { padding: .8rem; }.talent-line { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; }.talent-node { min-height: 210px; }.talent-node::before { display: none; }
+  .talent-map { --tree-gap: .55rem; grid-template-columns: repeat(3, minmax(88px, 128px)); grid-template-rows: repeat(2, minmax(88px, 128px)); min-height: 300px; padding: .5rem 0; }.origin-node { width: 100%; height: auto; margin: 0; }.class-talent-node { padding: .45rem; }.class-talent-node strong { font-size: .82rem; }.class-node-effect { font-size: .56rem; }.class-talent-node em { font-size: .46rem; }
 }
 
 @media (max-width: 480px) {
@@ -238,7 +271,7 @@ main { min-height: calc(100vh - 68px); }
   .ability-copy small { display: none; }.ability-button { min-height: 56px; grid-template-columns: 28px 1fr; }.ability-icon { width: 28px; height: 28px; }.ability-empty { min-height: 56px; }
   .inventory-grid { grid-template-columns: 1fr; }.item-card { min-height: 185px; }
   .derived-grid { grid-template-columns: 1fr 1fr; }.equipment-slot strong { font-size: .74rem; }
-  .talent-line { grid-template-columns: 1fr; }.talent-node { min-height: 170px; }.talent-node p { min-height: auto; }
+  .talent-map { grid-template-columns: repeat(3, minmax(82px, 108px)); grid-template-rows: repeat(2, minmax(82px, 108px)); min-height: 250px; }.origin-node { padding: .4rem; }.origin-node > span, .class-node-symbol { font-size: 1.05rem; }.origin-node strong, .class-talent-node strong { font-size: .72rem; }.origin-node small, .class-talent-node small { display: none; }.class-node-effect { font-size: .51rem; }.class-talent-node em { margin-top: .1rem; font-size: .42rem; line-height: 1.2; }
 }
 
 /* Compact combat board */

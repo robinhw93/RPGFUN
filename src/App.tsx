@@ -724,42 +724,43 @@ function formatStats(item: GearItem) {
 }
 
 function TalentsView({ character, locked, onUnlock, onToggleAbility }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void }) {
-  const branches: Array<{ id: Exclude<TalentBranch, "core">; name: string; subtitle: string; symbol: string }> = [
-    { id: "brute", name: "Brute", subtitle: "Might · Armor · Control", symbol: "◆" },
-    { id: "shadow", name: "Shadow", subtitle: "Speed · Bleed · Venom", symbol: "◢" },
-    { id: "arcanist", name: "Arcanist", subtitle: "Arcane · Energy · Focus", symbol: "✧" },
+  const branches: Array<{ id: Exclude<TalentBranch, "core">; symbol: string }> = [
+    { id: "arcanist", symbol: "✧" },
+    { id: "brute", symbol: "◆" },
+    { id: "shadow", symbol: "◈" },
   ];
   return (
     <section className="page talents-page">
-      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Constellation</h1><p>Begin at the center. Follow one path or weave powers from every discipline.</p></div><div className="talent-points"><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className="talent-points"><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       <div className="loadout-panel paper-panel">
         <div><p className="eyebrow">Active Loadout</p><h3>Equipped Abilities</h3></div>
         <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} title={ability && ability.id !== "strike" && ability.id !== "guard" ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
       </div>
 
-      <div className="talent-tree">
-        <div className="origin-node"><span>✦</span><strong>Wayfarer's Spark</strong><small>Strike · Guard</small></div>
-        <div className="branch-grid">
-          {branches.map((branch) => (
-            <div className={`talent-branch ${branch.id}`} key={branch.id}>
-              <div className="branch-heading"><span>{branch.symbol}</span><div><h2>{branch.name}</h2><small>{branch.subtitle}</small></div></div>
-              <div className="talent-line">
-                {TALENTS.filter((talent) => talent.branch === branch.id).map((talent) => {
-                  const unlocked = character.unlockedTalents.includes(talent.id);
-                  const available = talent.requires.every((id) => character.unlockedTalents.includes(id));
-                  const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
-                  const equipped = ability ? character.equippedAbilities.includes(ability.id) : false;
-                  return (
-                    <article className={`talent-node ${unlocked ? "unlocked" : available ? "available" : "locked"}`} key={talent.id}>
-                      <div className="talent-icon">{ability?.icon ?? branch.symbol}</div><span className="tier">Tier {talent.tier}</span><h3>{talent.name}</h3><p>{talent.description}</p>
-                      {unlocked ? <div className="talent-owned">Unlocked {ability && ability.id !== "strike" && ability.id !== "guard" && <button disabled={locked} onClick={() => onToggleAbility(ability.id)}>{equipped ? "Unequip" : "Equip"}</button>}</div> : <button className="unlock-button" disabled={locked || !available || character.talentPoints < talent.cost} onClick={() => onUnlock(talent.id)}>{locked ? "Locked in combat" : available ? `Unlock · ${talent.cost} pt${talent.cost > 1 ? "s" : ""}` : "Requires previous"}</button>}
-                    </article>
-                  );
-                })}
+      <div className="talent-tree" aria-label="Talent tree">
+        <div className="talent-map">
+          <div className="origin-node"><span>✦</span><strong>Wayfarer's Spark</strong><small>Starting node</small></div>
+          {branches.map((branch) => {
+            const talent = TALENTS.find((item) => item.branch === branch.id);
+            if (!talent) return null;
+            const unlocked = character.unlockedTalents.includes(talent.id);
+            const available = talent.requires.every((id) => character.unlockedTalents.includes(id));
+            const canUnlock = !locked && available && character.talentPoints >= talent.cost && !unlocked;
+            const state = unlocked ? "unlocked" : available ? "available" : "locked";
+            const action = unlocked ? "Unlocked" : locked ? "Locked in combat" : !available ? "Requires origin" : character.talentPoints < talent.cost ? "Not enough points" : `Unlock · ${talent.cost} point`;
+            return (
+              <div className={`talent-path ${branch.id}`} key={talent.id}>
+                <button className={`class-talent-node ${branch.id} ${state}`} disabled={!canUnlock} onClick={() => onUnlock(talent.id)} aria-label={`${talent.name}. ${talent.description} ${action}`}>
+                  <span className="class-node-symbol">{branch.symbol}</span>
+                  <small>Class node</small>
+                  <strong>{talent.name}</strong>
+                  <span className="class-node-effect">{talent.description}</span>
+                  <em>{action}</em>
+                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
