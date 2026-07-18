@@ -22,6 +22,59 @@ export interface StatusEffect {
   description: string;
 }
 
+export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_taken" | "turn_end";
+export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
+
+export interface PassiveBonuses {
+  stats?: Partial<Stats>;
+  armor?: number;
+  power?: number;
+  maxHp?: number;
+  maxEnergy?: number;
+  energyRegen?: number;
+  critChance?: number;
+  initiative?: number;
+}
+
+export interface CombatTriggerCondition {
+  abilityIds?: string[];
+  damageTypes?: DamageType[];
+  critical?: boolean;
+  minimumDamage?: number;
+  targetHasAnyStatus?: string[];
+}
+
+export type CombatEffectDefinition =
+  | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scaling?: number }
+  | { type: "apply_status"; status: StatusEffect; target?: CombatEffectTarget }
+  | { type: "heal"; amount: number; target?: "self" }
+  | { type: "gain_energy"; amount: number; target?: "self" }
+  | { type: "gain_guard"; amount: number; duration?: number; target?: "self" };
+
+export interface CombatTriggerDefinition {
+  id: string;
+  name: string;
+  description: string;
+  event: CombatTriggerEvent;
+  chance?: number;
+  conditions?: CombatTriggerCondition;
+  effects: CombatEffectDefinition[];
+  oncePerTurn?: boolean;
+  cooldownTurns?: number;
+}
+
+export interface CombatFeatureBundle {
+  passive?: PassiveBonuses;
+  triggers?: CombatTriggerDefinition[];
+}
+
+export interface GearSetBonusDefinition extends CombatFeatureBundle {
+  setId: string;
+  setName: string;
+  requiredPieces: number;
+  description: string;
+}
+
 export interface Ability {
   id: string;
   name: string;
@@ -45,6 +98,8 @@ export interface Talent {
   cost: number;
   requires: string[];
   abilityId?: string;
+  combat?: CombatFeatureBundle;
+  /** Legacy passive shape; new bonuses should use combat.passive. */
   passive?: {
     stat?: StatName;
     amount?: number;
@@ -66,6 +121,7 @@ export interface GearItem {
   power?: number;
   set?: string;
   setName?: string;
+  combat?: CombatFeatureBundle;
 }
 
 export interface EnemyTemplate {
@@ -113,6 +169,7 @@ export interface CombatState {
   eventId: number;
   floatingEvents: string[];
   pendingEffects: CombatPendingEffect[];
+  procUsage: Record<string, { lastTriggeredTurn: number }>;
   damagedTargets: string[];
   playerHp: number;
   playerMaxHp: number;

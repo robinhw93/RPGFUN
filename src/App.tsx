@@ -3,7 +3,7 @@ import {
   Backpack, BookOpen, ChevronRight, CircleDot, Coins, Footprints, Gem,
   Heart, Home, RotateCcw, Shield, Sparkles, Swords, Target, Trophy, UserRound,
 } from "lucide-react";
-import { ABILITIES, ADVENTURE, ENEMIES, TALENTS } from "./game/data";
+import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, resolveCombatEvent, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
@@ -701,7 +701,10 @@ function CharacterView({ character, locked, onEquip }: { character: CharacterSta
               return <div className={`equipment-slot ${item ? item.rarity : "empty"}`} key={slot}><span className="slot-icon">{slot.includes("ring") ? "◌" : slot.includes("Hand") ? "⚔" : "◇"}</span><span><small>{SLOT_LABELS[slot]}</small><strong>{item?.name ?? "Empty"}</strong>{item && <em>{formatStats(item)}</em>}</span></div>;
             })}
           </div>
-          {Object.keys(sets).length > 0 && <div className="set-bonuses">{Object.entries(sets).map(([id, set]) => <span key={id}><Gem size={14} /><strong>{set.name}</strong> · {set.count} pieces {set.count >= 2 && <b>— +2 Strength active</b>}</span>)}</div>}
+          {Object.keys(sets).length > 0 && <div className="set-bonuses">{Object.entries(sets).map(([id, set]) => {
+            const activeBonuses = GEAR_SET_BONUSES.filter((bonus) => bonus.setId === id && set.count >= bonus.requiredPieces);
+            return <span key={id}><Gem size={14} /><strong>{set.name}</strong> · {set.count} pieces {activeBonuses.map((bonus) => <b key={bonus.requiredPieces}>— {bonus.description} active</b>)}</span>;
+          })}</div>}
         </div>
       </div>
 
