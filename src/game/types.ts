@@ -227,6 +227,7 @@ export interface AdventureProgress {
 }
 
 export interface GameState {
+  characterCreated: boolean;
   character: CharacterState;
   adventure: AdventureProgress;
 }

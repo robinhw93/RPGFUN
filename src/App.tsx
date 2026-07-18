@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Backpack, BookOpen, ChevronRight, CircleDot, Coins, Footprints, Gem,
-  Heart, Home, RotateCcw, Shield, Sparkles, Swords, Target, Trophy, UserRound,
+  Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound,
 } from "lucide-react";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -49,11 +49,18 @@ function App() {
   const activeNode = ADVENTURE[game.adventure.nodeIndex];
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
 
-  useEffect(() => saveGame(game), [game]);
+  useEffect(() => {
+    if (game.adventure.combat?.outcome === "defeat") clearSave();
+    else saveGame(game);
+  }, [game]);
   useEffect(() => {
     document.body.classList.toggle("combat-open", isCombatScreen);
     return () => document.body.classList.remove("combat-open");
   }, [isCombatScreen]);
+  useEffect(() => {
+    document.body.classList.toggle("character-creation-open", !game.characterCreated);
+    return () => document.body.classList.remove("character-creation-open");
+  }, [game.characterCreated]);
   useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
   const navigate = (next: View) => {
@@ -131,6 +138,7 @@ function App() {
 
       if (adventure.nodeIndex >= ADVENTURE.length - 1) {
         return {
+          ...current,
           character: { ...character, xp: character.xp + 100, talentPoints: character.talentPoints + 2 },
           adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot: getLoot(adventure.nodeIndex), combat: null },
         };
@@ -140,6 +148,7 @@ function App() {
       const nextNode = ADVENTURE[nextIndex];
       const combat = nextNode.enemies ? createCombat(character, nextNode.enemies, carryHp) : null;
       return {
+        ...current,
         character,
         adventure: { ...adventure, nodeIndex: nextIndex, carryHp, combat, eventResolved: false, latestLoot: wonCombat ? getLoot(adventure.nodeIndex) : null },
       };
@@ -179,23 +188,12 @@ function App() {
         return { ...current, adventure: { ...current.adventure, carryHp: Math.min(maxHp, carryHp + 24), eventResolved: true } };
       }
       return {
+        ...current,
         character: { ...current.character, talentPoints: current.character.talentPoints + 1 },
         adventure: { ...current.adventure, carryHp: Math.max(1, carryHp - 10), eventResolved: true },
       };
     });
   };
-
-  const retryCombat = () => {
-    setGame((current) => {
-      const node = ADVENTURE[current.adventure.nodeIndex];
-      return { ...current, adventure: { ...current.adventure, carryHp: getDerivedStats(current.character).maxHp, combat: createCombat(current.character, node.enemies!) } };
-    });
-  };
-
-  const abandonAdventure = () => setGame((current) => ({
-    ...current,
-    adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, completed: false },
-  }));
 
   const unlockTalent = (talentId: string) => {
     setGame((current) => {
@@ -242,12 +240,28 @@ function App() {
     });
   };
 
-  const resetGame = () => {
-    if (!window.confirm("Erase your current save and begin again?")) return;
+  const returnToCharacterCreation = () => {
     clearSave();
     setGame(cloneInitial());
     setView("adventure");
+    setTravelTransition(null);
   };
+
+  const createCharacter = (name: string) => {
+    setGame((current) => ({
+      ...current,
+      characterCreated: true,
+      character: { ...current.character, name: name.trim() },
+    }));
+    setView("adventure");
+  };
+
+  const resetGame = () => {
+    if (!window.confirm("Permanently erase this character and begin again?")) return;
+    returnToCharacterCreation();
+  };
+
+  if (!game.characterCreated) return <CharacterCreation onCreate={createCharacter} />;
 
   return (
     <div className={`app-shell ${isCombatScreen ? "in-combat" : ""}`}>
@@ -281,8 +295,7 @@ function App() {
             onCombatEvent={revealCombatEvent}
             onContinue={continueJourney}
             onEvent={resolveEvent}
-            onRetry={retryCombat}
-            onAbandon={abandonAdventure}
+            onPermadeath={returnToCharacterCreation}
             onTalents={() => navigate("talents")}
           />
         )}
@@ -308,7 +321,41 @@ function NavButton({ active, onClick, icon, label }: { active: boolean; onClick:
   return <button className={active ? "nav-button active" : "nav-button"} onClick={onClick}>{icon}<span>{label}</span></button>;
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onContinue, onEvent, onRetry, onAbandon, onTalents }: {
+function CharacterCreation({ onCreate }: { onCreate: (name: string) => void }) {
+  const [name, setName] = useState("");
+  const trimmedName = name.trim();
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (trimmedName) onCreate(trimmedName);
+  };
+  return (
+    <main className="character-creation">
+      <section className="creation-card">
+        <div className="creation-sigil"><UserRound size={28} /></div>
+        <p className="eyebrow">A New Chronicle</p>
+        <h1>Create Your Character</h1>
+        <p>Name the wanderer who will brave Emberfall. This journey uses permadeath: if your character falls, their progress and possessions are lost.</p>
+        <form onSubmit={submit}>
+          <label htmlFor="character-name">Character name</label>
+          <input
+            id="character-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            maxLength={24}
+            autoComplete="off"
+            autoFocus
+            placeholder="Enter a name"
+          />
+          <small>{name.length}/24</small>
+          <button className="primary-button" type="submit" disabled={!trimmedName}>Begin Chronicle <ChevronRight size={17} /></button>
+        </form>
+        <div className="permadeath-warning"><Skull size={16} /><span><strong>Permadeath enabled</strong>Your save is erased when this character dies.</span></div>
+      </section>
+    </main>
+  );
+}
+
+function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onContinue, onEvent, onPermadeath, onTalents }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   onBegin: () => void;
@@ -319,8 +366,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   onCombatEvent: (eventId: number, eventIndex: number) => void;
   onContinue: () => void;
   onEvent: (choice: "rest" | "ember") => void;
-  onRetry: () => void;
-  onAbandon: () => void;
+  onPermadeath: () => void;
   onTalents: () => void;
 }) {
   const adventure = game.adventure;
@@ -515,11 +561,11 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       {combat.outcome !== "active" && !sequencePending && (
         <div className={`compact-outcome ${combat.outcome}`}>
           <div className="compact-outcome-card">
-            {combat.outcome === "victory" ? <Trophy /> : <Heart />}
+            {combat.outcome === "victory" ? <Trophy /> : <Skull />}
             <p className="eyebrow">Combat {combat.outcome}</p>
-            <h2>{combat.outcome === "victory" ? "The road is yours" : "Fallen in ash"}</h2>
-            <p>{combat.outcome === "victory" ? `Claim ${getLoot(adventure.nodeIndex).name}.` : "Reconsider your approach and rise again."}</p>
-            {combat.outcome === "victory" ? <button className="primary-button" onClick={onContinue}>{adventure.nodeIndex === ADVENTURE.length - 1 ? "Claim Victory" : "Claim & Continue"}<ChevronRight size={17} /></button> : <div className="outcome-actions"><button className="primary-button" onClick={onRetry}>Try Again</button><button className="text-button" onClick={onAbandon}>Return</button></div>}
+            <h2>{combat.outcome === "victory" ? "The road is yours" : `${game.character.name} has fallen`}</h2>
+            <p>{combat.outcome === "victory" ? `Claim ${getLoot(adventure.nodeIndex).name}.` : "This chronicle ends here. All progress, equipment, and talents are lost."}</p>
+            {combat.outcome === "victory" ? <button className="primary-button" onClick={onContinue}>{adventure.nodeIndex === ADVENTURE.length - 1 ? "Claim Victory" : "Claim & Continue"}<ChevronRight size={17} /></button> : <button className="primary-button" onClick={onPermadeath}>Create New Character <ChevronRight size={17} /></button>}
           </div>
         </div>
       )}
@@ -683,7 +729,7 @@ function CharacterView({ character, locked, onEquip }: { character: CharacterSta
   }, {});
   return (
     <section className="page character-page">
-      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>Character & Equipment</h1><p>Shape your attributes through gear. Every choice changes the fight.</p></div><div className="power-seal"><Swords /><span><small>Power</small><strong>{derived.power + derived.strength}</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p></div><div className="power-seal"><Swords /><span><small>Power</small><strong>{derived.power + derived.strength}</strong></span></div></div>
       <div className="character-layout">
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span><small>Base + equipment + talents</small></div>

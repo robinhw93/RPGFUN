@@ -25,6 +25,7 @@ export function loadGame(): GameState | null {
     const validAbilities = new Set(["strike", "guard", ...talentAbilities]);
     return {
       ...state,
+      characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
       character: {
         ...state.character,
         talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),

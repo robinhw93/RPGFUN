@@ -4,7 +4,7 @@ import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatur
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, Stats, StatusEffect, TurnOrderEntry } from "./types";
 
 export const INITIAL_CHARACTER: CharacterState = {
-  name: "The Wayfarer",
+  name: "",
   level: 1,
   xp: 0,
   gold: 18,
@@ -21,6 +21,7 @@ export const INITIAL_CHARACTER: CharacterState = {
 };
 
 export const INITIAL_GAME: GameState = {
+  characterCreated: false,
   character: INITIAL_CHARACTER,
   adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, completed: false },
 };
