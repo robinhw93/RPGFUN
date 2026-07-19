@@ -13,6 +13,7 @@ import { slotForItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
+import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
 import { createCombat, endPlayerTurn, ensureCombatState, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
@@ -928,21 +929,22 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
           : id === "guard" ? <Shield />
             : <Sparkles />;
   const label = `${name}, ${stacks} ${stacks === 1 ? "stack" : "stacks"}, ${duration} ${duration === 1 ? "turn" : "turns"} remaining`;
-  const safeDuration = Math.max(1, duration);
-  const gap = Math.min(6, 18 / safeDuration);
-  const segmentLength = Math.max(2, 100 / safeDuration - gap);
+  const remainingSegments = Math.max(0, Math.min(STATUS_DURATION_SEGMENTS, Math.floor(duration)));
+  const gap = 6;
+  const segmentLength = 100 / STATUS_DURATION_SEGMENTS - gap;
   const ring = (
     <svg className="status-duration-ring" viewBox="0 0 40 40" aria-hidden="true">
-      {Array.from({ length: safeDuration }, (_, index) => (
+      {Array.from({ length: STATUS_DURATION_SEGMENTS }, (_, index) => (
         <circle
           key={index}
+          className={index < remainingSegments ? "remaining" : "expired"}
           cx="20"
           cy="20"
           r="17"
           pathLength="100"
           style={{
             strokeDasharray: `${segmentLength} ${100 - segmentLength}`,
-            strokeDashoffset: -(index * 100 / safeDuration + gap / 2),
+            strokeDashoffset: -(index * 100 / STATUS_DURATION_SEGMENTS + gap / 2),
           }}
         />
       ))}

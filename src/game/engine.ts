@@ -1,5 +1,6 @@
 import { getDerivedStats } from "./character";
 import { ABILITIES, ENEMIES } from "./data";
+import { DEFAULT_STATUS_DURATION } from "./statusEffects";
 import { getCharacterCombatFeatures, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
@@ -438,14 +439,14 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
       if (ability.effect === "bleed") {
-        const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 3 damage per stack when its turn begins. Lasts 3 turns." };
+        const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stacks: 1, description: "Takes 3 damage per stack when its turn begins. Lasts 3 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, bleed) } : enemy);
         logs.push(makeLog(`${target.name} gains Bleed.`, statusInfo(bleed)));
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Bleed.`;
         queueStatus(events, pendingEffects, `${target.name} is Bleeding.`, target.instanceId, bleed, false, damageEventIndex);
       }
       if (ability.effect === "poison") {
-        const poison: StatusEffect = { id: "poison", name: "Poison", kind: "debuff", duration: 4, stacks: 1, description: "Takes 2 damage per stack when its turn begins. Lasts 4 turns." };
+        const poison: StatusEffect = { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stacks: 1, description: "Takes 2 damage per stack when its turn begins. Lasts 3 turns." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addStatus(enemy.statuses, poison) } : enemy);
         logs.push(makeLog(`${target.name} gains Poison.`, statusInfo(poison)));
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Poison.`;
@@ -593,7 +594,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     events.push(`${enemy.name} uses ${attackName}.`);
     const damageEventIndex = queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
     if (damage > 0 && enemy.onHitEffect === "bleed") {
-      const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: 3, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
+      const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
       playerStatuses = addStatus(playerStatuses, bleed);
       logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
       events[damageEventIndex] = `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""} and applies Bleed.`;

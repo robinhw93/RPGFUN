@@ -407,6 +407,7 @@ main { min-height: calc(100vh - 68px); }
 .status-badge.status-icon > svg:not(.status-duration-ring) { width: 9px; height: 9px; position: relative; z-index: 1; }
 .status-badge.status-icon .status-duration-ring { width: 24px; height: 24px; position: absolute; z-index: 0; inset: -2px; overflow: visible; transform: rotate(-90deg); pointer-events: none; }
 .status-badge.status-icon .status-duration-ring circle { fill: none; stroke: var(--status-ring); stroke-width: 1.65; stroke-linecap: round; filter: drop-shadow(0 0 1px color-mix(in srgb, var(--status-ring) 32%, transparent)); }
+.status-badge.status-icon .status-duration-ring circle.expired { opacity: 0; filter: none; }
 .status-badge.status-icon .status-stack-count { min-width: 14px; height: 14px; position: absolute; z-index: 2; right: -5px; bottom: -5px; display: grid; place-items: center; padding: 0 2px; color: #fff5df; border: 1px solid #8d794e; border-radius: 7px; background: #17130e; box-shadow: 0 2px 5px rgba(0,0,0,.65); font-size: .54rem; font-weight: 900; line-height: 1; letter-spacing: 0; }
 
 .player-combatant [data-game-tooltip]::after { left: 0; transform: translateY(4px); }

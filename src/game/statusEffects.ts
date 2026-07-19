@@ -1,0 +1,2 @@
+export const DEFAULT_STATUS_DURATION = 3;
+export const STATUS_DURATION_SEGMENTS = 3;
