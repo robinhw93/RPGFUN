@@ -4,11 +4,16 @@ import {
   Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound, Zap,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
+import { FloatingCombatText } from "./components/FloatingCombatText";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
+import { getDerivedStats, INITIAL_GAME } from "./game/character";
+import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
-import { addExperience, experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
+import { slotForItem } from "./game/gear";
+import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
+import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { createCombat, endPlayerTurn, ensureCombatState, getDerivedStats, getLoot, INITIAL_GAME, slotForItem, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, endPlayerTurn, ensureCombatState, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
@@ -51,45 +56,14 @@ function App() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const travelTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
-  const revealCombatEvent = useCombatEventSequencer(game, setGame);
+  const combatSequencer = useCombatEventSequencer(game, setGame);
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = ADVENTURE[game.adventure.nodeIndex];
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
 
   useEffect(() => {
     if (game.adventure.combat?.outcome !== "victory") return;
-    setGame((current) => {
-      const adventure = current.adventure;
-      if (adventure.combat?.outcome !== "victory" || adventure.pendingReward?.nodeIndex === adventure.nodeIndex) return current;
-      const node = ADVENTURE[adventure.nodeIndex];
-      if (!node.reward) return current;
-
-      const lootTemplate = node.reward.loot ? getLoot(adventure.nodeIndex) : null;
-      const loot = lootTemplate ? { ...lootTemplate, id: `${lootTemplate.id}-${adventure.nodeIndex}-${Date.now()}` } : null;
-      const experience = addExperience(current.character, node.reward.experience);
-      const reward: CombatReward = {
-        id: `combat-reward-${adventure.nodeIndex}-${Date.now()}`,
-        nodeIndex: adventure.nodeIndex,
-        experience: node.reward.experience,
-        gold: node.reward.gold,
-        loot,
-        levelBefore: experience.levelBefore,
-        xpBefore: experience.xpBefore,
-        levelAfter: experience.levelAfter,
-        xpAfter: experience.xpAfter,
-        levelsGained: experience.levelsGained,
-      };
-
-      return {
-        ...current,
-        character: {
-          ...experience.character,
-          gold: experience.character.gold + node.reward.gold,
-          inventory: loot ? [...experience.character.inventory, loot] : experience.character.inventory,
-        },
-        adventure: { ...adventure, latestLoot: loot, pendingReward: reward },
-      };
-    });
+    setGame((current) => grantCombatReward(current));
   }, [game.adventure.combat?.outcome, game.adventure.nodeIndex]);
 
   useEffect(() => {
@@ -338,7 +312,8 @@ function App() {
             onAbility={castAbility}
             onEndTurn={finishPlayerTurn}
             onEnemyTurn={runEnemyTurn}
-            onCombatEvent={revealCombatEvent}
+            onCombatEvent={combatSequencer.revealEvent}
+            onCombatSequenceComplete={combatSequencer.completeSequence}
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
             onEvent={resolveEvent}
@@ -419,7 +394,7 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string) => void }) {
   );
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onInitiativeComplete, onContinue, onEvent, onPermadeath, onTalents, onCharacter }: {
+function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onInitiativeComplete, onContinue, onEvent, onPermadeath, onTalents, onCharacter }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   onBegin: () => void;
@@ -428,6 +403,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   onEndTurn: () => void;
   onEnemyTurn: (actorId: string) => void;
   onCombatEvent: (eventId: number, eventIndex: number) => void;
+  onCombatSequenceComplete: (eventId: number) => void;
   onInitiativeComplete: () => void;
   onContinue: () => void;
   onEvent: (choice: "rest" | "ember") => void;
@@ -438,12 +414,10 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const adventure = game.adventure;
   const [logOpen, setLogOpen] = useState(false);
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
-  const [sequencePlaying, setSequencePlaying] = useState(Boolean(adventure.combat?.floatingEvents?.length && adventure.combat?.pendingEffects?.length));
+  const [playerReadyEventId, setPlayerReadyEventId] = useState<number | null>(null);
   const combatEventId = adventure.combat?.eventId ?? 0;
-  const floatingEventCount = adventure.combat?.floatingEvents?.length ?? 0;
-  const sequenceEventId = useRef(combatEventId);
   const initiativePlaying = Boolean(adventure.combat && adventure.combat.outcome === "active" && !adventure.combat.initiativeRevealed);
-  const sequencePending = initiativePlaying || sequencePlaying || sequenceEventId.current !== combatEventId;
+  const sequencePending = Boolean(adventure.combat && isCombatSequencePending(adventure.combat));
   const activeActor = adventure.combat?.turnOrder?.[adventure.combat.activeTurnIndex];
 
   useEffect(() => {
@@ -451,20 +425,10 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
     setInspectedInfo(null);
   }, [adventure.nodeIndex]);
   useEffect(() => {
-    sequenceEventId.current = combatEventId;
-    if (floatingEventCount === 0 || (adventure.combat?.outcome !== "active" && !adventure.combat?.pendingEffects?.length)) {
-      setSequencePlaying(false);
-      return;
-    }
-    setSequencePlaying(true);
-    const timer = window.setTimeout(() => setSequencePlaying(false), floatingEventCount * COMBAT_TIMING.floatingMessageMs);
-    return () => window.clearTimeout(timer);
-  }, [adventure.combat?.outcome, adventure.combat?.pendingEffects?.length, combatEventId, floatingEventCount]);
-  useEffect(() => {
-    if (!adventure.combat || adventure.combat.outcome !== "active" || sequencePending || logOpen || inspectedInfo || activeActor?.kind !== "enemy") return;
+    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || activeActor?.kind !== "enemy") return;
     const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
     return () => window.clearTimeout(timer);
-  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
+  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
 
   if (adventure.completed) {
     return (
@@ -527,6 +491,11 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const combat = adventure.combat!;
   const damagedTargets = combat.damagedTargets ?? [];
   const isPlayerTurn = activeActor?.kind === "player";
+  const playerInputLocked = initiativePlaying || (sequencePending && playerReadyEventId !== combatEventId);
+  const handleCombatEventShown = (eventId: number, eventIndex: number) => {
+    if (eventRevealsPlayerTurn(combat, eventIndex)) setPlayerReadyEventId(eventId);
+    onCombatEvent(eventId, eventIndex);
+  };
   return (
     <section className={`combat-page compact-combat ${inspectedInfo ? "inspect-info-open" : ""}`}>
       <ProgressHeader index={adventure.nodeIndex} />
@@ -593,20 +562,20 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         </div>
       </div>
 
-      <FloatingCombatText key={combat.eventId ?? 0} eventId={combat.eventId ?? 0} events={combat.floatingEvents ?? []} onEventShown={onCombatEvent} />
+      {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id, index) => {
           const ability = ABILITIES[id];
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
-          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={sequencePending || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
 
       <div className="combat-footer-controls">
         <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
-        <button className="end-turn-button" disabled={sequencePending || !isPlayerTurn || combat.outcome !== "active"} onClick={onEndTurn}>
+        <button className="end-turn-button" disabled={playerInputLocked || !isPlayerTurn || combat.outcome !== "active"} onClick={onEndTurn}>
           {isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
       </div>
@@ -1094,27 +1063,6 @@ function HoldAbilityButton({ ability, index, cooldown, disabled, onUse }: { abil
       <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>
     </button>
   );
-}
-
-function FloatingCombatText({ events, eventId, onEventShown }: { events: string[]; eventId: number; onEventShown: (eventId: number, eventIndex: number) => void }) {
-  const [index, setIndex] = useState(0);
-  const eventCallback = useRef(onEventShown);
-
-  useEffect(() => { eventCallback.current = onEventShown; }, [onEventShown]);
-  useEffect(() => setIndex(0), [eventId]);
-  useEffect(() => {
-    if (events.length === 0 || index >= events.length - 1) return;
-    const timer = window.setTimeout(() => setIndex((current) => current + 1), COMBAT_TIMING.floatingMessageMs);
-    return () => window.clearTimeout(timer);
-  }, [events, eventId, index]);
-
-  const message = events[index];
-  useEffect(() => {
-    if (message) eventCallback.current(eventId, index);
-  }, [eventId, index, message]);
-  if (!message) return null;
-  const tone = /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
-  return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`} style={{ animationDuration: `${COMBAT_TIMING.floatingMessageMs}ms` }}>{message}</span></div>;
 }
 
 function CharacterView({ character, locked, onEquip, onAllocateStat }: {

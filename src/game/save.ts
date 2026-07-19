@@ -28,7 +28,7 @@ export function loadGame(): GameState | null {
       characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
       character: {
         ...state.character,
-      unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (state.character.level - 1) * 3),
+        unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (state.character.level - 1) * 3),
         talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
         unlockedTalents,
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),

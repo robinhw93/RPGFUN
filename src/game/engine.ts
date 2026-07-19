@@ -1,64 +1,8 @@
-import { ABILITIES, ADVENTURE, ENEMIES, ITEMS } from "./data";
+import { getDerivedStats } from "./character";
+import { ABILITIES, ENEMIES } from "./data";
 import { getCharacterCombatFeatures, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
-import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, Stats, StatusEffect, TurnOrderEntry } from "./types";
-
-export const INITIAL_CHARACTER: CharacterState = {
-  name: "",
-  level: 1,
-  xp: 0,
-  unspentStatPoints: 0,
-  gold: 18,
-  baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 6, luck: 3 },
-  talentPoints: 3,
-  unlockedTalents: ["origin"],
-  equippedAbilities: ["strike", "guard"],
-  inventory: [ITEMS[1], ITEMS[2], ITEMS[4], ITEMS[6]],
-  equipment: {
-    mainHand: ITEMS[0],
-    chest: ITEMS[3],
-    boots: ITEMS[5],
-  },
-};
-
-export const INITIAL_GAME: GameState = {
-  characterCreated: false,
-  character: INITIAL_CHARACTER,
-  adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
-};
-
-export function getDerivedStats(character: CharacterState): Stats & { armor: number; power: number; maxHp: number; maxEnergy: number; energyRegen: number; critChance: number; initiativeBonus: number } {
-  const stats = { ...character.baseStats };
-  let armor = 0;
-  let power = 0;
-  Object.values(character.equipment).forEach((item) => {
-    if (!item) return;
-    armor += item.armor ?? 0;
-    power += item.power ?? 0;
-    Object.entries(item.stats).forEach(([key, value]) => {
-      stats[key as keyof Stats] += value ?? 0;
-    });
-  });
-  const features = getCharacterCombatFeatures(character);
-  Object.entries(features.passive.stats).forEach(([stat, amount]) => {
-    stats[stat as keyof Stats] += amount;
-  });
-  armor += features.passive.armor;
-  power += features.passive.power;
-  const maxEnergy = 10 + features.passive.maxEnergy;
-  const energyRegen = 1 + features.passive.energyRegen;
-  const critChance = 0.05 + stats.luck * 0.01 + features.passive.critChance;
-  return {
-    ...stats,
-    armor,
-    power,
-    maxHp: 42 + stats.vitality * 6 + features.passive.maxHp,
-    maxEnergy,
-    energyRegen,
-    critChance,
-    initiativeBonus: stats.agility + Math.floor(stats.intelligence / 2) + features.passive.initiative,
-  };
-}
+import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
   const derived = getDerivedStats(character);
@@ -80,6 +24,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     playerActed: false,
     abilityCooldowns: {},
     eventId: 1,
+    completedSequenceEventId: 1,
     floatingEvents: [],
     pendingEffects: [],
     procUsage: {},
@@ -190,6 +135,8 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       initiativeRevealed: combat.initiativeRevealed ?? true,
       playerActed: combat.playerActed ?? false,
       abilityCooldowns: combat.abilityCooldowns ?? {},
+      completedSequenceEventId: combat.completedSequenceEventId
+        ?? ((combat.floatingEvents?.length ?? 0) > 0 && (combat.pendingEffects?.length ?? 0) > 0 ? (combat.eventId ?? 1) - 1 : combat.eventId ?? 1),
       damagedTargets: combat.damagedTargets ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
@@ -208,6 +155,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     playerActed: false,
     abilityCooldowns: {},
     eventId: (combat.eventId ?? 0) + 1,
+    completedSequenceEventId: combat.eventId ?? 0,
     floatingEvents: [],
     pendingEffects: [],
     procUsage: {},
@@ -764,15 +712,4 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
     attackEffectId: attackEffect.id,
     damagedTargets: [],
   };
-}
-
-export function getLoot(nodeIndex: number): GearItem {
-  if (nodeIndex >= ADVENTURE.length - 1) return ITEMS[8];
-  const pool = ITEMS.slice(1, 8);
-  return pool[(nodeIndex * 3 + 1) % pool.length];
-}
-
-export function slotForItem(item: GearItem, equipment: CharacterState["equipment"]): GearSlot {
-  if (item.slot !== "ring") return item.slot;
-  return !equipment.ring1 ? "ring1" : !equipment.ring2 ? "ring2" : "ring1";
 }

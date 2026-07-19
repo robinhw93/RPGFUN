@@ -171,6 +171,7 @@ export interface CombatState {
   playerActed: boolean;
   abilityCooldowns: Record<string, number>;
   eventId: number;
+  completedSequenceEventId: number;
   floatingEvents: string[];
   pendingEffects: CombatPendingEffect[];
   procUsage: Record<string, { lastTriggeredTurn: number }>;

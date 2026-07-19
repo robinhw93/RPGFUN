@@ -15,7 +15,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
     scheduledEffects.current.clear();
   }, []);
 
-  return useCallback((eventId: number, eventIndex: number) => {
+  const revealEvent = useCallback((eventId: number, eventIndex: number) => {
     const visibleCombat = gameRef.current.adventure.combat;
     const attackEffect = visibleCombat?.pendingEffects.find((effect) => effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId));
 
@@ -55,4 +55,20 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
       return { ...current, adventure: { ...current.adventure, combat: resolved } };
     });
   }, [setGame]);
+
+  const completeSequence = useCallback((eventId: number) => {
+    setGame((current) => {
+      const combat = current.adventure.combat;
+      if (!combat || combat.eventId !== eventId || combat.completedSequenceEventId >= eventId) return current;
+      return {
+        ...current,
+        adventure: {
+          ...current.adventure,
+          combat: { ...combat, completedSequenceEventId: eventId },
+        },
+      };
+    });
+  }, [setGame]);
+
+  return { revealEvent, completeSequence };
 }
