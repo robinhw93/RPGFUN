@@ -7,11 +7,11 @@ import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GearSlotIcon } from "./components/GearSlotIcon";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
-import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
+import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, ITEMS, TALENTS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
-import { equipGearItem, getGearCategoryLabel, isEquipmentSlotLocked } from "./game/gear";
+import { equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, unequipGearItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -258,13 +258,20 @@ function App() {
     });
   };
 
-  const equipItem = (item: GearItem) => {
+  const equipItem = (item: GearItem, preferredSlot?: GearSlot) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
       return {
         ...current,
-        character: equipGearItem(current.character, item),
+        character: equipGearItem(current.character, item, preferredSlot),
       };
+    });
+  };
+
+  const unequipItem = (slot: GearSlot) => {
+    setGame((current) => {
+      if (current.adventure.combat?.outcome === "active") return current;
+      return { ...current, character: unequipGearItem(current.character, slot) };
     });
   };
 
@@ -340,7 +347,7 @@ function App() {
             onCharacter={() => navigate("character")}
           />
         )}
-        {view === "character" && <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onAllocateStat={allocateStat} />}
+        {view === "character" && <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />}
         {view === "talents" && <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} />}
       </main>
 
@@ -725,7 +732,7 @@ function VictoryScoreScreen({ reward, onCharacter, onContinue, finalEncounter }:
         {reward.loot && (
           <div className={`score-loot-card ${reward.loot.rarity}`}>
             <span className="score-loot-glyph"><GearSlotIcon slot={reward.loot.slot} item={reward.loot} size={24} /></span>
-            <span><small>{reward.loot.rarity} {reward.loot.slot}</small><strong>{reward.loot.name}</strong><em>{formatStats(reward.loot)}</em></span>
+            <span><small>{reward.loot.rarity} · {getGearCategoryLabel(reward.loot)}</small><strong>{reward.loot.name}</strong><em>{reward.loot.description}</em></span>
           </div>
         )}
 
@@ -1092,12 +1099,14 @@ function HoldAbilityButton({ ability, index, cooldown, disabled, onUse }: { abil
   );
 }
 
-function CharacterView({ character, locked, onEquip, onAllocateStat }: {
+function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }: {
   character: CharacterState;
   locked: boolean;
-  onEquip: (item: GearItem) => void;
+  onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
+  onUnequip: (slot: GearSlot) => void;
   onAllocateStat: (stat: StatName) => void;
 }) {
+  const [inspectedItem, setInspectedItem] = useState<{ item: GearItem; equippedSlot?: GearSlot } | null>(null);
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
@@ -1139,15 +1148,19 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
               const item = character.equipment[slot];
               const slotLocked = isEquipmentSlotLocked(slot, character.equipment);
               return (
-                <div
+                <button
+                  type="button"
                   className={`paper-doll-slot slot-${slot} ${item ? item.rarity : "empty"}${slotLocked ? " locked" : ""}`}
                   key={slot}
+                  disabled={!item || slotLocked}
+                  onClick={() => item && setInspectedItem({ item, equippedSlot: slot })}
+                  aria-label={item ? `View ${item.name}` : `${SLOT_LABELS[slot]} is ${slotLocked ? "locked" : "empty"}`}
                 >
                   <small>{SLOT_LABELS[slot]}</small>
                   <span className="paper-doll-slot-glyph"><GearSlotIcon slot={slot} item={item} /></span>
                   <strong>{slotLocked ? "Locked" : item?.name ?? "Empty"}</strong>
-                  {slotLocked ? <em>Two-Hand weapon equipped</em> : item && <em>{formatStats(item)}</em>}
-                </div>
+                  {slotLocked && <em>Two-Hand weapon equipped</em>}
+                </button>
               );
             })}
           </div>
@@ -1158,22 +1171,127 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
         </div>
       </div>
 
-      <div className="section-heading inventory-heading"><div><p className="eyebrow">Collected Items</p><h2>Inventory</h2></div><span className={locked ? "lock-note" : "muted"}>{locked ? "Equipment is locked during combat" : "Tap an item to equip it"}</span></div>
+      <div className="section-heading inventory-heading"><div><p className="eyebrow">Collected Items</p><h2>Inventory</h2></div><span className={locked ? "lock-note" : "muted"}>{locked ? "Equipment is locked during combat" : "Tap an item to view its details"}</span></div>
       <div className="inventory-grid">
-        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} disabled={locked} onClick={() => onEquip(item)}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><em>{formatStats(item)}</em><span className="equip-cta">{locked ? "Locked" : "Equip"} <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
+        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
       </div>
+      {inspectedItem && (
+        <ItemDetailModal
+          item={inspectedItem.item}
+          equippedSlot={inspectedItem.equippedSlot}
+          character={character}
+          locked={locked}
+          onClose={() => setInspectedItem(null)}
+          onEquip={(item, slot) => { onEquip(item, slot); setInspectedItem(null); }}
+          onUnequip={(slot) => { onUnequip(slot); setInspectedItem(null); }}
+        />
+      )}
     </section>
   );
 }
 
-function formatStats(item: GearItem) {
-  const values = Object.entries(item.stats).map(([key, value]) => `+${value} ${key.slice(0, 3).toUpperCase()}`);
-  if (item.armor) values.push(`+${item.armor} ARM`);
-  if (item.magicResistance) values.push(`+${item.magicResistance} MRES`);
-  if (item.physicalPower) values.push(`+${item.physicalPower} PHYS`);
-  if (item.magicalPower) values.push(`+${item.magicalPower} MAG`);
-  if (item.power) values.push(`+${item.power} PWR`);
-  return values.join(" · ");
+const ITEM_STAT_LABELS: Record<StatName, string> = {
+  strength: "Strength",
+  agility: "Agility",
+  intelligence: "Intelligence",
+  vitality: "Vitality",
+  luck: "Luck",
+};
+
+function getItemStatLines(item: GearItem): Array<{ label: string; value: number }> {
+  const lines = Object.entries(item.stats).flatMap(([stat, value]) => value ? [{ label: ITEM_STAT_LABELS[stat as StatName], value }] : []);
+  if (item.armor) lines.push({ label: "Armor", value: item.armor });
+  if (item.magicResistance) lines.push({ label: "Magic Resistance", value: item.magicResistance });
+  if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower });
+  if (item.magicalPower) lines.push({ label: "Magical Power", value: item.magicalPower });
+  if (item.power) lines.push({ label: "Power", value: item.power });
+  return lines;
+}
+
+function ItemDetailModal({ item, equippedSlot, character, locked, onClose, onEquip, onUnequip }: {
+  item: GearItem;
+  equippedSlot?: GearSlot;
+  character: CharacterState;
+  locked: boolean;
+  onClose: () => void;
+  onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
+  onUnequip: (slot: GearSlot) => void;
+}) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  const stats = getItemStatLines(item);
+  const equippedEntries = Object.entries(character.equipment) as Array<[GearSlot, GearItem]>;
+  const equippedIds = new Set(equippedEntries.map(([, equipped]) => equipped.id));
+  const ownedIds = new Set([...character.inventory.map((owned) => owned.id), ...equippedIds]);
+  const setItems = item.set
+    ? [...ITEMS.filter((candidate) => candidate.set === item.set), ...(!ITEMS.some((candidate) => candidate.id === item.id) ? [item] : [])]
+    : [];
+  const setBonuses = item.set ? GEAR_SET_BONUSES.filter((bonus) => bonus.setId === item.set) : [];
+  const equippedSetPieces = item.set ? equippedEntries.filter(([, equipped]) => equipped.set === item.set).length : 0;
+  const equipType = getWeaponEquipType(item);
+  const offHandLocked = isEquipmentSlotLocked("offHand", character.equipment);
+  const actionLocked = locked || (equipType === "offHand" && offHandLocked);
+
+  return (
+    <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
+      <article className="item-detail-card" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close item details">×</button>
+        <header className="item-detail-header">
+          <span className={`item-detail-icon ${item.rarity}`}><GearSlotIcon slot={item.slot} item={item} size={58} /></span>
+          <span>
+            <small>{item.rarity} · {getGearCategoryLabel(item)}</small>
+            <h2 className={`item-name-${item.rarity}`}>{item.name}</h2>
+            <p>{item.description}</p>
+          </span>
+        </header>
+
+        <section className="item-detail-section">
+          <h3>Item Stats</h3>
+          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small>{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
+        </section>
+
+        <section className="item-detail-section item-set-section">
+          <h3>Gear Set</h3>
+          {item.set ? (
+            <>
+              <div className="item-set-title"><Gem size={16} /><strong>{item.setName ?? item.set}</strong><span>{setItems.filter((piece) => ownedIds.has(piece.id)).length}/{setItems.length} owned</span></div>
+              <div className="item-set-pieces">
+                {setItems.map((piece) => {
+                  const equipped = equippedIds.has(piece.id);
+                  const owned = ownedIds.has(piece.id);
+                  return <span className={owned ? "owned" : "missing"} key={piece.id}><i><GearSlotIcon slot={piece.slot} item={piece} size={23} /></i><strong>{piece.name}</strong><em>{equipped ? "Equipped" : owned ? "Owned" : "Missing"}</em></span>;
+                })}
+              </div>
+              {setBonuses.length > 0 && <div className="item-set-bonuses">{setBonuses.map((bonus) => <span className={equippedSetPieces >= bonus.requiredPieces ? "active" : ""} key={bonus.requiredPieces}><strong>{bonus.requiredPieces} Pieces</strong><em>{bonus.description}</em><small>{equippedSetPieces >= bonus.requiredPieces ? "Active" : `${equippedSetPieces}/${bonus.requiredPieces} equipped`}</small></span>)}</div>}
+            </>
+          ) : <p className="item-detail-muted">This item is not part of a gear set.</p>}
+        </section>
+
+        {locked && <p className="item-action-lock"><Shield size={14} /> Equipment cannot be changed during combat.</p>}
+        <div className="item-detail-actions">
+          {equippedSlot ? (
+            <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip(equippedSlot)}>Unequip</button>
+          ) : equipType === "oneHand" ? (
+            <>
+              <button type="button" disabled={locked} onClick={() => onEquip(item, "mainHand")}>Equip Main Hand</button>
+              <button type="button" disabled={locked || offHandLocked} onClick={() => onEquip(item, "offHand")}>{offHandLocked ? "Off Hand Locked" : "Equip Off Hand"}</button>
+            </>
+          ) : item.slot === "ring" ? (
+            <>
+              <button type="button" disabled={locked} onClick={() => onEquip(item, "ring1")}>Equip Ring I</button>
+              <button type="button" disabled={locked} onClick={() => onEquip(item, "ring2")}>Equip Ring II</button>
+            </>
+          ) : (
+            <button type="button" disabled={actionLocked} onClick={() => onEquip(item)}>{offHandLocked && equipType === "offHand" ? "Off Hand Locked" : "Equip"}</button>
+          )}
+        </div>
+      </article>
+    </div>
+  );
 }
 
 function formatPercent(value: number): string {

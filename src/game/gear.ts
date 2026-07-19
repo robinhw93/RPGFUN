@@ -99,6 +99,14 @@ export function equipGearItem(character: CharacterState, item: GearItem, preferr
   return { ...character, inventory, equipment };
 }
 
+export function unequipGearItem(character: CharacterState, slot: GearSlot): CharacterState {
+  const item = character.equipment[slot];
+  if (!item) return character;
+  const equipment = { ...character.equipment };
+  delete equipment[slot];
+  return { ...character, equipment, inventory: [...character.inventory, item] };
+}
+
 export function getGearCategoryLabel(item: GearItem): string {
   const equipType = getWeaponEquipType(item);
   if (equipType) {
