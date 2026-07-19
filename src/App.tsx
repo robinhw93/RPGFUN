@@ -480,7 +480,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const damagedTargets = combat.damagedTargets ?? [];
   const isPlayerTurn = activeActor?.kind === "player";
   return (
-    <section className="combat-page compact-combat">
+    <section className={`combat-page compact-combat ${inspectedInfo ? "inspect-info-open" : ""}`}>
       <ProgressHeader index={adventure.nodeIndex} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
@@ -812,6 +812,9 @@ function EnergySegments({ value, max, regen, showGain = false }: { value: number
 }
 
 function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: string; name: string; stacks: number; duration: number; kind: string; onInspect?: () => void }) {
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const holdTimer = useRef<number | null>(null);
+  const longPressed = useRef(false);
   const icon = id === "bleed" ? <Droplets />
     : id === "poison" ? <FlaskConical />
       : id === "stunned" ? <Zap />
@@ -840,8 +843,53 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
     </svg>
   );
   const stackCounter = <b className="status-stack-count" aria-hidden="true">{stacks}</b>;
+
+  useEffect(() => () => {
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+  }, []);
+
   if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{ring}{icon}{stackCounter}</span>;
-  return <button type="button" className={`status-badge status-icon inspectable ${kind}`} aria-label={label} data-game-tooltip={label} onClick={(event) => { event.stopPropagation(); onInspect(); }}>{ring}{icon}{stackCounter}</button>;
+
+  const beginHold = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === "mouse") return;
+    longPressed.current = false;
+    holdTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      setTooltipOpen(true);
+    }, 420);
+  };
+
+  const endHold = () => {
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+    setTooltipOpen(false);
+    window.setTimeout(() => { longPressed.current = false; }, 250);
+  };
+
+  return (
+    <button
+      type="button"
+      className={`status-badge status-icon inspectable ${kind}`}
+      aria-label={label}
+      data-game-tooltip={label}
+      data-tooltip-open={tooltipOpen ? "true" : undefined}
+      onPointerDown={beginHold}
+      onPointerUp={endHold}
+      onPointerCancel={endHold}
+      onPointerLeave={endHold}
+      onContextMenu={(event) => event.preventDefault()}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (longPressed.current) {
+          event.preventDefault();
+          return;
+        }
+        onInspect();
+      }}
+    >
+      {ring}{icon}{stackCounter}
+    </button>
+  );
 }
 
 function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {
