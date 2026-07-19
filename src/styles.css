@@ -256,6 +256,7 @@ main { min-height: calc(100vh - 68px); }
 .paper-doll-slot em { min-width: 0; grid-column: 2; color: #94aa99; font-size: .48rem; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .paper-doll-slot.uncommon { border-color: #3f694c; }.paper-doll-slot.rare { border-color: #506b91; }.paper-doll-slot.epic { border-color: #805888; }
 .paper-doll-slot.empty { opacity: .63; border-color: #333832; }.paper-doll-slot.empty strong { color: #737a72; font-style: italic; }
+.paper-doll-slot.locked { opacity: .38; border-style: dashed; }.paper-doll-slot.locked .paper-doll-slot-glyph { filter: grayscale(1); }
 .slot-head, .slot-chest, .slot-pants, .slot-boots { left: 50%; transform: translateX(-50%); }
 .slot-head { top: 12px; }.slot-chest { top: 119px; }.slot-pants { top: 257px; }.slot-boots { top: 411px; }
 .slot-mainHand, .slot-offHand { top: 164px; }.slot-mainHand { left: 16px; }.slot-offHand { right: 16px; }

@@ -11,7 +11,7 @@ import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
-import { slotForItem } from "./game/gear";
+import { equipGearItem, getGearCategoryLabel, isEquipmentSlotLocked } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -261,13 +261,9 @@ function App() {
   const equipItem = (item: GearItem) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
-      const slot = slotForItem(item, current.character.equipment);
-      const oldItem = current.character.equipment[slot];
-      const inventory = current.character.inventory.filter((candidate) => candidate.id !== item.id);
-      if (oldItem) inventory.push(oldItem);
       return {
         ...current,
-        character: { ...current.character, inventory, equipment: { ...current.character.equipment, [slot]: item } },
+        character: equipGearItem(current.character, item),
       };
     });
   };
@@ -1141,15 +1137,16 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
             </div>
             {EQUIPMENT_SLOT_ORDER.map((slot) => {
               const item = character.equipment[slot];
+              const slotLocked = isEquipmentSlotLocked(slot, character.equipment);
               return (
                 <div
-                  className={`paper-doll-slot slot-${slot} ${item ? item.rarity : "empty"}`}
+                  className={`paper-doll-slot slot-${slot} ${item ? item.rarity : "empty"}${slotLocked ? " locked" : ""}`}
                   key={slot}
                 >
                   <small>{SLOT_LABELS[slot]}</small>
                   <span className="paper-doll-slot-glyph"><GearSlotIcon slot={slot} item={item} /></span>
-                  <strong>{item?.name ?? "Empty"}</strong>
-                  {item && <em>{formatStats(item)}</em>}
+                  <strong>{slotLocked ? "Locked" : item?.name ?? "Empty"}</strong>
+                  {slotLocked ? <em>Two-Hand weapon equipped</em> : item && <em>{formatStats(item)}</em>}
                 </div>
               );
             })}
@@ -1163,7 +1160,7 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
 
       <div className="section-heading inventory-heading"><div><p className="eyebrow">Collected Items</p><h2>Inventory</h2></div><span className={locked ? "lock-note" : "muted"}>{locked ? "Equipment is locked during combat" : "Tap an item to equip it"}</span></div>
       <div className="inventory-grid">
-        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} disabled={locked} onClick={() => onEquip(item)}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} {item.slot}</span><strong>{item.name}</strong><p>{item.description}</p><em>{formatStats(item)}</em><span className="equip-cta">{locked ? "Locked" : "Equip"} <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
+        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} disabled={locked} onClick={() => onEquip(item)}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><em>{formatStats(item)}</em><span className="equip-cta">{locked ? "Locked" : "Equip"} <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
       </div>
     </section>
   );

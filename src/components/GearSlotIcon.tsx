@@ -1,23 +1,62 @@
-import type { GearItem, GearSlot, GearType } from "../game/types";
+import { getArmorMaterial, getWeaponEquipType, getWeaponKind } from "../game/gear";
+import type { ArmorMaterial, GearItem, GearSlot, GearType, WeaponKind } from "../game/types";
 
-export type GearIconKind = "head" | "chest" | "pants" | "boots" | "ring" | "oneHanded" | "twoHanded" | "offHand";
-
-const GEAR_ICON_URLS: Record<GearIconKind, string> = {
-  head: "/assets/gear-icons/head.webp",
-  chest: "/assets/gear-icons/chest.webp",
-  pants: "/assets/gear-icons/pants.webp",
-  boots: "/assets/gear-icons/boots.webp",
-  ring: "/assets/gear-icons/ring.webp",
-  oneHanded: "/assets/gear-icons/one-handed.webp",
-  twoHanded: "/assets/gear-icons/two-handed.webp",
-  offHand: "/assets/gear-icons/offhand.webp",
+const ARMOR_ICON_URLS: Record<"head" | "chest" | "pants" | "boots", Record<ArmorMaterial, string>> = {
+  head: {
+    plate: "/assets/gear-icons/head.webp",
+    leather: "/assets/gear-icons/head-leather.webp",
+    cloth: "/assets/gear-icons/head-cloth.webp",
+  },
+  chest: {
+    plate: "/assets/gear-icons/chest.webp",
+    leather: "/assets/gear-icons/chest-leather.webp",
+    cloth: "/assets/gear-icons/chest-cloth.webp",
+  },
+  pants: {
+    plate: "/assets/gear-icons/pants-plate.webp",
+    leather: "/assets/gear-icons/pants-leather.webp",
+    cloth: "/assets/gear-icons/pants.webp",
+  },
+  boots: {
+    plate: "/assets/gear-icons/boots-plate.webp",
+    leather: "/assets/gear-icons/boots.webp",
+    cloth: "/assets/gear-icons/boots-cloth.webp",
+  },
 };
 
-function resolveGearIconKind(slot: GearSlot | GearType, item?: GearItem): GearIconKind {
+const MAIN_HAND_ICON_URLS: Partial<Record<WeaponKind, string>> = {
+  sword: "/assets/gear-icons/one-handed.webp",
+  axe: "/assets/gear-icons/main-axe.webp",
+  mace: "/assets/gear-icons/main-mace.webp",
+  dagger: "/assets/gear-icons/main-dagger.webp",
+  wand: "/assets/gear-icons/main-wand.webp",
+};
+
+const OFF_HAND_ICON_URLS: Partial<Record<WeaponKind, string>> = {
+  shield: "/assets/gear-icons/offhand.webp",
+  tome: "/assets/gear-icons/offhand-tome.webp",
+};
+
+const TWO_HAND_ICON_URLS: Partial<Record<WeaponKind, string>> = {
+  sword: "/assets/gear-icons/two-handed.webp",
+  axe: "/assets/gear-icons/twohand-axe.webp",
+  mace: "/assets/gear-icons/twohand-mace.webp",
+  staff: "/assets/gear-icons/twohand-staff.webp",
+  polearm: "/assets/gear-icons/twohand-polearm.webp",
+};
+
+function resolveGearIconUrl(slot: GearSlot | GearType, item?: GearItem): string {
   const itemSlot = item?.slot ?? slot;
-  if (itemSlot === "ring" || itemSlot === "ring1" || itemSlot === "ring2") return "ring";
-  if (itemSlot === "mainHand") return item?.weaponType === "twoHanded" ? "twoHanded" : "oneHanded";
-  return itemSlot;
+  if (itemSlot === "ring" || itemSlot === "ring1" || itemSlot === "ring2") return "/assets/gear-icons/ring.webp";
+  if (itemSlot === "head" || itemSlot === "chest" || itemSlot === "pants" || itemSlot === "boots") {
+    return ARMOR_ICON_URLS[itemSlot][getArmorMaterial(item, itemSlot)];
+  }
+
+  const equipType = getWeaponEquipType(item);
+  const kind = getWeaponKind(item);
+  if (equipType === "twoHand") return TWO_HAND_ICON_URLS[kind ?? "sword"] ?? TWO_HAND_ICON_URLS.sword!;
+  if (equipType === "offHand" || itemSlot === "offHand") return OFF_HAND_ICON_URLS[kind ?? "shield"] ?? OFF_HAND_ICON_URLS.shield!;
+  return MAIN_HAND_ICON_URLS[kind ?? "sword"] ?? MAIN_HAND_ICON_URLS.sword!;
 }
 
 export function GearSlotIcon({ slot, item, size = 24, className }: {
@@ -26,13 +65,11 @@ export function GearSlotIcon({ slot, item, size = 24, className }: {
   size?: number;
   className?: string;
 }) {
-  const kind = resolveGearIconKind(slot, item);
-
   return (
     <img
       aria-hidden="true"
       className={className ? `gear-slot-icon ${className}` : "gear-slot-icon"}
-      src={GEAR_ICON_URLS[kind]}
+      src={resolveGearIconUrl(slot, item)}
       alt=""
       width={size}
       height={size}

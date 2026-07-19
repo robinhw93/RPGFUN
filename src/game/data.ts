@@ -50,15 +50,15 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
 };
 
 export const ITEMS: GearItem[] = [
-  { id: "ironCleaver", name: "Notched Iron Cleaver", slot: "mainHand", weaponType: "oneHanded", rarity: "uncommon", description: "Still sharp enough to draw blood.", stats: { strength: 2 }, physicalPower: 3, set: "ashborn", setName: "Ashborn Warplate" },
-  { id: "embershard", name: "Embershard Focus", slot: "offHand", rarity: "rare", description: "Warm whispers curl around the crystal.", stats: { intelligence: 3 }, magicalPower: 2 },
-  { id: "wandererHood", name: "Wanderer's Hood", slot: "head", rarity: "common", description: "A little anonymity goes a long way.", stats: { agility: 1 }, armor: 1 },
-  { id: "ashCuirass", name: "Ashborn Cuirass", slot: "chest", rarity: "rare", description: "Forged in a fire that never cooled.", stats: { strength: 2, vitality: 2 }, armor: 5, set: "ashborn", setName: "Ashborn Warplate" },
-  { id: "veilTrousers", name: "Veilwalker Trousers", slot: "pants", rarity: "uncommon", description: "They leave no footprint in soot.", stats: { agility: 2 }, armor: 2, set: "veilwalker", setName: "Veilwalker's Guile" },
-  { id: "roadBoots", name: "Dustworn Boots", slot: "boots", rarity: "common", description: "Made for roads best left unnamed.", stats: { vitality: 1 }, armor: 1 },
+  { id: "ironCleaver", name: "Notched Iron Cleaver", slot: "mainHand", weaponEquipType: "oneHand", weaponKind: "axe", rarity: "uncommon", description: "Still sharp enough to draw blood.", stats: { strength: 2 }, physicalPower: 3, set: "ashborn", setName: "Ashborn Warplate" },
+  { id: "embershard", name: "Embershard Focus", slot: "offHand", weaponEquipType: "offHand", weaponKind: "tome", rarity: "rare", description: "Warm whispers curl around the crystal.", stats: { intelligence: 3 }, magicalPower: 2 },
+  { id: "wandererHood", name: "Wanderer's Hood", slot: "head", armorMaterial: "leather", rarity: "common", description: "A little anonymity goes a long way.", stats: { agility: 1 }, armor: 1 },
+  { id: "ashCuirass", name: "Ashborn Cuirass", slot: "chest", armorMaterial: "plate", rarity: "rare", description: "Forged in a fire that never cooled.", stats: { strength: 2, vitality: 2 }, armor: 5, set: "ashborn", setName: "Ashborn Warplate" },
+  { id: "veilTrousers", name: "Veilwalker Trousers", slot: "pants", armorMaterial: "leather", rarity: "uncommon", description: "They leave no footprint in soot.", stats: { agility: 2 }, armor: 2, set: "veilwalker", setName: "Veilwalker's Guile" },
+  { id: "roadBoots", name: "Dustworn Boots", slot: "boots", armorMaterial: "leather", rarity: "common", description: "Made for roads best left unnamed.", stats: { vitality: 1 }, armor: 1 },
   { id: "garnetBand", name: "Garnet Signet", slot: "ring", rarity: "rare", description: "A noble crest has been scratched away.", stats: { strength: 1, luck: 2 } },
   { id: "moonRing", name: "Moonlit Coil", slot: "ring", rarity: "epic", description: "Its silver surface reflects an unfamiliar sky.", stats: { intelligence: 2, agility: 1, luck: 1 } },
-  { id: "wardenHelm", name: "Warden's Broken Crown", slot: "head", rarity: "epic", description: "The last ember still burns within.", stats: { vitality: 3, strength: 2 }, armor: 4, set: "ashborn", setName: "Ashborn Warplate" },
+  { id: "wardenHelm", name: "Warden's Broken Crown", slot: "head", armorMaterial: "plate", rarity: "epic", description: "The last ember still burns within.", stats: { vitality: 3, strength: 2 }, armor: 4, set: "ashborn", setName: "Ashborn Warplate" },
 ];
 
 export const GEAR_SET_BONUSES: GearSetBonusDefinition[] = [

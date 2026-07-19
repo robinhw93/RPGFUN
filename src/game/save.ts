@@ -1,5 +1,5 @@
 import type { GameState } from "./types";
-import { TALENTS } from "./data";
+import { ITEMS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
 
 const SAVE_KEY = "emberfall-save-v1";
@@ -24,6 +24,25 @@ export function loadGame(): GameState | null {
       .filter((talent) => unlockedTalents.includes(talent.id) && talent.abilityId)
       .map((talent) => talent.abilityId!);
     const validAbilities = new Set(["strike", "guard", ...talentAbilities]);
+    const itemDefinitions = new Map(ITEMS.map((item) => [item.id, item]));
+    const hydrateGearMetadata = <T extends GameState["character"]["inventory"][number]>(item: T): T => {
+      const definition = itemDefinitions.get(item.id);
+      if (!definition) return item;
+      return {
+        ...item,
+        armorMaterial: item.armorMaterial ?? definition.armorMaterial,
+        weaponEquipType: item.weaponEquipType ?? definition.weaponEquipType,
+        weaponKind: item.weaponKind ?? definition.weaponKind,
+      };
+    };
+    const equipment = Object.fromEntries(
+      Object.entries(state.character.equipment).map(([slot, item]) => [slot, item ? hydrateGearMetadata(item) : item]),
+    ) as GameState["character"]["equipment"];
+    const inventory = state.character.inventory.map(hydrateGearMetadata);
+    if ((equipment.mainHand?.weaponEquipType === "twoHand" || equipment.mainHand?.weaponType === "twoHanded") && equipment.offHand) {
+      inventory.push(equipment.offHand);
+      delete equipment.offHand;
+    }
     return {
       ...state,
       characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
@@ -34,6 +53,8 @@ export function loadGame(): GameState | null {
         talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
         unlockedTalents,
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),
+        inventory,
+        equipment,
       },
       adventure: {
         ...state.adventure,

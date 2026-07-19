@@ -4,6 +4,10 @@ export type StatName = "strength" | "agility" | "intelligence" | "vitality" | "l
 export type TalentBranch = "core" | "brute" | "shadow" | "arcanist";
 export type GearSlot = "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring1" | "ring2";
 export type GearType = Exclude<GearSlot, "ring1" | "ring2"> | "ring";
+export type ArmorMaterial = "plate" | "leather" | "cloth";
+export type WeaponEquipType = "mainHand" | "oneHand" | "offHand" | "twoHand";
+export type WeaponKind = "sword" | "axe" | "mace" | "dagger" | "wand" | "shield" | "tome" | "staff" | "polearm";
+/** Legacy save value. New items should use weaponEquipType. */
 export type WeaponType = "oneHanded" | "twoHanded";
 export type DamageType = "physical" | "arcane" | "shadow";
 export type TargetType = "enemy" | "self" | "all_enemies";
@@ -129,6 +133,10 @@ export interface GearItem {
   id: string;
   name: string;
   slot: GearType;
+  armorMaterial?: ArmorMaterial;
+  weaponEquipType?: WeaponEquipType;
+  weaponKind?: WeaponKind;
+  /** Legacy save value. New items should use weaponEquipType. */
   weaponType?: WeaponType;
   rarity: "common" | "uncommon" | "rare" | "epic";
   description: string;
