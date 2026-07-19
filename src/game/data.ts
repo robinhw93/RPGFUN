@@ -50,7 +50,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
 };
 
 export const ITEMS: GearItem[] = [
-  { id: "ironCleaver", name: "Notched Iron Cleaver", slot: "mainHand", rarity: "uncommon", description: "Still sharp enough to draw blood.", stats: { strength: 2 }, physicalPower: 3, set: "ashborn", setName: "Ashborn Warplate" },
+  { id: "ironCleaver", name: "Notched Iron Cleaver", slot: "mainHand", weaponType: "oneHanded", rarity: "uncommon", description: "Still sharp enough to draw blood.", stats: { strength: 2 }, physicalPower: 3, set: "ashborn", setName: "Ashborn Warplate" },
   { id: "embershard", name: "Embershard Focus", slot: "offHand", rarity: "rare", description: "Warm whispers curl around the crystal.", stats: { intelligence: 3 }, magicalPower: 2 },
   { id: "wandererHood", name: "Wanderer's Hood", slot: "head", rarity: "common", description: "A little anonymity goes a long way.", stats: { agility: 1 }, armor: 1 },
   { id: "ashCuirass", name: "Ashborn Cuirass", slot: "chest", rarity: "rare", description: "Forged in a fire that never cooled.", stats: { strength: 2, vitality: 2 }, armor: 5, set: "ashborn", setName: "Ashborn Warplate" },

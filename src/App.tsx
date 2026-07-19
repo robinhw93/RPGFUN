@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
+import { GearSlotIcon } from "./components/GearSlotIcon";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -733,7 +734,7 @@ function VictoryScoreScreen({ reward, onCharacter, onContinue, finalEncounter }:
 
         {reward.loot && (
           <div className={`score-loot-card ${reward.loot.rarity}`}>
-            <span className="score-loot-glyph">{reward.loot.slot === "ring" ? "◌" : reward.loot.slot.includes("Hand") ? "†" : "◇"}</span>
+            <span className="score-loot-glyph"><GearSlotIcon slot={reward.loot.slot} item={reward.loot} size={24} /></span>
             <span><small>{reward.loot.rarity} {reward.loot.slot}</small><strong>{reward.loot.name}</strong><em>{formatStats(reward.loot)}</em></span>
           </div>
         )}
@@ -1117,7 +1118,7 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
   }, {});
   return (
     <section className="page character-page">
-      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div><div className="power-seal"><Swords /><span><small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div></div>
       <div className="character-layout">
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
@@ -1146,14 +1147,13 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
             </div>
             {EQUIPMENT_SLOT_ORDER.map((slot) => {
               const item = character.equipment[slot];
-              const glyph = slot.includes("ring") ? "◌" : slot.includes("Hand") ? "†" : slot === "head" ? "△" : slot === "boots" ? "⌄" : "◇";
               return (
                 <div
                   className={`paper-doll-slot slot-${slot} ${item ? item.rarity : "empty"}`}
                   key={slot}
                 >
                   <small>{SLOT_LABELS[slot]}</small>
-                  <span className="paper-doll-slot-glyph">{glyph}</span>
+                  <span className="paper-doll-slot-glyph"><GearSlotIcon slot={slot} item={item} /></span>
                   <strong>{item?.name ?? "Empty"}</strong>
                   {item && <em>{formatStats(item)}</em>}
                 </div>
@@ -1169,7 +1169,7 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
 
       <div className="section-heading inventory-heading"><div><p className="eyebrow">Collected Items</p><h2>Inventory</h2></div><span className={locked ? "lock-note" : "muted"}>{locked ? "Equipment is locked during combat" : "Tap an item to equip it"}</span></div>
       <div className="inventory-grid">
-        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} disabled={locked} onClick={() => onEquip(item)}><span className="item-glyph">{item.slot === "ring" ? "◌" : item.slot.includes("Hand") ? "†" : "◇"}</span><span className="rarity">{item.rarity} {item.slot}</span><strong>{item.name}</strong><p>{item.description}</p><em>{formatStats(item)}</em><span className="equip-cta">{locked ? "Locked" : "Equip"} <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
+        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} disabled={locked} onClick={() => onEquip(item)}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} {item.slot}</span><strong>{item.name}</strong><p>{item.description}</p><em>{formatStats(item)}</em><span className="equip-cta">{locked ? "Locked" : "Equip"} <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
       </div>
     </section>
   );

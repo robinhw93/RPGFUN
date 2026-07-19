@@ -4,6 +4,7 @@ export type StatName = "strength" | "agility" | "intelligence" | "vitality" | "l
 export type TalentBranch = "core" | "brute" | "shadow" | "arcanist";
 export type GearSlot = "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring1" | "ring2";
 export type GearType = Exclude<GearSlot, "ring1" | "ring2"> | "ring";
+export type WeaponType = "oneHanded" | "twoHanded";
 export type DamageType = "physical" | "arcane" | "shadow";
 export type TargetType = "enemy" | "self" | "all_enemies";
 
@@ -128,6 +129,7 @@ export interface GearItem {
   id: string;
   name: string;
   slot: GearType;
+  weaponType?: WeaponType;
   rarity: "common" | "uncommon" | "rare" | "epic";
   description: string;
   stats: Partial<Stats>;
