@@ -400,28 +400,22 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: Ch
         <form onSubmit={submit}>
           <fieldset className="avatar-picker">
             <legend>Choose appearance</legend>
-            {(["male", "female"] as const).map((group) => (
-              <div className="avatar-group" key={group}>
-                <div className="avatar-group-heading"><strong>{group === "male" ? "Male" : "Female"}</strong><small>5 options</small></div>
-                <div className="avatar-options">
-                  {CHARACTER_AVATARS.filter((avatar) => avatar.group === group).map((avatar, index) => (
-                    <label className={`avatar-option ${avatar.id === avatarId ? "selected" : ""}`} key={avatar.id}>
-                      <input
-                        type="radio"
-                        name="character-avatar"
-                        value={avatar.id}
-                        checked={avatar.id === avatarId}
-                        onChange={() => setAvatarId(avatar.id)}
-                        aria-label={avatar.label}
-                      />
-                      <span className="avatar-option-image"><img src={avatar.imageUrl} alt="" loading={avatar.id === avatarId ? "eager" : "lazy"} decoding="async" draggable={false} /></span>
-                      <span className="avatar-option-label">Option {index + 1}</span>
-                      <span className="avatar-option-check" aria-hidden="true">✓</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <div className="avatar-options">
+              {CHARACTER_AVATARS.map((avatar) => (
+                <label className={`avatar-option ${avatar.id === avatarId ? "selected" : ""}`} key={avatar.id}>
+                  <input
+                    type="radio"
+                    name="character-avatar"
+                    value={avatar.id}
+                    checked={avatar.id === avatarId}
+                    onChange={() => setAvatarId(avatar.id)}
+                    aria-label={avatar.label}
+                  />
+                  <span className="avatar-option-image"><img src={avatar.imageUrl} alt="" loading={avatar.id === avatarId ? "eager" : "lazy"} decoding="async" draggable={false} /></span>
+                  <span className="avatar-option-check" aria-hidden="true">✓</span>
+                </label>
+              ))}
+            </div>
           </fieldset>
           <div className="creation-name-field">
             <label htmlFor="character-name">Character name</label>
@@ -437,7 +431,7 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: Ch
           </div>
           <button className="primary-button" type="submit" disabled={!trimmedName}>Begin Chronicle <ChevronRight size={17} /></button>
         </form>
-        <div className="permadeath-warning"><Skull size={16} /><span><strong>Permadeath enabled</strong>Your save is erased when this character dies.</span></div>
+        <div className="permadeath-warning"><Skull size={16} /><span>Permadeath - Your character is erased when it dies.</span></div>
       </section>
     </main>
   );
