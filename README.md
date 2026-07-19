@@ -11,6 +11,12 @@ npm install
 npm run dev
 ```
 
+## GitHub Codespaces
+
+The included dev-container uses Node.js 20 and installs the locked dependencies automatically. When a Codespace starts, it checks for the local Vite binary and runs `npm ci --include=dev` only when dependencies are missing.
+
+After pulling a new dev-container configuration into an existing Codespace, run **Codespaces: Rebuild Container** once from the command palette. Future starts restore the development environment automatically.
+
 ## Production build
 
 ```bash

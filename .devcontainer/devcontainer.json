@@ -1,0 +1,13 @@
+{
+  "name": "RPGFUN",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm",
+  "postCreateCommand": "npm ci --include=dev",
+  "postStartCommand": "test -x node_modules/.bin/vite || npm ci --include=dev",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "RPGFUN (Vite)",
+      "onAutoForward": "notify"
+    }
+  }
+}
