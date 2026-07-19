@@ -26,6 +26,8 @@ const SLOT_LABELS: Record<GearSlot, string> = {
   mainHand: "Main Hand", offHand: "Off Hand", ring1: "Ring I", ring2: "Ring II",
 };
 
+const EQUIPMENT_SLOT_ORDER: GearSlot[] = ["head", "chest", "pants", "boots", "mainHand", "offHand", "ring1", "ring2"];
+
 const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
   { key: "strength", label: "Strength", short: "STR" },
   { key: "agility", label: "Agility", short: "AGI" },
@@ -1120,11 +1122,37 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
         </div>
 
         <div className="paper-panel equipment-panel">
-          <div className="panel-title"><span><Shield size={17} /> Equipped Gear</span><small>8 equipment slots</small></div>
-          <div className="equipment-grid">
-            {(Object.keys(SLOT_LABELS) as GearSlot[]).map((slot) => {
+          <div className="panel-title"><span><Shield size={17} /> Equipment</span><small>8 slots</small></div>
+          <div className="equipment-paper-doll">
+            <div className="character-silhouette" aria-hidden="true">
+              <i className="silhouette-aura" />
+              <i className="silhouette-head" />
+              <i className="silhouette-neck" />
+              <i className="silhouette-torso" />
+              <i className="silhouette-arm left" />
+              <i className="silhouette-arm right" />
+              <i className="silhouette-forearm left" />
+              <i className="silhouette-forearm right" />
+              <i className="silhouette-hips" />
+              <i className="silhouette-leg left" />
+              <i className="silhouette-leg right" />
+              <i className="silhouette-boot left" />
+              <i className="silhouette-boot right" />
+            </div>
+            {EQUIPMENT_SLOT_ORDER.map((slot) => {
               const item = character.equipment[slot];
-              return <div className={`equipment-slot ${item ? item.rarity : "empty"}`} key={slot}><span className="slot-icon">{slot.includes("ring") ? "◌" : slot.includes("Hand") ? "⚔" : "◇"}</span><span><small>{SLOT_LABELS[slot]}</small><strong>{item?.name ?? "Empty"}</strong>{item && <em>{formatStats(item)}</em>}</span></div>;
+              const glyph = slot.includes("ring") ? "◌" : slot.includes("Hand") ? "†" : slot === "head" ? "△" : slot === "boots" ? "⌄" : "◇";
+              return (
+                <div
+                  className={`paper-doll-slot slot-${slot} ${item ? item.rarity : "empty"}`}
+                  key={slot}
+                >
+                  <small>{SLOT_LABELS[slot]}</small>
+                  <span className="paper-doll-slot-glyph">{glyph}</span>
+                  <strong>{item?.name ?? "Empty"}</strong>
+                  {item && <em>{formatStats(item)}</em>}
+                </div>
+              );
             })}
           </div>
           {Object.keys(sets).length > 0 && <div className="set-bonuses">{Object.entries(sets).map(([id, set]) => {
