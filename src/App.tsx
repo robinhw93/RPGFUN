@@ -1111,11 +1111,6 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
-  const equipped = Object.entries(character.equipment) as Array<[GearSlot, GearItem]>;
-  const sets = equipped.reduce<Record<string, { name: string; count: number }>>((result, [, item]) => {
-    if (item.set) result[item.set] = { name: item.setName ?? item.set, count: (result[item.set]?.count ?? 0) + 1 };
-    return result;
-  }, {});
   return (
     <section className="page character-page">
       <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div></div>
@@ -1164,10 +1159,6 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
               );
             })}
           </div>
-          {Object.keys(sets).length > 0 && <div className="set-bonuses">{Object.entries(sets).map(([id, set]) => {
-            const activeBonuses = GEAR_SET_BONUSES.filter((bonus) => bonus.setId === id && set.count >= bonus.requiredPieces);
-            return <span key={id}><Gem size={14} /><strong>{set.name}</strong> · {set.count} pieces {activeBonuses.map((bonus) => <b key={bonus.requiredPieces}>— {bonus.description}</b>)}</span>;
-          })}</div>}
         </div>
       </div>
 

@@ -266,7 +266,6 @@ main { min-height: calc(100vh - 68px); }
 .slot-ring1, .slot-ring2 { top: 327px; }.slot-ring1 { left: 16px; }.slot-ring2 { right: 16px; }
 .paper-doll-slot.slot-mainHand::after, .paper-doll-slot.slot-ring1::after { right: -13px; bottom: 50%; width: 12px; height: 1px; border: 0; background: #5a513d; }
 .paper-doll-slot.slot-offHand::before, .paper-doll-slot.slot-ring2::before { left: -13px; top: 50%; width: 12px; height: 1px; border: 0; background: #5a513d; }
-.set-bonuses { display: flex; flex-direction: column; gap: .3rem; margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--line); }.set-bonuses span { display: flex; align-items: center; gap: .3rem; color: var(--muted); font-size: .67rem; }.set-bonuses svg { color: var(--gold); }.set-bonuses b { color: #87a991; }
 .inventory-heading { margin-top: 2.5rem; }
 .inventory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
 .item-card { min-height: 205px; display: flex; flex-direction: column; align-items: flex-start; padding: 1rem; color: var(--text); text-align: left; border: 1px solid var(--line); background: #111513; cursor: pointer; }
