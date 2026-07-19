@@ -35,11 +35,19 @@ const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
 ];
 
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
-  strength: "Makes your physical attacks stronger and increases the Guard you gain.",
-  agility: "Improves your physical attacks, accuracy, dodge chance, and initiative.",
-  intelligence: "Makes your magical attacks stronger and helps you act earlier in combat.",
-  vitality: "Increases your maximum Health and improves the healing you receive.",
-  luck: "Improves critical strikes, loot, and the chance for special effects to trigger.",
+  strength: "Increases your Physical Power and the amount of Guard you gain.",
+  agility: "Increases your Physical Power, Hit Chance, Dodge Chance, and Initiative.",
+  intelligence: "Increases your Magical Power and Initiative.",
+  vitality: "Increases your Max Health and the amount of healing you receive.",
+  luck: "Increases your Critical Chance, improves the quality of loot you find, and increases the chance for special effects to trigger.",
+};
+
+const ATTRIBUTE_SUMMARIES: Record<StatName, string> = {
+  strength: "Physical Power & Guard",
+  agility: "Physical Power, Hit Chance, Dodge Chance & Initiative",
+  intelligence: "Magical Power & Initiative",
+  vitality: "Max Health & Healing Received",
+  luck: "Critical Chance, Loot & Special Effects",
 };
 
 function cloneInitial(): GameState {
@@ -1095,19 +1103,19 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
           <div className="stats-list">
-            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical Power & Guard" : stat.key === "agility" ? "Physical Power, Hit, Dodge & Initiative" : stat.key === "intelligence" ? "Magical Power & Initiative" : stat.key === "vitality" ? "Health & healing received" : "Criticals, loot & chance effects"}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
+            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
           <div className="derived-grid">
-            <span data-game-tooltip="Increases the damage dealt by your physical and shadow abilities."><Swords /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
-            <span data-game-tooltip="Increases the damage dealt by your arcane abilities."><Sparkles /> <small>Magical Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
-            <span data-game-tooltip="Improves your chance to land attacks against evasive enemies."><Target /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
-            <span data-game-tooltip="Improves your chance to avoid enemy attacks."><Footprints /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
-            <span data-game-tooltip="Your chance for attacks to deal critical damage."><Target /> <small>Critical</small><strong>{formatPercent(derived.critChance)}</strong></span>
-            <span data-game-tooltip="The total amount of damage you can survive."><Heart /> <small>Max Health</small><strong>{formatStat(derived.maxHp)}</strong></span>
-            <span data-game-tooltip="Reduces damage taken from physical attacks."><Shield /> <small>Armor</small><strong>{formatStat(derived.armor)}</strong></span>
-            <span data-game-tooltip="Reduces damage taken from magical attacks."><Zap /> <small>Magic Resist</small><strong>{formatStat(derived.magicResistance)}</strong></span>
-            <span data-game-tooltip="Helps you act earlier when combat begins."><Footprints /> <small>Initiative</small><strong>+{formatStat(derived.initiativeBonus)}</strong></span>
-            <span data-game-tooltip="The most Energy you can hold at once."><Sparkles /> <small>Max Energy</small><strong>{formatStat(derived.maxEnergy)}</strong></span>
+            <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><Swords /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
+            <span data-game-tooltip="Determines the damage dealt by your arcane abilities."><Sparkles /> <small>Magical Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
+            <span data-game-tooltip="Determines how likely your attacks are to hit."><Target /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
+            <span data-game-tooltip="Determines how likely you are to avoid enemy attacks."><Footprints /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
+            <span data-game-tooltip="Determines how likely your attacks are to critically strike."><Target /> <small>Critical Chance</small><strong>{formatPercent(derived.critChance)}</strong></span>
+            <span data-game-tooltip="Determines how much damage you can take before falling."><Heart /> <small>Max Health</small><strong>{formatStat(derived.maxHp)}</strong></span>
+            <span data-game-tooltip="Reduces damage you take from physical attacks."><Shield /> <small>Armor</small><strong>{formatStat(derived.armor)}</strong></span>
+            <span data-game-tooltip="Reduces damage you take from magical attacks."><Zap /> <small>Magic Resistance</small><strong>{formatStat(derived.magicResistance)}</strong></span>
+            <span data-game-tooltip="Determines how early you act when combat begins."><Footprints /> <small>Initiative</small><strong>+{formatStat(derived.initiativeBonus)}</strong></span>
+            <span data-game-tooltip="Determines how much Energy you can hold at once."><Sparkles /> <small>Max Energy</small><strong>{formatStat(derived.maxEnergy)}</strong></span>
           </div>
         </div>
 
