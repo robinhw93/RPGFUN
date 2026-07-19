@@ -197,12 +197,12 @@ function tickEnemyStatuses(enemy: EnemyState, logs: CombatLogEntry[], events: st
   return { ...enemy, hp: Math.max(0, hp), statuses: enemy.statuses.map((status) => ({ ...status, duration: status.duration - 1 })).filter((status) => status.duration > 0) };
 }
 
-function tickPlayerStatuses(playerHp: number, statuses: StatusEffect[], logs: CombatLogEntry[], events: string[], pendingEffects: CombatPendingEffect[]) {
+function tickPlayerStatuses(playerHp: number, statuses: StatusEffect[], logs: CombatLogEntry[], events: string[], pendingEffects: CombatPendingEffect[], bleedDamageTakenMultiplier: number) {
   let hp = playerHp;
   const nextStatuses: StatusEffect[] = [];
   statuses.forEach((status) => {
     if (status.id === "bleed") {
-      const damage = 2 * status.stacks;
+      const damage = Math.ceil(2 * status.stacks * bleedDamageTakenMultiplier);
       hp = Math.max(0, hp - damage);
       logs.push(makeLog(`Bleed deals ${damage} damage to you.`, statusInfo(status)));
       queueDamage(events, pendingEffects, `You take ${damage} damage from Bleed.`, "player", damage);
@@ -248,7 +248,7 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
 
   if (nextActor.kind === "player") {
     const derived = getDerivedStats(character);
-    const playerTick = tickPlayerStatuses(next.playerHp, next.playerStatuses, logs, events, pendingEffects);
+    const playerTick = tickPlayerStatuses(next.playerHp, next.playerStatuses, logs, events, pendingEffects, derived.bleedDamageTakenMultiplier);
     const regeneratedEnergy = Math.min(next.maxEnergy, next.energy + derived.energyRegen);
     next = {
       ...next,

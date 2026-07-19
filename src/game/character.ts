@@ -43,6 +43,7 @@ export interface DerivedStats extends Stats {
   initiativeBonus: number;
   guardMultiplier: number;
   healingReceivedMultiplier: number;
+  bleedDamageTakenMultiplier: number;
   lootRarityBonus: number;
   chanceEffectBonus: number;
 }
@@ -92,6 +93,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     initiativeBonus: Math.round(stats.agility + stats.intelligence * 0.5 + features.passive.initiative),
     guardMultiplier: 1 + stats.strength * 0.01 + features.passive.guardGeneration,
     healingReceivedMultiplier: 1 + stats.vitality * 0.005 + features.passive.healingReceived,
+    bleedDamageTakenMultiplier: Math.max(0, 1 - features.passive.bleedDamageReduction),
     lootRarityBonus: stats.luck * 0.01 + features.passive.lootRarity,
     chanceEffectBonus: stats.luck * 0.0025 + features.passive.chanceEffect,
   };

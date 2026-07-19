@@ -46,6 +46,7 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   initiative: 0,
   guardGeneration: 0,
   healingReceived: 0,
+  bleedDamageReduction: 0,
   lootRarity: 0,
   chanceEffect: 0,
 };
@@ -69,6 +70,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.initiative += passive.initiative ?? 0;
   target.guardGeneration += passive.guardGeneration ?? 0;
   target.healingReceived += passive.healingReceived ?? 0;
+  target.bleedDamageReduction += passive.bleedDamageReduction ?? 0;
   target.lootRarity += passive.lootRarity ?? 0;
   target.chanceEffect += passive.chanceEffect ?? 0;
 }

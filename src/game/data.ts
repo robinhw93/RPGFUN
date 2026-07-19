@@ -69,6 +69,20 @@ export const GEAR_SET_BONUSES: GearSetBonusDefinition[] = [
     description: "+2 Strength.",
     passive: { stats: { strength: 2 } },
   },
+  {
+    setId: "ashborn",
+    setName: "Ashborn Warplate",
+    requiredPieces: 3,
+    description: "Bleed only deals half damage to you.",
+    passive: { bleedDamageReduction: 0.5 },
+  },
+  {
+    setId: "ashborn",
+    setName: "Ashborn Warplate",
+    requiredPieces: 4,
+    description: "+3 Vitality.",
+    passive: { stats: { vitality: 3 } },
+  },
 ];
 
 export const ADVENTURE: AdventureNode[] = [

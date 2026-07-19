@@ -7,7 +7,7 @@ import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GearSlotIcon } from "./components/GearSlotIcon";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
-import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, ITEMS, TALENTS } from "./game/data";
+import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
@@ -1166,7 +1166,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
           </div>
           {Object.keys(sets).length > 0 && <div className="set-bonuses">{Object.entries(sets).map(([id, set]) => {
             const activeBonuses = GEAR_SET_BONUSES.filter((bonus) => bonus.setId === id && set.count >= bonus.requiredPieces);
-            return <span key={id}><Gem size={14} /><strong>{set.name}</strong> · {set.count} pieces {activeBonuses.map((bonus) => <b key={bonus.requiredPieces}>— {bonus.description} active</b>)}</span>;
+            return <span key={id}><Gem size={14} /><strong>{set.name}</strong> · {set.count} pieces {activeBonuses.map((bonus) => <b key={bonus.requiredPieces}>— {bonus.description}</b>)}</span>;
           })}</div>}
         </div>
       </div>
@@ -1225,11 +1225,6 @@ function ItemDetailModal({ item, equippedSlot, character, locked, onClose, onEqu
 
   const stats = getItemStatLines(item);
   const equippedEntries = Object.entries(character.equipment) as Array<[GearSlot, GearItem]>;
-  const equippedIds = new Set(equippedEntries.map(([, equipped]) => equipped.id));
-  const ownedIds = new Set([...character.inventory.map((owned) => owned.id), ...equippedIds]);
-  const setItems = item.set
-    ? [...ITEMS.filter((candidate) => candidate.set === item.set), ...(!ITEMS.some((candidate) => candidate.id === item.id) ? [item] : [])]
-    : [];
   const setBonuses = item.set ? GEAR_SET_BONUSES.filter((bonus) => bonus.setId === item.set) : [];
   const equippedSetPieces = item.set ? equippedEntries.filter(([, equipped]) => equipped.set === item.set).length : 0;
   const equipType = getWeaponEquipType(item);
@@ -1254,22 +1249,12 @@ function ItemDetailModal({ item, equippedSlot, character, locked, onClose, onEqu
           {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small>{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
         </section>
 
-        <section className="item-detail-section item-set-section">
-          <h3>Gear Set</h3>
-          {item.set ? (
-            <>
-              <div className="item-set-title"><Gem size={16} /><strong>{item.setName ?? item.set}</strong><span>{setItems.filter((piece) => ownedIds.has(piece.id)).length}/{setItems.length} owned</span></div>
-              <div className="item-set-pieces">
-                {setItems.map((piece) => {
-                  const equipped = equippedIds.has(piece.id);
-                  const owned = ownedIds.has(piece.id);
-                  return <span className={owned ? "owned" : "missing"} key={piece.id}><i><GearSlotIcon slot={piece.slot} item={piece} size={23} /></i><strong>{piece.name}</strong><em>{equipped ? "Equipped" : owned ? "Owned" : "Missing"}</em></span>;
-                })}
-              </div>
-              {setBonuses.length > 0 && <div className="item-set-bonuses">{setBonuses.map((bonus) => <span className={equippedSetPieces >= bonus.requiredPieces ? "active" : ""} key={bonus.requiredPieces}><strong>{bonus.requiredPieces} Pieces</strong><em>{bonus.description}</em><small>{equippedSetPieces >= bonus.requiredPieces ? "Active" : `${equippedSetPieces}/${bonus.requiredPieces} equipped`}</small></span>)}</div>}
-            </>
-          ) : <p className="item-detail-muted">This item is not part of a gear set.</p>}
-        </section>
+        {item.set && (
+          <section className="item-detail-section item-set-section">
+            <div className="item-set-title"><Gem size={16} /><strong>{item.setName ?? item.set} Set</strong></div>
+            {setBonuses.length > 0 && <div className="item-set-bonuses">{setBonuses.map((bonus) => <span className={equippedSetPieces >= bonus.requiredPieces ? "unlocked" : "locked"} key={bonus.requiredPieces}><strong>{bonus.requiredPieces} Pieces:</strong><em>{bonus.description}</em></span>)}</div>}
+          </section>
+        )}
 
         {locked && <p className="item-action-lock"><Shield size={14} /> Equipment cannot be changed during combat.</p>}
         <div className="item-detail-actions">

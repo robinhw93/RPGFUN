@@ -49,6 +49,7 @@ export interface PassiveBonuses {
   initiative?: number;
   guardGeneration?: number;
   healingReceived?: number;
+  bleedDamageReduction?: number;
   lootRarity?: number;
   chanceEffect?: number;
 }
