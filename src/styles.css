@@ -249,7 +249,7 @@ main { min-height: calc(100vh - 68px); }
 .paper-doll-slot::before, .paper-doll-slot::after { content: ""; width: 5px; height: 5px; position: absolute; border-color: #8d7548; opacity: .58; }
 .paper-doll-slot::before { top: 3px; left: 3px; border-top: 1px solid; border-left: 1px solid; }.paper-doll-slot::after { right: 3px; bottom: 3px; border-right: 1px solid; border-bottom: 1px solid; }
 .paper-doll-slot small { grid-column: 2; color: var(--gold); font-size: .49rem; letter-spacing: .12em; text-transform: uppercase; }
-.gear-slot-icon { display: block; flex: 0 0 auto; }
+.gear-slot-icon { display: block; flex: 0 0 auto; object-fit: contain; user-select: none; filter: saturate(.86) brightness(1.08) contrast(1.06) drop-shadow(0 1px 2px rgba(0,0,0,.7)); }
 .paper-doll-slot-glyph { width: 30px; height: 30px; grid-row: 1 / 4; display: grid; place-items: center; color: #c7b88f; border: 1px solid #47483e; background: #171a17; }
 .paper-doll-slot-glyph .gear-slot-icon { width: 21px; height: 21px; }
 .paper-doll-slot strong { min-width: 0; grid-column: 2; color: var(--text); font-family: Georgia, serif; font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
