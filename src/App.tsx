@@ -529,19 +529,6 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
           <div className="compact-status-row">
-            <button
-              type="button"
-              className="armor-badge inspectable armor-indicator"
-              aria-label={`${derived.armor} Armor. Show details.`}
-              data-game-tooltip={`${derived.armor} Armor`}
-              onClick={() => setInspectedInfo({
-                title: "Armor",
-                description: `You have ${derived.armor} Armor. Enemy attacks reduce their damage by 35% of your Armor, rounded down.`,
-                category: "stat",
-              })}
-            >
-              <Shield size={13} /><b>{derived.armor}</b>
-            </button>
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>

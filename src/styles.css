@@ -169,8 +169,8 @@ main { min-height: calc(100vh - 68px); }
 .intent { width: 100%; display: flex; align-items: center; justify-content: center; gap: .6rem; margin-top: .75rem; padding: .55rem; color: #d3b89d; border-top: 1px solid #292d2a; background: rgba(0,0,0,.12); font-size: .68rem; }
 .intent span { display: flex; flex-direction: column; text-align: left; }.intent small { color: var(--dim); font-size: .52rem; text-transform: uppercase; letter-spacing: .12em; }
 .status-row { display: flex; flex-wrap: wrap; justify-content: center; gap: .3rem; min-height: 20px; margin-top: .6rem; }
-.status-badge, .armor-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .4rem; color: #d2b5d5; border: 1px solid #5b465e; background: #251c27; font-size: .57rem; text-transform: uppercase; letter-spacing: .06em; }
-.status-badge.buff, .armor-badge { color: #a8c1b0; border-color: #405c49; background: #17221a; }
+.status-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .4rem; color: #d2b5d5; border: 1px solid #5b465e; background: #251c27; font-size: .57rem; text-transform: uppercase; letter-spacing: .06em; }
+.status-badge.buff { color: #a8c1b0; border-color: #405c49; background: #17221a; }
 
 .combat-console { display: grid; grid-template-columns: 270px 1fr 260px; gap: 1px; background: var(--line); border: 1px solid var(--line); }
 .combat-console > * { background: #111513; }
@@ -390,7 +390,7 @@ main { min-height: calc(100vh - 68px); }
 .compact-target { position: absolute; right: .55rem; top: .55rem; display: none; color: var(--enemy-accent); }.enemy-combatant.selected .compact-target { display: block; }
 .compact-resource-label { display: flex; justify-content: space-between; margin-bottom: .3rem; color: var(--dim); font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; }.compact-resource-label b { color: #c6c3bb; font-weight: 600; }
 .compact-status-row { min-height: 24px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; margin-top: .55rem; padding-bottom: 5px; overflow: visible; }
-.compact-status-row .status-badge, .compact-status-row .armor-badge { margin: 0; padding: .22rem .36rem; }
+.compact-status-row .status-badge { margin: 0; padding: .22rem .36rem; }
 .no-status { color: #515752; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; }
 .energy-label { margin-top: .65rem; }.energy-label span { color: var(--gold); }
 .energy-bar { width: 100%; height: 7px; overflow: hidden; border: 1px solid #3b392f; background: #292821; }.energy-bar i { display: block; height: 100%; background: linear-gradient(90deg, #8d6b36, #e2bd69); box-shadow: 0 0 9px rgba(218,180,102,.2); transition: width .3s ease; }
@@ -436,12 +436,8 @@ main { min-height: calc(100vh - 68px); }
 .combat-log-term { display: inline; margin: 0; padding: 0; color: #d2b56f; border: 0; background: transparent; font: inherit; line-height: inherit; text-decoration: underline; text-decoration-color: rgba(201,168,103,.45); text-underline-offset: 3px; cursor: pointer; }
 .combat-log-term:hover, .combat-log-term:focus-visible { color: var(--gold-bright); }
 
-.status-badge.inspectable, .armor-badge.inspectable { font: inherit; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; }
-.status-badge.inspectable:hover, .status-badge.inspectable:focus-visible, .armor-badge.inspectable:hover, .armor-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
-.armor-indicator { width: 20px; height: 20px; position: relative; display: inline-grid; flex: 0 0 20px; place-items: center; gap: 0; padding: 0; color: #d3d9dc; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #5d666b 0, #30373b 35%, #171b1d 58%, #0f1213 59%); text-transform: none; overflow: visible; text-shadow: 0 1px 1px #000; }
-.armor-indicator::before { content: ""; position: absolute; inset: -2px; border: 1.5px solid #a9b1b5; border-radius: 50%; box-shadow: inset 0 0 2px rgba(255,255,255,.24), 0 0 3px rgba(168,178,183,.2); pointer-events: none; }
-.armor-indicator > svg { width: 9px; height: 9px; }
-.armor-indicator b { min-width: 14px; height: 14px; position: absolute; z-index: 2; right: -5px; bottom: -5px; display: grid; place-items: center; padding: 0 2px; color: #edf1f2; border: 1px solid #7e888d; border-radius: 7px; background: linear-gradient(145deg, #424a4e, #171b1d); box-shadow: inset 0 1px rgba(255,255,255,.12), 0 2px 5px rgba(0,0,0,.65); font-size: .54rem; font-weight: 900; line-height: 1; }
+.status-badge.inspectable { font: inherit; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+.status-badge.inspectable:hover, .status-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
 .status-badge.status-icon { --status-ring: #a879ad; width: 20px; height: 20px; position: relative; display: inline-grid; flex: 0 0 20px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: radial-gradient(circle, #281d2b 0 57%, #161318 58%); overflow: visible; }
 .status-badge.status-icon.buff { --status-ring: #75a584; background: radial-gradient(circle, #19261d 0 57%, #121713 58%); }
 .status-badge.status-icon.status-bleed { --status-ring: #d7584d; color: #ff8b7e; background: radial-gradient(circle at 35% 30%, #5b211e 0, #351817 42%, #190f10 58%, #110c0d 59%); }
@@ -588,9 +584,8 @@ main { min-height: calc(100vh - 68px); }
   .compact-resource-label { margin-bottom: .2rem; font-size: .48rem; }.compact-resource-label b { font-size: .52rem; }
   .compact-combatant .health-bar, .compact-combatant .energy-bar, .compact-combatant .energy-segments { height: 6px; }
   .compact-status-row { min-height: 24px; max-height: 40px; gap: 10px; margin-top: .38rem; padding-bottom: 5px; }
-  .compact-status-row .status-badge, .compact-status-row .armor-badge { padding: .18rem .28rem; font-size: .46rem; }
+  .compact-status-row .status-badge { padding: .18rem .28rem; font-size: .46rem; }
   .compact-status-row .status-badge.status-icon { width: 20px; height: 20px; flex-basis: 20px; padding: 0; }.compact-status-row .status-badge.status-icon > svg:not(.status-duration-ring) { width: 9px; height: 9px; }.compact-status-row .status-badge.status-icon .status-duration-ring { width: 24px; height: 24px; inset: -2px; }
-  .compact-status-row .armor-indicator { width: 20px; height: 20px; flex-basis: 20px; padding: 0; }.compact-status-row .armor-indicator > svg { width: 9px; height: 9px; }
   .no-status { font-size: .46rem; }
   .energy-label { margin-top: .45rem; }
   .compact-ability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 4px; }
