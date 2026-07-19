@@ -1,4 +1,5 @@
 import { getDerivedStats } from "./character";
+import { rollHit } from "./combatMath";
 import { ABILITIES, ENEMIES } from "./data";
 import { DEFAULT_STATUS_DURATION } from "./statusEffects";
 import { getCharacterCombatFeatures, resolveCharacterTriggers } from "./combatFeatures";
@@ -332,7 +333,7 @@ function applyPlayerProcs(
       }
 
       if (effect.type === "heal") {
-        const amount = Math.max(0, Math.round(effect.amount));
+        const amount = Math.max(0, Math.round(effect.amount * derived.healingReceivedMultiplier));
         playerHp = Math.min(combat.playerMaxHp, playerHp + amount);
         logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
         events.push(`You recover ${amount} Health.`);
@@ -345,10 +346,11 @@ function applyPlayerProcs(
       }
 
       if (effect.type === "gain_guard") {
-        const guard: StatusEffect = { id: "guard", name: "Guard", kind: "buff", duration: effect.duration ?? 1, stacks: effect.amount, description: `Absorbs ${effect.amount} incoming damage.` };
+        const amount = Math.max(1, Math.round(effect.amount * derived.guardMultiplier));
+        const guard: StatusEffect = { id: "guard", name: "Guard", kind: "buff", duration: effect.duration ?? 1, stacks: amount, description: `Absorbs ${amount} incoming damage.` };
         playerStatuses = addStatus(playerStatuses, guard);
-        logs.push(makeLog(`You gain ${effect.amount} Guard.`, statusInfo(guard)));
-        queueStatus(events, pendingEffects, `You gain ${effect.amount} Guard.`, "player", guard);
+        logs.push(makeLog(`You gain ${amount} Guard.`, statusInfo(guard)));
+        queueStatus(events, pendingEffects, `You gain ${amount} Guard.`, "player", guard);
       }
     });
   });
@@ -368,7 +370,7 @@ function runPlayerTriggerEvent(
   events: string[],
   pendingEffects: CombatPendingEffect[],
 ): { state: ProcApplicationState; procUsage: CombatState["procUsage"] } {
-  const resolved = resolveCharacterTriggers(character, combat, event, context, procUsage);
+  const resolved = resolveCharacterTriggers(character, combat, event, context, procUsage, derived.chanceEffectBonus);
   return {
     state: applyPlayerProcs(resolved.triggered, primaryTargetId, derived, combat, state, logs, events, pendingEffects),
     procUsage: resolved.procUsage,
@@ -422,19 +424,25 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
 
   if (ability.target === "self") {
     if (ability.effect === "guard") {
-      playerStatuses = addStatus(playerStatuses, { id: "guard", name: "Guard", kind: "buff", duration: 1, stacks: 6, description: "Absorbs incoming damage." });
+      const guardAmount = Math.max(1, Math.round(6 * derived.guardMultiplier));
+      playerStatuses = addStatus(playerStatuses, { id: "guard", name: "Guard", kind: "buff", duration: 1, stacks: guardAmount, description: `Absorbs ${guardAmount} incoming damage.` });
       const guardStatus = playerStatuses.find((status) => status.id === "guard")!;
-      logs.push(makeLog("You gain 6 Guard.", statusInfo(guardStatus)));
-      queueStatus(events, pendingEffects, "You gain 6 Guard.", "player", guardStatus);
+      logs.push(makeLog(`You gain ${guardAmount} Guard.`, statusInfo(guardStatus)));
+      queueStatus(events, pendingEffects, `You gain ${guardAmount} Guard.`, "player", guardStatus);
     }
   } else {
     targets.forEach((target) => {
-      const scaling = ability.scalingStat ? derived[ability.scalingStat] : 0;
-      const ignoresArmor = ability.damageType === "arcane" ? Math.floor(target.armor / 2) : 0;
+      if (!rollHit(derived.hitChance, target.dodgeChance)) {
+        logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
+        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, "player");
+        return;
+      }
+      const offensivePower = ability.damageType === "arcane" ? derived.magicalPower : derived.physicalPower;
+      const defense = ability.damageType === "arcane" ? target.magicResistance : target.armor;
       const vulnerable = target.statuses.some((status) => status.id === "vulnerable") ? 1.25 : 1;
       const critical = Math.random() < derived.critChance;
-      const raw = (ability.power ?? 0) + scaling * 1.15 + derived.power;
-      const damage = Math.max(1, Math.round((raw - Math.max(0, target.armor - ignoresArmor)) * vulnerable * (critical ? 1.6 : 1)));
+      const raw = (ability.power ?? 0) + offensivePower;
+      const damage = Math.max(1, Math.round((raw - defense) * vulnerable * (critical ? 1.6 : 1)));
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
@@ -459,7 +467,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage and applies Vulnerable.`;
         queueStatus(events, pendingEffects, `${target.name} becomes Vulnerable.`, target.instanceId, vulnerableStatus, false, damageEventIndex);
       }
-      if (ability.effect === "stun" && Math.random() < 0.45) {
+      if (ability.effect === "stun" && Math.random() < Math.min(1, 0.45 + derived.chanceEffectBonus)) {
         const stunned: StatusEffect = { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stacks: 1, description: "Cannot act on its next turn." };
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: true, statuses: addStatus(enemy.statuses, stunned) } : enemy);
         logs.push(makeLog(`${target.name} is Stunned.`, statusInfo(stunned)));
@@ -581,44 +589,50 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     logs.push(makeLog(`${enemy.name} gathers Energy.`));
     events.push(`${enemy.name} gathers Energy.`);
   } else {
-    const guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
-    const incoming = Math.max(1, enemy.power - Math.floor(derived.armor * 0.35));
-    const blocked = Math.min(guard, incoming);
-    const damage = incoming - blocked;
-    playerHp = Math.max(0, playerHp - damage);
-    const remainingGuard = guard - blocked;
-    playerStatuses = playerStatuses.flatMap((status) => status.id !== "guard" ? [status] : remainingGuard > 0 ? [{ ...status, stacks: remainingGuard }] : []);
     const attackName = enemy.intentText.split(" · ")[0];
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
-    logs.push(makeLog(`${enemy.name} uses ${attackName} for ${damage}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
     events.push(`${enemy.name} uses ${attackName}.`);
-    const damageEventIndex = queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
-    if (damage > 0 && enemy.onHitEffect === "bleed") {
-      const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
-      playerStatuses = addStatus(playerStatuses, bleed);
-      logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
-      events[damageEventIndex] = `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""} and applies Bleed.`;
-      queueStatus(events, pendingEffects, "You are Bleeding.", "player", bleed, false, damageEventIndex);
-    }
-    if (damage > 0) {
-      const result = runPlayerTriggerEvent(
-        "damage_taken",
-        { damage, targetStatusIds: playerStatuses.map((status) => status.id) },
-        enemy.instanceId,
-        character,
-        combat,
-        derived,
-        { enemies, playerStatuses, playerHp, energy: combat.energy },
-        procUsage,
-        logs,
-        events,
-        pendingEffects,
-      );
-      visiblePlayerHealing += Math.max(0, result.state.playerHp - playerHp);
-      procUsage = result.procUsage;
-      enemies = result.state.enemies;
-      playerStatuses = result.state.playerStatuses;
-      playerHp = result.state.playerHp;
+    if (!rollHit(enemy.hitChance, derived.dodgeChance)) {
+      logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
+      queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, enemy.instanceId);
+    } else {
+      const guard = playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
+      const defense = enemy.damageType === "arcane" ? derived.magicResistance : derived.armor;
+      const incoming = Math.max(1, enemy.power - Math.floor(defense * 0.35));
+      const blocked = Math.min(guard, incoming);
+      const damage = incoming - blocked;
+      playerHp = Math.max(0, playerHp - damage);
+      const remainingGuard = guard - blocked;
+      playerStatuses = playerStatuses.flatMap((status) => status.id !== "guard" ? [status] : remainingGuard > 0 ? [{ ...status, stacks: remainingGuard }] : []);
+      logs.push(makeLog(`${enemy.name} uses ${attackName} for ${damage}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
+      const damageEventIndex = queueDamage(events, pendingEffects, `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
+      if (damage > 0 && enemy.onHitEffect === "bleed") {
+        const bleed: StatusEffect = { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stacks: 1, description: "Takes 2 damage per stack when your turn begins. Lasts 3 turns." };
+        playerStatuses = addStatus(playerStatuses, bleed);
+        logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
+        events[damageEventIndex] = `It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""} and applies Bleed.`;
+        queueStatus(events, pendingEffects, "You are Bleeding.", "player", bleed, false, damageEventIndex);
+      }
+      if (damage > 0) {
+        const result = runPlayerTriggerEvent(
+          "damage_taken",
+          { damage, targetStatusIds: playerStatuses.map((status) => status.id) },
+          enemy.instanceId,
+          character,
+          combat,
+          derived,
+          { enemies, playerStatuses, playerHp, energy: combat.energy },
+          procUsage,
+          logs,
+          events,
+          pendingEffects,
+        );
+        visiblePlayerHealing += Math.max(0, result.state.playerHp - playerHp);
+        procUsage = result.procUsage;
+        enemies = result.state.enemies;
+        playerStatuses = result.state.playerStatuses;
+        playerHp = result.state.playerHp;
+      }
     }
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId
       ? { ...candidate, energy: enemy.energy - enemy.energyCost }

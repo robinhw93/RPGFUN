@@ -33,12 +33,21 @@ export interface CharacterCombatFeatures {
 const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   stats: { strength: 0, agility: 0, intelligence: 0, vitality: 0, luck: 0 },
   armor: 0,
+  magicResistance: 0,
+  physicalPower: 0,
+  magicalPower: 0,
   power: 0,
   maxHp: 0,
   maxEnergy: 0,
   energyRegen: 0,
   critChance: 0,
+  hitChance: 0,
+  dodgeChance: 0,
   initiative: 0,
+  guardGeneration: 0,
+  healingReceived: 0,
+  lootRarity: 0,
+  chanceEffect: 0,
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -47,12 +56,21 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
     target.stats[stat as keyof Stats] += amount ?? 0;
   });
   target.armor += passive.armor ?? 0;
+  target.magicResistance += passive.magicResistance ?? 0;
+  target.physicalPower += passive.physicalPower ?? 0;
+  target.magicalPower += passive.magicalPower ?? 0;
   target.power += passive.power ?? 0;
   target.maxHp += passive.maxHp ?? 0;
   target.maxEnergy += passive.maxEnergy ?? 0;
   target.energyRegen += passive.energyRegen ?? 0;
   target.critChance += passive.critChance ?? 0;
+  target.hitChance += passive.hitChance ?? 0;
+  target.dodgeChance += passive.dodgeChance ?? 0;
   target.initiative += passive.initiative ?? 0;
+  target.guardGeneration += passive.guardGeneration ?? 0;
+  target.healingReceived += passive.healingReceived ?? 0;
+  target.lootRarity += passive.lootRarity ?? 0;
+  target.chanceEffect += passive.chanceEffect ?? 0;
 }
 
 function addBundle(
@@ -126,6 +144,7 @@ export function resolveCharacterTriggers(
   event: CombatTriggerEvent,
   context: CombatTriggerContext,
   currentUsage: CombatState["procUsage"],
+  chanceEffectBonus = 0,
 ): { triggered: ResolvedCombatTrigger[]; procUsage: CombatState["procUsage"] } {
   const procUsage = { ...currentUsage };
   const triggered = getCharacterCombatFeatures(character).triggers.filter((trigger) => {
@@ -133,7 +152,8 @@ export function resolveCharacterTriggers(
     const previousTurn = procUsage[trigger.runtimeId]?.lastTriggeredTurn;
     if (trigger.oncePerTurn && previousTurn === combat.turn) return false;
     if (trigger.cooldownTurns && previousTurn !== undefined && combat.turn - previousTurn < trigger.cooldownTurns) return false;
-    const chance = Math.max(0, Math.min(1, trigger.chance ?? 1));
+    const bonus = trigger.chance === undefined ? 0 : chanceEffectBonus;
+    const chance = Math.max(0, Math.min(1, (trigger.chance ?? 1) + bonus));
     if (Math.random() >= chance) return false;
     procUsage[trigger.runtimeId] = { lastTriggeredTurn: combat.turn };
     return true;

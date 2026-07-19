@@ -1,4 +1,5 @@
 import { ADVENTURE } from "./data";
+import { getDerivedStats } from "./character";
 import { getLoot } from "./gear";
 import { addExperience } from "./progression";
 import type { CombatReward, GameState } from "./types";
@@ -11,7 +12,7 @@ export function grantCombatReward(state: GameState, timestamp = Date.now()): Gam
   const rewardDefinition = ADVENTURE[adventure.nodeIndex]?.reward;
   if (!rewardDefinition) return state;
 
-  const lootTemplate = rewardDefinition.loot ? getLoot(adventure.nodeIndex) : null;
+  const lootTemplate = rewardDefinition.loot ? getLoot(adventure.nodeIndex, getDerivedStats(state.character).lootRarityBonus) : null;
   const loot = lootTemplate ? { ...lootTemplate, id: `${lootTemplate.id}-${adventure.nodeIndex}-${timestamp}` } : null;
   const experience = addExperience(state.character, rewardDefinition.experience);
   const reward: CombatReward = {

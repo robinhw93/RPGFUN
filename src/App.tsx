@@ -1082,14 +1082,26 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
   }, {});
   return (
     <section className="page character-page">
-      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div><div className="power-seal"><Swords /><span><small>Power</small><strong>{derived.power + derived.strength}</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div><div className="power-seal"><Swords /><span><small>Physical Power</small><strong>{formatValue(derived.physicalPower)}</strong></span></div></div>
       <div className="character-layout">
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
           <div className="stats-list">
-            {STAT_LABELS.map((stat) => <div key={stat.key}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical power" : stat.key === "agility" ? "Finesse & precision" : stat.key === "intelligence" ? "Arcane potency" : stat.key === "vitality" ? "Health & resilience" : "Critical fortune"}</small></span><span className="stat-value-actions"><b>{derived[stat.key]}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
+            {STAT_LABELS.map((stat) => <div key={stat.key}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical Power & Guard" : stat.key === "agility" ? "Physical Power, Hit, Dodge & Initiative" : stat.key === "intelligence" ? "Magical Power & Initiative" : stat.key === "vitality" ? "Health & healing received" : "Criticals, loot & chance effects"}</small></span><span className="stat-value-actions"><b>{derived[stat.key]}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
-          <div className="derived-grid"><span><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span><span><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span><span><Target /> <small>Critical</small><strong>{Math.round(derived.critChance * 100)}%</strong></span><span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span><span data-game-tooltip="D100 + Agility + half Intelligence"><Footprints /> <small>Initiative</small><strong>+{derived.initiativeBonus}</strong></span></div>
+          <div className="derived-grid">
+            <span data-game-tooltip="Strength + 0.3 per Agility + gear, sets and talents"><Swords /> <small>Physical Power</small><strong>{formatValue(derived.physicalPower)}</strong></span>
+            <span data-game-tooltip="Intelligence + gear, sets and talents"><Sparkles /> <small>Magical Power</small><strong>{formatValue(derived.magicalPower)}</strong></span>
+            <span data-game-tooltip="Raw accuracy. This value has no maximum cap."><Target /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
+            <span data-game-tooltip="Reduces an attacker's Hit Chance. Capped at 50%."><Footprints /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
+            <span data-game-tooltip="Final hit chance is Hit minus Dodge, with a 20% minimum and 100% maximum."><CircleDot /> <small>Hit Rule</small><strong>20–100%</strong></span>
+            <span data-game-tooltip="5% base + 0.75% per Luck + gear, sets and talents. This value has no maximum cap."><Target /> <small>Critical</small><strong>{formatPercent(derived.critChance)}</strong></span>
+            <span data-game-tooltip="20 base + 10 per Vitality + gear, sets and talents"><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span>
+            <span data-game-tooltip="Reduces incoming physical damage"><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span>
+            <span data-game-tooltip="Reduces incoming arcane damage"><Zap /> <small>Magic Resist</small><strong>{derived.magicResistance}</strong></span>
+            <span data-game-tooltip="D100 + Agility + half Intelligence + gear, sets and talents"><Footprints /> <small>Initiative</small><strong>+{formatValue(derived.initiativeBonus)}</strong></span>
+            <span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span>
+          </div>
         </div>
 
         <div className="paper-panel equipment-panel">
@@ -1118,8 +1130,19 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
 function formatStats(item: GearItem) {
   const values = Object.entries(item.stats).map(([key, value]) => `+${value} ${key.slice(0, 3).toUpperCase()}`);
   if (item.armor) values.push(`+${item.armor} ARM`);
+  if (item.magicResistance) values.push(`+${item.magicResistance} MRES`);
+  if (item.physicalPower) values.push(`+${item.physicalPower} PHYS`);
+  if (item.magicalPower) values.push(`+${item.magicalPower} MAG`);
   if (item.power) values.push(`+${item.power} PWR`);
   return values.join(" · ");
+}
+
+function formatPercent(value: number): string {
+  return `${formatValue(value * 100)}%`;
+}
+
+function formatValue(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, "");
 }
 
 function TalentsView({ character, locked, onUnlock, onToggleAbility }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void }) {

@@ -28,12 +28,22 @@ export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_ene
 export interface PassiveBonuses {
   stats?: Partial<Stats>;
   armor?: number;
+  magicResistance?: number;
+  physicalPower?: number;
+  magicalPower?: number;
+  /** Legacy generic power. Prefer physicalPower or magicalPower for new content. */
   power?: number;
   maxHp?: number;
   maxEnergy?: number;
   energyRegen?: number;
   critChance?: number;
+  hitChance?: number;
+  dodgeChance?: number;
   initiative?: number;
+  guardGeneration?: number;
+  healingReceived?: number;
+  lootRarity?: number;
+  chanceEffect?: number;
 }
 
 export interface CombatTriggerCondition {
@@ -120,6 +130,10 @@ export interface GearItem {
   description: string;
   stats: Partial<Stats>;
   armor?: number;
+  magicResistance?: number;
+  physicalPower?: number;
+  magicalPower?: number;
+  /** Legacy generic power. Prefer physicalPower or magicalPower for new content. */
   power?: number;
   set?: string;
   setName?: string;
@@ -133,6 +147,10 @@ export interface EnemyTemplate {
   maxHp: number;
   power: number;
   armor: number;
+  magicResistance: number;
+  hitChance: number;
+  dodgeChance: number;
+  damageType: "physical" | "arcane";
   energyCost: number;
   intentText: string;
   attackDescription: string;

@@ -1,4 +1,5 @@
 import { getCharacterCombatFeatures } from "./combatFeatures";
+import { capDodgeChance } from "./combatMath";
 import { ITEMS } from "./data";
 import type { CharacterState, GameState, Stats } from "./types";
 
@@ -26,14 +27,36 @@ export const INITIAL_GAME: GameState = {
   adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
 };
 
-export function getDerivedStats(character: CharacterState): Stats & { armor: number; power: number; maxHp: number; maxEnergy: number; energyRegen: number; critChance: number; initiativeBonus: number } {
+export interface DerivedStats extends Stats {
+  armor: number;
+  magicResistance: number;
+  physicalPower: number;
+  magicalPower: number;
+  maxHp: number;
+  maxEnergy: number;
+  energyRegen: number;
+  critChance: number;
+  hitChance: number;
+  dodgeChance: number;
+  initiativeBonus: number;
+  guardMultiplier: number;
+  healingReceivedMultiplier: number;
+  lootRarityBonus: number;
+  chanceEffectBonus: number;
+}
+
+export function getDerivedStats(character: CharacterState): DerivedStats {
   const stats = { ...character.baseStats };
   let armor = 0;
-  let power = 0;
+  let magicResistance = 0;
+  let gearPhysicalPower = 0;
+  let gearMagicalPower = 0;
   Object.values(character.equipment).forEach((item) => {
     if (!item) return;
     armor += item.armor ?? 0;
-    power += item.power ?? 0;
+    magicResistance += item.magicResistance ?? 0;
+    gearPhysicalPower += item.physicalPower ?? (item.slot === "mainHand" ? item.power ?? 0 : 0);
+    gearMagicalPower += item.magicalPower ?? (item.slot === "offHand" ? item.power ?? 0 : 0);
     Object.entries(item.stats).forEach(([key, value]) => {
       stats[key as keyof Stats] += value ?? 0;
     });
@@ -43,18 +66,28 @@ export function getDerivedStats(character: CharacterState): Stats & { armor: num
     stats[stat as keyof Stats] += amount;
   });
   armor += features.passive.armor;
-  power += features.passive.power;
+  magicResistance += features.passive.magicResistance;
+  gearPhysicalPower += features.passive.physicalPower + features.passive.power;
+  gearMagicalPower += features.passive.magicalPower + features.passive.power;
   const maxEnergy = 10 + features.passive.maxEnergy;
   const energyRegen = 1 + features.passive.energyRegen;
-  const critChance = 0.05 + stats.luck * 0.01 + features.passive.critChance;
+  const critChance = 0.05 + stats.luck * 0.0075 + features.passive.critChance;
   return {
     ...stats,
     armor,
-    power,
-    maxHp: 42 + stats.vitality * 6 + features.passive.maxHp,
+    magicResistance,
+    physicalPower: stats.strength + stats.agility * 0.3 + gearPhysicalPower,
+    magicalPower: stats.intelligence + gearMagicalPower,
+    maxHp: 20 + stats.vitality * 10 + features.passive.maxHp,
     maxEnergy,
     energyRegen,
     critChance,
-    initiativeBonus: stats.agility + Math.floor(stats.intelligence / 2) + features.passive.initiative,
+    hitChance: 0.95 + stats.agility * 0.005 + features.passive.hitChance,
+    dodgeChance: capDodgeChance(0.02 + stats.agility * 0.004 + features.passive.dodgeChance),
+    initiativeBonus: stats.agility + stats.intelligence * 0.5 + features.passive.initiative,
+    guardMultiplier: 1 + stats.strength * 0.01 + features.passive.guardGeneration,
+    healingReceivedMultiplier: 1 + stats.vitality * 0.005 + features.passive.healingReceived,
+    lootRarityBonus: stats.luck * 0.01 + features.passive.lootRarity,
+    chanceEffectBonus: stats.luck * 0.0025 + features.passive.chanceEffect,
   };
 }
