@@ -7,8 +7,8 @@ export const COMBAT_TIMING = {
 export const INITIATIVE_TIMING = {
   rollTickMs: 45,
   rawRollMs: 1600,
-  bonusMs: 2700,
-  orderMs: 3800,
+  bonusMs: 3200,
+  orderMs: 4800,
   flightMs: 1400,
-  completeMs: 5600,
+  completeMs: 6600,
 } as const;
