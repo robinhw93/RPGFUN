@@ -232,21 +232,9 @@ main { min-height: calc(100vh - 68px); }
 .equipment-paper-doll { min-height: 520px; position: relative; isolation: isolate; margin-top: .25rem; overflow: hidden; border: 1px solid #292e2b; background: radial-gradient(ellipse at 50% 42%, rgba(105,91,57,.15) 0, rgba(26,31,28,.2) 32%, rgba(7,10,9,.86) 73%), linear-gradient(180deg, #111512, #090c0b); box-shadow: inset 0 0 75px rgba(0,0,0,.72); }
 .equipment-paper-doll::before { content: ""; width: 270px; height: 46px; position: absolute; z-index: 0; left: 50%; bottom: 17px; border: 1px solid rgba(170,142,82,.16); border-radius: 50%; background: radial-gradient(ellipse, rgba(177,143,75,.13), transparent 68%); box-shadow: 0 0 34px rgba(154,119,56,.12); transform: translateX(-50%); }
 .equipment-paper-doll::after { content: ""; position: absolute; z-index: 0; inset: 10px; border: 1px solid rgba(130,111,72,.08); pointer-events: none; }
-.character-silhouette { width: 190px; height: 455px; position: absolute; z-index: 0; top: 27px; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 14px 12px rgba(0,0,0,.72)); }
-.character-silhouette i { position: absolute; display: block; border: 1px solid rgba(165,153,122,.18); background: linear-gradient(105deg, #1c211e 0%, #343833 48%, #171b19 100%); box-shadow: inset 7px 0 13px rgba(255,255,255,.025), inset -8px -8px 16px rgba(0,0,0,.4); }
-.character-silhouette .silhouette-aura { inset: -8px -30px 1px; border: 0; border-radius: 50%; background: radial-gradient(ellipse, rgba(203,166,91,.08), transparent 66%); box-shadow: none; }
-.silhouette-head { width: 50px; height: 60px; top: 0; left: 70px; border-radius: 47% 47% 43% 43%; }
-.silhouette-neck { width: 25px; height: 25px; top: 53px; left: 83px; border-radius: 4px 4px 9px 9px; }
-.silhouette-torso { width: 108px; height: 148px; top: 68px; left: 41px; clip-path: polygon(20% 0, 80% 0, 100% 20%, 84% 100%, 16% 100%, 0 20%); }
-.silhouette-arm { width: 29px; height: 129px; top: 78px; border-radius: 14px 14px 11px 11px; transform-origin: top center; }
-.silhouette-arm.left { left: 25px; transform: rotate(7deg); }.silhouette-arm.right { right: 25px; transform: rotate(-7deg); }
-.silhouette-forearm { width: 25px; height: 111px; top: 190px; border-radius: 10px 10px 13px 13px; transform-origin: top center; }
-.silhouette-forearm.left { left: 18px; transform: rotate(3deg); }.silhouette-forearm.right { right: 18px; transform: rotate(-3deg); }
-.silhouette-hips { width: 82px; height: 58px; top: 205px; left: 54px; clip-path: polygon(8% 0, 92% 0, 82% 100%, 18% 100%); }
-.silhouette-leg { width: 34px; height: 153px; top: 252px; border-radius: 8px 8px 12px 12px; }
-.silhouette-leg.left { left: 56px; transform: rotate(1deg); }.silhouette-leg.right { right: 56px; transform: rotate(-1deg); }
-.silhouette-boot { width: 44px; height: 36px; top: 397px; border-radius: 9px 9px 4px 4px; }
-.silhouette-boot.left { left: 49px; transform: rotate(-2deg); }.silhouette-boot.right { right: 49px; transform: rotate(2deg); }
+.character-silhouette { width: 230px; height: 480px; position: absolute; z-index: 0; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+.character-silhouette::before { content: ""; position: absolute; z-index: -1; inset: 4% -24% 0; border-radius: 50%; background: radial-gradient(ellipse, rgba(203,166,91,.1), rgba(104,91,58,.035) 42%, transparent 70%); filter: blur(5px); }
+.character-silhouette img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: center bottom; opacity: .8; filter: saturate(.72) contrast(1.04) brightness(.84) drop-shadow(0 14px 12px rgba(0,0,0,.78)); user-select: none; }
 .paper-doll-slot { width: 150px; min-height: 68px; position: absolute; z-index: 2; display: grid; grid-template-columns: 30px minmax(0,1fr); grid-template-rows: auto auto auto; column-gap: .45rem; align-items: center; padding: .42rem .5rem; border: 1px solid #494538; background: linear-gradient(135deg, rgba(27,30,26,.96), rgba(12,15,13,.95)); box-shadow: 0 8px 20px rgba(0,0,0,.52), inset 0 0 18px rgba(189,158,92,.035); }
 .paper-doll-slot::before, .paper-doll-slot::after { content: ""; width: 5px; height: 5px; position: absolute; border-color: #8d7548; opacity: .58; }
 .paper-doll-slot::before { top: 3px; left: 3px; border-top: 1px solid; border-left: 1px solid; }.paper-doll-slot::after { right: 3px; bottom: 3px; border-right: 1px solid; border-bottom: 1px solid; }

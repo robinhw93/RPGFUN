@@ -1112,19 +1112,7 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
           <div className="panel-title"><span><Shield size={17} /> Equipment</span><small>8 slots</small></div>
           <div className="equipment-paper-doll">
             <div className="character-silhouette" aria-hidden="true">
-              <i className="silhouette-aura" />
-              <i className="silhouette-head" />
-              <i className="silhouette-neck" />
-              <i className="silhouette-torso" />
-              <i className="silhouette-arm left" />
-              <i className="silhouette-arm right" />
-              <i className="silhouette-forearm left" />
-              <i className="silhouette-forearm right" />
-              <i className="silhouette-hips" />
-              <i className="silhouette-leg left" />
-              <i className="silhouette-leg right" />
-              <i className="silhouette-boot left" />
-              <i className="silhouette-boot right" />
+              <img src="/assets/emberfall-paper-doll.png" alt="" draggable={false} />
             </div>
             {EQUIPMENT_SLOT_ORDER.map((slot) => {
               const item = character.equipment[slot];
