@@ -1,3 +1,5 @@
+import type { CharacterAvatarId } from "./avatars";
+
 export type StatName = "strength" | "agility" | "intelligence" | "vitality" | "luck";
 export type TalentBranch = "core" | "brute" | "shadow" | "arcanist";
 export type GearSlot = "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring1" | "ring2";
@@ -222,6 +224,7 @@ export interface CombatLogEntry {
 
 export interface CharacterState {
   name: string;
+  avatarId: CharacterAvatarId;
   level: number;
   xp: number;
   unspentStatPoints: number;

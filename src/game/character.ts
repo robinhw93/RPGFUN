@@ -1,10 +1,12 @@
 import { getCharacterCombatFeatures } from "./combatFeatures";
 import { capDodgeChance } from "./combatMath";
 import { ITEMS } from "./data";
+import { DEFAULT_CHARACTER_AVATAR_ID } from "./avatars";
 import type { CharacterState, GameState, Stats } from "./types";
 
 export const INITIAL_CHARACTER: CharacterState = {
   name: "",
+  avatarId: DEFAULT_CHARACTER_AVATAR_ID,
   level: 1,
   xp: 0,
   unspentStatPoints: 0,

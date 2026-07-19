@@ -1,5 +1,6 @@
 import type { GameState } from "./types";
 import { TALENTS } from "./data";
+import { normalizeCharacterAvatarId } from "./avatars";
 
 const SAVE_KEY = "emberfall-save-v1";
 const REMOVED_TALENT_COSTS: Record<string, number> = {
@@ -28,6 +29,7 @@ export function loadGame(): GameState | null {
       characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
       character: {
         ...state.character,
+        avatarId: normalizeCharacterAvatarId(state.character.avatarId),
         unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (state.character.level - 1) * 3),
         talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
         unlockedTalents,

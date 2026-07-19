@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
+import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
@@ -17,6 +18,7 @@ import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
 import { createCombat, endPlayerTurn, ensureCombatState, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
+import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
 type View = "adventure" | "character" | "talents";
@@ -291,11 +293,11 @@ function App() {
     setResetDialogOpen(false);
   };
 
-  const createCharacter = (name: string) => {
+  const createCharacter = (name: string, avatarId: CharacterAvatarId) => {
     setGame((current) => ({
       ...current,
       characterCreated: true,
-      character: { ...current.character, name: name.trim() },
+      character: { ...current.character, name: name.trim(), avatarId },
     }));
     setView("adventure");
   };
@@ -379,12 +381,13 @@ function NavButton({ active, onClick, icon, label }: { active: boolean; onClick:
   return <button className={active ? "nav-button active" : "nav-button"} onClick={onClick}>{icon}<span>{label}</span></button>;
 }
 
-function CharacterCreation({ onCreate }: { onCreate: (name: string) => void }) {
+function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: CharacterAvatarId) => void }) {
   const [name, setName] = useState("");
+  const [avatarId, setAvatarId] = useState<CharacterAvatarId>(DEFAULT_CHARACTER_AVATAR_ID);
   const trimmedName = name.trim();
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (trimmedName) onCreate(trimmedName);
+    if (trimmedName) onCreate(trimmedName, avatarId);
   };
   return (
     <main className="character-creation">
@@ -392,19 +395,45 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string) => void }) {
         <div className="creation-sigil"><UserRound size={28} /></div>
         <p className="eyebrow">A New Chronicle</p>
         <h1>Create Your Character</h1>
-        <p>Name the wanderer who will brave Emberfall. This journey uses permadeath: if your character falls, their progress and possessions are lost.</p>
+        <p>Choose the wanderer who will brave Emberfall. This journey uses permadeath: if your character falls, their progress and possessions are lost.</p>
         <form onSubmit={submit}>
-          <label htmlFor="character-name">Character name</label>
-          <input
-            id="character-name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={24}
-            autoComplete="off"
-            autoFocus
-            placeholder="Enter a name"
-          />
-          <small>{name.length}/24</small>
+          <fieldset className="avatar-picker">
+            <legend>Choose appearance</legend>
+            {(["male", "female"] as const).map((group) => (
+              <div className="avatar-group" key={group}>
+                <div className="avatar-group-heading"><strong>{group === "male" ? "Male" : "Female"}</strong><small>5 options</small></div>
+                <div className="avatar-options">
+                  {CHARACTER_AVATARS.filter((avatar) => avatar.group === group).map((avatar, index) => (
+                    <label className={`avatar-option ${avatar.id === avatarId ? "selected" : ""}`} key={avatar.id}>
+                      <input
+                        type="radio"
+                        name="character-avatar"
+                        value={avatar.id}
+                        checked={avatar.id === avatarId}
+                        onChange={() => setAvatarId(avatar.id)}
+                        aria-label={avatar.label}
+                      />
+                      <span className="avatar-option-image"><img src={avatar.imageUrl} alt="" loading={avatar.id === avatarId ? "eager" : "lazy"} decoding="async" draggable={false} /></span>
+                      <span className="avatar-option-label">Option {index + 1}</span>
+                      <span className="avatar-option-check" aria-hidden="true">✓</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </fieldset>
+          <div className="creation-name-field">
+            <label htmlFor="character-name">Character name</label>
+            <input
+              id="character-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              maxLength={24}
+              autoComplete="off"
+              placeholder="Enter a name"
+            />
+            <small>{name.length}/24</small>
+          </div>
           <button className="primary-button" type="submit" disabled={!trimmedName}>Begin Chronicle <ChevronRight size={17} /></button>
         </form>
         <div className="permadeath-warning"><Skull size={16} /><span><strong>Permadeath enabled</strong>Your save is erased when this character dies.</span></div>
@@ -1079,6 +1108,7 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
   onAllocateStat: (stat: StatName) => void;
 }) {
   const derived = getDerivedStats(character);
+  const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
   const equipped = Object.entries(character.equipment) as Array<[GearSlot, GearItem]>;
   const sets = equipped.reduce<Record<string, { name: string; count: number }>>((result, [, item]) => {
@@ -1112,7 +1142,7 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
           <div className="panel-title"><span><Shield size={17} /> Equipment</span><small>8 slots</small></div>
           <div className="equipment-paper-doll">
             <div className="character-silhouette" aria-hidden="true">
-              <img src="/assets/emberfall-paper-doll.png" alt="" draggable={false} />
+              <img src={avatar.imageUrl} alt="" draggable={false} />
             </div>
             {EQUIPMENT_SLOT_ORDER.map((slot) => {
               const item = character.equipment[slot];
