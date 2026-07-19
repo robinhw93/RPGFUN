@@ -1133,6 +1133,37 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
   const [selectedGearSlot, setSelectedGearSlot] = useState<GearSlot | null>(null);
   const [inventoryFilter, setInventoryFilter] = useState<InventoryGearFilter>("all");
   const [inventorySort, setInventorySort] = useState<InventorySort>("rarity");
+  const modalOpen = Boolean(inspectedItem || selectedGearSlot);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const root = document.documentElement;
+    const previousBody = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+    };
+    const previousRootOverflow = root.style.overflow;
+    const scrollbarWidth = Math.max(0, window.innerWidth - root.clientWidth);
+    root.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+    return () => {
+      root.style.overflow = previousRootOverflow;
+      body.style.overflow = previousBody.overflow;
+      body.style.position = previousBody.position;
+      body.style.top = previousBody.top;
+      body.style.width = previousBody.width;
+      body.style.paddingRight = previousBody.paddingRight;
+      window.scrollTo(0, scrollY);
+    };
+  }, [modalOpen]);
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
