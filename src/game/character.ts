@@ -15,11 +15,16 @@ export const INITIAL_CHARACTER: CharacterState = {
   talentPoints: 3,
   unlockedTalents: ["origin"],
   equippedAbilities: ["strike", "guard"],
-  inventory: [ITEMS[1], ITEMS[2], ITEMS[4], ITEMS[6]],
+  inventory: ITEMS.slice(8),
   equipment: {
     mainHand: ITEMS[0],
+    offHand: ITEMS[1],
+    head: ITEMS[2],
     chest: ITEMS[3],
+    pants: ITEMS[4],
     boots: ITEMS[5],
+    ring1: ITEMS[6],
+    ring2: ITEMS[7],
   },
 };
 
