@@ -801,7 +801,7 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
       <div className="initiative-panel">
         <p className="eyebrow">Combat Begins</p>
         <h2>{phase === "rolling" ? "Rolling Initiative" : phase === "landed" ? "Rolls Locked" : phase === "bonus" ? "Applying Bonuses" : "Turn Order"}</h2>
-        <p className="initiative-caption" aria-live="polite">{phase === "rolling" ? "The D100 counters are racing." : phase === "landed" ? "Raw rolls are locked in." : phase === "bonus" ? "Initiative bonuses are now added." : "Highest initiative acts first."}</p>
+        <p className="initiative-caption" aria-live="polite">{phase === "rolling" ? "The D100 counters are racing." : phase === "landed" ? "\u00A0" : phase === "bonus" ? "Initiative bonuses are now added." : "Highest initiative acts first."}</p>
         <div className="initiative-contestants" style={landingRect ? {
           "--initiative-target-top": `${landingRect.top}px`,
           "--initiative-target-left": `${landingRect.left}px`,
