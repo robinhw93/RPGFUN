@@ -205,6 +205,7 @@ export interface CharacterState {
   name: string;
   level: number;
   xp: number;
+  unspentStatPoints: number;
   gold: number;
   baseStats: Stats;
   talentPoints: number;
@@ -221,6 +222,24 @@ export interface AdventureNode {
   title: string;
   description: string;
   enemies?: string[];
+  reward?: {
+    experience: number;
+    gold: number;
+    loot: boolean;
+  };
+}
+
+export interface CombatReward {
+  id: string;
+  nodeIndex: number;
+  experience: number;
+  gold: number;
+  loot: GearItem | null;
+  levelBefore: number;
+  xpBefore: number;
+  levelAfter: number;
+  xpAfter: number;
+  levelsGained: number;
 }
 
 export interface AdventureProgress {
@@ -230,6 +249,7 @@ export interface AdventureProgress {
   combat: CombatState | null;
   eventResolved: boolean;
   latestLoot: GearItem | null;
+  pendingReward: CombatReward | null;
   completed: boolean;
 }
 

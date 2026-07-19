@@ -7,6 +7,7 @@ export const INITIAL_CHARACTER: CharacterState = {
   name: "",
   level: 1,
   xp: 0,
+  unspentStatPoints: 0,
   gold: 18,
   baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 6, luck: 3 },
   talentPoints: 3,
@@ -23,7 +24,7 @@ export const INITIAL_CHARACTER: CharacterState = {
 export const INITIAL_GAME: GameState = {
   characterCreated: false,
   character: INITIAL_CHARACTER,
-  adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, completed: false },
+  adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
 };
 
 export function getDerivedStats(character: CharacterState): Stats & { armor: number; power: number; maxHp: number; maxEnergy: number; energyRegen: number; critChance: number; initiativeBonus: number } {
