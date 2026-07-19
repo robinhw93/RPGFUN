@@ -11,7 +11,7 @@ import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
-import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, unequipGearItem } from "./game/gear";
+import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -1265,6 +1265,17 @@ function getItemStatLines(item: GearItem): Array<{ label: string; value: number 
   return lines;
 }
 
+function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number }> {
+  const currentStats = new Map(getItemStatLines(current).map((stat) => [stat.label, stat.value]));
+  const candidateStats = new Map(getItemStatLines(candidate).map((stat) => [stat.label, stat.value]));
+  const labels = [...new Set([...currentStats.keys(), ...candidateStats.keys()])];
+  return labels.map((label) => {
+    const currentValue = currentStats.get(label) ?? 0;
+    const candidateValue = candidateStats.get(label) ?? 0;
+    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue };
+  });
+}
+
 function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked, onClose, onEquip, onUnequip }: {
   item: GearItem;
   equippedSlot?: GearSlot;
@@ -1275,6 +1286,7 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
   onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
   onUnequip: (slot: GearSlot) => void;
 }) {
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     window.addEventListener("keydown", closeOnEscape);
@@ -1288,6 +1300,9 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
   const equipType = getWeaponEquipType(item);
   const offHandLocked = isEquipmentSlotLocked("offHand", character.equipment);
   const actionLocked = locked || (preferredSlot ? isEquipmentSlotLocked(preferredSlot, character.equipment) : equipType === "offHand" && offHandLocked);
+  const comparisonSlot = preferredSlot ?? slotForItem(item, character.equipment);
+  const comparisonItem = equippedSlot ? undefined : character.equipment[comparisonSlot];
+  const comparisonLines = comparisonItem ? getItemComparisonLines(comparisonItem, item) : [];
 
   return (
     <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
@@ -1314,8 +1329,28 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
           </section>
         )}
 
+        {comparisonOpen && comparisonItem && (
+          <section className="item-comparison" aria-label={`Compare ${item.name} with ${comparisonItem.name}`}>
+            <h3>Item Comparison</h3>
+            <div className="comparison-items">
+              <div><small>Currently Equipped</small><span><GearSlotIcon slot={comparisonItem.slot} item={comparisonItem} size={34} /><strong className={`item-name-${comparisonItem.rarity}`}>{comparisonItem.name}</strong></span></div>
+              <div><small>New Item</small><span><GearSlotIcon slot={item.slot} item={item} size={34} /><strong className={`item-name-${item.rarity}`}>{item.name}</strong></span></div>
+            </div>
+            <div className="comparison-stats">
+              {comparisonLines.length > 0 ? comparisonLines.map((stat) => (
+                <div key={stat.label}>
+                  <strong>{stat.label}</strong>
+                  <span>{stat.current} <i>→</i> {stat.candidate}</span>
+                  <em className={stat.difference > 0 ? "positive" : stat.difference < 0 ? "negative" : "neutral"}>{stat.difference > 0 ? `+${stat.difference}` : stat.difference < 0 ? stat.difference : "—"}</em>
+                </div>
+              )) : <p className="item-detail-muted">These items grant no direct stat bonuses.</p>}
+            </div>
+          </section>
+        )}
+
         {locked && <p className="item-action-lock"><Shield size={14} /> Equipment cannot be changed during combat.</p>}
         <div className="item-detail-actions">
+          {comparisonItem && <button type="button" className="item-compare-button" aria-expanded={comparisonOpen} onClick={() => setComparisonOpen((open) => !open)}>{comparisonOpen ? "Close Comparison" : "Compare"}</button>}
           {equippedSlot ? (
             <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip(equippedSlot)}>Unequip</button>
           ) : preferredSlot ? (
