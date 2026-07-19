@@ -336,7 +336,7 @@ main { min-height: calc(100vh - 68px); }
 .enemy-combatant.selected { border-color: var(--enemy-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--enemy-accent) 35%, transparent), 0 0 20px color-mix(in srgb, var(--enemy-accent) 8%, transparent); }
 .compact-target { position: absolute; right: .55rem; top: .55rem; display: none; color: var(--enemy-accent); }.enemy-combatant.selected .compact-target { display: block; }
 .compact-resource-label { display: flex; justify-content: space-between; margin-bottom: .3rem; color: var(--dim); font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; }.compact-resource-label b { color: #c6c3bb; font-weight: 600; }
-.compact-status-row { min-height: 32px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: .8rem; margin-top: .55rem; padding-bottom: 7px; overflow: visible; }
+.compact-status-row { min-height: 24px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; margin-top: .55rem; padding-bottom: 5px; overflow: visible; }
 .compact-status-row .status-badge, .compact-status-row .armor-badge { margin: 0; padding: .22rem .36rem; }
 .no-status { color: #515752; font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; }
 .energy-label { margin-top: .65rem; }.energy-label span { color: var(--gold); }
@@ -382,16 +382,16 @@ main { min-height: calc(100vh - 68px); }
 
 .status-badge.inspectable, .armor-badge.inspectable { font: inherit; cursor: pointer; }
 .status-badge.inspectable:hover, .status-badge.inspectable:focus-visible, .armor-badge.inspectable:hover, .armor-badge.inspectable:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
-.armor-indicator { width: 32px; height: 32px; position: relative; display: inline-grid; flex: 0 0 32px; place-items: center; gap: 0; padding: 0; color: #9bc6a6; border: 0; border-radius: 50%; background: radial-gradient(circle, #19261d 0 57%, #121713 58%); text-transform: none; overflow: visible; }
-.armor-indicator::before { content: ""; position: absolute; inset: -4px; border: 2px solid #75a584; border-radius: 50%; box-shadow: 0 0 4px rgba(117,165,132,.2); pointer-events: none; }
-.armor-indicator > svg { width: 14px; height: 14px; }
-.armor-indicator b { min-width: 17px; height: 17px; position: absolute; z-index: 2; right: -6px; bottom: -6px; display: grid; place-items: center; padding: 0 3px; color: #e9f6ec; border: 1px solid #52735b; border-radius: 9px; background: #101812; box-shadow: 0 2px 6px rgba(0,0,0,.65); font-size: .64rem; font-weight: 900; line-height: 1; }
-.status-badge.status-icon { --status-ring: #a879ad; width: 32px; height: 32px; position: relative; display: inline-grid; flex: 0 0 32px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: radial-gradient(circle, #281d2b 0 57%, #161318 58%); overflow: visible; }
+.armor-indicator { width: 20px; height: 20px; position: relative; display: inline-grid; flex: 0 0 20px; place-items: center; gap: 0; padding: 0; color: #9bc6a6; border: 0; border-radius: 50%; background: radial-gradient(circle, #19261d 0 57%, #121713 58%); text-transform: none; overflow: visible; }
+.armor-indicator::before { content: ""; position: absolute; inset: -2px; border: 1.5px solid #75a584; border-radius: 50%; box-shadow: 0 0 3px rgba(117,165,132,.18); pointer-events: none; }
+.armor-indicator > svg { width: 9px; height: 9px; }
+.armor-indicator b { min-width: 14px; height: 14px; position: absolute; z-index: 2; right: -5px; bottom: -5px; display: grid; place-items: center; padding: 0 2px; color: #e9f6ec; border: 1px solid #52735b; border-radius: 7px; background: #101812; box-shadow: 0 2px 5px rgba(0,0,0,.65); font-size: .54rem; font-weight: 900; line-height: 1; }
+.status-badge.status-icon { --status-ring: #a879ad; width: 20px; height: 20px; position: relative; display: inline-grid; flex: 0 0 20px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: radial-gradient(circle, #281d2b 0 57%, #161318 58%); overflow: visible; }
 .status-badge.status-icon.buff { --status-ring: #75a584; background: radial-gradient(circle, #19261d 0 57%, #121713 58%); }
-.status-badge.status-icon > svg:not(.status-duration-ring) { width: 14px; height: 14px; position: relative; z-index: 1; }
-.status-badge.status-icon .status-duration-ring { width: 40px; height: 40px; position: absolute; z-index: 0; inset: -4px; overflow: visible; transform: rotate(-90deg); pointer-events: none; }
-.status-badge.status-icon .status-duration-ring circle { fill: none; stroke: var(--status-ring); stroke-width: 2.1; stroke-linecap: round; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--status-ring) 35%, transparent)); }
-.status-badge.status-icon .status-stack-count { min-width: 17px; height: 17px; position: absolute; z-index: 2; right: -6px; bottom: -6px; display: grid; place-items: center; padding: 0 3px; color: #fff5df; border: 1px solid #8d794e; border-radius: 9px; background: #17130e; box-shadow: 0 2px 6px rgba(0,0,0,.65); font-size: .64rem; font-weight: 900; line-height: 1; letter-spacing: 0; }
+.status-badge.status-icon > svg:not(.status-duration-ring) { width: 9px; height: 9px; position: relative; z-index: 1; }
+.status-badge.status-icon .status-duration-ring { width: 24px; height: 24px; position: absolute; z-index: 0; inset: -2px; overflow: visible; transform: rotate(-90deg); pointer-events: none; }
+.status-badge.status-icon .status-duration-ring circle { fill: none; stroke: var(--status-ring); stroke-width: 1.65; stroke-linecap: round; filter: drop-shadow(0 0 1px color-mix(in srgb, var(--status-ring) 32%, transparent)); }
+.status-badge.status-icon .status-stack-count { min-width: 14px; height: 14px; position: absolute; z-index: 2; right: -5px; bottom: -5px; display: grid; place-items: center; padding: 0 2px; color: #fff5df; border: 1px solid #8d794e; border-radius: 7px; background: #17130e; box-shadow: 0 2px 5px rgba(0,0,0,.65); font-size: .54rem; font-weight: 900; line-height: 1; letter-spacing: 0; }
 
 .inspect-info-modal { position: fixed; z-index: 150; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.84); backdrop-filter: blur(6px); }
 .inspect-info-card { width: min(370px, 100%); padding: 1.35rem; border: 1px solid #66583b; background: #121613; box-shadow: 0 24px 70px rgba(0,0,0,.75); }
@@ -495,10 +495,10 @@ main { min-height: calc(100vh - 68px); }
   .enemy-combatant { max-height: none; padding: .52rem; border-right-width: 2px; }
   .compact-resource-label { margin-bottom: .2rem; font-size: .48rem; }.compact-resource-label b { font-size: .52rem; }
   .compact-combatant .health-bar, .compact-combatant .energy-bar, .compact-combatant .energy-segments { height: 6px; }
-  .compact-status-row { min-height: 32px; max-height: 48px; gap: 12px; margin-top: .38rem; padding-bottom: 7px; }
+  .compact-status-row { min-height: 24px; max-height: 40px; gap: 10px; margin-top: .38rem; padding-bottom: 5px; }
   .compact-status-row .status-badge, .compact-status-row .armor-badge { padding: .18rem .28rem; font-size: .46rem; }
-  .compact-status-row .status-badge.status-icon { width: 30px; height: 30px; flex-basis: 30px; padding: 0; }.compact-status-row .status-badge.status-icon > svg:not(.status-duration-ring) { width: 13px; height: 13px; }.compact-status-row .status-badge.status-icon .status-duration-ring { width: 38px; height: 38px; inset: -4px; }
-  .compact-status-row .armor-indicator { width: 30px; height: 30px; flex-basis: 30px; padding: 0; }.compact-status-row .armor-indicator > svg { width: 13px; height: 13px; }
+  .compact-status-row .status-badge.status-icon { width: 20px; height: 20px; flex-basis: 20px; padding: 0; }.compact-status-row .status-badge.status-icon > svg:not(.status-duration-ring) { width: 9px; height: 9px; }.compact-status-row .status-badge.status-icon .status-duration-ring { width: 24px; height: 24px; inset: -2px; }
+  .compact-status-row .armor-indicator { width: 20px; height: 20px; flex-basis: 20px; padding: 0; }.compact-status-row .armor-indicator > svg { width: 9px; height: 9px; }
   .no-status { font-size: .46rem; }
   .energy-label { margin-top: .45rem; }
   .compact-ability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 4px; }
