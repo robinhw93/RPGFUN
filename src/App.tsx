@@ -956,7 +956,7 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
     if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
   }, []);
 
-  if (!onInspect) return <span className={`status-badge status-icon ${kind}`} aria-label={label} data-game-tooltip={label}>{ring}{icon}{stackCounter}</span>;
+  if (!onInspect) return <span className={`status-badge status-icon status-${id} ${kind}`} aria-label={label} data-game-tooltip={label}>{ring}{icon}{stackCounter}</span>;
 
   const beginHold = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === "mouse") return;
@@ -977,7 +977,7 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
   return (
     <button
       type="button"
-      className={`status-badge status-icon inspectable ${kind}`}
+      className={`status-badge status-icon status-${id} inspectable ${kind}`}
       aria-label={label}
       data-game-tooltip={label}
       data-tooltip-open={tooltipOpen ? "true" : undefined}
