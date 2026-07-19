@@ -31,6 +31,29 @@ const SLOT_LABELS: Record<GearSlot, string> = {
 
 const EQUIPMENT_SLOT_ORDER: GearSlot[] = ["head", "chest", "pants", "boots", "mainHand", "offHand", "ring1", "ring2"];
 
+type InventoryGearFilter = "all" | "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring";
+type InventorySort = "rarity" | "name";
+
+const INVENTORY_GEAR_FILTERS: Array<{ id: InventoryGearFilter; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "head", label: "Head" },
+  { id: "chest", label: "Chest" },
+  { id: "pants", label: "Pants" },
+  { id: "boots", label: "Boots" },
+  { id: "mainHand", label: "Main Hand" },
+  { id: "offHand", label: "Off Hand" },
+  { id: "ring", label: "Rings" },
+];
+
+const RARITY_SORT_WEIGHT: Record<GearItem["rarity"], number> = { common: 0, uncommon: 1, rare: 2, epic: 3 };
+
+function itemMatchesInventoryFilter(item: GearItem, filter: InventoryGearFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "ring") return item.slot === "ring";
+  if (filter === "mainHand" || filter === "offHand") return canEquipItemInSlot(item, filter);
+  return item.slot === filter;
+}
+
 const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
   { key: "strength", label: "Strength", short: "STR" },
   { key: "agility", label: "Agility", short: "AGI" },
@@ -1108,9 +1131,17 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
 }) {
   const [inspectedItem, setInspectedItem] = useState<{ item: GearItem; equippedSlot?: GearSlot; preferredSlot?: GearSlot } | null>(null);
   const [selectedGearSlot, setSelectedGearSlot] = useState<GearSlot | null>(null);
+  const [inventoryFilter, setInventoryFilter] = useState<InventoryGearFilter>("all");
+  const [inventorySort, setInventorySort] = useState<InventorySort>("rarity");
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
+  const visibleInventory = character.inventory
+    .filter((item) => itemMatchesInventoryFilter(item, inventoryFilter))
+    .sort((left, right) => inventorySort === "name"
+      ? left.name.localeCompare(right.name)
+      : RARITY_SORT_WEIGHT[right.rarity] - RARITY_SORT_WEIGHT[left.rarity] || left.name.localeCompare(right.name));
+  const activeInventoryFilter = INVENTORY_GEAR_FILTERS.find((filter) => filter.id === inventoryFilter)!;
   return (
     <section className="page character-page">
       <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div></div>
@@ -1163,8 +1194,21 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
       </div>
 
       <div className="section-heading inventory-heading"><div><h2>Inventory</h2></div><span className={locked ? "lock-note" : "muted"}>{locked ? "Equipment is locked during combat" : "Tap an item to view its details"}</span></div>
+      <div className="inventory-controls">
+        <div className="inventory-tabs" role="tablist" aria-label="Filter inventory by gear slot">
+          {INVENTORY_GEAR_FILTERS.map((filter) => {
+            const count = character.inventory.filter((item) => itemMatchesInventoryFilter(item, filter.id)).length;
+            return <button type="button" role="tab" aria-selected={inventoryFilter === filter.id} className={inventoryFilter === filter.id ? "selected" : ""} key={filter.id} onClick={() => setInventoryFilter(filter.id)}><span>{filter.label}</span><small>{count}</small></button>;
+          })}
+        </div>
+        <div className="inventory-sort" role="group" aria-label="Sort inventory">
+          <span>Sort</span>
+          <button type="button" className={inventorySort === "rarity" ? "selected" : ""} aria-pressed={inventorySort === "rarity"} onClick={() => setInventorySort("rarity")}>Rarity</button>
+          <button type="button" className={inventorySort === "name" ? "selected" : ""} aria-pressed={inventorySort === "name"} onClick={() => setInventorySort("name")}>Name</button>
+        </div>
+      </div>
       <div className="inventory-grid">
-        {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
+        {visibleInventory.length ? visibleInventory.map((item, index) => <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
       </div>
       {selectedGearSlot && (
         <GearSlotPickerModal
