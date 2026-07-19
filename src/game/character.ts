@@ -65,6 +65,9 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
   Object.entries(features.passive.stats).forEach(([stat, amount]) => {
     stats[stat as keyof Stats] += amount;
   });
+  Object.keys(stats).forEach((stat) => {
+    stats[stat as keyof Stats] = Math.round(stats[stat as keyof Stats]);
+  });
   armor += features.passive.armor;
   magicResistance += features.passive.magicResistance;
   gearPhysicalPower += features.passive.physicalPower + features.passive.power;
@@ -74,17 +77,17 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
   const critChance = 0.05 + stats.luck * 0.0075 + features.passive.critChance;
   return {
     ...stats,
-    armor,
-    magicResistance,
-    physicalPower: stats.strength + stats.agility * 0.3 + gearPhysicalPower,
-    magicalPower: stats.intelligence + gearMagicalPower,
-    maxHp: 20 + stats.vitality * 10 + features.passive.maxHp,
-    maxEnergy,
-    energyRegen,
+    armor: Math.round(armor),
+    magicResistance: Math.round(magicResistance),
+    physicalPower: Math.round(stats.strength + stats.agility * 0.3 + gearPhysicalPower),
+    magicalPower: Math.round(stats.intelligence + gearMagicalPower),
+    maxHp: Math.round(20 + stats.vitality * 10 + features.passive.maxHp),
+    maxEnergy: Math.round(maxEnergy),
+    energyRegen: Math.round(energyRegen),
     critChance,
     hitChance: 0.95 + stats.agility * 0.005 + features.passive.hitChance,
     dodgeChance: capDodgeChance(0.02 + stats.agility * 0.004 + features.passive.dodgeChance),
-    initiativeBonus: stats.agility + stats.intelligence * 0.5 + features.passive.initiative,
+    initiativeBonus: Math.round(stats.agility + stats.intelligence * 0.5 + features.passive.initiative),
     guardMultiplier: 1 + stats.strength * 0.01 + features.passive.guardGeneration,
     healingReceivedMultiplier: 1 + stats.vitality * 0.005 + features.passive.healingReceived,
     lootRarityBonus: stats.luck * 0.01 + features.passive.lootRarity,

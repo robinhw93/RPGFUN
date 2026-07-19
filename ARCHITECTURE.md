@@ -31,6 +31,7 @@ Player turns are explicitly ended with `endPlayerTurn`; using an ability never a
 
 ## UI rules
 
+- All player-facing copy explains the game in the language of the character and player. Internal formulas, implementation terms, and developer-oriented rules do not belong in game UI.
 - Never use browser-native `alert`, `confirm`, or `prompt` dialogs.
 - Never use HTML `title` attributes for tooltips. Hover and keyboard hints use the game-owned `data-game-tooltip` UI; detailed touch interactions use game-owned modals.
 - Confirmations and destructive actions use components from `src/components/`.

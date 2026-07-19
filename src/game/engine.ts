@@ -131,7 +131,11 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     return {
       ...combat,
       enemies,
-      turnOrder: combat.turnOrder.map((entry) => ({ ...entry, roll: entry.roll ?? entry.initiative, bonus: entry.bonus ?? 0 })),
+      turnOrder: combat.turnOrder.map((entry) => {
+        const roll = Math.round(entry.roll ?? entry.initiative);
+        const bonus = Math.round(entry.bonus ?? 0);
+        return { ...entry, roll, bonus, initiative: Math.round(entry.initiative ?? roll + bonus) };
+      }),
       selectedEnemyId,
       activeTurnIndex: Math.min(combat.activeTurnIndex ?? 0, combat.turnOrder.length - 1),
       initiativeRevealed: combat.initiativeRevealed ?? true,

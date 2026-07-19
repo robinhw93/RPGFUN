@@ -34,6 +34,14 @@ const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
   { key: "luck", label: "Luck", short: "LCK" },
 ];
 
+const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
+  strength: "Makes your physical attacks stronger and increases the Guard you gain.",
+  agility: "Improves your physical attacks, accuracy, dodge chance, and initiative.",
+  intelligence: "Makes your magical attacks stronger and helps you act earlier in combat.",
+  vitality: "Increases your maximum Health and improves the healing you receive.",
+  luck: "Improves critical strikes, loot, and the chance for special effects to trigger.",
+};
+
 function cloneInitial(): GameState {
   return JSON.parse(JSON.stringify(INITIAL_GAME)) as GameState;
 }
@@ -1082,25 +1090,24 @@ function CharacterView({ character, locked, onEquip, onAllocateStat }: {
   }, {});
   return (
     <section className="page character-page">
-      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div><div className="power-seal"><Swords /><span><small>Physical Power</small><strong>{formatValue(derived.physicalPower)}</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><p>Character & Equipment · Shape your attributes through gear.</p><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div><div className="power-seal"><Swords /><span><small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span></div></div>
       <div className="character-layout">
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
           <div className="stats-list">
-            {STAT_LABELS.map((stat) => <div key={stat.key}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical Power & Guard" : stat.key === "agility" ? "Physical Power, Hit, Dodge & Initiative" : stat.key === "intelligence" ? "Magical Power & Initiative" : stat.key === "vitality" ? "Health & healing received" : "Criticals, loot & chance effects"}</small></span><span className="stat-value-actions"><b>{derived[stat.key]}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
+            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{stat.key === "strength" ? "Physical Power & Guard" : stat.key === "agility" ? "Physical Power, Hit, Dodge & Initiative" : stat.key === "intelligence" ? "Magical Power & Initiative" : stat.key === "vitality" ? "Health & healing received" : "Criticals, loot & chance effects"}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
           <div className="derived-grid">
-            <span data-game-tooltip="Strength + 0.3 per Agility + gear, sets and talents"><Swords /> <small>Physical Power</small><strong>{formatValue(derived.physicalPower)}</strong></span>
-            <span data-game-tooltip="Intelligence + gear, sets and talents"><Sparkles /> <small>Magical Power</small><strong>{formatValue(derived.magicalPower)}</strong></span>
-            <span data-game-tooltip="Raw accuracy. This value has no maximum cap."><Target /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
-            <span data-game-tooltip="Reduces an attacker's Hit Chance. Capped at 50%."><Footprints /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
-            <span data-game-tooltip="Final hit chance is Hit minus Dodge, with a 20% minimum and 100% maximum."><CircleDot /> <small>Hit Rule</small><strong>20–100%</strong></span>
-            <span data-game-tooltip="5% base + 0.75% per Luck + gear, sets and talents. This value has no maximum cap."><Target /> <small>Critical</small><strong>{formatPercent(derived.critChance)}</strong></span>
-            <span data-game-tooltip="20 base + 10 per Vitality + gear, sets and talents"><Heart /> <small>Max Health</small><strong>{derived.maxHp}</strong></span>
-            <span data-game-tooltip="Reduces incoming physical damage"><Shield /> <small>Armor</small><strong>{derived.armor}</strong></span>
-            <span data-game-tooltip="Reduces incoming arcane damage"><Zap /> <small>Magic Resist</small><strong>{derived.magicResistance}</strong></span>
-            <span data-game-tooltip="D100 + Agility + half Intelligence + gear, sets and talents"><Footprints /> <small>Initiative</small><strong>+{formatValue(derived.initiativeBonus)}</strong></span>
-            <span><Sparkles /> <small>Max Energy</small><strong>{derived.maxEnergy}</strong></span>
+            <span data-game-tooltip="Increases the damage dealt by your physical and shadow abilities."><Swords /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
+            <span data-game-tooltip="Increases the damage dealt by your arcane abilities."><Sparkles /> <small>Magical Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
+            <span data-game-tooltip="Improves your chance to land attacks against evasive enemies."><Target /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
+            <span data-game-tooltip="Improves your chance to avoid enemy attacks."><Footprints /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
+            <span data-game-tooltip="Your chance for attacks to deal critical damage."><Target /> <small>Critical</small><strong>{formatPercent(derived.critChance)}</strong></span>
+            <span data-game-tooltip="The total amount of damage you can survive."><Heart /> <small>Max Health</small><strong>{formatStat(derived.maxHp)}</strong></span>
+            <span data-game-tooltip="Reduces damage taken from physical attacks."><Shield /> <small>Armor</small><strong>{formatStat(derived.armor)}</strong></span>
+            <span data-game-tooltip="Reduces damage taken from magical attacks."><Zap /> <small>Magic Resist</small><strong>{formatStat(derived.magicResistance)}</strong></span>
+            <span data-game-tooltip="Helps you act earlier when combat begins."><Footprints /> <small>Initiative</small><strong>+{formatStat(derived.initiativeBonus)}</strong></span>
+            <span data-game-tooltip="The most Energy you can hold at once."><Sparkles /> <small>Max Energy</small><strong>{formatStat(derived.maxEnergy)}</strong></span>
           </div>
         </div>
 
@@ -1138,11 +1145,11 @@ function formatStats(item: GearItem) {
 }
 
 function formatPercent(value: number): string {
-  return `${formatValue(value * 100)}%`;
+  return `${Math.round(value * 100)}%`;
 }
 
-function formatValue(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, "");
+function formatStat(value: number): string {
+  return String(Math.round(value));
 }
 
 function TalentsView({ character, locked, onUnlock, onToggleAbility }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void }) {
