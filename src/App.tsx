@@ -11,7 +11,7 @@ import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
-import { equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, unequipGearItem } from "./game/gear";
+import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, unequipGearItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -1106,7 +1106,8 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
   onUnequip: (slot: GearSlot) => void;
   onAllocateStat: (stat: StatName) => void;
 }) {
-  const [inspectedItem, setInspectedItem] = useState<{ item: GearItem; equippedSlot?: GearSlot } | null>(null);
+  const [inspectedItem, setInspectedItem] = useState<{ item: GearItem; equippedSlot?: GearSlot; preferredSlot?: GearSlot } | null>(null);
+  const [selectedGearSlot, setSelectedGearSlot] = useState<GearSlot | null>(null);
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
@@ -1152,9 +1153,8 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
                   type="button"
                   className={`paper-doll-slot slot-${slot} ${item ? item.rarity : "empty"}${slotLocked ? " locked" : ""}`}
                   key={slot}
-                  disabled={!item || slotLocked}
-                  onClick={() => item && setInspectedItem({ item, equippedSlot: slot })}
-                  aria-label={item ? `View ${item.name}` : `${SLOT_LABELS[slot]} is ${slotLocked ? "locked" : "empty"}`}
+                  onClick={() => setSelectedGearSlot(slot)}
+                  aria-label={`Choose equipment for ${SLOT_LABELS[slot]}${item ? `, currently ${item.name}` : slotLocked ? ", slot locked" : ", currently empty"}`}
                 >
                   <small>{SLOT_LABELS[slot]}</small>
                   <span className="paper-doll-slot-glyph"><GearSlotIcon slot={slot} item={item} /></span>
@@ -1175,10 +1175,23 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
       <div className="inventory-grid">
         {character.inventory.length ? character.inventory.map((item) => <button key={item.id} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">Your pack is empty. Adventure awaits.</div>}
       </div>
+      {selectedGearSlot && (
+        <GearSlotPickerModal
+          slot={selectedGearSlot}
+          character={character}
+          locked={locked}
+          onClose={() => setSelectedGearSlot(null)}
+          onInspect={(item, equippedSlot) => {
+            setSelectedGearSlot(null);
+            setInspectedItem({ item, equippedSlot, preferredSlot: equippedSlot ? undefined : selectedGearSlot });
+          }}
+        />
+      )}
       {inspectedItem && (
         <ItemDetailModal
           item={inspectedItem.item}
           equippedSlot={inspectedItem.equippedSlot}
+          preferredSlot={inspectedItem.preferredSlot}
           character={character}
           locked={locked}
           onClose={() => setInspectedItem(null)}
@@ -1187,6 +1200,50 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
         />
       )}
     </section>
+  );
+}
+
+function GearSlotPickerModal({ slot, character, locked, onClose, onInspect }: {
+  slot: GearSlot;
+  character: CharacterState;
+  locked: boolean;
+  onClose: () => void;
+  onInspect: (item: GearItem, equippedSlot?: GearSlot) => void;
+}) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  const equippedItem = character.equipment[slot];
+  const compatibleItems = character.inventory.filter((item) => canEquipItemInSlot(item, slot));
+  const slotLocked = isEquipmentSlotLocked(slot, character.equipment);
+
+  const itemRow = (item: GearItem, current = false) => (
+    <button type="button" className={`gear-choice-row ${item.rarity}`} key={`${current ? "equipped" : "inventory"}-${item.id}`} onClick={() => onInspect(item, current ? slot : undefined)}>
+      <span className="gear-choice-icon"><GearSlotIcon slot={item.slot} item={item} size={34} /></span>
+      <span><small>{item.rarity} · {getGearCategoryLabel(item)}</small><strong>{item.name}</strong><em>{item.description}</em></span>
+      <span className="gear-choice-action">{current ? "View Equipped" : locked || slotLocked ? "View Details" : "Select"}<ChevronRight size={15} /></span>
+    </button>
+  );
+
+  return (
+    <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${SLOT_LABELS[slot]} equipment`} onClick={onClose}>
+      <article className="gear-slot-picker" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close equipment list">×</button>
+        <header className="gear-slot-picker-header">
+          <span><GearSlotIcon slot={slot} item={equippedItem} size={38} /></span>
+          <div><small>Equipment Slot</small><h2>{SLOT_LABELS[slot]}</h2><p>Choose an item from your inventory.</p></div>
+        </header>
+        {slotLocked && <p className="item-action-lock"><Shield size={14} /> Unequip your Two-Hand weapon before using this slot.</p>}
+        {equippedItem && <section className="gear-choice-section"><h3>Currently Equipped</h3>{itemRow(equippedItem, true)}</section>}
+        <section className="gear-choice-section">
+          <h3>Available Items <small>{compatibleItems.length}</small></h3>
+          <div className="gear-choice-list">{compatibleItems.length > 0 ? compatibleItems.map((item) => itemRow(item)) : <p className="gear-choice-empty">You have no items that can be equipped in this slot.</p>}</div>
+        </section>
+      </article>
+    </div>
   );
 }
 
@@ -1208,9 +1265,10 @@ function getItemStatLines(item: GearItem): Array<{ label: string; value: number 
   return lines;
 }
 
-function ItemDetailModal({ item, equippedSlot, character, locked, onClose, onEquip, onUnequip }: {
+function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked, onClose, onEquip, onUnequip }: {
   item: GearItem;
   equippedSlot?: GearSlot;
+  preferredSlot?: GearSlot;
   character: CharacterState;
   locked: boolean;
   onClose: () => void;
@@ -1229,7 +1287,7 @@ function ItemDetailModal({ item, equippedSlot, character, locked, onClose, onEqu
   const equippedSetPieces = item.set ? equippedEntries.filter(([, equipped]) => equipped.set === item.set).length : 0;
   const equipType = getWeaponEquipType(item);
   const offHandLocked = isEquipmentSlotLocked("offHand", character.equipment);
-  const actionLocked = locked || (equipType === "offHand" && offHandLocked);
+  const actionLocked = locked || (preferredSlot ? isEquipmentSlotLocked(preferredSlot, character.equipment) : equipType === "offHand" && offHandLocked);
 
   return (
     <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
@@ -1260,6 +1318,8 @@ function ItemDetailModal({ item, equippedSlot, character, locked, onClose, onEqu
         <div className="item-detail-actions">
           {equippedSlot ? (
             <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip(equippedSlot)}>Unequip</button>
+          ) : preferredSlot ? (
+            <button type="button" disabled={actionLocked} onClick={() => onEquip(item, preferredSlot)}>{actionLocked && !locked ? `${SLOT_LABELS[preferredSlot]} Locked` : `Equip in ${SLOT_LABELS[preferredSlot]}`}</button>
           ) : equipType === "oneHand" ? (
             <>
               <button type="button" disabled={locked} onClick={() => onEquip(item, "mainHand")}>Equip Main Hand</button>

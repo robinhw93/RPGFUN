@@ -58,6 +58,19 @@ export function isEquipmentSlotLocked(slot: GearSlot, equipment: CharacterState[
   return slot === "offHand" && isTwoHandWeapon(equipment.mainHand);
 }
 
+export function canEquipItemInSlot(item: GearItem, slot: GearSlot): boolean {
+  if (slot === "ring1" || slot === "ring2") return item.slot === "ring";
+  if (slot === "mainHand") {
+    const equipType = getWeaponEquipType(item);
+    return equipType === "mainHand" || equipType === "oneHand" || equipType === "twoHand";
+  }
+  if (slot === "offHand") {
+    const equipType = getWeaponEquipType(item);
+    return equipType === "offHand" || equipType === "oneHand";
+  }
+  return item.slot === slot;
+}
+
 export function slotForItem(item: GearItem, equipment: CharacterState["equipment"], preferredSlot?: GearSlot): GearSlot {
   if (item.slot === "ring") {
     if (preferredSlot === "ring1" || preferredSlot === "ring2") return preferredSlot;
