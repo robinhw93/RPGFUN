@@ -70,6 +70,10 @@ const ATTRIBUTE_ICON_URLS: Record<StatName, string> = {
   luck: "/assets/attribute-icons/luck.png",
 };
 
+function AttributeIcon({ stat }: { stat: StatName }) {
+  return <img className="attribute-icon" src={ATTRIBUTE_ICON_URLS[stat]} alt="" aria-hidden="true" draggable={false} />;
+}
+
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
   strength: "Increases your Physical Power and the amount of Guard you gain.",
   agility: "Increases your Physical Power, Hit Chance, Dodge Chance, and Initiative.",
@@ -1188,7 +1192,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
           <div className="stats-list">
-            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><img src={ATTRIBUTE_ICON_URLS[stat.key]} alt="" aria-hidden="true" draggable={false} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
+            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><AttributeIcon stat={stat.key} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
           <div className="derived-grid">
             <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><Swords /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
@@ -1328,8 +1332,10 @@ const ITEM_STAT_LABELS: Record<StatName, string> = {
   luck: "Luck",
 };
 
-function getItemStatLines(item: GearItem): Array<{ label: string; value: number }> {
-  const lines = Object.entries(item.stats).flatMap(([stat, value]) => value ? [{ label: ITEM_STAT_LABELS[stat as StatName], value }] : []);
+type ItemStatLine = { label: string; value: number; attribute?: StatName };
+
+function getItemStatLines(item: GearItem): ItemStatLine[] {
+  const lines: ItemStatLine[] = (Object.entries(item.stats) as Array<[StatName, number | undefined]>).flatMap(([stat, value]) => value ? [{ label: ITEM_STAT_LABELS[stat], value, attribute: stat }] : []);
   if (item.armor) lines.push({ label: "Armor", value: item.armor });
   if (item.magicResistance) lines.push({ label: "Magic Resistance", value: item.magicResistance });
   if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower });
@@ -1338,14 +1344,17 @@ function getItemStatLines(item: GearItem): Array<{ label: string; value: number 
   return lines.sort((left, right) => left.label.localeCompare(right.label));
 }
 
-function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number }> {
-  const currentStats = new Map(getItemStatLines(current).map((stat) => [stat.label, stat.value]));
-  const candidateStats = new Map(getItemStatLines(candidate).map((stat) => [stat.label, stat.value]));
+function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number; attribute?: StatName }> {
+  const currentLines = getItemStatLines(current);
+  const candidateLines = getItemStatLines(candidate);
+  const currentStats = new Map(currentLines.map((stat) => [stat.label, stat.value]));
+  const candidateStats = new Map(candidateLines.map((stat) => [stat.label, stat.value]));
+  const attributes = new Map([...currentLines, ...candidateLines].map((stat) => [stat.label, stat.attribute]));
   const labels = [...new Set([...currentStats.keys(), ...candidateStats.keys()])];
   return labels.map((label) => {
     const currentValue = currentStats.get(label) ?? 0;
     const candidateValue = candidateStats.get(label) ?? 0;
-    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue };
+    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue, attribute: attributes.get(label) };
   });
 }
 
@@ -1392,7 +1401,7 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
 
         <section className="item-detail-section">
           <h3>Item Stats</h3>
-          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small>{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
+          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.attribute && <AttributeIcon stat={stat.attribute} />}{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
         </section>
 
         {item.set && (
@@ -1412,7 +1421,7 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
             <div className="comparison-stats">
               {comparisonLines.length > 0 ? comparisonLines.map((stat) => (
                 <div key={stat.label}>
-                  <strong>{stat.label}</strong>
+                  <strong className="comparison-stat-label">{stat.attribute && <AttributeIcon stat={stat.attribute} />}{stat.label}</strong>
                   <span>{stat.current} <i>→</i> {stat.candidate}</span>
                   <em className={stat.difference > 0 ? "positive" : stat.difference < 0 ? "negative" : "neutral"}>{stat.difference > 0 ? `+${stat.difference}` : stat.difference < 0 ? stat.difference : "—"}</em>
                 </div>
