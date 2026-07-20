@@ -87,13 +87,6 @@ const DIRECT_PASSIVE_BONUSES: DirectPassiveBonus[] = [
   "armor", "magicResistance", "physicalPower", "magicalPower", "maxHp", "maxEnergy", "energyRegen", "critChance", "hitChance", "dodgeChance", "initiative",
 ];
 
-const INITIAL_POSITIONS: Record<string, { x: number; y: number }> = {
-  origin: { x: 50, y: 50 },
-  arcanist_1: { x: 50, y: 18 },
-  brute_1: { x: 22, y: 72 },
-  shadow_1: { x: 78, y: 72 },
-};
-
 const STATUS_LIBRARY = Object.values(STATUS_EFFECTS).sort((left, right) => left.name.localeCompare(right.name));
 
 function passiveBonusesFromTalent(talent: (typeof TALENTS)[number]): TalentPassiveBonus[] {
@@ -123,13 +116,13 @@ function createInitialDraft(): TalentDraft {
       name: talent.name,
       description: talent.description,
       branch: talent.branch,
-      kind: talent.tier <= 1 ? "class" : talent.abilityId ? "ability" : "passive",
+      kind: talent.kind,
       tier: talent.tier,
       cost: talent.cost,
       requires: [...talent.requires],
-      position: INITIAL_POSITIONS[talent.id] ?? { x: 50, y: 50 },
-      icon: talent.branch === "arcanist" ? "✧" : talent.branch === "shadow" ? "◈" : talent.branch === "brute" ? "◆" : "✦",
-      shape: talent.tier <= 1 ? "square" : "circle",
+      position: { ...talent.position },
+      icon: talent.icon,
+      shape: talent.shape,
       passiveBonuses: passiveBonusesFromTalent(talent),
       abilityId: talent.abilityId ?? "",
       effectNotes: "",

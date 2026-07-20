@@ -131,6 +131,8 @@ export interface Ability {
   target: TargetType;
   damageType?: DamageType;
   power?: number;
+  /** Multiplier applied to Physical or Magical Power. Defaults to 1. */
+  powerScaling?: number;
   scalingStat?: StatName;
   icon: string;
   branch: TalentBranch;
@@ -145,6 +147,10 @@ export interface Talent {
   tier: number;
   cost: number;
   requires: string[];
+  kind: "class" | "passive" | "ability";
+  position: { x: number; y: number };
+  icon: string;
+  shape: "circle" | "square";
   abilityId?: string;
   combat?: CombatFeatureBundle;
   /** Legacy passive shape; new bonuses should use combat.passive. */

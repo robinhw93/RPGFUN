@@ -9,6 +9,10 @@ export const ABILITIES: Record<string, Ability> = {
     id: "guard", name: "Guard", description: "Gain 6 Guard until the next turn.", energyCost: 2,
     target: "self", icon: "◆", branch: "core", effect: "guard",
   },
+  quickSlash: {
+    id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 50% of your Physical Power.", energyCost: 1,
+    target: "enemy", damageType: "physical", powerScaling: 0.5, icon: "◢", branch: "shadow",
+  },
   crushingBlow: {
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
     target: "enemy", damageType: "physical", power: 12, scalingStat: "strength", icon: "✦", branch: "brute", effect: "vulnerable",
@@ -36,10 +40,10 @@ export const ABILITIES: Record<string, Ability> = {
 };
 
 export const TALENTS: Talent[] = [
-  { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", tier: 0, cost: 0, requires: [] },
-  { id: "brute_1", name: "Brute", description: "+2 Strength.", branch: "brute", tier: 1, cost: 1, requires: ["origin"], combat: { passive: { stats: { strength: 2 } } } },
-  { id: "shadow_1", name: "Shadow", description: "+2 Agility.", branch: "shadow", tier: 1, cost: 1, requires: ["origin"], combat: { passive: { stats: { agility: 2 } } } },
-  { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence.", branch: "arcanist", tier: 1, cost: 1, requires: ["origin"], combat: { passive: { stats: { intelligence: 2 } } } },
+  { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 50, y: 50 }, icon: "✦", shape: "square" },
+  { id: "brute_1", name: "Brute", description: "+2 Strength.", branch: "brute", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 42.5, y: 50 }, icon: "◆", shape: "square", combat: { passive: { stats: { strength: 2 } } } },
+  { id: "shadow_1", name: "Shadow", description: "+2 Agility.", branch: "shadow", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 57.5, y: 50 }, icon: "◈", shape: "square", abilityId: "quickSlash", combat: { passive: { stats: { agility: 2 } } } },
+  { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence.", branch: "arcanist", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 50, y: 40 }, icon: "✧", shape: "square", combat: { passive: { stats: { intelligence: 2 } } } },
 ];
 
 export const ENEMIES: Record<string, EnemyTemplate> = {

@@ -667,7 +667,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const offensivePower = getOffensivePower(derived, ability.damageType);
       const defense = getDefense(target.armor, target.magicResistance, target.statuses, ability.damageType);
       const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses);
-      const raw = (ability.power ?? 0) + offensivePower;
+      const raw = (ability.power ?? 0) + offensivePower * (ability.powerScaling ?? 1);
       const damage = getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1))), playerStatuses, target.statuses, ability.damageType);
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(enemy.statuses, damage) } : enemy);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));

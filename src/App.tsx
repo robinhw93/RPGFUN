@@ -21,7 +21,7 @@ import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
 import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId, TalentBranch } from "./game/types";
+import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -1536,11 +1536,21 @@ function formatStat(value: number): string {
 }
 
 function TalentsView({ character, locked, onUnlock, onToggleAbility }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void }) {
-  const branches: Array<{ id: Exclude<TalentBranch, "core">; symbol: string }> = [
-    { id: "arcanist", symbol: "✧" },
-    { id: "brute", symbol: "◆" },
-    { id: "shadow", symbol: "◈" },
-  ];
+  const xScale = 22;
+  const yScale = 15;
+  const padding = 86;
+  const xs = TALENTS.map((talent) => talent.position.x);
+  const ys = TALENTS.map((talent) => talent.position.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const treeWidth = Math.max(520, (maxX - minX) * xScale + padding * 2);
+  const treeHeight = Math.max(390, (maxY - minY) * yScale + padding * 2);
+  const nodePositions = new Map(TALENTS.map((talent) => [talent.id, {
+    x: padding + (talent.position.x - minX) * xScale,
+    y: padding + (talent.position.y - minY) * yScale,
+  }]));
   return (
     <section className="page talents-page">
       <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className="talent-points"><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
@@ -1550,27 +1560,38 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
         <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} data-game-tooltip={ability && ability.id !== "strike" && ability.id !== "guard" ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
       </div>
 
-      <div className="talent-tree" aria-label="Talent tree">
-        <div className="talent-map">
-          <div className="origin-node"><span>✦</span><strong>Wayfarer's Spark</strong><small>Starting node</small></div>
-          {branches.map((branch) => {
-            const talent = TALENTS.find((item) => item.branch === branch.id);
-            if (!talent) return null;
+      <div className="talent-tree runtime-talent-tree" aria-label="Talent tree">
+        <div className="talent-map runtime-talent-map" style={{ width: treeWidth, height: treeHeight }}>
+          <svg className="runtime-talent-connections" viewBox={`0 0 ${treeWidth} ${treeHeight}`} aria-hidden="true">
+            {TALENTS.flatMap((talent) => talent.requires.map((requirement) => {
+              const from = nodePositions.get(requirement);
+              const to = nodePositions.get(talent.id);
+              if (!from || !to) return null;
+              const active = character.unlockedTalents.includes(requirement) && character.unlockedTalents.includes(talent.id);
+              return <line key={`${requirement}-${talent.id}`} className={active ? "active" : ""} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />;
+            }))}
+          </svg>
+          {TALENTS.map((talent) => {
             const unlocked = character.unlockedTalents.includes(talent.id);
             const available = talent.requires.every((id) => character.unlockedTalents.includes(id));
             const canUnlock = !locked && available && character.talentPoints >= talent.cost && !unlocked;
             const state = unlocked ? "unlocked" : available ? "available" : "locked";
-            const action = unlocked ? "Unlocked" : locked ? "Locked in combat" : !available ? "Requires origin" : character.talentPoints < talent.cost ? "Not enough points" : `Unlock · ${talent.cost} point`;
+            const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
+            const abilityEquipped = Boolean(ability && character.equippedAbilities.includes(ability.id));
+            const loadoutFull = character.equippedAbilities.length >= 6;
+            const action = locked ? "Locked in combat" : !available ? `Requires ${talent.requires.join(", ")}` : character.talentPoints < talent.cost ? "Not enough points" : `Unlock · ${talent.cost} point`;
+            const position = nodePositions.get(talent.id)!;
             return (
-              <div className={`talent-path ${branch.id}`} key={talent.id}>
-                <button className={`class-talent-node ${branch.id} ${state}`} disabled={!canUnlock} onClick={() => onUnlock(talent.id)} aria-label={`${talent.name}. ${talent.description} ${action}`}>
-                  <span className="class-node-symbol">{branch.symbol}</span>
-                  <small>Class node</small>
+              <article className={`runtime-talent-node ${talent.branch} ${talent.shape} ${state}`} key={talent.id} style={{ left: position.x, top: position.y }}>
+                  <span className="class-node-symbol">{talent.icon}</span>
+                  <small>{talent.kind} node</small>
                   <strong>{talent.name}</strong>
                   <span className="class-node-effect">{talent.description}</span>
-                  <em>{action}</em>
-                </button>
-              </div>
+                  {ability && <span className="runtime-talent-ability" data-game-tooltip={ability.description}>{ability.name} · {ability.energyCost} Energy</span>}
+                  {talent.id === "origin" ? <em>Starting node</em> : unlocked ? (
+                    ability ? <button type="button" disabled={locked || (!abilityEquipped && loadoutFull)} onClick={() => onToggleAbility(ability.id)}>{abilityEquipped ? "Unequip ability" : loadoutFull ? "Loadout full" : "Equip ability"}</button> : <em>Unlocked</em>
+                  ) : <button type="button" disabled={!canUnlock} onClick={() => onUnlock(talent.id)}>{action}</button>}
+              </article>
             );
           })}
         </div>
