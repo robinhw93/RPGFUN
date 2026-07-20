@@ -54,13 +54,21 @@ function itemMatchesInventoryFilter(item: GearItem, filter: InventoryGearFilter)
   return item.slot === filter;
 }
 
-const STAT_LABELS: Array<{ key: StatName; label: string; short: string }> = [
-  { key: "strength", label: "Strength", short: "STR" },
-  { key: "agility", label: "Agility", short: "AGI" },
-  { key: "intelligence", label: "Intelligence", short: "INT" },
-  { key: "vitality", label: "Vitality", short: "VIT" },
-  { key: "luck", label: "Luck", short: "LCK" },
+const STAT_LABELS: Array<{ key: StatName; label: string }> = [
+  { key: "strength", label: "Strength" },
+  { key: "agility", label: "Agility" },
+  { key: "intelligence", label: "Intelligence" },
+  { key: "vitality", label: "Vitality" },
+  { key: "luck", label: "Luck" },
 ];
+
+const ATTRIBUTE_ICON_URLS: Record<StatName, string> = {
+  strength: "/assets/attribute-icons/strength.png",
+  agility: "/assets/attribute-icons/agility.png",
+  intelligence: "/assets/attribute-icons/intelligence.png",
+  vitality: "/assets/attribute-icons/vitality.png",
+  luck: "/assets/attribute-icons/luck.png",
+};
 
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
   strength: "Increases your Physical Power and the amount of Guard you gain.",
@@ -1180,7 +1188,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
           <div className="stats-list">
-            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune">{stat.short}</span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
+            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><img src={ATTRIBUTE_ICON_URLS[stat.key]} alt="" aria-hidden="true" draggable={false} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
           <div className="derived-grid">
             <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><Swords /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>

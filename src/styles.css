@@ -219,7 +219,8 @@ main { min-height: calc(100vh - 68px); }
 .character-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 1rem; }
 .paper-panel { padding: 1.2rem; border: 1px solid var(--line); background: linear-gradient(135deg, #151917, #101312); }
 .stats-list > div { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: .7rem; padding: .7rem 0; border-bottom: 1px solid #252a27; }
-.stat-rune { width: 34px; height: 34px; display: grid; place-items: center; color: var(--gold); border: 1px solid #443b2a; background: #181813; font-family: Georgia, serif; font-size: .59rem; }
+.stat-rune { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #443b2a; background: #181813; }
+.stat-rune img { width: 30px; height: 30px; display: block; object-fit: contain; }
 .stats-list span:nth-child(2) { display: flex; flex-direction: column; }.stats-list small { color: var(--dim); font-size: .62rem; }.stats-list b { font-family: Georgia, serif; font-size: 1.25rem; font-weight: 400; }
 .character-xp { width: min(280px, 62vw); display: flex; align-items: center; gap: .55rem; margin-top: .7rem; }
 .character-xp > span { height: 5px; flex: 1; overflow: hidden; border: 1px solid #393d38; background: #0c0f0d; }
