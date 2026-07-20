@@ -1327,7 +1327,7 @@ function getItemStatLines(item: GearItem): Array<{ label: string; value: number 
   if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower });
   if (item.magicalPower) lines.push({ label: "Magical Power", value: item.magicalPower });
   if (item.power) lines.push({ label: "Power", value: item.power });
-  return lines;
+  return lines.sort((left, right) => left.label.localeCompare(right.label));
 }
 
 function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number }> {
