@@ -1,11 +1,12 @@
 import { getDerivedStats } from "./character";
-import { rollHit } from "./combatMath";
+import { capDodgeChance, rollHit } from "./combatMath";
 import { ABILITIES, ENEMIES } from "./data";
 import {
   addOrRefreshStatus,
   createStatusEffect,
   decrementStatusDurations,
   getCriticalChanceBonus,
+  getDodgeChanceBonus,
   getEffectiveArmor,
   getEnergyRegeneration,
   getIncomingDamageMultiplier,
@@ -16,7 +17,7 @@ import {
   isMagicalDamage,
   isStatusEffectId,
 } from "./statusEffects";
-import { getCharacterCombatFeatures, resolveCharacterTriggers } from "./combatFeatures";
+import { getCharacterCombatFeatures, getCharacterDamageMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
@@ -312,7 +313,7 @@ function processTurnStart(
   let nextHp = hp;
   let nextStatuses = [...statuses];
   // One-round defensive effects protect the owner until their next turn begins.
-  nextStatuses = nextStatuses.filter((status) => (status.id !== "stealth" || status.expiresAtTurnStart === false) && status.id !== "guard");
+  nextStatuses = nextStatuses.filter((status) => status.expiresAtTurnStart !== true && (status.id !== "stealth" || status.expiresAtTurnStart === false) && status.id !== "guard");
   const burn = nextStatuses.find((status) => status.id === "burn");
   if (burn) {
     const damage = getAfflictionDamage(burn, nextStatuses);
@@ -647,6 +648,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     ? enemies.filter((enemy) => enemy.hp > 0 && !isEnemyStealthed(enemy))
     : enemies.filter((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy));
   if (ability.target === "enemy" && targets.length === 0) return combat;
+  if (ability.requiredTargetStatus && targets.some((target) => !hasStatus(target.statuses, ability.requiredTargetStatus!))) return combat;
 
   if (ability.target === "self") {
     if (ability.effect === "guard") {
@@ -671,9 +673,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         const statusId = ability.effect === "stun" ? "stunned" : ability.effect;
         if (statusId && isStatusEffectId(statusId) && statusId !== "guard") {
           const status = createPlayerAppliedStatus(statusId, derived, { duration: ability.statusDuration, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
-          enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, status) } : enemy);
+          const stunned = status.id === "stunned";
+          enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: stunned || enemy.stunned, statuses: addOrRefreshStatus(enemy.statuses, status) } : enemy);
           logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
-          queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status);
+          queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status, stunned);
         }
         continue;
       }
@@ -686,7 +689,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const defense = getDefense(target.armor, target.magicResistance, target.statuses, ability.damageType);
       const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses);
       const raw = (ability.power ?? 0) + offensivePower * (ability.powerScaling ?? 1);
-      const damage = getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1))), playerStatuses, target.statuses, ability.damageType);
+      const talentDamageMultiplier = getCharacterDamageMultiplier(character, playerStatuses, target.statuses, ability.damageType);
+      const damage = getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier)), playerStatuses, target.statuses, ability.damageType);
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(enemy.statuses, damage) } : enemy);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
@@ -865,7 +869,8 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const attackName = enemy.intentText.split(" · ")[0];
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
     events.push(`${enemy.name} uses ${attackName}.`);
-    if (!rollHit(enemy.hitChance, derived.dodgeChance)) {
+    const playerDodgeChance = capDodgeChance(derived.dodgeChance + getDodgeChanceBonus(playerStatuses));
+    if (!rollHit(enemy.hitChance, playerDodgeChance)) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, enemy.instanceId);
     } else {

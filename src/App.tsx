@@ -108,6 +108,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   regenerate: HeartPulse,
   taunt: Megaphone,
   stealth: EyeOff,
+  evasion: Footprints,
   poison: FlaskConical,
   bleed: Droplets,
   burn: Flame,
@@ -708,7 +709,9 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         {game.character.equippedAbilities.map((id, index) => {
           const ability = ABILITIES[id];
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
-          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy} onUse={() => onAbility(id)} />;
+          const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
+          const targetRequirementMet = !ability.requiredTargetStatus || selectedTarget?.statuses.some((status) => status.id === ability.requiredTargetStatus);
+          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1536,8 +1539,8 @@ function formatStat(value: number): string {
 }
 
 function TalentsView({ character, locked, onUnlock, onToggleAbility }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void }) {
-  const xScale = 22;
-  const yScale = 15;
+  const xScale = 30;
+  const yScale = 24;
   const padding = 86;
   const xs = TALENTS.map((talent) => talent.position.x);
   const ys = TALENTS.map((talent) => talent.position.y);

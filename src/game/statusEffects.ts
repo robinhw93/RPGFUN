@@ -23,6 +23,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Magical Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
   stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 1, description: "Cannot be targeted by enemies this round." },
+  evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn." },
   poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Magic Damage at the end of each turn. Damage scales with the applier's Magical Power." },
   bleed: { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Physical Damage whenever it uses an ability. Damage scales with the applier's Physical Power." },
   burn: { id: "burn", name: "Burn", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Fire Damage at the start of each turn. Damage scales with the applier's Magical Power." },
@@ -79,7 +80,7 @@ export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffec
 
 export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect[] {
   return statuses.flatMap((status) => {
-    if (status.permanent || (status.id === "stealth" && status.expiresAtTurnStart !== false) || status.id === "guard") return [status];
+    if (status.permanent || status.expiresAtTurnStart === true || (status.id === "stealth" && status.expiresAtTurnStart !== false) || status.id === "guard") return [status];
     const duration = status.duration - 1;
     return duration > 0 ? [{ ...status, duration }] : [];
   });
@@ -116,6 +117,10 @@ export function getEffectiveArmor(armor: number, statuses: StatusEffect[]): numb
 
 export function getCriticalChanceBonus(statuses: StatusEffect[]): number {
   return hasStatus(statuses, "fierce") ? 0.2 : 0;
+}
+
+export function getDodgeChanceBonus(statuses: StatusEffect[]): number {
+  return hasStatus(statuses, "evasion") ? 0.6 : 0;
 }
 
 export function getEnergyRegeneration(regeneration: number, statuses: StatusEffect[]): number {

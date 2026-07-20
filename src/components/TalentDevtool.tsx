@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen, Circle, Copy, Download, Grid3X3, Hand, Link2, LockKeyhole, Maximize2, Minus, Plus, Save, Search, Sparkles, Square, Trash2, Wrench, X,
 } from "lucide-react";
-import { TALENTS } from "../game/data";
+import { TALENTS, TALENT_TREE_CANVAS } from "../game/data";
 import { STATUS_EFFECTS } from "../game/statusEffects";
 import type { StatName, TalentBranch } from "../game/types";
 
@@ -120,7 +120,7 @@ function passiveBonusesFromTalent(talent: (typeof TALENTS)[number]): TalentPassi
 function createInitialDraft(): TalentDraft {
   return ensureCanvasRoom({
     version: 1,
-    canvas: { width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT },
+    canvas: { width: TALENT_TREE_CANVAS.width, height: TALENT_TREE_CANVAS.height },
     grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
     nodes: TALENTS.map((talent) => ({
       id: talent.id,

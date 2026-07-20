@@ -43,6 +43,7 @@ export type StatusEffectId =
   | "regenerate"
   | "taunt"
   | "stealth"
+  | "evasion"
   | "poison"
   | "bleed"
   | "burn"
@@ -111,9 +112,20 @@ export interface CombatTriggerDefinition {
   cooldownTurns?: number;
 }
 
+export interface CombatDamageModifierDefinition {
+  id: string;
+  name: string;
+  description: string;
+  multiplier: number;
+  damageTypes?: DamageType[];
+  attackerHasAnyStatus?: StatusEffectId[];
+  targetHasAnyStatus?: StatusEffectId[];
+}
+
 export interface CombatFeatureBundle {
   passive?: PassiveBonuses;
   triggers?: CombatTriggerDefinition[];
+  damageModifiers?: CombatDamageModifierDefinition[];
 }
 
 export interface GearSetBonusDefinition extends CombatFeatureBundle {
@@ -141,6 +153,7 @@ export interface Ability {
   dealsDamage?: boolean;
   statusDuration?: number;
   statusExpiresAtTurnStart?: boolean;
+  requiredTargetStatus?: StatusEffectId;
   scalingStat?: StatName;
   icon: string;
   branch: TalentBranch;

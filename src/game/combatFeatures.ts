@@ -1,16 +1,25 @@
 import { GEAR_SET_BONUSES, TALENTS } from "./data";
 import type {
   CharacterState,
+  CombatDamageModifierDefinition,
   CombatFeatureBundle,
   CombatState,
   CombatTriggerDefinition,
   CombatTriggerEvent,
   DamageType,
   PassiveBonuses,
+  StatusEffect,
   Stats,
 } from "./types";
 
 export interface ResolvedCombatTrigger extends CombatTriggerDefinition {
+  runtimeId: string;
+  sourceId: string;
+  sourceName: string;
+  sourceKind: "gear" | "set" | "talent";
+}
+
+export interface ResolvedCombatDamageModifier extends CombatDamageModifierDefinition {
   runtimeId: string;
   sourceId: string;
   sourceName: string;
@@ -28,6 +37,7 @@ export interface CombatTriggerContext {
 export interface CharacterCombatFeatures {
   passive: Required<Omit<PassiveBonuses, "stats">> & { stats: Stats };
   triggers: ResolvedCombatTrigger[];
+  damageModifiers: ResolvedCombatDamageModifier[];
 }
 
 const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
@@ -89,12 +99,20 @@ function addBundle(
       runtimeId: `${source.sourceKind}:${source.sourceId}:${trigger.id}`,
     });
   });
+  (bundle.damageModifiers ?? []).forEach((modifier) => {
+    features.damageModifiers.push({
+      ...modifier,
+      ...source,
+      runtimeId: `${source.sourceKind}:${source.sourceId}:${modifier.id}`,
+    });
+  });
 }
 
 export function getCharacterCombatFeatures(character: CharacterState): CharacterCombatFeatures {
   const features: CharacterCombatFeatures = {
     passive: { ...EMPTY_PASSIVE, stats: { ...EMPTY_PASSIVE.stats } },
     triggers: [],
+    damageModifiers: [],
   };
   const setCounts: Record<string, number> = {};
 
@@ -127,6 +145,20 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
   });
 
   return features;
+}
+
+export function getCharacterDamageMultiplier(
+  character: CharacterState,
+  attackerStatuses: StatusEffect[],
+  targetStatuses: StatusEffect[],
+  damageType?: DamageType,
+): number {
+  return getCharacterCombatFeatures(character).damageModifiers.reduce((multiplier, modifier) => {
+    if (modifier.damageTypes?.length && (!damageType || !modifier.damageTypes.includes(damageType))) return multiplier;
+    if (modifier.attackerHasAnyStatus?.length && !modifier.attackerHasAnyStatus.some((id) => attackerStatuses.some((status) => status.id === id))) return multiplier;
+    if (modifier.targetHasAnyStatus?.length && !modifier.targetHasAnyStatus.some((id) => targetStatuses.some((status) => status.id === id))) return multiplier;
+    return multiplier * modifier.multiplier;
+  }, 1);
 }
 
 function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerContext): boolean {
