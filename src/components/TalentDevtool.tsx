@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  BookOpen, Circle, Copy, Download, Grid3X3, Grip, Link2, LockKeyhole, Plus, Save, Search, Sparkles, Square, Trash2, Wrench, X,
+  BookOpen, Circle, Copy, Download, Grid3X3, Hand, Link2, LockKeyhole, Maximize2, Minus, Plus, Save, Search, Sparkles, Square, Trash2, Wrench, X,
 } from "lucide-react";
 import { TALENTS } from "../game/data";
 import { STATUS_EFFECTS } from "../game/statusEffects";
@@ -10,6 +10,12 @@ const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
 const DEVTOOL_CODE = "bajs321";
 const SNAP_GRID_SIZE = 5;
+const TALENT_CANVAS_WIDTH = 2200;
+const TALENT_CANVAS_HEIGHT = 1500;
+const MIN_CANVAS_ZOOM = 0.15;
+const MAX_CANVAS_ZOOM = 2;
+const DEFAULT_CANVAS_ZOOM = 0.65;
+const CANVAS_ZOOM_STEP = 0.1;
 
 type TalentNodeKind = "class" | "passive" | "ability";
 type TalentNodeShape = "circle" | "square";
@@ -172,6 +178,10 @@ function loadSnapPreference(): boolean {
   return window.localStorage.getItem(TALENT_SNAP_STORAGE_KEY) !== "false";
 }
 
+function clampCanvasZoom(zoom: number): number {
+  return Math.max(MIN_CANVAS_ZOOM, Math.min(MAX_CANVAS_ZOOM, Math.round(zoom * 100) / 100));
+}
+
 function exportDraft(draft: TalentDraft): string {
   return JSON.stringify({
     format: "emberfall-talent-tree",
@@ -237,12 +247,17 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
   const [draft, setDraft] = useState<TalentDraft>(loadDraft);
   const [selectedId, setSelectedId] = useState("origin");
   const [snapToGrid, setSnapToGrid] = useState(loadSnapPreference);
+  const [canvasZoom, setCanvasZoom] = useState(DEFAULT_CANVAS_ZOOM);
+  const [isFitView, setIsFitView] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
   const [statusQuery, setStatusQuery] = useState("");
   const [message, setMessage] = useState("Draft saved locally");
   const [deleteArmed, setDeleteArmed] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const canvasScrollRef = useRef<HTMLDivElement>(null);
   const draggingIdRef = useRef<string | null>(null);
+  const zoomRef = useRef(DEFAULT_CANVAS_ZOOM);
+  const panRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const selected = draft.nodes.find((node) => node.id === selectedId) ?? draft.nodes[0];
 
   useEffect(() => {
@@ -255,8 +270,12 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
 
   useEffect(() => {
     const scroller = canvasScrollRef.current;
-    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return;
-    scroller.scrollLeft = (scroller.scrollWidth - scroller.clientWidth) / 2;
+    if (!scroller) return;
+    const frame = window.requestAnimationFrame(() => {
+      scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
+      scroller.scrollTop = Math.max(0, (scroller.scrollHeight - scroller.clientHeight) / 2);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => { setDeleteArmed(false); }, [selectedId]);
@@ -349,6 +368,72 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     });
   };
 
+  const zoomCanvasTo = (requestedZoom: number, anchorClientX?: number, anchorClientY?: number) => {
+    const scroller = canvasScrollRef.current;
+    const canvas = canvasRef.current;
+    const nextZoom = clampCanvasZoom(requestedZoom);
+    if (!scroller || !canvas || nextZoom === zoomRef.current) return;
+    const rect = scroller.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    const resolvedClientX = anchorClientX ?? rect.left + scroller.clientWidth / 2;
+    const resolvedClientY = anchorClientY ?? rect.top + scroller.clientHeight / 2;
+    const anchorX = resolvedClientX - rect.left;
+    const anchorY = resolvedClientY - rect.top;
+    const worldX = (resolvedClientX - canvasRect.left) / zoomRef.current;
+    const worldY = (resolvedClientY - canvasRect.top) / zoomRef.current;
+    zoomRef.current = nextZoom;
+    setIsFitView(false);
+    setCanvasZoom(nextZoom);
+    window.requestAnimationFrame(() => {
+      scroller.scrollLeft = worldX * nextZoom - anchorX;
+      scroller.scrollTop = worldY * nextZoom - anchorY;
+    });
+  };
+
+  const fitCanvas = () => {
+    const scroller = canvasScrollRef.current;
+    if (!scroller) return;
+    const nextZoom = clampCanvasZoom(Math.min(scroller.clientWidth / TALENT_CANVAS_WIDTH, scroller.clientHeight / TALENT_CANVAS_HEIGHT) * 0.94);
+    zoomRef.current = nextZoom;
+    setIsFitView(true);
+    setCanvasZoom(nextZoom);
+    window.requestAnimationFrame(() => {
+      scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
+      scroller.scrollTop = Math.max(0, (scroller.scrollHeight - scroller.clientHeight) / 2);
+    });
+    setMessage("Talent tree fitted to view");
+  };
+
+  const beginCanvasPan = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (draggingIdRef.current || (event.pointerType === "mouse" && event.button !== 0 && event.button !== 1)) return;
+    const scroller = canvasScrollRef.current;
+    if (!scroller) return;
+    event.preventDefault();
+    canvasRef.current?.setPointerCapture(event.pointerId);
+    panRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, scrollLeft: scroller.scrollLeft, scrollTop: scroller.scrollTop };
+    setIsPanning(true);
+  };
+
+  const moveCanvasPointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    const pan = panRef.current;
+    const scroller = canvasScrollRef.current;
+    if (pan && pan.pointerId === event.pointerId && scroller) {
+      event.preventDefault();
+      scroller.scrollLeft = pan.scrollLeft - (event.clientX - pan.x);
+      scroller.scrollTop = pan.scrollTop - (event.clientY - pan.y);
+      return;
+    }
+    updateDragPosition(event.clientX, event.clientY);
+  };
+
+  const endCanvasPointer = (pointerId: number) => {
+    if (panRef.current?.pointerId === pointerId) {
+      panRef.current = null;
+      setIsPanning(false);
+    }
+    draggingIdRef.current = null;
+  };
+
   const updateDragPosition = (clientX: number, clientY: number) => {
     const draggingId = draggingIdRef.current;
     if (!draggingId || !canvasRef.current) return;
@@ -400,20 +485,39 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       <div className="talent-devtool-layout">
         <div className="talent-canvas-shell">
           <div className="talent-canvas-toolbar">
-            <span><Grip size={15} /> Drag talents to place them</span>
+            <span><Hand size={15} /> Drag empty space to pan</span>
             <div className="talent-canvas-toolbar-actions">
+              <div className="talent-zoom-controls" aria-label="Talent tree zoom controls">
+                <button type="button" onClick={() => zoomCanvasTo(canvasZoom - CANVAS_ZOOM_STEP)} aria-label="Zoom out"><Minus size={14} /></button>
+                <output aria-label="Current zoom">{Math.round(canvasZoom * 100)}%</output>
+                <button type="button" onClick={() => zoomCanvasTo(canvasZoom + CANVAS_ZOOM_STEP)} aria-label="Zoom in"><Plus size={14} /></button>
+                <button type="button" onClick={fitCanvas} aria-label="Fit talent tree to view"><Maximize2 size={14} /><span>Fit</span></button>
+              </div>
               <button type="button" className={snapToGrid ? "active" : ""} aria-pressed={snapToGrid} onClick={toggleSnapToGrid}><Grid3X3 size={15} /> Snap to grid <small>{snapToGrid ? "On" : "Off"}</small></button>
               <button type="button" onClick={addNode}><Plus size={15} /> Add talent</button>
             </div>
           </div>
-          <div ref={canvasScrollRef} className="talent-canvas-scroll">
-            <div
-              ref={canvasRef}
-              className="talent-dev-canvas"
-              onPointerMove={(event) => updateDragPosition(event.clientX, event.clientY)}
-              onPointerUp={() => { draggingIdRef.current = null; }}
-              onPointerCancel={() => { draggingIdRef.current = null; }}
-            >
+          <div
+            ref={canvasScrollRef}
+            className={isFitView ? "talent-canvas-scroll fit-view" : "talent-canvas-scroll"}
+            onWheel={(event) => {
+              if (!event.ctrlKey && !event.metaKey) return;
+              event.preventDefault();
+              zoomCanvasTo(canvasZoom - Math.sign(event.deltaY) * CANVAS_ZOOM_STEP, event.clientX, event.clientY);
+            }}
+          >
+            <div className="talent-canvas-zoom-surface" style={{ width: TALENT_CANVAS_WIDTH * canvasZoom, height: TALENT_CANVAS_HEIGHT * canvasZoom }}>
+              <div
+                ref={canvasRef}
+                className={`talent-dev-canvas ${isPanning ? "panning" : ""}`}
+                style={{ width: TALENT_CANVAS_WIDTH, height: TALENT_CANVAS_HEIGHT, transform: `scale(${canvasZoom})` }}
+                onPointerDown={beginCanvasPan}
+                onPointerMove={moveCanvasPointer}
+                onPointerUp={(event) => endCanvasPointer(event.pointerId)}
+                onPointerCancel={(event) => endCanvasPointer(event.pointerId)}
+                onLostPointerCapture={(event) => endCanvasPointer(event.pointerId)}
+                onContextMenu={(event) => event.preventDefault()}
+              >
               <svg className="talent-connection-layer" aria-hidden="true">
                 {connections.map((connection) => <line key={connection.id} x1={`${connection.from.x}%`} y1={`${connection.from.y}%`} x2={`${connection.to.x}%`} y2={`${connection.to.y}%`} />)}
               </svg>
@@ -424,6 +528,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                   className={`talent-dev-node ${node.branch} ${node.shape} ${selected?.id === node.id ? "selected" : ""}`}
                   style={{ left: `${node.position.x}%`, top: `${node.position.y}%` }}
                   onPointerDown={(event) => {
+                    if (event.pointerType === "mouse" && event.button !== 0) return;
                     event.preventDefault();
                     canvasRef.current?.setPointerCapture(event.pointerId);
                     setSelectedId(node.id);
@@ -436,6 +541,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                   <small>{node.kind} · tier {node.tier}</small>
                 </button>
               ))}
+              </div>
             </div>
           </div>
         </div>

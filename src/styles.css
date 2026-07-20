@@ -707,13 +707,20 @@ main { min-height: calc(100vh - 68px); }
 .talent-devtool-actions .devtool-exit { color: #a77d77; border-color: #493635; }
 .talent-devtool-layout { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 350px; align-items: start; gap: 1rem; }
 .talent-canvas-shell, .talent-inspector { min-width: 0; border: 1px solid #303732; background: #101412; }
-.talent-canvas-toolbar { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: .55rem .75rem; border-bottom: 1px solid #303732; background: #151a17; }
+.talent-canvas-toolbar { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: .65rem; padding: .55rem .75rem; border-bottom: 1px solid #303732; background: #151a17; }
 .talent-canvas-toolbar > span { display: flex; align-items: center; gap: .45rem; color: #767d77; font-size: .62rem; }
-.talent-canvas-toolbar-actions { display: flex; align-items: center; gap: .4rem; }
+.talent-canvas-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .4rem; }
 .talent-canvas-toolbar-actions button.active { color: var(--gold-bright); border-color: #716142; background: #211d14; }
 .talent-canvas-toolbar-actions button small { color: inherit; font-size: .48rem; letter-spacing: .06em; text-transform: uppercase; }
-.talent-canvas-scroll { width: 100%; overflow: auto; }
-.talent-dev-canvas { width: 100%; min-width: 720px; min-height: 680px; position: relative; overflow: hidden; touch-action: none; background: radial-gradient(circle at 50% 50%, rgba(201,168,103,.07), transparent 24rem), linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px), #0b0f0d; background-size: auto, 5% 5%, 5% 5%, auto; }
+.talent-zoom-controls { display: flex; align-items: center; border: 1px solid #3b433e; background: #0e1210; }
+.talent-canvas-toolbar .talent-zoom-controls button { width: 32px; min-height: 32px; padding: 0; border: 0; border-right: 1px solid #303732; background: transparent; }
+.talent-canvas-toolbar .talent-zoom-controls button:last-child { width: auto; padding: 0 .5rem; border-right: 0; border-left: 1px solid #303732; }
+.talent-zoom-controls output { min-width: 45px; color: var(--gold-bright); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .56rem; text-align: center; }
+.talent-canvas-scroll { width: 100%; height: 680px; display: flex; overflow: auto; overscroll-behavior: contain; scrollbar-color: #4b514c #111513; }
+.talent-canvas-scroll.fit-view { align-items: center; justify-content: center; }
+.talent-canvas-zoom-surface { flex: 0 0 auto; position: relative; margin: auto; overflow: hidden; }
+.talent-dev-canvas { position: absolute; left: 0; top: 0; overflow: hidden; touch-action: none; transform-origin: left top; cursor: grab; background: radial-gradient(circle at 50% 50%, rgba(201,168,103,.07), transparent 24rem), linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px), #0b0f0d; background-size: auto, 5% 5%, 5% 5%, auto; }
+.talent-dev-canvas.panning { cursor: grabbing; }
 .talent-connection-layer { width: 100%; height: 100%; position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 .talent-connection-layer line { stroke: #6e634a; stroke-width: 1.5; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
 .talent-dev-node { --node-color: #847c68; width: 108px; min-height: 108px; aspect-ratio: 1; position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .18rem; padding: .65rem; color: var(--text); border: 1px solid color-mix(in srgb, var(--node-color) 58%, #303630); background: linear-gradient(145deg, color-mix(in srgb, var(--node-color) 10%, #171b18), #0f1311); box-shadow: 0 7px 20px rgba(0,0,0,.3); transform: translate(-50%, -50%); cursor: grab; touch-action: none; user-select: none; }
@@ -790,9 +797,10 @@ main { min-height: calc(100vh - 68px); }
   .talent-devtool-actions > span { grid-column: 1 / -1; }.talent-devtool-actions button { padding: .4rem; }
   .talent-canvas-toolbar > span { display: none; }
   .talent-canvas-toolbar { justify-content: flex-end; }
-  .talent-canvas-toolbar-actions { width: 100%; justify-content: space-between; }
+  .talent-canvas-toolbar-actions { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; justify-content: stretch; }
+  .talent-zoom-controls { grid-column: 1 / -1; justify-content: center; }
   .talent-canvas-toolbar-actions button { padding-inline: .45rem; }
-  .talent-dev-canvas { min-height: 560px; }
+  .talent-canvas-scroll { height: 560px; }
   .devtool-gate { padding: 1.5rem; }
 }
 
