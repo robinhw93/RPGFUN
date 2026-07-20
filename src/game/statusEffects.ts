@@ -20,6 +20,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   enlightened: { id: "enlightened", name: "Enlightened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Magic Damage." },
   fierce: { id: "fierce", name: "Fierce", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+20% Critical Strike Chance." },
   shielded: { id: "shielded", name: "Shielded", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Reduces damage taken by 25%." },
+  regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Magical Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
   stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 1, description: "Cannot be targeted by enemies this round." },
   poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Magic Damage at the end of each turn. Damage scales with the applier's Magical Power." },
@@ -130,4 +131,10 @@ export function getStatusDamage(status: StatusEffect): number {
         ? 2 + power * 0.3
         : 0;
   return Math.max(0, Math.round(perStack * status.stacks));
+}
+
+export function getStatusHealing(status: StatusEffect): number {
+  if (status.id !== "regenerate") return 0;
+  const power = Math.max(0, status.sourcePower ?? 0);
+  return Math.max(1, Math.round((3 + power * 0.2) * status.stacks));
 }

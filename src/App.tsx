@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Backpack, BatteryLow, Bolt, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
-  EyeOff, Flame, FlaskConical, Footprints, Gem, Heart, Home, Megaphone, Moon, RotateCcw, Shield,
+  EyeOff, Flame, FlaskConical, Footprints, Gem, Heart, HeartPulse, Home, Megaphone, Moon, RotateCcw, Shield,
   ShieldCheck, ShieldOff, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
@@ -105,6 +105,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   enlightened: Brain,
   fierce: Crosshair,
   shielded: ShieldCheck,
+  regenerate: HeartPulse,
   taunt: Megaphone,
   stealth: EyeOff,
   poison: FlaskConical,

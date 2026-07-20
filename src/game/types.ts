@@ -38,6 +38,7 @@ export type StatusEffectId =
   | "enlightened"
   | "fierce"
   | "shielded"
+  | "regenerate"
   | "taunt"
   | "stealth"
   | "poison"
@@ -218,6 +219,7 @@ export interface TurnOrderEntry {
 
 export type CombatPendingEffect =
   | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string }
+  | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number };
 

@@ -11,6 +11,7 @@ import {
   getIncomingDamageMultiplier,
   getOutgoingDamageMultiplier,
   getStatusDamage,
+  getStatusHealing,
   hasStatus,
   isMagicalDamage,
   isStatusEffectId,
@@ -76,6 +77,14 @@ function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], te
   events.push(text);
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage, attackerId });
+  return eventIndex;
+}
+
+function queueHeal(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, amount: number): number {
+  const eventIndex = events.length;
+  events.push(text);
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "heal", targetId, amount });
   return eventIndex;
 }
 
@@ -223,7 +232,7 @@ function getAfflictionDamage(status: StatusEffect, targetStatuses: StatusEffect[
 
 function createPlayerAppliedStatus(statusId: StatusEffect["id"], derived: ReturnType<typeof getDerivedStats>): StatusEffect {
   const sourcePower = statusId === "bleed" ? derived.physicalPower
-    : statusId === "poison" || statusId === "burn" ? derived.magicalPower
+    : statusId === "poison" || statusId === "burn" || statusId === "regenerate" ? derived.magicalPower
       : undefined;
   return createStatusEffect(statusId, { sourcePower, sourceId: "player" });
 }
@@ -287,12 +296,14 @@ interface StatusTurnResult {
 
 function processTurnStart(
   hp: number,
+  maxHp: number,
   statuses: StatusEffect[],
   targetId: "player" | string,
   targetName: string,
   logs: CombatLogEntry[],
   events: string[],
   pendingEffects: CombatPendingEffect[],
+  healingReceivedMultiplier = 1,
 ): StatusTurnResult {
   let nextHp = hp;
   let nextStatuses = [...statuses];
@@ -306,6 +317,15 @@ function processTurnStart(
     const text = targetId === "player" ? `You take ${damage} damage from Burn.` : `${targetName} takes ${damage} damage from Burn.`;
     logs.push(makeLog(text, statusInfo(burn)));
     queueDamage(events, pendingEffects, text, targetId, damage);
+  }
+
+  const regenerate = nextStatuses.find((status) => status.id === "regenerate");
+  if (regenerate && nextHp > 0 && nextHp < maxHp) {
+    const healing = Math.min(maxHp - nextHp, Math.max(1, Math.round(getStatusHealing(regenerate) * healingReceivedMultiplier)));
+    nextHp += healing;
+    const text = targetId === "player" ? `You recover ${healing} Health from Regenerate.` : `${targetName} recovers ${healing} Health from Regenerate.`;
+    logs.push(makeLog(text, statusInfo(regenerate)));
+    queueHeal(events, pendingEffects, text, targetId, healing);
   }
 
   const sleeping = nextStatuses.find((status) => status.id === "sleep");
@@ -425,7 +445,7 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
     const derived = getDerivedStats(character);
     const playerTurnEventIndex = events.length;
     queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy);
-    const playerStart = processTurnStart(next.playerHp, next.playerStatuses, "player", "You", logs, events, pendingEffects);
+    const playerStart = processTurnStart(next.playerHp, next.playerMaxHp, next.playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier);
     const regeneratedEnergy = Math.min(next.maxEnergy, next.energy + getEnergyRegeneration(derived.energyRegen, playerStart.statuses));
     next = {
       ...next,
@@ -517,7 +537,7 @@ function applyPlayerProcs(
 
       if (effect.type === "apply_status") {
         const sourcePower = effect.status.id === "bleed" ? derived.physicalPower
-          : effect.status.id === "poison" || effect.status.id === "burn" ? derived.magicalPower
+          : effect.status.id === "poison" || effect.status.id === "burn" || effect.status.id === "regenerate" ? derived.magicalPower
             : effect.status.sourcePower;
         const status = { ...effect.status, sourcePower, sourceId: effect.status.sourceId ?? ("player" as const) };
         if (targetMode === "self") {
@@ -803,7 +823,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   if (enemyIndex < 0) return moveToNextActor(combat, character, logs, events, pendingEffects);
 
   const originalEnemy = enemies[enemyIndex];
-  const enemyStart = processTurnStart(originalEnemy.hp, originalEnemy.statuses, originalEnemy.instanceId, originalEnemy.name, logs, events, pendingEffects);
+  const enemyStart = processTurnStart(originalEnemy.hp, originalEnemy.maxHp, originalEnemy.statuses, originalEnemy.instanceId, originalEnemy.name, logs, events, pendingEffects);
   const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(1, enemyStart.statuses));
   let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false };
   enemies[enemyIndex] = enemy;
@@ -950,6 +970,14 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       playerStatuses = effect.playerStatuses ?? playerStatuses;
       energy = effect.energy ?? energy;
       attackingActorId = null;
+      return;
+    }
+    if (effect.type === "heal") {
+      if (effect.targetId === "player") {
+        playerHp = Math.min(combat.playerMaxHp, playerHp + effect.amount);
+      } else {
+        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId ? { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + effect.amount) } : enemy);
+      }
       return;
     }
     if (effect.targetId === "player") {
