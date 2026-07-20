@@ -70,8 +70,26 @@ const ATTRIBUTE_ICON_URLS: Record<StatName, string> = {
   luck: "/assets/attribute-icons/luck.png",
 };
 
-function AttributeIcon({ stat }: { stat: StatName }) {
-  return <img className="attribute-icon" src={ATTRIBUTE_ICON_URLS[stat]} alt="" aria-hidden="true" draggable={false} />;
+type DerivedStatIconName = "physicalPower" | "magicalPower" | "hitChance" | "dodgeChance" | "critChance" | "maxHp" | "armor" | "magicResistance" | "initiativeBonus" | "maxEnergy";
+type StatIconName = StatName | DerivedStatIconName;
+
+const DERIVED_STAT_ICON_URLS: Record<DerivedStatIconName, string> = {
+  physicalPower: "/assets/stat-icons/physical-power.png",
+  magicalPower: "/assets/stat-icons/magical-power.png",
+  hitChance: "/assets/stat-icons/hit-chance.png",
+  dodgeChance: "/assets/stat-icons/dodge-chance.png",
+  critChance: "/assets/stat-icons/critical-chance.png",
+  maxHp: "/assets/stat-icons/max-health.png",
+  armor: "/assets/stat-icons/armor.png",
+  magicResistance: "/assets/stat-icons/magic-resistance.png",
+  initiativeBonus: "/assets/stat-icons/initiative.png",
+  maxEnergy: "/assets/stat-icons/max-energy.png",
+};
+
+const STAT_ICON_URLS: Record<StatIconName, string> = { ...ATTRIBUTE_ICON_URLS, ...DERIVED_STAT_ICON_URLS };
+
+function StatIcon({ stat }: { stat: StatIconName }) {
+  return <img className="stat-icon" src={STAT_ICON_URLS[stat]} alt="" aria-hidden="true" draggable={false} />;
 }
 
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
@@ -1192,19 +1210,19 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
           <div className="stats-list">
-            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><AttributeIcon stat={stat.key} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
+            {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><StatIcon stat={stat.key} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
           <div className="derived-grid">
-            <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><Swords /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
-            <span data-game-tooltip="Determines the damage dealt by your arcane abilities."><Sparkles /> <small>Magical Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
-            <span data-game-tooltip="Determines how likely your attacks are to hit."><Target /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
-            <span data-game-tooltip="Determines how likely you are to avoid enemy attacks."><Footprints /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
-            <span data-game-tooltip="Determines how likely your attacks are to critically strike."><Target /> <small>Critical Chance</small><strong>{formatPercent(derived.critChance)}</strong></span>
-            <span data-game-tooltip="Determines how much damage you can take before falling."><Heart /> <small>Max Health</small><strong>{formatStat(derived.maxHp)}</strong></span>
-            <span data-game-tooltip="Reduces damage you take from physical attacks."><Shield /> <small>Armor</small><strong>{formatStat(derived.armor)}</strong></span>
-            <span data-game-tooltip="Reduces damage you take from magical attacks."><Zap /> <small>Magic Resistance</small><strong>{formatStat(derived.magicResistance)}</strong></span>
-            <span data-game-tooltip="Determines how early you act when combat begins."><Footprints /> <small>Initiative</small><strong>+{formatStat(derived.initiativeBonus)}</strong></span>
-            <span data-game-tooltip="Determines how much Energy you can hold at once."><Sparkles /> <small>Max Energy</small><strong>{formatStat(derived.maxEnergy)}</strong></span>
+            <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><StatIcon stat="physicalPower" /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
+            <span data-game-tooltip="Determines the damage dealt by your arcane abilities."><StatIcon stat="magicalPower" /> <small>Magical Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
+            <span data-game-tooltip="Determines how likely your attacks are to hit."><StatIcon stat="hitChance" /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
+            <span data-game-tooltip="Determines how likely you are to avoid enemy attacks."><StatIcon stat="dodgeChance" /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
+            <span data-game-tooltip="Determines how likely your attacks are to critically strike."><StatIcon stat="critChance" /> <small>Critical Chance</small><strong>{formatPercent(derived.critChance)}</strong></span>
+            <span data-game-tooltip="Determines how much damage you can take before falling."><StatIcon stat="maxHp" /> <small>Max Health</small><strong>{formatStat(derived.maxHp)}</strong></span>
+            <span data-game-tooltip="Reduces damage you take from physical attacks."><StatIcon stat="armor" /> <small>Armor</small><strong>{formatStat(derived.armor)}</strong></span>
+            <span data-game-tooltip="Reduces damage you take from magical attacks."><StatIcon stat="magicResistance" /> <small>Magic Resistance</small><strong>{formatStat(derived.magicResistance)}</strong></span>
+            <span data-game-tooltip="Determines how early you act when combat begins."><StatIcon stat="initiativeBonus" /> <small>Initiative</small><strong>+{formatStat(derived.initiativeBonus)}</strong></span>
+            <span data-game-tooltip="Determines how much Energy you can hold at once."><StatIcon stat="maxEnergy" /> <small>Max Energy</small><strong>{formatStat(derived.maxEnergy)}</strong></span>
           </div>
         </div>
 
@@ -1332,29 +1350,29 @@ const ITEM_STAT_LABELS: Record<StatName, string> = {
   luck: "Luck",
 };
 
-type ItemStatLine = { label: string; value: number; attribute?: StatName };
+type ItemStatLine = { label: string; value: number; icon?: StatIconName };
 
 function getItemStatLines(item: GearItem): ItemStatLine[] {
-  const lines: ItemStatLine[] = (Object.entries(item.stats) as Array<[StatName, number | undefined]>).flatMap(([stat, value]) => value ? [{ label: ITEM_STAT_LABELS[stat], value, attribute: stat }] : []);
-  if (item.armor) lines.push({ label: "Armor", value: item.armor });
-  if (item.magicResistance) lines.push({ label: "Magic Resistance", value: item.magicResistance });
-  if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower });
-  if (item.magicalPower) lines.push({ label: "Magical Power", value: item.magicalPower });
-  if (item.power) lines.push({ label: "Power", value: item.power });
+  const lines: ItemStatLine[] = (Object.entries(item.stats) as Array<[StatName, number | undefined]>).flatMap(([stat, value]) => value ? [{ label: ITEM_STAT_LABELS[stat], value, icon: stat }] : []);
+  if (item.armor) lines.push({ label: "Armor", value: item.armor, icon: "armor" });
+  if (item.magicResistance) lines.push({ label: "Magic Resistance", value: item.magicResistance, icon: "magicResistance" });
+  if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower, icon: "physicalPower" });
+  if (item.magicalPower) lines.push({ label: "Magical Power", value: item.magicalPower, icon: "magicalPower" });
+  if (item.power) lines.push({ label: "Power", value: item.power, icon: "physicalPower" });
   return lines.sort((left, right) => left.label.localeCompare(right.label));
 }
 
-function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number; attribute?: StatName }> {
+function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number; icon?: StatIconName }> {
   const currentLines = getItemStatLines(current);
   const candidateLines = getItemStatLines(candidate);
   const currentStats = new Map(currentLines.map((stat) => [stat.label, stat.value]));
   const candidateStats = new Map(candidateLines.map((stat) => [stat.label, stat.value]));
-  const attributes = new Map([...currentLines, ...candidateLines].map((stat) => [stat.label, stat.attribute]));
+  const icons = new Map([...currentLines, ...candidateLines].map((stat) => [stat.label, stat.icon]));
   const labels = [...new Set([...currentStats.keys(), ...candidateStats.keys()])];
   return labels.map((label) => {
     const currentValue = currentStats.get(label) ?? 0;
     const candidateValue = candidateStats.get(label) ?? 0;
-    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue, attribute: attributes.get(label) };
+    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue, icon: icons.get(label) };
   });
 }
 
@@ -1401,7 +1419,7 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
 
         <section className="item-detail-section">
           <h3>Item Stats</h3>
-          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.attribute && <AttributeIcon stat={stat.attribute} />}{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
+          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
         </section>
 
         {item.set && (
@@ -1421,7 +1439,7 @@ function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked,
             <div className="comparison-stats">
               {comparisonLines.length > 0 ? comparisonLines.map((stat) => (
                 <div key={stat.label}>
-                  <strong className="comparison-stat-label">{stat.attribute && <AttributeIcon stat={stat.attribute} />}{stat.label}</strong>
+                  <strong className="comparison-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</strong>
                   <span>{stat.current} <i>→</i> {stat.candidate}</span>
                   <em className={stat.difference > 0 ? "positive" : stat.difference < 0 ? "negative" : "neutral"}>{stat.difference > 0 ? `+${stat.difference}` : stat.difference < 0 ? stat.difference : "—"}</em>
                 </div>
