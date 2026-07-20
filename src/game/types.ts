@@ -9,7 +9,7 @@ export type WeaponEquipType = "mainHand" | "oneHand" | "offHand" | "twoHand";
 export type WeaponKind = "sword" | "axe" | "mace" | "dagger" | "wand" | "shield" | "tome" | "staff" | "polearm";
 /** Legacy save value. New items should use weaponEquipType. */
 export type WeaponType = "oneHanded" | "twoHanded";
-export type DamageType = "physical" | "arcane" | "shadow";
+export type DamageType = "physical" | "arcane" | "shadow" | "fire" | "frost" | "lightning";
 export type TargetType = "enemy" | "self" | "all_enemies";
 
 export interface Stats {
@@ -21,13 +21,40 @@ export interface Stats {
 }
 
 export interface StatusEffect {
-  id: string;
+  id: StatusEffectId;
   name: string;
   kind: "buff" | "debuff";
   duration: number;
   stacks: number;
   description: string;
+  permanent?: boolean;
+  sourcePower?: number;
+  sourceId?: "player" | string;
 }
+
+export type StatusEffectId =
+  | "guard"
+  | "strengthened"
+  | "enlightened"
+  | "fierce"
+  | "shielded"
+  | "taunt"
+  | "stealth"
+  | "poison"
+  | "bleed"
+  | "burn"
+  | "weaken"
+  | "shatter"
+  | "vulnerable"
+  | "stunned"
+  | "exhausted"
+  | "slowed"
+  | "reckless"
+  | "wet"
+  | "electrified"
+  | "cold"
+  | "charred"
+  | "sleep";
 
 export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_taken" | "turn_end";
 export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
@@ -106,7 +133,7 @@ export interface Ability {
   scalingStat?: StatName;
   icon: string;
   branch: TalentBranch;
-  effect?: "guard" | "bleed" | "poison" | "stun" | "heal" | "energy" | "vulnerable";
+  effect?: StatusEffectId | "stun" | "heal" | "energy";
 }
 
 export interface Talent {
@@ -163,7 +190,7 @@ export interface EnemyTemplate {
   magicResistance: number;
   hitChance: number;
   dodgeChance: number;
-  damageType: "physical" | "arcane";
+  damageType: DamageType;
   energyCost: number;
   intentText: string;
   attackDescription: string;

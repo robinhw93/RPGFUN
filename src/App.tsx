@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Backpack, BookOpen, ChevronRight, CircleDot, Droplets, FlaskConical, Footprints, Gem,
-  Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound, Zap,
+  Backpack, BatteryLow, Bolt, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
+  EyeOff, Flame, FlaskConical, Footprints, Gem, Heart, Home, Megaphone, Moon, RotateCcw, Shield,
+  ShieldCheck, ShieldOff, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
+  UserRound, Waves, Zap, type LucideIcon,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
@@ -16,9 +18,9 @@ import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progr
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
-import { createCombat, endPlayerTurn, ensureCombatState, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, TalentBranch } from "./game/types";
+import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId, TalentBranch } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -95,6 +97,31 @@ function StatIcon({ stat }: { stat: StatIconName }) {
 function GoldIcon() {
   return <img className="gold-icon" src="/assets/resource-icons/gold.png" alt="" aria-hidden="true" draggable={false} />;
 }
+
+const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
+  guard: Shield,
+  strengthened: Dumbbell,
+  enlightened: Brain,
+  fierce: Crosshair,
+  shielded: ShieldCheck,
+  taunt: Megaphone,
+  stealth: EyeOff,
+  poison: FlaskConical,
+  bleed: Droplets,
+  burn: Flame,
+  weaken: TrendingDown,
+  shatter: ShieldOff,
+  vulnerable: Target,
+  stunned: Zap,
+  exhausted: BatteryLow,
+  slowed: Snail,
+  reckless: Skull,
+  wet: Waves,
+  electrified: Bolt,
+  cold: Snowflake,
+  charred: Flame,
+  sleep: Moon,
+};
 
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
   strength: "Increases your Physical Power and the amount of Guard you gain.",
@@ -175,7 +202,7 @@ function App() {
   const selectEnemy = (enemyId: string) => {
     setGame((current) => current.adventure.combat ? ({
       ...current,
-      adventure: { ...current.adventure, combat: { ...current.adventure.combat, selectedEnemyId: enemyId } },
+      adventure: { ...current.adventure, combat: selectEnemyTarget(current.adventure.combat, enemyId) },
     }) : current);
   };
 
@@ -592,8 +619,10 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
 
   const combat = adventure.combat!;
   const damagedTargets = combat.damagedTargets ?? [];
+  const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
-  const playerInputLocked = initiativePlaying || (sequencePending && playerReadyEventId !== combatEventId);
+  const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep");
+  const playerInputLocked = initiativePlaying || playerIncapacitated || (sequencePending && playerReadyEventId !== combatEventId);
   const handleCombatEventShown = (eventId: number, eventIndex: number) => {
     if (eventRevealsPlayerTurn(combat, eventIndex)) setPlayerReadyEventId(eventId);
     onCombatEvent(eventId, eventIndex);
@@ -612,25 +641,27 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
           <div className="compact-status-row">
-            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
           <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} showGain />
         </article>
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
-          {combat.enemies.map((enemy) => (
+          {combat.enemies.map((enemy) => {
+            const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
+            return (
             <article
               key={enemy.instanceId}
               role="button"
-              tabIndex={enemy.hp > 0 ? 0 : -1}
-              aria-disabled={enemy.hp <= 0}
+              tabIndex={targetable ? 0 : -1}
+              aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? "attacking-left" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? "attacking-left" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
-              onClick={() => enemy.hp > 0 && onSelectEnemy(enemy.instanceId)}
+              onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
-                if (event.target === event.currentTarget && enemy.hp > 0 && (event.key === "Enter" || event.key === " ")) {
+                if (event.target === event.currentTarget && targetable && (event.key === "Enter" || event.key === " ")) {
                   event.preventDefault();
                   onSelectEnemy(enemy.instanceId);
                 }
@@ -642,12 +673,12 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               <HealthBar value={enemy.hp} max={enemy.maxHp} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
-                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
               </div>
               <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy ?? 10}/{enemy.maxEnergy ?? 10}</b></div>
               <EnergySegments value={enemy.energy ?? 10} max={enemy.maxEnergy ?? 10} regen={1} />
             </article>
-          ))}
+          );})}
         </div>
       </div>
 
@@ -1006,21 +1037,20 @@ function EnergySegments({ value, max, regen, showGain = false }: { value: number
   );
 }
 
-function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: string; name: string; stacks: number; duration: number; kind: string; onInspect?: () => void }) {
+function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onInspect }: { id: StatusEffectId; name: string; stacks: number; duration: number; permanent?: boolean; kind: StatusEffect["kind"]; onInspect?: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
-  const icon = id === "bleed" ? <Droplets />
-    : id === "poison" ? <FlaskConical />
-      : id === "stunned" ? <Zap />
-        : id === "vulnerable" ? <Target />
-          : id === "guard" ? <Shield />
-            : <Sparkles />;
-  const label = `${name}, ${stacks} ${stacks === 1 ? "stack" : "stacks"}, ${duration} ${duration === 1 ? "turn" : "turns"} remaining`;
+  const Icon = STATUS_ICONS[id];
+  const label = `${name}, ${stacks} ${stacks === 1 ? "stack" : "stacks"}, ${permanent ? "permanent" : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`}`;
   const remainingSegments = Math.max(0, Math.min(STATUS_DURATION_SEGMENTS, Math.floor(duration)));
   const gap = 6;
   const segmentLength = 100 / STATUS_DURATION_SEGMENTS - gap;
-  const ring = (
+  const ring = permanent ? (
+    <svg className="status-duration-ring permanent" viewBox="0 0 40 40" aria-hidden="true">
+      <circle className="remaining" cx="20" cy="20" r="17" />
+    </svg>
+  ) : (
     <svg className="status-duration-ring" viewBox="0 0 40 40" aria-hidden="true">
       {Array.from({ length: STATUS_DURATION_SEGMENTS }, (_, index) => (
         <circle
@@ -1044,7 +1074,7 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
     if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
   }, []);
 
-  if (!onInspect) return <span className={`status-badge status-icon status-${id} ${kind}`} aria-label={label} data-game-tooltip={label}>{ring}{icon}{stackCounter}</span>;
+  if (!onInspect) return <span className={`status-badge status-icon status-${id} ${kind}`} aria-label={label} data-game-tooltip={label}>{ring}<Icon />{stackCounter}</span>;
 
   const beginHold = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === "mouse") return;
@@ -1083,7 +1113,7 @@ function StatusBadge({ id, name, stacks, duration, kind, onInspect }: { id: stri
         onInspect();
       }}
     >
-      {ring}{icon}{stackCounter}
+      {ring}<Icon />{stackCounter}
     </button>
   );
 }
