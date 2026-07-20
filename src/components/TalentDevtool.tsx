@@ -9,7 +9,7 @@ import type { StatName, TalentBranch } from "../game/types";
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
 const DEVTOOL_CODE = "bajs321";
-const SNAP_GRID_SIZE = 5;
+const SNAP_GRID_SIZE = 1.25;
 const TALENT_CANVAS_WIDTH = 2200;
 const TALENT_CANVAS_HEIGHT = 1500;
 const MIN_CANVAS_ZOOM = 0.15;
