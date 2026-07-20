@@ -151,9 +151,13 @@ export interface Ability {
   hits?: number;
   /** False applies the ability's effect without dealing direct damage. */
   dealsDamage?: boolean;
+  /** Number of stacks applied when effect is a status. Defaults to 1. */
+  statusStacks?: number;
   statusDuration?: number;
   statusExpiresAtTurnStart?: boolean;
   requiredTargetStatus?: StatusEffectId;
+  /** Conditional multipliers belonging to this ability. */
+  damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;
   icon: string;
   branch: TalentBranch;

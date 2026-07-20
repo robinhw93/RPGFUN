@@ -38,6 +38,11 @@ export const ABILITIES: Record<string, Ability> = {
     id: "Neurotoxin", name: "Neurotoxin", description: "Stun a Poisoned enemy. The target must already be Poisoned.", energyCost: 3,
     cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", icon: "⌁", branch: "shadow", effect: "stun",
   },
+  VenomousStrike: {
+    id: "VenomousStrike", name: "Venomous Strike", description: "Deal Physical Damage equal to 100% of your Physical Power and apply 2 Poison. Deals double damage if the target is already Poisoned.", energyCost: 4,
+    cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 1, icon: "†", branch: "shadow", effect: "poison", statusStacks: 2,
+    damageModifiers: [{ id: "venomous-strike-poisoned", name: "Venomous Strike", description: "Deals double damage to Poisoned targets.", multiplier: 2, targetHasAnyStatus: ["poison"] }],
+  },
   crushingBlow: {
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
     target: "enemy", damageType: "physical", power: 12, scalingStat: "strength", icon: "✦", branch: "brute", effect: "vulnerable",
@@ -90,6 +95,9 @@ export const TALENTS: Talent[] = [
   { id: "talent_17", name: "Blisters", description: "Deal 20% more Physical Damage to Poisoned enemies.", branch: "shadow", kind: "passive", tier: 7, cost: 1, requires: ["talent_10"], position: { x: 75.49019607843137, y: 44.230769230769226 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "blisters", name: "Blisters", description: "Deal 20% more Physical Damage to Poisoned enemies.", multiplier: 1.2, damageTypes: ["physical"], targetHasAnyStatus: ["poison"] }] } },
   { id: "talent_18", name: "Agile", description: "+2 Agility.", branch: "shadow", kind: "passive", tier: 8, cost: 1, requires: ["talent_14"], position: { x: 75.49019607843137, y: 20.192307692307693 }, icon: "✦", shape: "circle", combat: { passive: { stats: { agility: 2 } } } },
   { id: "talent_19", name: "Smarts", description: "+2 Intelligence.", branch: "shadow", kind: "passive", tier: 8, cost: 1, requires: ["talent_15"], position: { x: 75.49019607843137, y: 56.730769230769226 }, icon: "✦", shape: "circle", combat: { passive: { stats: { intelligence: 2 } } } },
+  { id: "talent_20", name: "Venomous Strike", description: "Deal 100% Physical Power as damage and apply 2 Poison. Deals double damage if the target is already Poisoned.", branch: "shadow", kind: "ability", tier: 9, cost: 1, requires: ["talent_19"], position: { x: 80.3921568627451, y: 62.5 }, icon: "✦", shape: "square", abilityId: "VenomousStrike" },
+  { id: "talent_21", name: "New Talent", description: "Describe what this talent does for the player.", branch: "shadow", kind: "passive", tier: 9, cost: 1, requires: ["talent_19"], position: { x: 80.3921568627451, y: 50.96153846153846 }, icon: "✦", shape: "circle" },
+  { id: "talent_22", name: "New Talent", description: "Describe what this talent does for the player.", branch: "shadow", kind: "passive", tier: 8, cost: 1, requires: ["talent_17"], position: { x: 80.3921568627451, y: 44.230769230769226 }, icon: "✦", shape: "circle" },
 ];
 
 export const ENEMIES: Record<string, EnemyTemplate> = {

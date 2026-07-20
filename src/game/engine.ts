@@ -17,7 +17,7 @@ import {
   isMagicalDamage,
   isStatusEffectId,
 } from "./statusEffects";
-import { getCharacterCombatFeatures, getCharacterDamageMultiplier, resolveCharacterTriggers } from "./combatFeatures";
+import { getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
@@ -234,7 +234,7 @@ function getAfflictionDamage(status: StatusEffect, targetStatuses: StatusEffect[
 function createPlayerAppliedStatus(
   statusId: StatusEffect["id"],
   derived: ReturnType<typeof getDerivedStats>,
-  options: Partial<Pick<StatusEffect, "duration" | "expiresAtTurnStart">> = {},
+  options: Partial<Pick<StatusEffect, "duration" | "stacks" | "expiresAtTurnStart">> = {},
 ): StatusEffect {
   const sourcePower = statusId === "bleed" ? derived.physicalPower
     : statusId === "poison" || statusId === "burn" || statusId === "regenerate" ? derived.magicalPower
@@ -658,7 +658,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       logs.push(makeLog(`You gain ${guardAmount} Guard.`, statusInfo(guardStatus)));
       queueStatus(events, pendingEffects, `You gain ${guardAmount} Guard.`, "player", guardStatus);
     } else if (ability.effect && isStatusEffectId(ability.effect)) {
-      const status = createPlayerAppliedStatus(ability.effect, derived, { duration: ability.statusDuration, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+      const status = createPlayerAppliedStatus(ability.effect, derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
       playerStatuses = addOrRefreshStatus(playerStatuses, status);
       logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
       queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status);
@@ -672,7 +672,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (ability.dealsDamage === false) {
         const statusId = ability.effect === "stun" ? "stunned" : ability.effect;
         if (statusId && isStatusEffectId(statusId) && statusId !== "guard") {
-          const status = createPlayerAppliedStatus(statusId, derived, { duration: ability.statusDuration, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+          const status = createPlayerAppliedStatus(statusId, derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
           const stunned = status.id === "stunned";
           enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: stunned || enemy.stunned, statuses: addOrRefreshStatus(enemy.statuses, status) } : enemy);
           logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
@@ -690,7 +690,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses);
       const raw = (ability.power ?? 0) + offensivePower * (ability.powerScaling ?? 1);
       const talentDamageMultiplier = getCharacterDamageMultiplier(character, playerStatuses, target.statuses, ability.damageType);
-      const damage = getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier)), playerStatuses, target.statuses, ability.damageType);
+      const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, ability.damageType);
+      const damage = getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier)), playerStatuses, target.statuses, ability.damageType);
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(enemy.statuses, damage) } : enemy);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
@@ -703,10 +704,11 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueStatus(events, pendingEffects, `${target.name} is Bleeding.`, target.instanceId, bleed, false, damageEventIndex);
       }
       if (ability.effect === "poison") {
-        const poison = createPlayerAppliedStatus("poison", derived);
+        const poison = createPlayerAppliedStatus("poison", derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+        const poisonLabel = poison.stacks > 1 ? `${poison.stacks} Poison` : "Poison";
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, poison) } : enemy);
-        logs.push(makeLog(`${target.name} gains Poison.`, statusInfo(poison)));
-        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage and applies Poison.`;
+        logs.push(makeLog(`${target.name} gains ${poisonLabel}.`, statusInfo(poison)));
+        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage and applies ${poisonLabel}.`;
         queueStatus(events, pendingEffects, `${target.name} is Poisoned.`, target.instanceId, poison, false, damageEventIndex);
       }
       if (ability.effect === "vulnerable") {
@@ -726,7 +728,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const directStatusId = ability.effect === "stun" ? "stunned" : ability.effect;
       const speciallyHandled = directStatusId === "bleed" || directStatusId === "poison" || directStatusId === "vulnerable" || directStatusId === "stunned";
       if (directStatusId && isStatusEffectId(directStatusId) && !speciallyHandled && directStatusId !== "guard") {
-        const status = createPlayerAppliedStatus(directStatusId, derived, { duration: ability.statusDuration, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+        const status = createPlayerAppliedStatus(directStatusId, derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, status) } : enemy);
         logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage and applies ${status.name}.`;

@@ -153,7 +153,16 @@ export function getCharacterDamageMultiplier(
   targetStatuses: StatusEffect[],
   damageType?: DamageType,
 ): number {
-  return getCharacterCombatFeatures(character).damageModifiers.reduce((multiplier, modifier) => {
+  return getDamageModifierMultiplier(getCharacterCombatFeatures(character).damageModifiers, attackerStatuses, targetStatuses, damageType);
+}
+
+export function getDamageModifierMultiplier(
+  modifiers: CombatDamageModifierDefinition[],
+  attackerStatuses: StatusEffect[],
+  targetStatuses: StatusEffect[],
+  damageType?: DamageType,
+): number {
+  return modifiers.reduce((multiplier, modifier) => {
     if (modifier.damageTypes?.length && (!damageType || !modifier.damageTypes.includes(damageType))) return multiplier;
     if (modifier.attackerHasAnyStatus?.length && !modifier.attackerHasAnyStatus.some((id) => attackerStatuses.some((status) => status.id === id))) return multiplier;
     if (modifier.targetHasAnyStatus?.length && !modifier.targetHasAnyStatus.some((id) => targetStatuses.some((status) => status.id === id))) return multiplier;
