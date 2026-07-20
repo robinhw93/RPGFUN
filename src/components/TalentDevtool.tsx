@@ -1,16 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Copy, Download, Grip, Link2, LockKeyhole, Plus, Save, Sparkles, Trash2, Wrench, X,
+  BookOpen, Circle, Copy, Download, Grid3X3, Grip, Link2, LockKeyhole, Plus, Save, Search, Sparkles, Square, Trash2, Wrench, X,
 } from "lucide-react";
 import { TALENTS } from "../game/data";
+import { STATUS_EFFECTS } from "../game/statusEffects";
 import type { StatName, TalentBranch } from "../game/types";
 
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
+const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
 const DEVTOOL_CODE = "bajs321";
+const SNAP_GRID_SIZE = 5;
 
 type TalentNodeKind = "class" | "passive" | "ability";
+type TalentNodeShape = "circle" | "square";
 type PassiveBonus = StatName | "armor" | "magicResistance" | "physicalPower" | "magicalPower" | "maxHp" | "maxEnergy" | "energyRegen" | "critChance" | "hitChance" | "dodgeChance" | "initiative";
 type DirectPassiveBonus = Exclude<PassiveBonus, StatName>;
+
+interface TalentPassiveBonus {
+  id: string;
+  bonus: PassiveBonus;
+  amount: number;
+}
 
 interface TalentDraftNode {
   id: string;
@@ -23,10 +33,17 @@ interface TalentDraftNode {
   requires: string[];
   position: { x: number; y: number };
   icon: string;
-  passiveBonus: PassiveBonus | "";
-  passiveAmount: number;
+  shape: TalentNodeShape;
+  passiveBonuses: TalentPassiveBonus[];
   abilityId: string;
   effectNotes: string;
+}
+
+interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses"> {
+  shape?: TalentNodeShape;
+  passiveBonuses?: TalentPassiveBonus[];
+  passiveBonus?: PassiveBonus | "";
+  passiveAmount?: number;
 }
 
 interface TalentDraft {
@@ -71,16 +88,25 @@ const INITIAL_POSITIONS: Record<string, { x: number; y: number }> = {
   shadow_1: { x: 78, y: 72 },
 };
 
-function passiveFromTalent(talent: (typeof TALENTS)[number]): Pick<TalentDraftNode, "passiveBonus" | "passiveAmount"> {
+const STATUS_LIBRARY = Object.values(STATUS_EFFECTS).sort((left, right) => left.name.localeCompare(right.name));
+
+function passiveBonusesFromTalent(talent: (typeof TALENTS)[number]): TalentPassiveBonus[] {
+  const bonuses: TalentPassiveBonus[] = [];
   const stats = talent.combat?.passive?.stats;
-  const stat = stats && (Object.keys(stats)[0] as StatName | undefined);
-  if (stat) return { passiveBonus: stat, passiveAmount: stats[stat] ?? 0 };
+  if (stats) {
+    (Object.keys(stats) as StatName[]).forEach((stat) => {
+      const amount = stats[stat];
+      if (amount !== undefined) bonuses.push({ id: `${talent.id}-${stat}`, bonus: stat, amount });
+    });
+  }
   const passive = talent.combat?.passive;
   if (passive) {
-    const key = DIRECT_PASSIVE_BONUSES.find((candidate) => passive[candidate] !== undefined);
-    if (key) return { passiveBonus: key, passiveAmount: Number(passive[key] ?? 0) };
+    DIRECT_PASSIVE_BONUSES.forEach((bonus) => {
+      const amount = passive[bonus];
+      if (amount !== undefined) bonuses.push({ id: `${talent.id}-${bonus}`, bonus, amount: Number(amount) });
+    });
   }
-  return { passiveBonus: "", passiveAmount: 0 };
+  return bonuses;
 }
 
 function createInitialDraft(): TalentDraft {
@@ -97,14 +123,15 @@ function createInitialDraft(): TalentDraft {
       requires: [...talent.requires],
       position: INITIAL_POSITIONS[talent.id] ?? { x: 50, y: 50 },
       icon: talent.branch === "arcanist" ? "✧" : talent.branch === "shadow" ? "◈" : talent.branch === "brute" ? "◆" : "✦",
-      ...passiveFromTalent(talent),
+      shape: talent.tier <= 1 ? "square" : "circle",
+      passiveBonuses: passiveBonusesFromTalent(talent),
       abilityId: talent.abilityId ?? "",
       effectNotes: "",
     })),
   };
 }
 
-function isTalentDraft(value: unknown): value is TalentDraft {
+function isStoredTalentDraft(value: unknown): value is { version: 1; nodes: LegacyTalentDraftNode[] } {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<TalentDraft>;
   return candidate.version === 1 && Array.isArray(candidate.nodes) && candidate.nodes.every((node) => (
@@ -113,15 +140,36 @@ function isTalentDraft(value: unknown): value is TalentDraft {
   ));
 }
 
+function normalizeDraft(draft: { version: 1; nodes: LegacyTalentDraftNode[] }): TalentDraft {
+  return {
+    version: 1,
+    nodes: draft.nodes.map((node) => {
+      const { passiveBonus, passiveAmount, passiveBonuses, shape, ...current } = node;
+      const migratedBonus = passiveBonus
+        ? [{ id: `${node.id}-${passiveBonus}`, bonus: passiveBonus, amount: Number(passiveAmount ?? 0) }]
+        : [];
+      return {
+        ...current,
+        shape: shape === "circle" ? "circle" : "square",
+        passiveBonuses: Array.isArray(passiveBonuses) ? passiveBonuses : migratedBonus,
+      };
+    }),
+  };
+}
+
 function loadDraft(): TalentDraft {
   try {
     const stored = window.localStorage.getItem(TALENT_DRAFT_STORAGE_KEY);
     if (!stored) return createInitialDraft();
     const parsed: unknown = JSON.parse(stored);
-    return isTalentDraft(parsed) ? parsed : createInitialDraft();
+    return isStoredTalentDraft(parsed) ? normalizeDraft(parsed) : createInitialDraft();
   } catch {
     return createInitialDraft();
   }
+}
+
+function loadSnapPreference(): boolean {
+  return window.localStorage.getItem(TALENT_SNAP_STORAGE_KEY) !== "false";
 }
 
 function exportDraft(draft: TalentDraft): string {
@@ -187,17 +235,23 @@ export function TalentDevtoolAccessDialog({ onClose, onUnlock }: { onClose: () =
 
 export function TalentDevtool({ onExit }: { onExit: () => void }) {
   const [draft, setDraft] = useState<TalentDraft>(loadDraft);
-  const [selectedId, setSelectedId] = useState(() => loadDraft().nodes[0]?.id ?? "");
-  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState("origin");
+  const [snapToGrid, setSnapToGrid] = useState(loadSnapPreference);
+  const [statusQuery, setStatusQuery] = useState("");
   const [message, setMessage] = useState("Draft saved locally");
   const [deleteArmed, setDeleteArmed] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const canvasScrollRef = useRef<HTMLDivElement>(null);
+  const draggingIdRef = useRef<string | null>(null);
   const selected = draft.nodes.find((node) => node.id === selectedId) ?? draft.nodes[0];
 
   useEffect(() => {
     window.localStorage.setItem(TALENT_DRAFT_STORAGE_KEY, JSON.stringify(draft));
   }, [draft]);
+
+  useEffect(() => {
+    window.localStorage.setItem(TALENT_SNAP_STORAGE_KEY, String(snapToGrid));
+  }, [snapToGrid]);
 
   useEffect(() => {
     const scroller = canvasScrollRef.current;
@@ -211,6 +265,11 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     const parent = draft.nodes.find((candidate) => candidate.id === parentId);
     return parent ? { id: `${parent.id}-${node.id}`, from: parent.position, to: node.position } : null;
   })).filter((connection): connection is NonNullable<typeof connection> => Boolean(connection)), [draft.nodes]);
+  const visibleStatuses = useMemo(() => {
+    const query = statusQuery.trim().toLocaleLowerCase();
+    if (!query) return STATUS_LIBRARY;
+    return STATUS_LIBRARY.filter((status) => `${status.name} ${status.kind} ${status.description}`.toLocaleLowerCase().includes(query));
+  }, [statusQuery]);
 
   const updateSelected = (patch: Partial<TalentDraftNode>) => {
     if (!selected) return;
@@ -232,8 +291,8 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       requires: parent ? [parent.id] : [],
       position: { x: Math.min(90, (parent?.position.x ?? 50) + 8), y: Math.min(90, (parent?.position.y ?? 50) + 16) },
       icon: "✦",
-      passiveBonus: "",
-      passiveAmount: 0,
+      shape: "circle",
+      passiveBonuses: [],
       abilityId: "",
       effectNotes: "",
     };
@@ -265,11 +324,39 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     updateSelected({ requires });
   };
 
+  const addPassiveBonus = () => {
+    if (!selected) return;
+    const usedBonuses = new Set(selected.passiveBonuses.map((item) => item.bonus));
+    const bonus = PASSIVE_OPTIONS.find((option) => !usedBonuses.has(option.id))?.id ?? "strength";
+    const nextNumber = Math.max(0, ...selected.passiveBonuses.map((item) => Number(item.id.match(/-(\d+)$/)?.[1] ?? 0))) + 1;
+    updateSelected({ passiveBonuses: [...selected.passiveBonuses, { id: `${selected.id}-bonus-${nextNumber}`, bonus, amount: 1 }] });
+  };
+
+  const updatePassiveBonus = (id: string, patch: Partial<Omit<TalentPassiveBonus, "id">>) => {
+    if (!selected) return;
+    updateSelected({ passiveBonuses: selected.passiveBonuses.map((bonus) => bonus.id === id ? { ...bonus, ...patch } : bonus) });
+  };
+
+  const removePassiveBonus = (id: string) => {
+    if (!selected) return;
+    updateSelected({ passiveBonuses: selected.passiveBonuses.filter((bonus) => bonus.id !== id) });
+  };
+
+  const toggleSnapToGrid = () => {
+    setSnapToGrid((current) => {
+      setMessage(`Snap to grid ${current ? "disabled" : "enabled"}`);
+      return !current;
+    });
+  };
+
   const updateDragPosition = (clientX: number, clientY: number) => {
+    const draggingId = draggingIdRef.current;
     if (!draggingId || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.max(5, Math.min(95, ((clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(7, Math.min(93, ((clientY - rect.top) / rect.height) * 100));
+    const rawX = ((clientX - rect.left) / rect.width) * 100;
+    const rawY = ((clientY - rect.top) / rect.height) * 100;
+    const x = Math.max(5, Math.min(95, snapToGrid ? Math.round(rawX / SNAP_GRID_SIZE) * SNAP_GRID_SIZE : Math.round(rawX * 10) / 10));
+    const y = Math.max(5, Math.min(95, snapToGrid ? Math.round(rawY / SNAP_GRID_SIZE) * SNAP_GRID_SIZE : Math.round(rawY * 10) / 10));
     setDraft((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === draggingId ? { ...node, position: { x, y } } : node) }));
   };
 
@@ -314,15 +401,18 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
         <div className="talent-canvas-shell">
           <div className="talent-canvas-toolbar">
             <span><Grip size={15} /> Drag talents to place them</span>
-            <button type="button" onClick={addNode}><Plus size={15} /> Add talent</button>
+            <div className="talent-canvas-toolbar-actions">
+              <button type="button" className={snapToGrid ? "active" : ""} aria-pressed={snapToGrid} onClick={toggleSnapToGrid}><Grid3X3 size={15} /> Snap to grid <small>{snapToGrid ? "On" : "Off"}</small></button>
+              <button type="button" onClick={addNode}><Plus size={15} /> Add talent</button>
+            </div>
           </div>
           <div ref={canvasScrollRef} className="talent-canvas-scroll">
             <div
               ref={canvasRef}
               className="talent-dev-canvas"
               onPointerMove={(event) => updateDragPosition(event.clientX, event.clientY)}
-              onPointerUp={() => setDraggingId(null)}
-              onPointerCancel={() => setDraggingId(null)}
+              onPointerUp={() => { draggingIdRef.current = null; }}
+              onPointerCancel={() => { draggingIdRef.current = null; }}
             >
               <svg className="talent-connection-layer" aria-hidden="true">
                 {connections.map((connection) => <line key={connection.id} x1={`${connection.from.x}%`} y1={`${connection.from.y}%`} x2={`${connection.to.x}%`} y2={`${connection.to.y}%`} />)}
@@ -331,13 +421,13 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                 <button
                   type="button"
                   key={node.id}
-                  className={`talent-dev-node ${node.branch} ${selected?.id === node.id ? "selected" : ""}`}
+                  className={`talent-dev-node ${node.branch} ${node.shape} ${selected?.id === node.id ? "selected" : ""}`}
                   style={{ left: `${node.position.x}%`, top: `${node.position.y}%` }}
                   onPointerDown={(event) => {
                     event.preventDefault();
                     canvasRef.current?.setPointerCapture(event.pointerId);
                     setSelectedId(node.id);
-                    setDraggingId(node.id);
+                    draggingIdRef.current = node.id;
                   }}
                   onClick={() => setSelectedId(node.id)}
                 >
@@ -361,6 +451,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
             <div className="talent-form-grid two-columns">
               <label><span>Branch</span><select value={selected.branch} onChange={(event) => updateSelected({ branch: event.target.value as TalentBranch })}>{BRANCH_OPTIONS.map((branch) => <option key={branch.id} value={branch.id}>{branch.label}</option>)}</select></label>
               <label><span>Talent type</span><select value={selected.kind} onChange={(event) => updateSelected({ kind: event.target.value as TalentNodeKind })}><option value="class">Class node</option><option value="passive">Passive</option><option value="ability">Ability</option></select></label>
+              <label><span>Node shape</span><select value={selected.shape} onChange={(event) => updateSelected({ shape: event.target.value as TalentNodeShape })}><option value="circle">Circle</option><option value="square">Square</option></select></label>
               <label><span>Tier</span><input type="number" min={0} value={selected.tier} onChange={(event) => updateSelected({ tier: Math.max(0, Number(event.target.value)) })} /></label>
               <label><span>Point cost</span><input type="number" min={0} value={selected.cost} onChange={(event) => updateSelected({ cost: Math.max(0, Number(event.target.value)) })} /></label>
             </div>
@@ -369,10 +460,17 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
               <h3><Sparkles size={15} /> Effect</h3>
               {selected.kind === "ability" ? (
                 <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => updateSelected({ abilityId: event.target.value })} /></label>
-              ) : (
-                <div className="talent-form-grid passive-row">
-                  <label><span>Passive bonus</span><select value={selected.passiveBonus} onChange={(event) => updateSelected({ passiveBonus: event.target.value as PassiveBonus | "" })}><option value="">No direct stat</option>{PASSIVE_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
-                  <label><span>Amount</span><input type="number" step="0.01" value={selected.passiveAmount} onChange={(event) => updateSelected({ passiveAmount: Number(event.target.value) })} /></label>
+              ) : null}
+              <div className="talent-passive-heading"><span>Passive bonuses</span><button type="button" onClick={addPassiveBonus}><Plus size={13} /> Add bonus</button></div>
+              {selected.passiveBonuses.length === 0 ? <p className="talent-passive-empty">No passive bonuses added.</p> : (
+                <div className="talent-passive-list">
+                  {selected.passiveBonuses.map((passive) => (
+                    <div className="talent-passive-row" key={passive.id}>
+                      <label><span>Bonus</span><select value={passive.bonus} onChange={(event) => updatePassiveBonus(passive.id, { bonus: event.target.value as PassiveBonus })}>{PASSIVE_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
+                      <label><span>Amount</span><input type="number" step="0.01" value={passive.amount} onChange={(event) => updatePassiveBonus(passive.id, { amount: Number(event.target.value) })} /></label>
+                      <button type="button" onClick={() => removePassiveBonus(passive.id)} aria-label={`Remove ${PASSIVE_OPTIONS.find((option) => option.id === passive.bonus)?.label ?? "bonus"}`}><X size={14} /></button>
+                    </div>
+                  ))}
                 </div>
               )}
               <label className="talent-form-field"><span>Effect and proc notes</span><textarea rows={4} value={selected.effectNotes} placeholder="Example: 20% chance on hit to apply Burn for 3 turns." onChange={(event) => updateSelected({ effectNotes: event.target.value })} /></label>
@@ -391,6 +489,28 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                   </label>
                 ))}
               </div>
+            </div>
+
+            <div className="talent-inspector-section talent-status-library">
+              <h3><BookOpen size={15} /> Buffs & Debuffs</h3>
+              <p>Search the combat status library while designing effects.</p>
+              <label className="talent-status-search"><Search size={14} /><input type="search" value={statusQuery} placeholder="Search statuses" aria-label="Search statuses" onChange={(event) => setStatusQuery(event.target.value)} /></label>
+              {(["buff", "debuff"] as const).map((kind) => {
+                const statuses = visibleStatuses.filter((status) => status.kind === kind);
+                if (statuses.length === 0) return null;
+                return (
+                  <div className={`talent-status-group ${kind}`} key={kind}>
+                    <strong>{kind === "buff" ? "Buffs" : "Debuffs"}</strong>
+                    {statuses.map((status) => (
+                      <details key={status.id}>
+                        <summary><span>{kind === "buff" ? <Circle size={9} /> : <Square size={9} />}{status.name}</span><small>{status.permanent ? "Permanent" : `${status.duration} ${status.duration === 1 ? "turn" : "turns"}`}</small></summary>
+                        <p>{status.description}</p>
+                      </details>
+                    ))}
+                  </div>
+                );
+              })}
+              {visibleStatuses.length === 0 && <p className="talent-status-empty">No statuses match that search.</p>}
             </div>
 
             {selected.id !== "origin" && <button type="button" className={`talent-delete ${deleteArmed ? "armed" : ""}`} onClick={deleteSelected}><Trash2 size={15} /> {deleteArmed ? "Click again to delete" : "Delete talent"}</button>}
