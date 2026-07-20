@@ -1212,7 +1212,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
       <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div></div>
       <div className="character-layout">
         <div className="paper-panel">
-          <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 ? <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong> : <small>Base + equipment + talents</small>}</div>
+          <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 && <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong>}</div>
           <div className="stats-list">
             {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><StatIcon stat={stat.key} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
@@ -1231,7 +1231,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
         </div>
 
         <div className="paper-panel equipment-panel">
-          <div className="panel-title"><span><Shield size={17} /> Equipment</span><small>8 slots</small></div>
+          <div className="panel-title"><span><Shield size={17} /> Equipment</span></div>
           <div className="equipment-paper-doll">
             <div className="character-silhouette" aria-hidden="true">
               <img src={avatar.imageUrl} alt="" draggable={false} />
