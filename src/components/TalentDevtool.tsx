@@ -136,7 +136,7 @@ function createInitialDraft(): TalentDraft {
       shape: talent.shape,
       passiveBonuses: passiveBonusesFromTalent(talent),
       abilityId: talent.abilityId ?? "",
-      effectNotes: "",
+      effectNotes: talent.effectNotes ?? "",
     })),
   });
 }

@@ -10,7 +10,7 @@ import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GearSlotIcon } from "./components/GearSlotIcon";
 import { TalentDevtool, TalentDevtoolAccessDialog } from "./components/TalentDevtool";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
-import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
+import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
@@ -711,7 +711,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
           const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
           const targetRequirementMet = !ability.requiredTargetStatus || selectedTarget?.statuses.some((status) => status.id === ability.requiredTargetStatus);
-          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet} onUse={() => onAbility(id)} />;
+          const selfRequirementMet = !ability.requiredSelfStatus || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus);
+          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1635,20 +1636,18 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
   const treeZoomRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treePanRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const closeTalentDetails = useCallback(() => setSelectedTalentId(null), []);
-  const xScale = 30;
-  const yScale = 24;
   const padding = 86;
-  const xs = TALENTS.map((talent) => talent.position.x);
-  const ys = TALENTS.map((talent) => talent.position.y);
+  const xs = TALENTS.map((talent) => talent.position.x / 100 * TALENT_TREE_CANVAS.width);
+  const ys = TALENTS.map((talent) => talent.position.y / 100 * TALENT_TREE_CANVAS.height);
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
-  const treeWidth = Math.max(520, (maxX - minX) * xScale + padding * 2);
-  const treeHeight = Math.max(390, (maxY - minY) * yScale + padding * 2);
+  const treeWidth = Math.max(520, maxX - minX + padding * 2);
+  const treeHeight = Math.max(390, maxY - minY + padding * 2);
   const nodePositions = new Map(TALENTS.map((talent) => [talent.id, {
-    x: padding + (talent.position.x - minX) * xScale,
-    y: padding + (talent.position.y - minY) * yScale,
+    x: padding + talent.position.x / 100 * TALENT_TREE_CANVAS.width - minX,
+    y: padding + talent.position.y / 100 * TALENT_TREE_CANVAS.height - minY,
   }]));
   const selectedTalent = TALENTS.find((talent) => talent.id === selectedTalentId) ?? null;
 

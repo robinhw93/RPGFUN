@@ -35,7 +35,11 @@ export interface CombatTriggerContext {
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats">> & { stats: Stats };
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation">> & {
+    stats: Stats;
+    statusDamage: Partial<Record<StatusEffect["id"], number>>;
+    preserveStatusOnDetonation: StatusEffect["id"][];
+  };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
 }
@@ -59,6 +63,8 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   bleedDamageReduction: 0,
   lootRarity: 0,
   chanceEffect: 0,
+  statusDamage: {},
+  preserveStatusOnDetonation: [],
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -83,6 +89,13 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.bleedDamageReduction += passive.bleedDamageReduction ?? 0;
   target.lootRarity += passive.lootRarity ?? 0;
   target.chanceEffect += passive.chanceEffect ?? 0;
+  Object.entries(passive.statusDamage ?? {}).forEach(([statusId, amount]) => {
+    const id = statusId as StatusEffect["id"];
+    target.statusDamage[id] = (target.statusDamage[id] ?? 0) + (amount ?? 0);
+  });
+  (passive.preserveStatusOnDetonation ?? []).forEach((statusId) => {
+    if (!target.preserveStatusOnDetonation.includes(statusId)) target.preserveStatusOnDetonation.push(statusId);
+  });
 }
 
 function addBundle(
@@ -110,7 +123,12 @@ function addBundle(
 
 export function getCharacterCombatFeatures(character: CharacterState): CharacterCombatFeatures {
   const features: CharacterCombatFeatures = {
-    passive: { ...EMPTY_PASSIVE, stats: { ...EMPTY_PASSIVE.stats } },
+    passive: {
+      ...EMPTY_PASSIVE,
+      stats: { ...EMPTY_PASSIVE.stats },
+      statusDamage: { ...EMPTY_PASSIVE.statusDamage },
+      preserveStatusOnDetonation: [...EMPTY_PASSIVE.preserveStatusOnDetonation],
+    },
     triggers: [],
     damageModifiers: [],
   };

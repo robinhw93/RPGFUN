@@ -2,7 +2,7 @@ import { getCharacterCombatFeatures } from "./combatFeatures";
 import { capDodgeChance } from "./combatMath";
 import { ITEMS } from "./data";
 import { DEFAULT_CHARACTER_AVATAR_ID } from "./avatars";
-import type { CharacterState, GameState, Stats } from "./types";
+import type { CharacterState, GameState, Stats, StatusEffectId } from "./types";
 
 export const INITIAL_CHARACTER: CharacterState = {
   name: "",
@@ -51,6 +51,8 @@ export interface DerivedStats extends Stats {
   bleedDamageTakenMultiplier: number;
   lootRarityBonus: number;
   chanceEffectBonus: number;
+  statusDamageMultipliers: Partial<Record<StatusEffectId, number>>;
+  preserveStatusOnDetonation: StatusEffectId[];
 }
 
 export function getDerivedStats(character: CharacterState): DerivedStats {
@@ -101,5 +103,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     bleedDamageTakenMultiplier: Math.max(0, 1 - features.passive.bleedDamageReduction),
     lootRarityBonus: stats.luck * 0.01 + features.passive.lootRarity,
     chanceEffectBonus: stats.luck * 0.0025 + features.passive.chanceEffect,
+    statusDamageMultipliers: Object.fromEntries(Object.entries(features.passive.statusDamage).map(([id, bonus]) => [id, 1 + bonus])),
+    preserveStatusOnDetonation: [...features.passive.preserveStatusOnDetonation],
   };
 }

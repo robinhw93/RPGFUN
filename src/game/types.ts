@@ -83,6 +83,10 @@ export interface PassiveBonuses {
   bleedDamageReduction?: number;
   lootRarity?: number;
   chanceEffect?: number;
+  /** Additive damage bonuses by damage-over-time status. 0.1 means 10% more damage. */
+  statusDamage?: Partial<Record<StatusEffectId, number>>;
+  /** Statuses kept when an ability would normally consume them through detonation. */
+  preserveStatusOnDetonation?: StatusEffectId[];
 }
 
 export interface CombatTriggerCondition {
@@ -149,6 +153,8 @@ export interface Ability {
   powerScaling?: number;
   /** Number of separate attacks performed by one use. Each attack can trigger on-hit effects. */
   hits?: number;
+  /** Chooses a new living enemy independently for every hit. */
+  randomTargetPerHit?: boolean;
   /** False applies the ability's effect without dealing direct damage. */
   dealsDamage?: boolean;
   /** Number of stacks applied when effect is a status. Defaults to 1. */
@@ -156,6 +162,10 @@ export interface Ability {
   statusDuration?: number;
   statusExpiresAtTurnStart?: boolean;
   requiredTargetStatus?: StatusEffectId;
+  requiredSelfStatus?: StatusEffectId;
+  critChanceBonus?: number;
+  /** Deals all remaining damage from this status immediately. */
+  detonateStatus?: StatusEffectId;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;
@@ -177,6 +187,8 @@ export interface Talent {
   icon: string;
   shape: "circle" | "square";
   abilityId?: string;
+  /** Design notes shown when this node becomes the starting point for a fresh devtool draft. */
+  effectNotes?: string;
   combat?: CombatFeatureBundle;
   /** Legacy passive shape; new bonuses should use combat.passive. */
   passive?: {
@@ -252,6 +264,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean }
+  | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number };
 
 export interface CombatState {

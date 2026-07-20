@@ -4,6 +4,7 @@ import { ABILITIES, ENEMIES } from "./data";
 import {
   addOrRefreshStatus,
   createStatusEffect,
+  DEFAULT_STATUS_DURATION,
   decrementStatusDurations,
   getCriticalChanceBonus,
   getDodgeChanceBonus,
@@ -94,6 +95,11 @@ function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], te
   if (attachedEventIndex === undefined) events.push(text);
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "status", targetId, status: { ...status }, stunned });
+}
+
+function queueStatusRemoval(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: string, statusId: StatusEffect["id"]): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "remove_status", targetId, statusId });
 }
 
 function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number): void {
@@ -378,12 +384,14 @@ function processTurnEnd(
   logs: CombatLogEntry[],
   events: string[],
   pendingEffects: CombatPendingEffect[],
+  playerPoisonDamageMultiplier = 1,
 ): { hp: number; statuses: StatusEffect[] } {
   let nextHp = hp;
   let nextStatuses = [...statuses];
   const poison = nextStatuses.find((status) => status.id === "poison");
   if (poison) {
-    const damage = getAfflictionDamage(poison, nextStatuses);
+    const sourceMultiplier = poison.sourceId === "player" ? playerPoisonDamageMultiplier : 1;
+    const damage = getAfflictionDamage(poison, nextStatuses, sourceMultiplier);
     nextHp = Math.max(0, nextHp - damage);
     nextStatuses = wakeFromDamage(nextStatuses, damage);
     const text = targetId === "player" ? `You take ${damage} damage from Poison.` : `${targetName} takes ${damage} damage from Poison.`;
@@ -617,6 +625,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
+  if (ability.requiredSelfStatus && !hasStatus(playerStatuses, ability.requiredSelfStatus)) return combat;
   let procUsage = { ...(combat.procUsage ?? {}) };
   const logs: CombatLogEntry[] = [];
   const events: string[] = [];
@@ -667,8 +676,27 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     targets.forEach((initialTarget) => {
       const totalHits = Math.max(1, Math.round(ability.hits ?? 1));
       for (let hitIndex = 0; hitIndex < totalHits; hitIndex += 1) {
-      const target = enemies.find((enemy) => enemy.instanceId === initialTarget.instanceId);
+      const randomTargets = ability.randomTargetPerHit ? enemies.filter((enemy) => isEnemyTargetable(enemies, enemy)) : [];
+      const target = ability.randomTargetPerHit
+        ? randomTargets[Math.floor(Math.random() * randomTargets.length)]
+        : enemies.find((enemy) => enemy.instanceId === initialTarget.instanceId);
       if (!target || target.hp <= 0) break;
+      if (ability.detonateStatus) {
+        const detonatedStatus = target.statuses.find((status) => status.id === ability.detonateStatus);
+        if (!detonatedStatus) continue;
+        const statusDamageMultiplier = detonatedStatus.sourceId === "player" ? derived.statusDamageMultipliers[detonatedStatus.id] ?? 1 : 1;
+        const damage = getAfflictionDamage(detonatedStatus, target.statuses, statusDamageMultiplier) * DEFAULT_STATUS_DURATION;
+        const preservesStatus = derived.preserveStatusOnDetonation.includes(detonatedStatus.id);
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
+          ...enemy,
+          hp: Math.max(0, enemy.hp - damage),
+          statuses: wakeFromDamage(preservesStatus ? enemy.statuses : enemy.statuses.filter((status) => status.id !== detonatedStatus.id), damage),
+        } : enemy);
+        logs.push(makeLog(`${ability.name} detonates ${detonatedStatus.name} on ${target.name} for ${damage} damage.`, abilityInfo));
+        const damageEventIndex = queueDamage(events, pendingEffects, `${detonatedStatus.name} detonates for ${damage} damage.`, target.instanceId, damage, "player");
+        if (!preservesStatus) queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, detonatedStatus.id);
+        continue;
+      }
       if (ability.dealsDamage === false) {
         const statusId = ability.effect === "stun" ? "stunned" : ability.effect;
         if (statusId && isStatusEffectId(statusId) && statusId !== "guard") {
@@ -687,7 +715,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       }
       const offensivePower = getOffensivePower(derived, ability.damageType);
       const defense = getDefense(target.armor, target.magicResistance, target.statuses, ability.damageType);
-      const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses);
+      const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses) + (ability.critChanceBonus ?? 0);
       const raw = (ability.power ?? 0) + offensivePower * (ability.powerScaling ?? 1);
       const talentDamageMultiplier = getCharacterDamageMultiplier(character, playerStatuses, target.statuses, ability.damageType);
       const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, ability.damageType);
@@ -935,7 +963,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
 
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
   if (enemy.hp > 0) {
-    const enemyEnd = processTurnEnd(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects);
+    const enemyEnd = processTurnEnd(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, derived.statusDamageMultipliers.poison ?? 1);
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, hp: enemyEnd.hp, statuses: enemyEnd.statuses } : candidate);
   } else {
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, statuses: decrementStatusDurations(candidate.statuses) } : candidate);
@@ -980,6 +1008,14 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let attackEffectId = combat.attackEffectId ?? null;
   const damagedTargets: string[] = [];
   matchingEffects.forEach((effect) => {
+    if (effect.type === "remove_status") {
+      if (effect.targetId === "player") {
+        playerStatuses = playerStatuses.filter((status) => status.id !== effect.statusId);
+      } else {
+        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== effect.statusId) } : enemy);
+      }
+      return;
+    }
     if (effect.type === "status") {
       if (effect.targetId === "player") {
         playerStatuses = addOrRefreshStatus(playerStatuses, effect.status);
