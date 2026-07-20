@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Backpack, BookOpen, ChevronRight, CircleDot, Coins, Droplets, FlaskConical, Footprints, Gem,
+  Backpack, BookOpen, ChevronRight, CircleDot, Droplets, FlaskConical, Footprints, Gem,
   Heart, Home, RotateCcw, Shield, Skull, Sparkles, Swords, Target, Trophy, UserRound, Zap,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
@@ -90,6 +90,10 @@ const STAT_ICON_URLS: Record<StatIconName, string> = { ...ATTRIBUTE_ICON_URLS, .
 
 function StatIcon({ stat }: { stat: StatIconName }) {
   return <img className="stat-icon" src={STAT_ICON_URLS[stat]} alt="" aria-hidden="true" draggable={false} />;
+}
+
+function GoldIcon() {
+  return <img className="gold-icon" src="/assets/resource-icons/gold.png" alt="" aria-hidden="true" draggable={false} />;
 }
 
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
@@ -374,7 +378,7 @@ function App() {
           <NavButton active={view === "talents"} onClick={() => navigate("talents")} icon={<CircleDot size={17} />} label="Talents" />
         </nav>
         <div className="resources">
-          <span><Coins size={15} /> {game.character.gold}</span>
+          <span><GoldIcon /> {game.character.gold}</span>
           <span><Sparkles size={15} /> {game.character.talentPoints}</span>
           <button className="icon-button" onClick={() => setResetDialogOpen(true)} data-game-tooltip="Reset save" data-tooltip-placement="bottom" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
@@ -537,7 +541,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         <h1>The Black Gate Falls</h1>
         <p>The Warden's flame gutters out. Beyond the gate, Emberfall waits beneath a bruised and starless sky.</p>
         <div className="reward-strip">
-          <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong>{game.character.gold}</strong> Gold</span>
+          <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
         </div>
         <button className="primary-button" onClick={onBegin}>Venture Forth Again <ChevronRight size={17} /></button>
         <button className="text-button" onClick={onTalents}>Spend talent points</button>
@@ -763,7 +767,7 @@ function VictoryScoreScreen({ reward, onCharacter, onContinue, finalEncounter }:
 
         <div className="score-reward-totals">
           <span><Sparkles size={15} /><strong>+{reward.experience}</strong><small>Experience</small></span>
-          <span><Coins size={15} /><strong>+{reward.gold}</strong><small>Gold</small></span>
+          <span><GoldIcon /><strong>+{reward.gold}</strong><small>Gold</small></span>
         </div>
 
         <div className="score-experience-panel">

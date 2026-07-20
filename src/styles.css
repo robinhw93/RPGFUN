@@ -60,6 +60,8 @@ p { color: var(--muted); line-height: 1.65; }
 .desktop-nav .nav-button.active::after { content: ""; position: absolute; bottom: 0; left: 1rem; right: 1rem; height: 2px; background: var(--gold); box-shadow: 0 0 12px var(--gold); }
 .resources { display: flex; align-items: center; gap: .65rem; color: var(--gold-bright); font-size: .82rem; }
 .resources > span { display: flex; align-items: center; gap: .35rem; padding: .42rem .65rem; border: 1px solid #39372d; background: #151611; }
+.gold-icon { display: block; object-fit: contain; }
+.resources .gold-icon { width: 17px; height: 17px; }
 .icon-button { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid var(--line); color: var(--dim); background: transparent; cursor: pointer; }
 .icon-button:hover { color: var(--text); border-color: var(--line-bright); }
 .mobile-nav { display: none; }
@@ -149,6 +151,7 @@ main { min-height: calc(100vh - 68px); }
 .reward-strip { display: grid; grid-template-columns: repeat(3, 1fr); margin: 2.2rem 0; border: 1px solid var(--line); background: var(--panel); }
 .reward-strip span { display: flex; flex-direction: column; padding: 1rem; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; border-right: 1px solid var(--line); }
 .reward-strip span:last-child { border: 0; }.reward-strip strong { color: var(--gold-bright); font-size: 1.25rem; }
+.reward-value-with-icon { display: flex; align-items: center; justify-content: center; gap: .32rem; }.reward-value-with-icon .gold-icon { width: 22px; height: 22px; }
 .completion-page > .text-button { display: block; margin: .75rem auto; }
 
 .combat-page { padding-top: 1.4rem; }
@@ -538,7 +541,7 @@ main { min-height: calc(100vh - 68px); }
 .score-trophy { width: 48px; height: 48px; flex: 0 0 auto; display: grid; place-items: center; color: var(--gold-bright); border: 1px solid #6b5836; background: radial-gradient(circle, #302719, #151711 70%); }
 .score-reward-totals { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; margin: .85rem 0; }
 .score-reward-totals > span { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: .4rem; padding: .65rem .75rem; border: 1px solid #353b35; background: #111512; }
-.score-reward-totals svg { color: var(--gold); }.score-reward-totals strong { color: #e8d4a7; font-family: Georgia, serif; font-size: 1.05rem; }.score-reward-totals small { color: var(--dim); font-size: .53rem; letter-spacing: .08em; text-transform: uppercase; }
+.score-reward-totals svg { color: var(--gold); }.score-reward-totals .gold-icon { width: 20px; height: 20px; }.score-reward-totals strong { color: #e8d4a7; font-family: Georgia, serif; font-size: 1.05rem; }.score-reward-totals small { color: var(--dim); font-size: .53rem; letter-spacing: .08em; text-transform: uppercase; }
 .score-experience-panel { position: relative; padding: .75rem; border: 1px solid #343a35; background: #0e1210; }
 .score-experience-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: .45rem; }.score-experience-meta strong { font-family: Georgia, serif; }.score-experience-meta span { color: var(--muted); font-size: .6rem; font-variant-numeric: tabular-nums; }
 .score-experience-track { height: 11px; overflow: hidden; border: 1px solid #484a3e; background: #080b09; }
