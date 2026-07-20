@@ -18,12 +18,13 @@ import {
   isMagicalDamage,
   isStatusEffectId,
 } from "./statusEffects";
-import { getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
+import { getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
   const derived = getDerivedStats(character);
+  const features = getCharacterCombatFeatures(character);
   const enemies: EnemyState[] = enemyIds.map((id, index) => ({
     ...ENEMIES[id],
     instanceId: `${id}-${index}`,
@@ -56,7 +57,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     maxEnergy: derived.maxEnergy,
     selectedEnemyId: enemies[0].instanceId,
     enemies,
-    playerStatuses: [],
+    playerStatuses: features.passive.startingStatuses.map((status) => ({ ...status })),
     log: [makeLog(`The ${enemies.map((enemy) => enemy.name).join(" and ")} bar your path.`)],
     outcome: "active",
   };
@@ -100,6 +101,11 @@ function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], te
 function queueStatusRemoval(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: string, statusId: StatusEffect["id"]): void {
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "remove_status", targetId, statusId });
+}
+
+function queueStatusSet(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: string, status: StatusEffect): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "set_status", targetId, status: { ...status } });
 }
 
 function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number): void {
@@ -240,7 +246,7 @@ function getAfflictionDamage(status: StatusEffect, targetStatuses: StatusEffect[
 function createPlayerAppliedStatus(
   statusId: StatusEffect["id"],
   derived: ReturnType<typeof getDerivedStats>,
-  options: Partial<Pick<StatusEffect, "duration" | "stacks" | "expiresAtTurnStart">> = {},
+  options: Partial<Pick<StatusEffect, "duration" | "stacks" | "magnitude" | "expiresAtTurnStart">> = {},
 ): StatusEffect {
   const sourcePower = statusId === "bleed" ? derived.physicalPower
     : statusId === "poison" || statusId === "burn" || statusId === "regenerate" ? derived.magicalPower
@@ -618,6 +624,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const remainingCooldown = combat.abilityCooldowns?.[abilityId] ?? 0;
   if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0 || ability.energyCost > combat.energy) return combat;
   const derived = getDerivedStats(character);
+  const abilityModifiers = getCharacterAbilityModifiers(character, ability.id);
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
   const displayedEnemyStatuses = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.statuses]));
@@ -625,14 +632,21 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
-  if (ability.requiredSelfStatus && !hasStatus(playerStatuses, ability.requiredSelfStatus)) return combat;
+  const selfRequirementMissing = Boolean(ability.requiredSelfStatus && !hasStatus(playerStatuses, ability.requiredSelfStatus));
+  if (selfRequirementMissing && !abilityModifiers.some((modifier) => modifier.allowWithoutRequiredSelfStatus)) return combat;
+  const effectivePowerScaling = selfRequirementMissing
+    ? abilityModifiers.find((modifier) => modifier.powerScalingWhenRequirementMissing !== undefined)?.powerScalingWhenRequirementMissing ?? ability.powerScaling
+    : ability.powerScaling;
+  const effectiveStatusDuration = abilityModifiers.find((modifier) => modifier.statusDuration !== undefined)?.statusDuration ?? ability.statusDuration;
+  const effectiveStatusMagnitude = abilityModifiers.find((modifier) => modifier.statusMagnitude !== undefined)?.statusMagnitude ?? ability.statusMagnitude;
+  const effectiveStatusExpiresAtTurnStart = abilityModifiers.find((modifier) => modifier.statusExpiresAtTurnStart !== undefined)?.statusExpiresAtTurnStart ?? ability.statusExpiresAtTurnStart;
   let procUsage = { ...(combat.procUsage ?? {}) };
   const logs: CombatLogEntry[] = [];
   const events: string[] = [];
   const damagedTargets: string[] = [];
   const pendingEffects: CombatPendingEffect[] = [];
   let energy = combat.energy - ability.energyCost;
-  const abilityCooldowns = ability.cooldownTurns
+  let abilityCooldowns = ability.cooldownTurns
     ? { ...(combat.abilityCooldowns ?? {}), [ability.id]: ability.cooldownTurns }
     : (combat.abilityCooldowns ?? {});
   const abilityInfo: InspectableInfo = { title: ability.name, description: `${ability.description} Costs ${ability.energyCost} Energy.`, category: "ability" };
@@ -660,14 +674,18 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   if (ability.requiredTargetStatus && targets.some((target) => !hasStatus(target.statuses, ability.requiredTargetStatus!))) return combat;
 
   if (ability.target === "self") {
-    if (ability.effect === "guard") {
+    if (ability.effect === "reset_cooldowns") {
+      abilityCooldowns = ability.cooldownTurns ? { [ability.id]: ability.cooldownTurns } : {};
+      logs.push(makeLog("Your ability cooldowns are reset.", abilityInfo));
+      events.push("Your ability cooldowns are reset.");
+    } else if (ability.effect === "guard") {
       const guardAmount = Math.max(1, Math.round(6 * derived.guardMultiplier));
       playerStatuses = addOrRefreshStatus(playerStatuses, createStatusEffect("guard", { stacks: guardAmount, description: `Absorbs ${guardAmount} incoming damage.` }));
       const guardStatus = playerStatuses.find((status) => status.id === "guard")!;
       logs.push(makeLog(`You gain ${guardAmount} Guard.`, statusInfo(guardStatus)));
       queueStatus(events, pendingEffects, `You gain ${guardAmount} Guard.`, "player", guardStatus);
     } else if (ability.effect && isStatusEffectId(ability.effect)) {
-      const status = createPlayerAppliedStatus(ability.effect, derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+      const status = createPlayerAppliedStatus(ability.effect, derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
       playerStatuses = addOrRefreshStatus(playerStatuses, status);
       logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
       queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status);
@@ -681,30 +699,64 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         ? randomTargets[Math.floor(Math.random() * randomTargets.length)]
         : enemies.find((enemy) => enemy.instanceId === initialTarget.instanceId);
       if (!target || target.hp <= 0) break;
+      if (ability.consumeStatusForHealing) {
+        const consumedStatus = target.statuses.find((status) => status.id === ability.consumeStatusForHealing);
+        if (!consumedStatus) continue;
+        const statusDamageMultiplier = consumedStatus.sourceId === "player" ? derived.statusDamageMultipliers[consumedStatus.id] ?? 1 : 1;
+        const potentialHealing = getAfflictionDamage(consumedStatus, target.statuses, statusDamageMultiplier) * DEFAULT_STATUS_DURATION;
+        const healing = Math.min(combat.playerMaxHp - playerHp, potentialHealing);
+        playerHp += healing;
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== consumedStatus.id) } : enemy);
+        logs.push(makeLog(`${ability.name} consumes ${consumedStatus.name} from ${target.name} and restores ${healing} Health.`, abilityInfo));
+        const healEventIndex = queueHeal(events, pendingEffects, `You consume ${consumedStatus.name} and recover ${healing} Health.`, "player", healing);
+        queueStatusRemoval(pendingEffects, healEventIndex, target.instanceId, consumedStatus.id);
+        continue;
+      }
       if (ability.detonateStatus) {
         const detonatedStatus = target.statuses.find((status) => status.id === ability.detonateStatus);
         if (!detonatedStatus) continue;
         const statusDamageMultiplier = detonatedStatus.sourceId === "player" ? derived.statusDamageMultipliers[detonatedStatus.id] ?? 1 : 1;
         const damage = getAfflictionDamage(detonatedStatus, target.statuses, statusDamageMultiplier) * DEFAULT_STATUS_DURATION;
-        const preservesStatus = derived.preserveStatusOnDetonation.includes(detonatedStatus.id);
+        const modifierRetention = abilityModifiers.reduce((ratio, modifier) => Math.max(ratio, modifier.detonationRetainedStackRatio ?? 0), 0);
+        const retentionRatio = derived.preserveStatusOnDetonation.includes(detonatedStatus.id) ? 1 : modifierRetention;
+        const retainedStacks = Math.ceil(detonatedStatus.stacks * Math.max(0, Math.min(1, retentionRatio)));
+        const retainedStatus = retainedStacks > 0 ? { ...detonatedStatus, stacks: retainedStacks } : null;
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
           ...enemy,
           hp: Math.max(0, enemy.hp - damage),
-          statuses: wakeFromDamage(preservesStatus ? enemy.statuses : enemy.statuses.filter((status) => status.id !== detonatedStatus.id), damage),
+          statuses: wakeFromDamage(enemy.statuses.flatMap((status) => status.id !== detonatedStatus.id ? [status] : retainedStatus ? [retainedStatus] : []), damage),
         } : enemy);
         logs.push(makeLog(`${ability.name} detonates ${detonatedStatus.name} on ${target.name} for ${damage} damage.`, abilityInfo));
         const damageEventIndex = queueDamage(events, pendingEffects, `${detonatedStatus.name} detonates for ${damage} damage.`, target.instanceId, damage, "player");
-        if (!preservesStatus) queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, detonatedStatus.id);
+        if (retainedStatus) queueStatusSet(pendingEffects, damageEventIndex, target.instanceId, retainedStatus);
+        else queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, detonatedStatus.id);
         continue;
       }
       if (ability.dealsDamage === false) {
         const statusId = ability.effect === "stun" ? "stunned" : ability.effect;
         if (statusId && isStatusEffectId(statusId) && statusId !== "guard") {
-          const status = createPlayerAppliedStatus(statusId, derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+          const status = createPlayerAppliedStatus(statusId, derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
           const stunned = status.id === "stunned";
-          enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: stunned || enemy.stunned, statuses: addOrRefreshStatus(enemy.statuses, status) } : enemy);
+          const consumedStatusId = ability.consumeTargetStatus;
+          const followUp = abilityModifiers.find((modifier) => modifier.applyStatusAfterConsume)?.applyStatusAfterConsume;
+          const followUpStatus = followUp ? createPlayerAppliedStatus(followUp.status, derived, { stacks: followUp.stacks, duration: followUp.duration }) : null;
+          enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
+            ...enemy,
+            stunned: stunned || enemy.stunned,
+            statuses: addOrRefreshStatus(
+              consumedStatusId ? enemy.statuses.filter((existing) => existing.id !== consumedStatusId) : enemy.statuses,
+              status,
+            ).concat(followUpStatus ? [followUpStatus] : []),
+          } : enemy);
           logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
-          queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status, stunned);
+          const statusText = followUpStatus
+            ? `${target.name} is ${status.name} and gains ${followUpStatus.stacks} ${followUpStatus.name}.`
+            : `${target.name} gains ${status.name}.`;
+          const statusEventIndex = events.length;
+          events.push(statusText);
+          queueStatus(events, pendingEffects, statusText, target.instanceId, status, stunned, statusEventIndex);
+          if (consumedStatusId) queueStatusRemoval(pendingEffects, statusEventIndex, target.instanceId, consumedStatusId);
+          if (followUpStatus) queueStatus(events, pendingEffects, statusText, target.instanceId, followUpStatus, false, statusEventIndex);
         }
         continue;
       }
@@ -713,14 +765,19 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, "player");
         continue;
       }
-      const offensivePower = getOffensivePower(derived, ability.damageType);
-      const defense = getDefense(target.armor, target.magicResistance, target.statuses, ability.damageType);
       const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses) + (ability.critChanceBonus ?? 0);
-      const raw = (ability.power ?? 0) + offensivePower * (ability.powerScaling ?? 1);
-      const talentDamageMultiplier = getCharacterDamageMultiplier(character, playerStatuses, target.statuses, ability.damageType);
-      const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, ability.damageType);
-      const damage = getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier)), playerStatuses, target.statuses, ability.damageType);
+      const damageComponents = ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: effectivePowerScaling }];
+      const damage = damageComponents.reduce((total, component) => {
+        const offensivePower = getOffensivePower(derived, component.damageType);
+        const defense = getDefense(target.armor, target.magicResistance, target.statuses, component.damageType);
+        const raw = (component.power ?? 0) + offensivePower * (component.powerScaling ?? 1);
+        const talentDamageMultiplier = getCharacterDamageMultiplier(character, playerStatuses, target.statuses, component.damageType);
+        const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, component.damageType);
+        return total + getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier)), playerStatuses, target.statuses, component.damageType);
+      }, 0);
+      const targetHpBeforePercent = target.hp / target.maxHp;
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(enemy.statuses, damage) } : enemy);
+      const damagedTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}.`, target.instanceId, damage, "player");
@@ -732,7 +789,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueStatus(events, pendingEffects, `${target.name} is Bleeding.`, target.instanceId, bleed, false, damageEventIndex);
       }
       if (ability.effect === "poison") {
-        const poison = createPlayerAppliedStatus("poison", derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+        const poison = createPlayerAppliedStatus("poison", derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
         const poisonLabel = poison.stacks > 1 ? `${poison.stacks} Poison` : "Poison";
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, poison) } : enemy);
         logs.push(makeLog(`${target.name} gains ${poisonLabel}.`, statusInfo(poison)));
@@ -756,7 +813,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const directStatusId = ability.effect === "stun" ? "stunned" : ability.effect;
       const speciallyHandled = directStatusId === "bleed" || directStatusId === "poison" || directStatusId === "vulnerable" || directStatusId === "stunned";
       if (directStatusId && isStatusEffectId(directStatusId) && !speciallyHandled && directStatusId !== "guard") {
-        const status = createPlayerAppliedStatus(directStatusId, derived, { duration: ability.statusDuration, stacks: ability.statusStacks, expiresAtTurnStart: ability.statusExpiresAtTurnStart });
+        const status = createPlayerAppliedStatus(directStatusId, derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, status) } : enemy);
         logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage and applies ${status.name}.`;
@@ -765,10 +822,12 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
 
       const triggerContext = {
         abilityId: ability.id,
-        damageType: ability.damageType,
+        damageType: ability.damageType ?? damageComponents[0]?.damageType,
         critical,
         damage,
         targetStatusIds: enemies.find((enemy) => enemy.instanceId === target.instanceId)?.statuses.map((status) => status.id) ?? [],
+        targetHpBeforePercent,
+        targetHpAfterPercent: damagedTarget ? damagedTarget.hp / damagedTarget.maxHp : undefined,
       };
       const triggerEvents = critical ? ["on_hit", "on_crit"] as const : ["on_hit"] as const;
       triggerEvents.forEach((triggerEvent) => {
@@ -804,7 +863,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
     const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
-    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, abilityCooldowns, playerActed: true, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: ability.consumeStatusForHealing ? displayedPlayerHp : Math.max(displayedPlayerHp, playerHp), playerStatuses: displayedPlayerStatuses, energy, procUsage, abilityCooldowns, playerActed: true, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
   }
 
   const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
@@ -818,7 +877,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     pendingEffects,
     damagedTargets,
     enemies: displayedEnemies,
-    playerHp: Math.max(displayedPlayerHp, playerHp),
+    playerHp: ability.consumeStatusForHealing ? displayedPlayerHp : Math.max(displayedPlayerHp, playerHp),
     playerStatuses: displayedPlayerStatuses,
     energy,
     procUsage,
@@ -1008,6 +1067,16 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let attackEffectId = combat.attackEffectId ?? null;
   const damagedTargets: string[] = [];
   matchingEffects.forEach((effect) => {
+    if (effect.type === "set_status") {
+      if (effect.targetId === "player") {
+        playerStatuses = [...playerStatuses.filter((status) => status.id !== effect.status.id), effect.status];
+      } else {
+        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
+          ? { ...enemy, statuses: [...enemy.statuses.filter((status) => status.id !== effect.status.id), effect.status] }
+          : enemy);
+      }
+      return;
+    }
     if (effect.type === "remove_status") {
       if (effect.targetId === "player") {
         playerStatuses = playerStatuses.filter((status) => status.id !== effect.statusId);

@@ -13,6 +13,7 @@ import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } fr
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
+import { getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
@@ -712,7 +713,9 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
           const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
           const targetRequirementMet = !ability.requiredTargetStatus || selectedTarget?.statuses.some((status) => status.id === ability.requiredTargetStatus);
-          const selfRequirementMet = !ability.requiredSelfStatus || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus);
+          const selfRequirementMet = !ability.requiredSelfStatus
+            || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
+            || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
           return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}

@@ -31,6 +31,8 @@ export interface StatusEffect {
   permanent?: boolean;
   sourcePower?: number;
   sourceId?: "player" | string;
+  /** Optional status-specific strength, expressed as a decimal bonus. */
+  magnitude?: number;
   /** False keeps special one-round effects until their duration expires at turn end. */
   expiresAtTurnStart?: boolean;
 }
@@ -88,6 +90,7 @@ export interface PassiveBonuses {
   statusDamage?: Partial<Record<StatusEffectId, number>>;
   /** Statuses kept when an ability would normally consume them through detonation. */
   preserveStatusOnDetonation?: StatusEffectId[];
+  startingStatuses?: StatusEffect[];
 }
 
 export interface CombatTriggerCondition {
@@ -96,6 +99,8 @@ export interface CombatTriggerCondition {
   critical?: boolean;
   minimumDamage?: number;
   targetHasAnyStatus?: string[];
+  /** Matches only when direct damage crosses from at-or-above to below this Health ratio. */
+  targetHealthCrossedBelow?: number;
 }
 
 export type CombatEffectDefinition =
@@ -127,10 +132,25 @@ export interface CombatDamageModifierDefinition {
   targetHasAnyStatus?: StatusEffectId[];
 }
 
+export interface AbilityModifierDefinition {
+  id: string;
+  name: string;
+  description: string;
+  abilityIds: string[];
+  allowWithoutRequiredSelfStatus?: boolean;
+  powerScalingWhenRequirementMissing?: number;
+  statusDuration?: number;
+  statusMagnitude?: number;
+  statusExpiresAtTurnStart?: boolean;
+  applyStatusAfterConsume?: { status: StatusEffectId; stacks?: number; duration?: number };
+  detonationRetainedStackRatio?: number;
+}
+
 export interface CombatFeatureBundle {
   passive?: PassiveBonuses;
   triggers?: CombatTriggerDefinition[];
   damageModifiers?: CombatDamageModifierDefinition[];
+  abilityModifiers?: AbilityModifierDefinition[];
 }
 
 export interface GearSetBonusDefinition extends CombatFeatureBundle {
@@ -149,6 +169,7 @@ export interface Ability {
   cooldownTurns?: number;
   target: TargetType;
   damageType?: DamageType;
+  damageComponents?: Array<{ damageType: DamageType; power?: number; powerScaling?: number }>;
   power?: number;
   /** Multiplier applied to Physical or Magical Power. Defaults to 1. */
   powerScaling?: number;
@@ -161,18 +182,21 @@ export interface Ability {
   /** Number of stacks applied when effect is a status. Defaults to 1. */
   statusStacks?: number;
   statusDuration?: number;
+  statusMagnitude?: number;
   statusExpiresAtTurnStart?: boolean;
   requiredTargetStatus?: StatusEffectId;
   requiredSelfStatus?: StatusEffectId;
   critChanceBonus?: number;
   /** Deals all remaining damage from this status immediately. */
   detonateStatus?: StatusEffectId;
+  consumeTargetStatus?: StatusEffectId;
+  consumeStatusForHealing?: StatusEffectId;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;
   icon: string;
   branch: TalentBranch;
-  effect?: StatusEffectId | "stun" | "heal" | "energy";
+  effect?: StatusEffectId | "stun" | "heal" | "energy" | "reset_cooldowns";
 }
 
 export interface Talent {
@@ -268,6 +292,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
+  | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number };
 
 export interface CombatState {

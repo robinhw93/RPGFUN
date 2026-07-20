@@ -1,6 +1,7 @@
 import { GEAR_SET_BONUSES, TALENTS } from "./data";
 import type {
   CharacterState,
+  AbilityModifierDefinition,
   CombatDamageModifierDefinition,
   CombatFeatureBundle,
   CombatState,
@@ -26,22 +27,33 @@ export interface ResolvedCombatDamageModifier extends CombatDamageModifierDefini
   sourceKind: "gear" | "set" | "talent";
 }
 
+export interface ResolvedAbilityModifier extends AbilityModifierDefinition {
+  runtimeId: string;
+  sourceId: string;
+  sourceName: string;
+  sourceKind: "gear" | "set" | "talent";
+}
+
 export interface CombatTriggerContext {
   abilityId?: string;
   damageType?: DamageType;
   critical?: boolean;
   damage?: number;
   targetStatusIds?: string[];
+  targetHpBeforePercent?: number;
+  targetHpAfterPercent?: number;
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses">> & {
     stats: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
+    startingStatuses: StatusEffect[];
   };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
+  abilityModifiers: ResolvedAbilityModifier[];
 }
 
 const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
@@ -65,6 +77,7 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   chanceEffect: 0,
   statusDamage: {},
   preserveStatusOnDetonation: [],
+  startingStatuses: [],
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -96,6 +109,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   (passive.preserveStatusOnDetonation ?? []).forEach((statusId) => {
     if (!target.preserveStatusOnDetonation.includes(statusId)) target.preserveStatusOnDetonation.push(statusId);
   });
+  (passive.startingStatuses ?? []).forEach((status) => target.startingStatuses.push({ ...status }));
 }
 
 function addBundle(
@@ -119,6 +133,13 @@ function addBundle(
       runtimeId: `${source.sourceKind}:${source.sourceId}:${modifier.id}`,
     });
   });
+  (bundle.abilityModifiers ?? []).forEach((modifier) => {
+    features.abilityModifiers.push({
+      ...modifier,
+      ...source,
+      runtimeId: `${source.sourceKind}:${source.sourceId}:${modifier.id}`,
+    });
+  });
 }
 
 export function getCharacterCombatFeatures(character: CharacterState): CharacterCombatFeatures {
@@ -128,9 +149,11 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
       stats: { ...EMPTY_PASSIVE.stats },
       statusDamage: { ...EMPTY_PASSIVE.statusDamage },
       preserveStatusOnDetonation: [...EMPTY_PASSIVE.preserveStatusOnDetonation],
+      startingStatuses: EMPTY_PASSIVE.startingStatuses.map((status) => ({ ...status })),
     },
     triggers: [],
     damageModifiers: [],
+    abilityModifiers: [],
   };
   const setCounts: Record<string, number> = {};
 
@@ -188,6 +211,10 @@ export function getDamageModifierMultiplier(
   }, 1);
 }
 
+export function getCharacterAbilityModifiers(character: CharacterState, abilityId: string): ResolvedAbilityModifier[] {
+  return getCharacterCombatFeatures(character).abilityModifiers.filter((modifier) => modifier.abilityIds.includes(abilityId));
+}
+
 function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerContext): boolean {
   const conditions = trigger.conditions;
   if (!conditions) return true;
@@ -196,6 +223,11 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   if (conditions.critical !== undefined && Boolean(context.critical) !== conditions.critical) return false;
   if (conditions.minimumDamage !== undefined && (context.damage ?? 0) < conditions.minimumDamage) return false;
   if (conditions.targetHasAnyStatus?.length && !conditions.targetHasAnyStatus.some((id) => context.targetStatusIds?.includes(id))) return false;
+  if (conditions.targetHealthCrossedBelow !== undefined) {
+    const threshold = conditions.targetHealthCrossedBelow;
+    if (context.targetHpBeforePercent === undefined || context.targetHpAfterPercent === undefined) return false;
+    if (context.targetHpBeforePercent < threshold || context.targetHpAfterPercent >= threshold) return false;
+  }
   return true;
 }
 

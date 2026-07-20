@@ -41,7 +41,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
 };
 
-export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<StatusEffect, "duration" | "stacks" | "description" | "sourcePower" | "sourceId" | "expiresAtTurnStart">> = {}): StatusEffect {
+export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<StatusEffect, "duration" | "stacks" | "description" | "sourcePower" | "sourceId" | "magnitude" | "expiresAtTurnStart">> = {}): StatusEffect {
   const definition = STATUS_EFFECTS[id];
   return {
     id,
@@ -53,6 +53,7 @@ export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<Sta
     permanent: definition.permanent,
     sourcePower: options.sourcePower,
     sourceId: options.sourceId,
+    magnitude: options.magnitude,
     expiresAtTurnStart: options.expiresAtTurnStart,
   };
 }
@@ -120,7 +121,8 @@ export function getCriticalChanceBonus(statuses: StatusEffect[]): number {
 }
 
 export function getDodgeChanceBonus(statuses: StatusEffect[]): number {
-  return hasStatus(statuses, "evasion") ? 0.6 : 0;
+  const evasion = statuses.find((status) => status.id === "evasion");
+  return evasion ? evasion.magnitude ?? 0.6 : 0;
 }
 
 export function getEnergyRegeneration(regeneration: number, statuses: StatusEffect[]): number {
