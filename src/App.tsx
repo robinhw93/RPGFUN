@@ -379,7 +379,6 @@ function App() {
         </nav>
         <div className="resources">
           <span><GoldIcon /> {game.character.gold}</span>
-          <span><Sparkles size={15} /> {game.character.talentPoints}</span>
           <button className="icon-button" onClick={() => setResetDialogOpen(true)} data-game-tooltip="Reset save" data-tooltip-placement="bottom" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
       </header>
