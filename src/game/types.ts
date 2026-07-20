@@ -2,6 +2,7 @@ import type { CharacterAvatarId } from "./avatars";
 
 export type StatName = "strength" | "agility" | "intelligence" | "vitality" | "luck";
 export type TalentBranch = "core" | "brute" | "shadow" | "arcanist";
+export type TalentRequirementMode = "all" | "any";
 export type GearSlot = "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring1" | "ring2";
 export type GearType = Exclude<GearSlot, "ring1" | "ring2"> | "ring";
 export type ArmorMaterial = "plate" | "leather" | "cloth";
@@ -182,6 +183,8 @@ export interface Talent {
   tier: number;
   cost: number;
   requires: string[];
+  /** Defaults to all for backward compatibility with older talent exports. */
+  requireMode?: TalentRequirementMode;
   kind: "class" | "passive" | "ability";
   position: { x: number; y: number };
   icon: string;
