@@ -9,12 +9,15 @@ import type { StatName, TalentBranch } from "../game/types";
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
 const DEVTOOL_CODE = "bajs321";
-const SNAP_GRID_PIXELS = 24;
 const DEFAULT_CANVAS_WIDTH = 2200;
 const DEFAULT_CANVAS_HEIGHT = 1500;
+// Preserve the editor's original 1.25% grid, expressed as fixed world units so
+// expanding the canvas never changes the spacing beneath existing nodes.
+const SNAP_GRID_X = DEFAULT_CANVAS_WIDTH * 0.0125;
+const SNAP_GRID_Y = DEFAULT_CANVAS_HEIGHT * 0.0125;
 const CANVAS_EDGE_ROOM = 260;
-const CANVAS_GROW_WIDTH = 600;
-const CANVAS_GROW_HEIGHT = 440;
+const CANVAS_GROW_WIDTH = SNAP_GRID_X * 22;
+const CANVAS_GROW_HEIGHT = SNAP_GRID_Y * 24;
 const MIN_CANVAS_ZOOM = 0.15;
 const MAX_CANVAS_ZOOM = 2;
 const DEFAULT_CANVAS_ZOOM = 0.65;
@@ -58,6 +61,7 @@ interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passive
 interface TalentDraft {
   version: 1;
   canvas: { width: number; height: number };
+  grid: { x: number; y: number };
   nodes: TalentDraftNode[];
 }
 
@@ -117,6 +121,7 @@ function createInitialDraft(): TalentDraft {
   return ensureCanvasRoom({
     version: 1,
     canvas: { width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT },
+    grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
     nodes: TALENTS.map((talent) => ({
       id: talent.id,
       name: talent.name,
@@ -136,7 +141,7 @@ function createInitialDraft(): TalentDraft {
   });
 }
 
-function isStoredTalentDraft(value: unknown): value is { version: 1; canvas?: { width: number; height: number }; nodes: LegacyTalentDraftNode[] } {
+function isStoredTalentDraft(value: unknown): value is { version: 1; canvas?: { width: number; height: number }; grid?: { x: number; y: number }; nodes: LegacyTalentDraftNode[] } {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<TalentDraft>;
   return candidate.version === 1 && Array.isArray(candidate.nodes) && candidate.nodes.every((node) => (
@@ -145,13 +150,16 @@ function isStoredTalentDraft(value: unknown): value is { version: 1; canvas?: { 
   ));
 }
 
-function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: number }; nodes: LegacyTalentDraftNode[] }): TalentDraft {
+function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: number }; grid?: { x: number; y: number }; nodes: LegacyTalentDraftNode[] }): TalentDraft {
+  const canvas = {
+    width: Math.max(DEFAULT_CANVAS_WIDTH, Number(draft.canvas?.width) || DEFAULT_CANVAS_WIDTH),
+    height: Math.max(DEFAULT_CANVAS_HEIGHT, Number(draft.canvas?.height) || DEFAULT_CANVAS_HEIGHT),
+  };
+  const repairChangedGrid = Boolean(draft.canvas && !draft.grid);
   return ensureCanvasRoom({
     version: 1,
-    canvas: {
-      width: Math.max(DEFAULT_CANVAS_WIDTH, Number(draft.canvas?.width) || DEFAULT_CANVAS_WIDTH),
-      height: Math.max(DEFAULT_CANVAS_HEIGHT, Number(draft.canvas?.height) || DEFAULT_CANVAS_HEIGHT),
-    },
+    canvas,
+    grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
     nodes: draft.nodes.map((node) => {
       const { passiveBonus, passiveAmount, passiveBonuses, shape, ...current } = node;
       const migratedBonus = passiveBonus
@@ -159,6 +167,10 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
         : [];
       return {
         ...current,
+        position: repairChangedGrid ? {
+          x: Math.round((current.position.x / 100 * canvas.width) / SNAP_GRID_X) * SNAP_GRID_X / canvas.width * 100,
+          y: Math.round((current.position.y / 100 * canvas.height) / SNAP_GRID_Y) * SNAP_GRID_Y / canvas.height * 100,
+        } : current.position,
         shape: shape === "circle" ? "circle" : "square",
         passiveBonuses: Array.isArray(passiveBonuses) ? passiveBonuses : migratedBonus,
       };
@@ -220,6 +232,7 @@ function exportDraft(draft: TalentDraft): string {
     version: draft.version,
     note: "Positions use percentages measured from the top-left of the talent canvas. Canvas dimensions expand automatically.",
     canvas: draft.canvas,
+    grid: draft.grid,
     nodes: draft.nodes,
   }, null, 2);
 }
@@ -342,8 +355,8 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       cost: 1,
       requires: parent ? [parent.id] : [],
       position: {
-        x: (parent?.position.x ?? 50) + 180 / draft.canvas.width * 100,
-        y: (parent?.position.y ?? 50) + 150 / draft.canvas.height * 100,
+        x: Math.round(((parent?.position.x ?? 50) / 100 * draft.canvas.width + SNAP_GRID_X * 6) / SNAP_GRID_X) * SNAP_GRID_X / draft.canvas.width * 100,
+        y: Math.round(((parent?.position.y ?? 50) / 100 * draft.canvas.height + SNAP_GRID_Y * 8) / SNAP_GRID_Y) * SNAP_GRID_Y / draft.canvas.height * 100,
       },
       icon: "✦",
       shape: "circle",
@@ -476,8 +489,8 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     const rect = canvasRef.current.getBoundingClientRect();
     const rawX = (clientX - rect.left) / rect.width * draft.canvas.width;
     const rawY = (clientY - rect.top) / rect.height * draft.canvas.height;
-    const absoluteX = Math.max(1, Math.min(draft.canvas.width - 1, snapToGrid ? Math.round(rawX / SNAP_GRID_PIXELS) * SNAP_GRID_PIXELS : Math.round(rawX)));
-    const absoluteY = Math.max(1, Math.min(draft.canvas.height - 1, snapToGrid ? Math.round(rawY / SNAP_GRID_PIXELS) * SNAP_GRID_PIXELS : Math.round(rawY)));
+    const absoluteX = Math.max(0, Math.min(draft.canvas.width, snapToGrid ? Math.round(rawX / SNAP_GRID_X) * SNAP_GRID_X : Math.round(rawX)));
+    const absoluteY = Math.max(0, Math.min(draft.canvas.height, snapToGrid ? Math.round(rawY / SNAP_GRID_Y) * SNAP_GRID_Y : Math.round(rawY)));
     const positioned: TalentDraft = {
       ...draft,
       nodes: draft.nodes.map((node) => node.id === draggingId ? {
