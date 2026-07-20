@@ -3,11 +3,12 @@ import {
   Backpack, BatteryLow, Bolt, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
   EyeOff, Flame, FlaskConical, Footprints, Gem, Heart, Home, Megaphone, Moon, RotateCcw, Shield,
   ShieldCheck, ShieldOff, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
-  UserRound, Waves, Zap, type LucideIcon,
+  UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GearSlotIcon } from "./components/GearSlotIcon";
+import { TalentDevtool, TalentDevtoolAccessDialog } from "./components/TalentDevtool";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
 import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -24,7 +25,7 @@ import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatRewa
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
-type View = "adventure" | "character" | "talents";
+type View = "adventure" | "character" | "talents" | "talentDevtool";
 
 const SLOT_LABELS: Record<GearSlot, string> = {
   head: "Head", chest: "Chest", pants: "Pants", boots: "Boots",
@@ -160,6 +161,8 @@ function App() {
   const [view, setView] = useState<View>("adventure");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
+  const [devtoolUnlocked, setDevtoolUnlocked] = useState(false);
   const travelTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatSequencer = useCombatEventSequencer(game, setGame);
@@ -187,8 +190,21 @@ function App() {
   useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
   const navigate = (next: View) => {
+    if (view === "talentDevtool" && next !== "talentDevtool") setDevtoolUnlocked(false);
     setView(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openTalentDevtool = () => {
+    setDevtoolUnlocked(false);
+    setDevtoolGateOpen(true);
+  };
+
+  const unlockTalentDevtool = () => {
+    setDevtoolGateOpen(false);
+    setDevtoolUnlocked(true);
+    setView("talentDevtool");
+    window.scrollTo({ top: 0 });
   };
 
   const beginAdventure = () => {
@@ -406,6 +422,7 @@ function App() {
         </nav>
         <div className="resources">
           <span><GoldIcon /> {game.character.gold}</span>
+          <button className="icon-button devtool-menu-button" onClick={openTalentDevtool} data-game-tooltip="Developer tools" data-tooltip-placement="bottom" aria-label="Open developer tools"><Wrench size={14} /></button>
           <button className="icon-button" onClick={() => setResetDialogOpen(true)} data-game-tooltip="Reset save" data-tooltip-placement="bottom" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
       </header>
@@ -432,6 +449,7 @@ function App() {
         )}
         {view === "character" && <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />}
         {view === "talents" && <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} />}
+        {view === "talentDevtool" && devtoolUnlocked && <TalentDevtool onExit={() => navigate("talents")} />}
       </main>
 
       <nav className="mobile-nav" aria-label="Mobile navigation">
@@ -448,6 +466,7 @@ function App() {
           onConfirm={returnToCharacterCreation}
         />
       )}
+      {devtoolGateOpen && <TalentDevtoolAccessDialog onClose={() => setDevtoolGateOpen(false)} onUnlock={unlockTalentDevtool} />}
       {travelTransition && (
         <div className={`travel-transition ${travelTransition.phase}`} role="status" aria-live="polite">
           <div className="travel-transition-content">
