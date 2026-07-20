@@ -1299,7 +1299,6 @@ function GearSlotPickerModal({ slot, character, locked, onClose, onInspect }: {
       <article className="gear-slot-picker" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close equipment list">×</button>
         <header className="gear-slot-picker-header">
-          <span><GearSlotIcon slot={slot} item={equippedItem} size={44} /></span>
           <div><h2>Equipment Slot - {SLOT_LABELS[slot]}</h2><p>Choose an item from your inventory.</p></div>
         </header>
         {slotLocked && <p className="item-action-lock"><Shield size={14} /> Unequip your Two-Hand weapon before using this slot.</p>}
