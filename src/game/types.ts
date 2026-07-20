@@ -30,6 +30,8 @@ export interface StatusEffect {
   permanent?: boolean;
   sourcePower?: number;
   sourceId?: "player" | string;
+  /** False keeps special one-round effects until their duration expires at turn end. */
+  expiresAtTurnStart?: boolean;
 }
 
 export type StatusEffectId =
@@ -133,6 +135,12 @@ export interface Ability {
   power?: number;
   /** Multiplier applied to Physical or Magical Power. Defaults to 1. */
   powerScaling?: number;
+  /** Number of separate attacks performed by one use. Each attack can trigger on-hit effects. */
+  hits?: number;
+  /** False applies the ability's effect without dealing direct damage. */
+  dealsDamage?: boolean;
+  statusDuration?: number;
+  statusExpiresAtTurnStart?: boolean;
   scalingStat?: StatName;
   icon: string;
   branch: TalentBranch;

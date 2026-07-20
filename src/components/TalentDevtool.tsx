@@ -9,9 +9,12 @@ import type { StatName, TalentBranch } from "../game/types";
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
 const DEVTOOL_CODE = "bajs321";
-const SNAP_GRID_SIZE = 1.25;
-const TALENT_CANVAS_WIDTH = 2200;
-const TALENT_CANVAS_HEIGHT = 1500;
+const SNAP_GRID_PIXELS = 24;
+const DEFAULT_CANVAS_WIDTH = 2200;
+const DEFAULT_CANVAS_HEIGHT = 1500;
+const CANVAS_EDGE_ROOM = 260;
+const CANVAS_GROW_WIDTH = 600;
+const CANVAS_GROW_HEIGHT = 440;
 const MIN_CANVAS_ZOOM = 0.15;
 const MAX_CANVAS_ZOOM = 2;
 const DEFAULT_CANVAS_ZOOM = 0.65;
@@ -54,6 +57,7 @@ interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passive
 
 interface TalentDraft {
   version: 1;
+  canvas: { width: number; height: number };
   nodes: TalentDraftNode[];
 }
 
@@ -86,6 +90,7 @@ const PASSIVE_OPTIONS: Array<{ id: PassiveBonus; label: string }> = [
 const DIRECT_PASSIVE_BONUSES: DirectPassiveBonus[] = [
   "armor", "magicResistance", "physicalPower", "magicalPower", "maxHp", "maxEnergy", "energyRegen", "critChance", "hitChance", "dodgeChance", "initiative",
 ];
+const PERCENT_PASSIVE_BONUSES = new Set<PassiveBonus>(["critChance", "hitChance", "dodgeChance"]);
 
 const STATUS_LIBRARY = Object.values(STATUS_EFFECTS).sort((left, right) => left.name.localeCompare(right.name));
 
@@ -102,15 +107,16 @@ function passiveBonusesFromTalent(talent: (typeof TALENTS)[number]): TalentPassi
   if (passive) {
     DIRECT_PASSIVE_BONUSES.forEach((bonus) => {
       const amount = passive[bonus];
-      if (amount !== undefined) bonuses.push({ id: `${talent.id}-${bonus}`, bonus, amount: Number(amount) });
+      if (amount !== undefined) bonuses.push({ id: `${talent.id}-${bonus}`, bonus, amount: Number(amount) * (PERCENT_PASSIVE_BONUSES.has(bonus) ? 100 : 1) });
     });
   }
   return bonuses;
 }
 
 function createInitialDraft(): TalentDraft {
-  return {
+  return ensureCanvasRoom({
     version: 1,
+    canvas: { width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT },
     nodes: TALENTS.map((talent) => ({
       id: talent.id,
       name: talent.name,
@@ -127,10 +133,10 @@ function createInitialDraft(): TalentDraft {
       abilityId: talent.abilityId ?? "",
       effectNotes: "",
     })),
-  };
+  });
 }
 
-function isStoredTalentDraft(value: unknown): value is { version: 1; nodes: LegacyTalentDraftNode[] } {
+function isStoredTalentDraft(value: unknown): value is { version: 1; canvas?: { width: number; height: number }; nodes: LegacyTalentDraftNode[] } {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<TalentDraft>;
   return candidate.version === 1 && Array.isArray(candidate.nodes) && candidate.nodes.every((node) => (
@@ -139,9 +145,13 @@ function isStoredTalentDraft(value: unknown): value is { version: 1; nodes: Lega
   ));
 }
 
-function normalizeDraft(draft: { version: 1; nodes: LegacyTalentDraftNode[] }): TalentDraft {
-  return {
+function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: number }; nodes: LegacyTalentDraftNode[] }): TalentDraft {
+  return ensureCanvasRoom({
     version: 1,
+    canvas: {
+      width: Math.max(DEFAULT_CANVAS_WIDTH, Number(draft.canvas?.width) || DEFAULT_CANVAS_WIDTH),
+      height: Math.max(DEFAULT_CANVAS_HEIGHT, Number(draft.canvas?.height) || DEFAULT_CANVAS_HEIGHT),
+    },
     nodes: draft.nodes.map((node) => {
       const { passiveBonus, passiveAmount, passiveBonuses, shape, ...current } = node;
       const migratedBonus = passiveBonus
@@ -153,6 +163,35 @@ function normalizeDraft(draft: { version: 1; nodes: LegacyTalentDraftNode[] }): 
         passiveBonuses: Array.isArray(passiveBonuses) ? passiveBonuses : migratedBonus,
       };
     }),
+  });
+}
+
+function ensureCanvasRoom(draft: TalentDraft): TalentDraft {
+  if (draft.nodes.length === 0) return draft;
+  const width = draft.canvas.width;
+  const height = draft.canvas.height;
+  const absolute = draft.nodes.map((node) => ({ node, x: node.position.x / 100 * width, y: node.position.y / 100 * height }));
+  const minX = Math.min(...absolute.map((item) => item.x));
+  const maxX = Math.max(...absolute.map((item) => item.x));
+  const minY = Math.min(...absolute.map((item) => item.y));
+  const maxY = Math.max(...absolute.map((item) => item.y));
+  const addLeft = minX < CANVAS_EDGE_ROOM ? CANVAS_GROW_WIDTH : 0;
+  const addRight = maxX > width - CANVAS_EDGE_ROOM ? CANVAS_GROW_WIDTH : 0;
+  const addTop = minY < CANVAS_EDGE_ROOM ? CANVAS_GROW_HEIGHT : 0;
+  const addBottom = maxY > height - CANVAS_EDGE_ROOM ? CANVAS_GROW_HEIGHT : 0;
+  if (!addLeft && !addRight && !addTop && !addBottom) return draft;
+  const nextWidth = width + addLeft + addRight;
+  const nextHeight = height + addTop + addBottom;
+  return {
+    ...draft,
+    canvas: { width: nextWidth, height: nextHeight },
+    nodes: absolute.map(({ node, x, y }) => ({
+      ...node,
+      position: {
+        x: Math.round((x + addLeft) / nextWidth * 100000) / 1000,
+        y: Math.round((y + addTop) / nextHeight * 100000) / 1000,
+      },
+    })),
   };
 }
 
@@ -179,7 +218,8 @@ function exportDraft(draft: TalentDraft): string {
   return JSON.stringify({
     format: "emberfall-talent-tree",
     version: draft.version,
-    note: "Positions use percentages measured from the top-left of the talent canvas.",
+    note: "Positions use percentages measured from the top-left of the talent canvas. Canvas dimensions expand automatically.",
+    canvas: draft.canvas,
     nodes: draft.nodes,
   }, null, 2);
 }
@@ -301,14 +341,17 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       tier: Math.max(1, (parent?.tier ?? 0) + 1),
       cost: 1,
       requires: parent ? [parent.id] : [],
-      position: { x: Math.min(90, (parent?.position.x ?? 50) + 8), y: Math.min(90, (parent?.position.y ?? 50) + 16) },
+      position: {
+        x: (parent?.position.x ?? 50) + 180 / draft.canvas.width * 100,
+        y: (parent?.position.y ?? 50) + 150 / draft.canvas.height * 100,
+      },
       icon: "✦",
       shape: "circle",
       passiveBonuses: [],
       abilityId: "",
       effectNotes: "",
     };
-    setDraft((current) => ({ ...current, nodes: [...current.nodes, node] }));
+    setDraft((current) => ensureCanvasRoom({ ...current, nodes: [...current.nodes, node] }));
     setSelectedId(id);
     setMessage("Talent created");
   };
@@ -386,7 +429,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
   const fitCanvas = () => {
     const scroller = canvasScrollRef.current;
     if (!scroller) return;
-    const nextZoom = clampCanvasZoom(Math.min(scroller.clientWidth / TALENT_CANVAS_WIDTH, scroller.clientHeight / TALENT_CANVAS_HEIGHT) * 0.94);
+    const nextZoom = clampCanvasZoom(Math.min(scroller.clientWidth / draft.canvas.width, scroller.clientHeight / draft.canvas.height) * 0.94);
     zoomRef.current = nextZoom;
     setIsFitView(true);
     setCanvasZoom(nextZoom);
@@ -431,11 +474,30 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     const draggingId = draggingIdRef.current;
     if (!draggingId || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const rawX = ((clientX - rect.left) / rect.width) * 100;
-    const rawY = ((clientY - rect.top) / rect.height) * 100;
-    const x = Math.max(5, Math.min(95, snapToGrid ? Math.round(rawX / SNAP_GRID_SIZE) * SNAP_GRID_SIZE : Math.round(rawX * 10) / 10));
-    const y = Math.max(5, Math.min(95, snapToGrid ? Math.round(rawY / SNAP_GRID_SIZE) * SNAP_GRID_SIZE : Math.round(rawY * 10) / 10));
-    setDraft((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === draggingId ? { ...node, position: { x, y } } : node) }));
+    const rawX = (clientX - rect.left) / rect.width * draft.canvas.width;
+    const rawY = (clientY - rect.top) / rect.height * draft.canvas.height;
+    const absoluteX = Math.max(1, Math.min(draft.canvas.width - 1, snapToGrid ? Math.round(rawX / SNAP_GRID_PIXELS) * SNAP_GRID_PIXELS : Math.round(rawX)));
+    const absoluteY = Math.max(1, Math.min(draft.canvas.height - 1, snapToGrid ? Math.round(rawY / SNAP_GRID_PIXELS) * SNAP_GRID_PIXELS : Math.round(rawY)));
+    const positioned: TalentDraft = {
+      ...draft,
+      nodes: draft.nodes.map((node) => node.id === draggingId ? {
+        ...node,
+        position: { x: absoluteX / draft.canvas.width * 100, y: absoluteY / draft.canvas.height * 100 },
+      } : node),
+    };
+    const expanded = ensureCanvasRoom(positioned);
+    const addedLeft = absoluteX < CANVAS_EDGE_ROOM && expanded.canvas.width > draft.canvas.width;
+    const addedTop = absoluteY < CANVAS_EDGE_ROOM && expanded.canvas.height > draft.canvas.height;
+    setIsFitView(false);
+    setDraft(expanded);
+    if (addedLeft || addedTop) {
+      window.requestAnimationFrame(() => {
+        const scroller = canvasScrollRef.current;
+        if (!scroller) return;
+        if (addedLeft) scroller.scrollLeft += CANVAS_GROW_WIDTH * zoomRef.current;
+        if (addedTop) scroller.scrollTop += CANVAS_GROW_HEIGHT * zoomRef.current;
+      });
+    }
   };
 
   const saveDraft = () => {
@@ -499,11 +561,11 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
               zoomCanvasTo(canvasZoom - Math.sign(event.deltaY) * CANVAS_ZOOM_STEP, event.clientX, event.clientY);
             }}
           >
-            <div className="talent-canvas-zoom-surface" style={{ width: TALENT_CANVAS_WIDTH * canvasZoom, height: TALENT_CANVAS_HEIGHT * canvasZoom }}>
+            <div className="talent-canvas-zoom-surface" style={{ width: draft.canvas.width * canvasZoom, height: draft.canvas.height * canvasZoom }}>
               <div
                 ref={canvasRef}
                 className={`talent-dev-canvas ${isPanning ? "panning" : ""}`}
-                style={{ width: TALENT_CANVAS_WIDTH, height: TALENT_CANVAS_HEIGHT, transform: `scale(${canvasZoom})` }}
+                style={{ width: draft.canvas.width, height: draft.canvas.height, transform: `scale(${canvasZoom})` }}
                 onPointerDown={beginCanvasPan}
                 onPointerMove={moveCanvasPointer}
                 onPointerUp={(event) => endCanvasPointer(event.pointerId)}

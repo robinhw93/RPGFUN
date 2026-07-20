@@ -1,4 +1,5 @@
 import type { Ability, AdventureNode, EnemyTemplate, GearItem, GearSetBonusDefinition, Talent } from "./types";
+import { createStatusEffect } from "./statusEffects";
 
 export const ABILITIES: Record<string, Ability> = {
   strike: {
@@ -12,6 +13,22 @@ export const ABILITIES: Record<string, Ability> = {
   quickSlash: {
     id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 50% of your Physical Power.", energyCost: 1,
     target: "enemy", damageType: "physical", powerScaling: 0.5, icon: "◢", branch: "shadow",
+  },
+  TwinStrike: {
+    id: "TwinStrike", name: "Twin Strike", description: "Strike twice. Each hit deals Physical Damage equal to 50% of your Physical Power and triggers on-hit effects separately.", energyCost: 3,
+    cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.5, hits: 2, icon: "⫸", branch: "shadow",
+  },
+  PoisonStab: {
+    id: "PoisonStab", name: "Poison Stab", description: "Deal Physical Damage equal to 50% of your Physical Power and apply 1 Poison.", energyCost: 3,
+    target: "enemy", damageType: "physical", powerScaling: 0.5, icon: "†", branch: "shadow", effect: "poison",
+  },
+  PoisonCloud: {
+    id: "PoisonCloud", name: "Poison Cloud", description: "Apply 1 Poison to all enemies without dealing direct damage.", energyCost: 3,
+    cooldownTurns: 2, target: "all_enemies", dealsDamage: false, icon: "☁", branch: "shadow", effect: "poison",
+  },
+  Stealth: {
+    id: "Stealth", name: "Stealth", description: "Enemies cannot target you until the end of your next turn.", energyCost: 2,
+    cooldownTurns: 3, target: "self", icon: "◌", branch: "shadow", effect: "stealth", statusDuration: 2, statusExpiresAtTurnStart: false,
   },
   crushingBlow: {
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
@@ -42,8 +59,21 @@ export const ABILITIES: Record<string, Ability> = {
 export const TALENTS: Talent[] = [
   { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 50, y: 50 }, icon: "✦", shape: "square" },
   { id: "brute_1", name: "Brute", description: "+2 Strength.", branch: "brute", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 42.5, y: 50 }, icon: "◆", shape: "square", combat: { passive: { stats: { strength: 2 } } } },
-  { id: "shadow_1", name: "Shadow", description: "+2 Agility.", branch: "shadow", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 57.5, y: 50 }, icon: "◈", shape: "square", abilityId: "quickSlash", combat: { passive: { stats: { agility: 2 } } } },
+  { id: "shadow_1", name: "Shadow", description: "+2 Agility. Unlocks Quick Slash.", branch: "shadow", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 57.5, y: 50 }, icon: "◈", shape: "square", abilityId: "quickSlash", combat: { passive: { stats: { agility: 2 } } } },
   { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence.", branch: "arcanist", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 50, y: 40 }, icon: "✧", shape: "square", combat: { passive: { stats: { intelligence: 2 } } } },
+  { id: "talent_1", name: "Immaculate Timing", description: "+2 Agility. +5 Initiative.", branch: "shadow", kind: "passive", tier: 2, cost: 1, requires: ["shadow_1"], position: { x: 65, y: 50 }, icon: "✦", shape: "circle", combat: { passive: { stats: { agility: 2 }, initiative: 5 } } },
+  { id: "talent_2", name: "Twin Strike", description: "Strike twice for 50% Physical Power per hit. Each hit triggers on-hit effects.", branch: "shadow", kind: "ability", tier: 3, cost: 1, requires: ["talent_1"], position: { x: 71.25, y: 42.5 }, icon: "✦", shape: "square", abilityId: "TwinStrike" },
+  { id: "talent_3", name: "Poison Stab", description: "Deal 50% Physical Power as damage and apply 1 Poison.", branch: "shadow", kind: "ability", tier: 3, cost: 1, requires: ["talent_1"], position: { x: 71.25, y: 57.5 }, icon: "✦", shape: "square", abilityId: "PoisonStab" },
+  { id: "talent_4", name: "Honed Skills", description: "+2% Critical Strike Chance.", branch: "shadow", kind: "passive", tier: 4, cost: 1, requires: ["talent_2"], position: { x: 77.5, y: 42.5 }, icon: "✦", shape: "circle", combat: { passive: { critChance: 0.02 } } },
+  { id: "talent_5", name: "Precision", description: "+2% Hit Chance.", branch: "shadow", kind: "passive", tier: 4, cost: 1, requires: ["talent_3"], position: { x: 77.5, y: 57.5 }, icon: "✦", shape: "circle", combat: { passive: { hitChance: 0.02 } } },
+  { id: "talent_6", name: "Evasion", description: "+2% Dodge Chance.", branch: "shadow", kind: "passive", tier: 5, cost: 1, requires: ["talent_4"], position: { x: 77.5, y: 33.75 }, icon: "✦", shape: "circle", combat: { passive: { dodgeChance: 0.02 } } },
+  { id: "talent_7", name: "Stamina", description: "+1 Max Energy.", branch: "shadow", kind: "passive", tier: 5, cost: 1, requires: ["talent_4"], position: { x: 83.75, y: 42.5 }, icon: "✦", shape: "circle", combat: { passive: { maxEnergy: 1 } } },
+  { id: "talent_8", name: "Setup", description: "+2 Initiative.", branch: "shadow", kind: "passive", tier: 5, cost: 1, requires: ["talent_5"], position: { x: 77.5, y: 66.25 }, icon: "✦", shape: "circle", combat: { passive: { initiative: 2 } } },
+  { id: "talent_9", name: "Spell Dodger", description: "+2 Magic Resistance.", branch: "shadow", kind: "passive", tier: 5, cost: 1, requires: ["talent_5"], position: { x: 83.75, y: 57.5 }, icon: "✦", shape: "circle", combat: { passive: { magicResistance: 2 } } },
+  { id: "talent_10", name: "Poison Cloud", description: "Apply 1 Poison to all enemies without dealing direct damage.", branch: "shadow", kind: "ability", tier: 6, cost: 1, requires: ["talent_9"], position: { x: 90, y: 57.5 }, icon: "✦", shape: "square", abilityId: "PoisonCloud" },
+  { id: "talent_11", name: "Stealth", description: "Enemies cannot target you until the end of your next turn.", branch: "shadow", kind: "ability", tier: 6, cost: 1, requires: ["talent_7"], position: { x: 90, y: 42.5 }, icon: "✦", shape: "square", abilityId: "Stealth" },
+  { id: "talent_12", name: "Poison Coating", description: "Each hit has a 50% chance to apply 1 Poison.", branch: "shadow", kind: "passive", tier: 6, cost: 1, requires: ["talent_8"], position: { x: 83.75, y: 73.75 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "poison-coating", name: "Poison Coating", description: "Each hit has a 50% chance to apply 1 Poison.", event: "on_hit", chance: 0.5, effects: [{ type: "apply_status", status: createStatusEffect("poison"), target: "target" }] }] } },
+  { id: "talent_13", name: "Adrenaline", description: "Each hit has a 10% chance to restore 1 Energy.", branch: "shadow", kind: "passive", tier: 6, cost: 1, requires: ["talent_6"], position: { x: 83.75, y: 26.25 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "adrenaline", name: "Adrenaline", description: "Each hit has a 10% chance to restore 1 Energy.", event: "on_hit", chance: 0.1, effects: [{ type: "gain_energy", amount: 1, target: "self" }] }] } },
 ];
 
 export const ENEMIES: Record<string, EnemyTemplate> = {

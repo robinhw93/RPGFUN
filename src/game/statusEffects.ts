@@ -40,7 +40,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
 };
 
-export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<StatusEffect, "duration" | "stacks" | "description" | "sourcePower" | "sourceId">> = {}): StatusEffect {
+export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<StatusEffect, "duration" | "stacks" | "description" | "sourcePower" | "sourceId" | "expiresAtTurnStart">> = {}): StatusEffect {
   const definition = STATUS_EFFECTS[id];
   return {
     id,
@@ -52,6 +52,7 @@ export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<Sta
     permanent: definition.permanent,
     sourcePower: options.sourcePower,
     sourceId: options.sourceId,
+    expiresAtTurnStart: options.expiresAtTurnStart,
   };
 }
 
@@ -78,7 +79,7 @@ export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffec
 
 export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect[] {
   return statuses.flatMap((status) => {
-    if (status.permanent || status.id === "stealth" || status.id === "guard") return [status];
+    if (status.permanent || (status.id === "stealth" && status.expiresAtTurnStart !== false) || status.id === "guard") return [status];
     const duration = status.duration - 1;
     return duration > 0 ? [{ ...status, duration }] : [];
   });
