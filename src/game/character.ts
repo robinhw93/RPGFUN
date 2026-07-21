@@ -104,7 +104,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     critChance,
     hitChance: 0.95 + stats.agility * 0.005 + features.passive.hitChance,
     dodgeChance: capDodgeChance(0.02 + stats.agility * 0.004 + features.passive.dodgeChance),
-    initiativeBonus: Math.round(stats.agility + stats.intelligence * 0.5 + features.passive.initiative),
+    initiativeBonus: Math.round(stats.agility * 0.5 + stats.intelligence * 0.25 + features.passive.initiative),
     guardMultiplier: 1 + stats.strength * 0.01 + features.passive.guardGeneration,
     healingReceivedMultiplier: 1 + stats.vitality * 0.005 + features.passive.healingReceived,
     bleedDamageTakenMultiplier: Math.max(0, 1 - features.passive.bleedDamageReduction),

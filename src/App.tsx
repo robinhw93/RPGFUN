@@ -12,7 +12,7 @@ import { TalentDevtool, TalentDevtoolAccessDialog } from "./components/TalentDev
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
 import { ABILITIES, ADVENTURE, ENDLESS_ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
-import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
+import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending } from "./game/combatSequence";
 import { getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
@@ -179,8 +179,8 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
 
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
   strength: "Increases your Physical Power and the amount of Guard you gain.",
-  agility: "Increases your Physical Power, Hit Chance, Dodge Chance, and Initiative.",
-  intelligence: "Increases your Magical Power and Initiative.",
+  agility: "Increases your Physical Power, Hit Chance, Dodge Chance, and Initiative. Every 2 Agility grants 1 Initiative.",
+  intelligence: "Increases your Magical Power and Initiative. Every 4 Intelligence grants 1 Initiative.",
   vitality: "Increases your Max Health and the amount of healing you receive.",
   luck: "Increases your Critical Chance, improves the quality of loot you find, and increases the chance for special effects to trigger.",
 };
@@ -192,6 +192,17 @@ const ATTRIBUTE_SUMMARIES: Record<StatName, string> = {
   vitality: "Max Health & Healing Received",
   luck: "Critical Chance, Loot & Special Effects",
 };
+
+function getAvailableCharacterAbilities(character: CharacterState): Ability[] {
+  const abilityIds = [
+    "strike",
+    "guard",
+    ...TALENTS
+      .filter((talent) => talent.abilityId && character.unlockedTalents.includes(talent.id))
+      .map((talent) => talent.abilityId!),
+  ];
+  return [...new Set(abilityIds)].flatMap((abilityId) => ABILITIES[abilityId] ? [ABILITIES[abilityId]] : []);
+}
 
 function cloneInitial(): GameState {
   return JSON.parse(JSON.stringify(INITIAL_GAME)) as GameState;
@@ -463,6 +474,30 @@ function App() {
     });
   };
 
+  const setAbilitySlot = (slotIndex: number, abilityId: string | null) => {
+    setGame((current) => {
+      if (current.adventure.combat?.outcome === "active" || slotIndex < 0 || slotIndex >= 6) return current;
+      const equipped = [...current.character.equippedAbilities];
+      if (abilityId === null) {
+        if (slotIndex >= equipped.length) return current;
+        equipped.splice(slotIndex, 1);
+      } else {
+        const availableIds = new Set(getAvailableCharacterAbilities(current.character).map((ability) => ability.id));
+        if (!availableIds.has(abilityId)) return current;
+        const existingIndex = equipped.indexOf(abilityId);
+        if (existingIndex === slotIndex) return current;
+        if (slotIndex < equipped.length) {
+          const replacedAbilityId = equipped[slotIndex];
+          equipped[slotIndex] = abilityId;
+          if (existingIndex >= 0) equipped[existingIndex] = replacedAbilityId;
+        } else if (existingIndex < 0 && equipped.length < 6) {
+          equipped.push(abilityId);
+        }
+      }
+      return { ...current, character: { ...current.character, equippedAbilities: equipped } };
+    });
+  };
+
   const equipItem = (item: GearItem, preferredSlot?: GearSlot) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
@@ -559,7 +594,7 @@ function App() {
         {view === "character" && (characterAssetsReady
           ? <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
           : <CharacterLoadingScreen />)}
-        {view === "talents" && <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} />}
+        {view === "talents" && <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />}
         {view === "talentDevtool" && devtoolUnlocked && <TalentDevtool onExit={() => navigate("talents")} />}
       </main>
 
@@ -832,7 +867,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
 
       {poisonAnimations.filter((animation) => animation.sourceTargetId).map((animation) => <PoisonTransferAnimation key={animation.id} animation={animation} />)}
 
-      {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
+      {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id) => {
@@ -1901,10 +1936,10 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
               <span><small>Energy</small><strong>{ability.energyCost}</strong></span>
               <span><small>Cooldown</small><strong>{ability.cooldownTurns ? `${ability.cooldownTurns} ${ability.cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
             </div>
-            {talent.kind === "class" && <div className="talent-detail-effect"><small>Class Bonus</small><p>{classBonus}</p></div>}
             <div className="talent-detail-effect"><small>Ability Effect</small><p>{ability.description}</p></div>
+            {talent.kind === "class" && <div className="talent-detail-effect"><small>Passive Bonus</small><p>{classBonus}</p></div>}
           </>
-        ) : <div className="talent-detail-effect"><small>Effect</small><p>{talent.description}</p></div>}
+        ) : <div className="talent-detail-effect"><small>{talent.kind === "class" ? "Passive Bonus" : "Effect"}</small><p>{talent.description}</p></div>}
         <div className="talent-detail-actions">
           <button type="button" className="talent-detail-close" onClick={onClose}>Close</button>
           {talent.id !== "origin" && !unlocked && <button type="button" className="talent-detail-primary" disabled={!canUnlock} onClick={() => onUnlock(talent.id)}>{unlockLabel}</button>}
@@ -1915,8 +1950,85 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
   );
 }
 
-function TalentsView({ character, locked, onUnlock, onToggleAbility }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void }) {
+function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
+  slotIndex: number;
+  character: CharacterState;
+  onClose: () => void;
+  onSetSlot: (slotIndex: number, abilityId: string | null) => void;
+}) {
+  const currentAbilityId = character.equippedAbilities[slotIndex] ?? null;
+  const abilities = getAvailableCharacterAbilities(character);
+
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const root = document.documentElement;
+    const previousBody = { overflow: body.style.overflow, position: body.style.position, top: body.style.top, width: body.style.width };
+    const previousRootOverflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      root.style.overflow = previousRootOverflow;
+      body.style.overflow = previousBody.overflow;
+      body.style.position = previousBody.position;
+      body.style.top = previousBody.top;
+      body.style.width = previousBody.width;
+      window.scrollTo(0, scrollY);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="ability-slot-picker" role="dialog" aria-modal="true" aria-label={`Choose Ability for Slot ${slotIndex + 1}`} onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <article className="ability-slot-picker-card">
+        <div className="ability-slot-picker-heading">
+          <div><p className="eyebrow">Equipped Ability Slot {slotIndex + 1}</p><h2>Choose Ability</h2></div>
+          <button type="button" onClick={onClose} aria-label="Close ability picker">Close</button>
+        </div>
+        <p className="ability-slot-picker-copy">Choose an unlocked ability for this combat slot.</p>
+        <div className="ability-slot-picker-list">
+          {abilities.map((ability) => {
+            const equippedSlot = character.equippedAbilities.indexOf(ability.id);
+            const equippedHere = equippedSlot === slotIndex;
+            const occupiedTarget = currentAbilityId !== null;
+            const unavailableForEmptySlot = !occupiedTarget && equippedSlot >= 0;
+            const slotLabel = equippedHere
+              ? "Equipped here"
+              : equippedSlot >= 0
+                ? occupiedTarget ? `Swap with Slot ${equippedSlot + 1}` : `Equipped in Slot ${equippedSlot + 1}`
+                : "Equip here";
+            return (
+              <button
+                type="button"
+                key={ability.id}
+                className={`ability-slot-picker-option ${ability.branch} ${equippedHere ? "current" : ""}`}
+                disabled={equippedHere || unavailableForEmptySlot}
+                onClick={() => { onSetSlot(slotIndex, ability.id); onClose(); }}
+              >
+                <span className="ability-slot-picker-icon" aria-hidden="true">{ability.icon}</span>
+                <span className="ability-slot-picker-info"><strong>{ability.name}</strong><small>{ability.description}</small></span>
+                <span className="ability-slot-picker-metrics"><small>{ability.energyCost} Energy</small><small>{ability.cooldownTurns ?? 0} CD</small><em>{slotLabel}</em></span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="ability-slot-picker-actions">
+          <button type="button" onClick={onClose}>Cancel</button>
+          {currentAbilityId && <button type="button" className="unequip" onClick={() => { onSetSlot(slotIndex, null); onClose(); }}>Unequip Slot</button>}
+        </div>
+      </article>
+    </div>
+  );
+}
+
+function TalentsView({ character, locked, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
+  const [selectedAbilitySlot, setSelectedAbilitySlot] = useState<number | null>(null);
   const [treeZoom, setTreeZoom] = useState(RUNTIME_TALENT_DEFAULT_ZOOM);
   const [isPanning, setIsPanning] = useState(false);
   const treeScrollRef = useRef<HTMLDivElement>(null);
@@ -2014,7 +2126,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       <div className="loadout-panel paper-panel">
         <div><p className="eyebrow">Active Loadout</p><h3>Equipped Abilities</h3></div>
-        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} data-game-tooltip={ability ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
+        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} type="button" disabled={locked} className={ability ? ability.branch : "empty"} aria-label={`Ability Slot ${index + 1}: ${ability?.name ?? "Empty"}. Choose ability.`} onClick={() => setSelectedAbilitySlot(index)} data-game-tooltip="Choose ability">{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
       </div>
       <div className="runtime-talent-toolbar">
         <span><Hand size={14} /> Drag empty space to pan</span>
@@ -2033,13 +2145,26 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
         <div className="runtime-talent-zoom-surface" style={{ width: treeWidth * treeZoom, height: treeHeight * treeZoom }}>
           <div ref={treeCanvasRef} className={`talent-map runtime-talent-map ${isPanning ? "panning" : ""}`} style={{ width: treeWidth, height: treeHeight, transform: `scale(${treeZoom})` }} onPointerDown={beginTreePan} onPointerMove={moveTreePan} onPointerUp={(event) => endTreePan(event.pointerId)} onPointerCancel={(event) => endTreePan(event.pointerId)} onLostPointerCapture={(event) => endTreePan(event.pointerId)}>
             <svg className="runtime-talent-connections" viewBox={`0 0 ${treeWidth} ${treeHeight}`} aria-hidden="true">
-              {TALENTS.flatMap((talent) => talent.requires.map((requirement) => {
-                const from = nodePositions.get(requirement);
-                const to = nodePositions.get(talent.id);
-                if (!from || !to) return null;
-                const active = character.unlockedTalents.includes(requirement) && character.unlockedTalents.includes(talent.id);
-                return <line key={`${requirement}-${talent.id}`} className={active ? "active" : ""} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />;
-              }))}
+              <defs>
+                <mask id="runtime-talent-connection-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width={treeWidth} height={treeHeight}>
+                  <rect width={treeWidth} height={treeHeight} fill="white" />
+                  {TALENTS.map((talent) => {
+                    const position = nodePositions.get(talent.id)!;
+                    return talent.shape === "circle"
+                      ? <circle key={talent.id} cx={position.x} cy={position.y} r="47" fill="black" />
+                      : <rect key={talent.id} x={position.x - 61} y={position.y - 61} width="122" height="122" fill="black" />;
+                  })}
+                </mask>
+              </defs>
+              <g mask="url(#runtime-talent-connection-mask)">
+                {TALENTS.flatMap((talent) => talent.requires.map((requirement) => {
+                  const from = nodePositions.get(requirement);
+                  const to = nodePositions.get(talent.id);
+                  if (!from || !to) return null;
+                  const active = character.unlockedTalents.includes(requirement) && character.unlockedTalents.includes(talent.id);
+                  return <line key={`${requirement}-${talent.id}`} className={active ? "active" : ""} x1={from.x} y1={from.y} x2={to.x} y2={to.y} />;
+                }))}
+              </g>
             </svg>
             {TALENTS.map((talent) => {
               const unlocked = character.unlockedTalents.includes(talent.id);
@@ -2058,6 +2183,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
         </div>
       </div>
       {selectedTalent && <TalentDetailModal talent={selectedTalent} character={character} locked={locked} onClose={closeTalentDetails} onUnlock={onUnlock} onToggleAbility={onToggleAbility} />}
+      {selectedAbilitySlot !== null && <AbilitySlotPicker slotIndex={selectedAbilitySlot} character={character} onClose={() => setSelectedAbilitySlot(null)} onSetSlot={onSetAbilitySlot} />}
     </section>
   );
 }

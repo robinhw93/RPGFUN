@@ -49,8 +49,8 @@ Attributes are whole numbers. Equipment and talent bonuses are added to base att
 | Attribute | Current effects |
 | --- | --- |
 | Strength | +1 Physical Power per point and +1% Guard gained per point. |
-| Agility | +0.3 Physical Power, +0.5% raw Hit Chance, +0.4% Dodge Chance, and +1 Initiative per point. |
-| Intelligence | +1 Magical Power and +0.5 Initiative per point. |
+| Agility | +0.3 Physical Power, +0.5% raw Hit Chance, +0.4% Dodge Chance, and +0.5 Initiative per point. |
+| Intelligence | +1 Magical Power and +0.25 Initiative per point. |
 | Vitality | +10 Max Health and +0.5% healing received per point. |
 | Luck | +0.75% Critical Strike Chance, +1% loot-rarity bonus, and +0.25% to explicitly chance-based combat triggers per point. |
 
@@ -72,7 +72,7 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 | Critical Strike Chance | `5% + Luck × 0.75% + bonuses` |
 | Hit Chance | `95% + Agility × 0.5% + bonuses` |
 | Dodge Chance | `2% + Agility × 0.4% + bonuses`, capped at 50%. |
-| Initiative bonus | `Agility + Intelligence × 0.5 + bonuses` |
+| Initiative bonus | `Agility × 0.5 + Intelligence × 0.25 + bonuses` |
 | Guard multiplier | `100% + Strength × 1% + bonuses` |
 | Healing received | `100% + Vitality × 0.5% + bonuses` |
 | Loot-rarity bonus | `Luck × 1% + bonuses` |
@@ -222,7 +222,7 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 
 Combat calculations can prepare future results, but visible HP, status, and active-turn changes are delayed until their corresponding floating combat message is shown. Direct attacks start their lunge animation with the damage message and apply damage at the configured impact frame.
 
-Every hit of a multi-hit ability receives its own lunge and impact reaction. Animation speed is multiplied by the number of hits, so two hits animate at twice normal speed and the total motion time remains equal to one standard attack animation.
+Every hit of a multi-hit ability receives its own lunge and impact reaction. Animation speed is multiplied by the number of hits, so two hits animate at twice normal speed and the total motion time remains equal to one standard attack animation. Direct-hit floating messages use the same shortened slots, causing the hit animations to run consecutively without normal floating-text pauses between them.
 
 This sequencing guarantees that:
 
@@ -346,7 +346,9 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 - The combat loadout has six slots.
 - Strike and Guard are permanently unlocked core abilities. They can be equipped or unequipped from Wayfarer's Spark like other available abilities.
 - Other unlocked abilities can be equipped or removed outside combat.
+- Selecting any equipped or empty loadout slot opens the in-game ability picker. An occupied slot can replace or swap its ability with another equipped slot, while **Unequip Slot** removes its current ability.
 - Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
+- Circular passive nodes are 25% smaller than square class/ability nodes. Unlocked nodes receive a gold outer outline, and the connection layer is masked beneath every node so lines cannot show through transparent locked nodes.
 - The player can pan, zoom, and fit the talent tree on desktop and mobile.
 
 The complete current tree is listed in [Content reference](CONTENT_REFERENCE.md#talent-tree).

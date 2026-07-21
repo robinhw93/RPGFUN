@@ -139,7 +139,7 @@ Important fields:
 - `energyCost`, `cooldownTurns`, and `target` define usability.
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation.
-- `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation/impact timing proportionally.
+- `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
@@ -166,6 +166,8 @@ Each talent defines:
 - Optional data-driven `combat` bundle.
 
 Changing or removing IDs is a save-migration decision. Existing saves store unlocked talent IDs and equipped ability IDs.
+
+The runtime loadout remains a compact `equippedAbilities` array. The slot picker replaces or swaps occupied indices and appends newly selected abilities to the first available empty position; it never creates sparse slots. Its available list is derived from Strike, Guard, and `abilityId` values on currently unlocked talents.
 
 ### Enemies, items, sets, and adventures
 

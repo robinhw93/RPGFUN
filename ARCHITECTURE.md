@@ -110,6 +110,7 @@ UI modules display these results but never reproduce their formulas.
 - Final Hit Chance is `raw Hit - capped Dodge`, clamped to 20–100%.
 - Strength and Agility feed Physical Power.
 - Intelligence feeds Magical Power.
+- Agility contributes 0.5 Initiative per point and Intelligence contributes 0.25 Initiative per point before direct Initiative bonuses.
 - Abilities use their relevant derived power exactly once. `scalingStat` remains legacy/category metadata for older definitions and is not independently added to damage.
 - All visible stats and initiative values are rounded whole numbers.
 
@@ -259,7 +260,7 @@ Direct attack damage has two presentation phases:
 
 Statuses attached to that same event index resolve at impact with damage. Non-attack effects resolve as soon as their floating message appears.
 
-Multi-hit abilities attach their total hit count to every direct-damage event. The sequencer divides both animation duration and impact delay by that count, keeping the combined motion budget equal to one normal attack. `attackAnimationId` alternates equivalent CSS keyframes so consecutive hits by the same combatant always restart the lunge animation.
+Multi-hit abilities attach their total hit count to every direct-damage event. The sequencer divides animation duration and impact delay by that count, while `getCombatEventDurationMs` gives each direct-hit message the same shortened slot. This removes normal floating-message waits between hits and keeps the complete hit sequence within one normal attack-duration budget. `attackAnimationId` alternates equivalent CSS keyframes so consecutive hits by the same combatant always restart the lunge animation.
 
 Attack impact and animation completion are separate lifecycle points. Damage resolves at impact, while the attacker stays animated until the full return movement completes. A turn handoff attached to a damage event must therefore preserve the current attacker until the sequencer's animation-completion timer releases it.
 
@@ -338,6 +339,10 @@ The UI may preview and compare, but only these helpers authorize the transaction
 Each edge should be stored once. The runtime tree draws that one line, while availability and modal requirement text work from either end. The Talent Editor presents the checkbox as connected from both node perspectives, removes either stored orientation when disconnected, and normalizes duplicate reciprocal edges on load.
 
 The runtime tree derives its minimum bounding box from node world positions inside `TALENT_TREE_CANVAS`, then adds padding. It pans by scroll offset and zooms a scaled world surface between 20% and 160%. Fit uses the available viewport. The editor has independent zoom/canvas rules.
+
+Connections render in an SVG layer with shape-aware black cutouts in a user-space mask for every node position. The lines therefore cannot show through nodes even when locked nodes use whole-element transparency. Circular passive nodes render at 75% of the square-node diameter, while unlocked nodes use a gold outer outline independent of branch color.
+
+Ability-slot selection is an explicit indexed state transaction. Occupied slots can replace or swap abilities; removing a slot compacts the loadout, and empty selections append without creating sparse array entries. The picker only exposes core abilities and abilities granted by unlocked talents.
 
 ## Talent Editor isolation
 
