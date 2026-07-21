@@ -256,6 +256,8 @@ When `FloatingCombatText` reveals an index, the sequencer resolves all effects a
 
 Resolved status effects also produce short-lived `statusAnimations` presentation metadata. Poison uses it to pulse the receiving combatant green, while Electrified flashes its target yellow with a local lightning overlay. Contagion includes the source combatant ID on its queued status effect, allowing the UI to measure the live source and destination icons and animate a copied Poison icon between them without coupling animation code to combat rules. Damage effects may carry a `sourceLabel`; resolution exposes it through transient `damageSourceLabels` so Health bars can distinguish status damage from ordinary attacks without parsing combat text. Passive and on-hit triggers similarly emit `passiveAnimations` targeted at the affected combatant. These local effects are not sequencer events, so their CSS animation never blocks combat input or extends a turn.
 
+Abilities may declare a data-driven `vfx` kind. Resolution converts its `ability_vfx` pending effect into transient `abilityAnimations` metadata at the same event or attack impact as the mechanical result. Poison Cloud, Neurotoxin, Toxic Explosion, and Venomborn use this path. The UI owns their smoke, flash, burst, transfer, and healing presentation; none of these animations adds sequencer time. Status-application overlays are keyed by pending-effect ID rather than only a persistent CSS class, so refreshing an existing Poison status reliably restarts its green pulse.
+
 ### Direct-attack two-phase contract
 
 Direct attack damage has two presentation phases:

@@ -21,7 +21,7 @@ import {
 } from "./statusEffects";
 import { getCharacterAbilityDescription, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
-import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
+import type { CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
   const derived = getDerivedStats(character);
@@ -55,6 +55,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
+    abilityAnimations: [],
     passiveAnimations: [],
     attackingActorId: null,
     attackAnimationId: 0,
@@ -140,6 +141,11 @@ function queueNextTurnEnergyRegeneration(pendingEffects: CombatPendingEffect[], 
 function queuePassiveAnimation(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: "player" | string, text: string): void {
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "passive_text", targetId, text, lane: combatEffectSequence % 3 });
+}
+
+function queueAbilityVfx(pendingEffects: CombatPendingEffect[], eventIndex: number, kind: CombatAbilityVfxKind, targetId?: "player" | string, sourceTargetId?: "player" | string): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "ability_vfx", kind, targetId, sourceTargetId });
 }
 
 function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false, attachedEventIndex?: number, sourceTargetId?: string): void {
@@ -317,6 +323,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       missedTargets: combat.missedTargets ?? [],
       damageSourceLabels: combat.damageSourceLabels ?? {},
       statusAnimations: combat.statusAnimations ?? [],
+      abilityAnimations: combat.abilityAnimations ?? [],
       passiveAnimations: combat.passiveAnimations ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
@@ -350,6 +357,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
+    abilityAnimations: [],
     passiveAnimations: [],
     attackingActorId: null,
     attackAnimationId: combat.attackAnimationId ?? 0,
@@ -1027,6 +1035,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         logs.push(makeLog(`${ability.name} consumes ${consumedStatus.name} from ${target.name} and restores ${healing} Health.`, abilityInfo));
         const healEventIndex = queueHeal(events, pendingEffects, `You consume ${consumedStatus.name} and recover ${healing} Health.`, "player", healing);
         queueStatusRemoval(pendingEffects, healEventIndex, target.instanceId, consumedStatus.id);
+        if (ability.vfx) queueAbilityVfx(pendingEffects, healEventIndex, ability.vfx, "player", target.instanceId);
         continue;
       }
       if (ability.detonateStatus) {
@@ -1049,6 +1058,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
         if (retainedStatus) queueStatusSet(pendingEffects, damageEventIndex, target.instanceId, retainedStatus);
         else queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, detonatedStatus.id);
+        if (ability.vfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, target.instanceId, "player");
         const leechRatio = derived.statusDamageLeech[detonatedStatus.id] ?? 0;
         if (damage > 0 && leechRatio > 0) {
           const healing = Math.min(combat.playerMaxHp - playerHp, Math.ceil(damage * leechRatio));
@@ -1089,6 +1099,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           affectedTargets.forEach((affectedTarget) => appliedStatuses.forEach((applied) => {
             queueStatus(events, pendingEffects, statusText, affectedTarget.instanceId, applied, applied.id === "stunned", statusEventIndex);
           }));
+          if (ability.vfx) queueAbilityVfx(pendingEffects, statusEventIndex, ability.vfx, groupedAreaApplication ? undefined : target.instanceId, "player");
         }
         continue;
       }
@@ -1619,11 +1630,14 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const statusAnimations = matchingEffects.flatMap((effect) => effect.type === "status"
     ? [{ id: effect.id, statusId: effect.status.id, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId }]
     : []);
+  const abilityAnimations = matchingEffects.flatMap((effect) => effect.type === "ability_vfx"
+    ? [{ id: effect.id, kind: effect.kind, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId }]
+    : []);
   const passiveAnimations = matchingEffects.flatMap((effect) => effect.type === "passive_text"
     ? [{ id: effect.id, targetId: effect.targetId, text: effect.text, lane: effect.lane }]
     : []);
   matchingEffects.forEach((effect) => {
-    if (effect.type === "passive_text") return;
+    if (effect.type === "passive_text" || effect.type === "ability_vfx") return;
     if (effect.type === "energy_regen_bonus") {
       nextTurnEnergyRegenBonus += effect.amount;
       return;
@@ -1701,7 +1715,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
@@ -1724,5 +1738,6 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
     missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
+    abilityAnimations: [],
   };
 }

@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
@@ -786,9 +786,13 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const missedTargets = combat.missedTargets ?? [];
   const passiveAnimations = combat.passiveAnimations ?? [];
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
-  const poisonPulseTargets = new Set(poisonAnimations.map((animation) => animation.targetId));
   const electrifiedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "electrified");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
+  const abilityAnimations = combat.abilityAnimations ?? [];
+  const poisonCloudAnimations = abilityAnimations.filter((animation) => animation.kind === "poison_cloud");
+  const neurotoxinAnimations = abilityAnimations.filter((animation) => animation.kind === "neurotoxin");
+  const toxicExplosionAnimations = abilityAnimations.filter((animation) => animation.kind === "toxic_explosion");
+  const venombornAnimations = abilityAnimations.filter((animation) => animation.kind === "venomborn");
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
@@ -809,9 +813,11 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         <article
           key="player"
           data-combatant-id="player"
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""} ${playerStealthed ? "stealthed" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${playerStealthed ? "stealthed" : ""}`}
         >
+          {poisonAnimations.filter((animation) => animation.targetId === "player").map((animation) => <PoisonApplicationEffect key={animation.id} />)}
           {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
+          {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
@@ -826,8 +832,11 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         </article>
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
+          {poisonCloudAnimations.map((animation) => <PoisonCloudEffect key={animation.id} />)}
           {combat.enemies.map((enemy) => {
             const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
+            const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
+            const toxicExplosionEffects = toxicExplosionAnimations.filter((animation) => animation.targetId === enemy.instanceId);
             return (
             <article
               key={enemy.instanceId}
@@ -836,7 +845,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               tabIndex={targetable ? 0 : -1}
               aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${poisonPulseTargets.has(enemy.instanceId) ? "poison-applied" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -846,7 +855,10 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
                 }
               }}
             >
+              {poisonAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <PoisonApplicationEffect key={animation.id} />)}
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
+              {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
+              {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
@@ -864,6 +876,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       </div>
 
       {poisonAnimations.filter((animation) => animation.sourceTargetId).map((animation) => <PoisonTransferAnimation key={animation.id} animation={animation} />)}
+      {venombornAnimations.map((animation) => <VenombornTransferAnimation key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
@@ -1252,6 +1265,81 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
         })}
       </div>
     </div>
+  );
+}
+
+function PoisonApplicationEffect() {
+  return <span className="poison-application-effect" aria-hidden="true" />;
+}
+
+function PoisonCloudEffect() {
+  return (
+    <span className="poison-cloud-effect" aria-hidden="true">
+      {Array.from({ length: 8 }).map((_, index) => <i key={index} style={{ "--smoke-left": `${3 + index * 13}%`, "--smoke-delay": `${index * 45}ms` } as React.CSSProperties} />)}
+    </span>
+  );
+}
+
+function NeurotoxinEffect() {
+  return (
+    <span className="neurotoxin-effect" aria-hidden="true">
+      <i /><i /><i />
+    </span>
+  );
+}
+
+function ToxicExplosionEffect() {
+  return (
+    <span className="toxic-explosion-effect" aria-hidden="true">
+      <b>☣</b>
+      <i className="toxic-wave" />
+      {Array.from({ length: 7 }).map((_, index) => <i className="toxic-particle" key={index} style={{ "--particle-angle": `${index * (360 / 7)}deg`, "--particle-delay": `${index * 18}ms` } as React.CSSProperties} />)}
+    </span>
+  );
+}
+
+function VenombornHealingEffect() {
+  return (
+    <span className="venomborn-healing-effect" aria-hidden="true">
+      <HeartPulse />
+      <i /><i /><i />
+    </span>
+  );
+}
+
+function VenombornTransferAnimation({ animation }: { animation: CombatAbilityAnimation }) {
+  const [path, setPath] = useState<{ left: number; top: number; x: number; y: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!animation.sourceTargetId || !animation.targetId) return;
+    const combatants = [...document.querySelectorAll<HTMLElement>("[data-combatant-id]")];
+    const source = combatants.find((element) => element.dataset.combatantId === animation.sourceTargetId);
+    const target = combatants.find((element) => element.dataset.combatantId === animation.targetId);
+    if (!source || !target) return;
+    const sourceAnchor = source.querySelector<HTMLElement>(".status-poison") ?? source.querySelector<HTMLElement>(".compact-status-row") ?? source;
+    const targetAnchor = target.querySelector<HTMLElement>(".health-bar-wrap") ?? target;
+    const sourceRect = sourceAnchor.getBoundingClientRect();
+    const targetRect = targetAnchor.getBoundingClientRect();
+    const sourceX = sourceRect.left + sourceRect.width / 2;
+    const sourceY = sourceRect.top + sourceRect.height / 2;
+    setPath({
+      left: sourceX - 14,
+      top: sourceY - 14,
+      x: targetRect.left + targetRect.width / 2 - sourceX,
+      y: targetRect.top + targetRect.height / 2 - sourceY,
+    });
+  }, [animation.id, animation.sourceTargetId, animation.targetId]);
+
+  if (!path) return null;
+  return (
+    <span
+      className="venomborn-transfer-animation"
+      style={{ left: path.left, top: path.top, "--venomborn-x": `${path.x}px`, "--venomborn-y": `${path.y}px` } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      <FlaskConical />
+      <i /><i /><i />
+    </span>
   );
 }
 

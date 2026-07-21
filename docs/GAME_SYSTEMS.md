@@ -240,6 +240,11 @@ This sequencing guarantees that:
 - HP bars animate from the old value to the new value.
 - Statuses appear with the message that applies them.
 - Enemies pulse green once when Poison is applied.
+- Refreshing or adding stacks to an existing Poison also restarts that green pulse.
+- Poison Cloud sends a fading green smoke burst across the complete enemy side while all affected enemies pulse together.
+- Neurotoxin shakes and flashes its target green before the persistent yellow Stunned treatment remains visible.
+- Toxic Explosion creates a toxic burst on its target at the damage impact.
+- Venomborn pulls a Poison icon from its target toward the player and finishes with a green healing effect.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
 - The turn-order highlight moves when the turn message is shown.

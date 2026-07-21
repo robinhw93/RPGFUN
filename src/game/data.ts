@@ -24,7 +24,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   PoisonCloud: {
     id: "PoisonCloud", name: "Poison Cloud", description: "Apply 1 Poison to all enemies without dealing direct damage.", energyCost: 3,
-    cooldownTurns: 2, target: "all_enemies", dealsDamage: false, icon: "☁", branch: "shadow", effect: "poison",
+    cooldownTurns: 2, target: "all_enemies", dealsDamage: false, icon: "☁", branch: "shadow", effect: "poison", vfx: "poison_cloud",
   },
   Contagion: {
     id: "Contagion", name: "Contagion", description: "Copy all Poison stacks from the selected enemy to another random living enemy.", energyCost: 2,
@@ -40,7 +40,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   Neurotoxin: {
     id: "Neurotoxin", name: "Neurotoxin", description: "Consume all Poison on an enemy to Stun it.", energyCost: 3,
-    cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeTargetStatus: "poison", icon: "⌁", branch: "shadow", effect: "stun",
+    cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeTargetStatus: "poison", icon: "⌁", branch: "shadow", effect: "stun", vfx: "neurotoxin",
   },
   VenomousStrike: {
     id: "VenomousStrike", name: "Venomous Strike", description: "Deal Physical Damage equal to 100% of your Physical Power and apply 2 Poison. Deals double damage if the target is already Poisoned.", energyCost: 4,
@@ -57,11 +57,11 @@ export const ABILITIES: Record<string, Ability> = {
   },
   ToxicExplosion: {
     id: "ToxicExplosion", name: "Toxic Explosion", description: "Detonate all Poison on the target, dealing its full duration damage immediately and removing Poison.", energyCost: 5,
-    cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", detonateStatus: "poison", icon: "☣", branch: "shadow",
+    cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", detonateStatus: "poison", icon: "☣", branch: "shadow", vfx: "toxic_explosion",
   },
   Venomborn: {
     id: "Venomborn", name: "Venomborn", description: "Consume all Poison on the target to heal for the damage it would deal over its full duration.", energyCost: 2,
-    cooldownTurns: 6, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeStatusForHealing: "poison", icon: "♨", branch: "shadow",
+    cooldownTurns: 6, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeStatusForHealing: "poison", icon: "♨", branch: "shadow", vfx: "venomborn",
   },
   LightningStrike: {
     id: "LightningStrike", name: "Lightning Strike", description: "Deal 50% Physical Power as Physical Damage and 50% Magical Power as Lightning Damage, then apply Electrified for 3 turns.", energyCost: 5,

@@ -182,6 +182,8 @@ export interface GearSetBonusDefinition extends CombatFeatureBundle {
   description: string;
 }
 
+export type CombatAbilityVfxKind = "poison_cloud" | "neurotoxin" | "toxic_explosion" | "venomborn";
+
 export interface Ability {
   id: string;
   name: string;
@@ -246,6 +248,8 @@ export interface Ability {
   resetCooldownOnKill?: boolean;
   /** Multiplies the complete direct-attack animation sequence without changing combat rules. */
   attackSequenceDurationMultiplier?: number;
+  /** Presentation effect emitted when this ability resolves. */
+  vfx?: CombatAbilityVfxKind;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;
@@ -359,6 +363,13 @@ export interface CombatPassiveAnimation {
   lane: number;
 }
 
+export interface CombatAbilityAnimation {
+  id: string;
+  kind: CombatAbilityVfxKind;
+  targetId?: "player" | string;
+  sourceTargetId?: "player" | string;
+}
+
 export type CombatPendingEffect =
   | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
@@ -367,6 +378,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
+  | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatState {
@@ -388,6 +400,7 @@ export interface CombatState {
   missedTargets: string[];
   damageSourceLabels: Record<string, string>;
   statusAnimations: CombatStatusAnimation[];
+  abilityAnimations: CombatAbilityAnimation[];
   passiveAnimations: CombatPassiveAnimation[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;
