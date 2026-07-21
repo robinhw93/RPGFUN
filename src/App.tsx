@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
@@ -801,6 +801,10 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const evasionAnimations = abilityAnimations.filter((animation) => animation.kind === "evasion" && animation.targetId === "player");
   const focusAnimations = abilityAnimations.filter((animation) => animation.kind === "focus" && animation.targetId === "player");
   const recuperateAnimations = abilityAnimations.filter((animation) => animation.kind === "recuperate" && animation.targetId === "player");
+  const epidemicAnimations = abilityAnimations.filter((animation) => animation.kind === "epidemic");
+  const pandemicAnimations = abilityAnimations.filter((animation) => animation.kind === "pandemic");
+  const lightSpeedAnimations = abilityAnimations.filter((animation) => animation.kind === "light_speed");
+  const voltageSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "voltage_siphon");
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
@@ -829,6 +833,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
           {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}
+          {abilityAnimations.filter((animation) => animation.targetId === "player").map((animation) => <AbilityImpactEffect key={`player-${animation.id}`} kind={animation.kind} />)}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
@@ -844,6 +849,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
           {poisonCloudAnimations.map((animation) => <PoisonCloudEffect key={animation.id} />)}
+          {epidemicAnimations.map((animation) => <EpidemicEffect key={animation.id} />)}
           {combat.enemies.map((enemy) => {
             const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
             const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
@@ -871,6 +877,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
+              {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
@@ -889,6 +896,9 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
 
       {poisonAnimations.filter((animation) => animation.sourceTargetId).map((animation) => <PoisonTransferAnimation key={animation.id} animation={animation} />)}
       {venombornAnimations.map((animation) => <VenombornTransferAnimation key={animation.id} animation={animation} />)}
+      {pandemicAnimations.map((animation) => <PandemicSpreadEffect key={animation.id} animation={animation} statusIds={combat.enemies.find((enemy) => enemy.instanceId === animation.sourceTargetId)?.statuses.filter((status) => status.kind === "debuff").map((status) => status.id) ?? []} />)}
+      {lightSpeedAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="light-speed-path"><Zap /><i /><i /></CombatantPathEffect>)}
+      {voltageSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="voltage-siphon-path"><Zap /><HeartPulse /><i /></CombatantPathEffect>)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
@@ -1202,6 +1212,7 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
   const previousPositions = useRef(new Map<string, DOMRect>());
   const reorderAnimations = useRef(new Map<string, Animation>());
   const orderSignature = combat.turnOrder.map((actor) => actor.actorId).join("|");
+  const lightSpeedTurn = (combat.abilityAnimations ?? []).some((animation) => animation.kind === "light_speed_turn");
 
   useLayoutEffect(() => {
     reorderAnimations.current.forEach((animation) => animation.cancel());
@@ -1249,7 +1260,7 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
   }, []);
 
   return (
-    <div className="turn-order-bar" aria-label={`Turn order, round ${combat.turn}`}>
+    <div className={`turn-order-bar ${lightSpeedTurn ? "light-speed-turn" : ""}`} aria-label={`Turn order, round ${combat.turn}`}>
       <span className="round-label">Round {combat.turn}</span>
       <div ref={rowElement}>
         {combat.turnOrder.map((actor, index) => {
@@ -1341,6 +1352,132 @@ function RecuperateCastEffect() {
         <b key={index} style={{ "--energy-particle-x": `${14 + index * 14}%`, "--energy-particle-delay": `${index * 42}ms` } as React.CSSProperties} />
       ))}
     </span>
+  );
+}
+
+function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
+  if (kind === "guard") {
+    return <span className="ability-impact-effect guard-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /></span>;
+  }
+  if (kind === "ambush") {
+    return <span className="ability-impact-effect ambush-impact" aria-hidden="true"><Moon /><i /><i /><i /></span>;
+  }
+  if (kind === "venomous_strike" || kind === "slowing_venom" || kind === "weakening_venom" || kind === "rabid_venom") {
+    return <span className={`ability-impact-effect venom-impact ${kind}`} aria-hidden="true"><FlaskConical /><i /><i /><i /></span>;
+  }
+  if (kind === "flurry" || kind === "slice_and_dice") {
+    return <span className={`ability-impact-effect slash-storm-impact ${kind}`} aria-hidden="true"><Swords /><i /><i /><i /><i /></span>;
+  }
+  if (kind === "lightning_strike" || kind === "light_speed") {
+    return <span className={`ability-impact-effect lightning-impact ${kind}`} aria-hidden="true"><Zap /><i /><i /><i /></span>;
+  }
+  if (kind === "sharpened_blade") {
+    return <span className="ability-impact-effect sharpened-impact" aria-hidden="true"><ShieldOff /><i /><i /><i /></span>;
+  }
+  if (kind === "pinpoint_slice") {
+    return <span className="ability-impact-effect pinpoint-impact" aria-hidden="true"><Crosshair /><b /></span>;
+  }
+  if (kind === "chain_assassination") {
+    return <span className="ability-impact-effect chain-impact" aria-hidden="true"><Skull /><i /><i /><i /></span>;
+  }
+  if (kind === "cull_the_weak") {
+    return <span className="ability-impact-effect cull-impact" aria-hidden="true"><Target />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--cull-angle": `${index * 60}deg` } as React.CSSProperties} />)}</span>;
+  }
+  if (kind === "voltage_siphon") {
+    return <span className="ability-impact-effect voltage-siphon-impact" aria-hidden="true"><Zap /><HeartPulse /><i /></span>;
+  }
+  if (kind === "light_speed_turn") {
+    return <span className="ability-impact-effect light-speed-turn-impact" aria-hidden="true"><Zap /><Sparkles /><i /><i /></span>;
+  }
+  return null;
+}
+
+function EpidemicEffect() {
+  return (
+    <span className="epidemic-effect" aria-hidden="true">
+      <b>☣</b>
+      {Array.from({ length: 11 }).map((_, index) => (
+        <i key={index} style={{ "--epidemic-left": `${2 + index * 9.4}%`, "--epidemic-delay": `${index * 38}ms` } as React.CSSProperties} />
+      ))}
+    </span>
+  );
+}
+
+function CombatantPathEffect({ animation, className, children }: { animation: CombatAbilityAnimation; className: string; children: ReactNode }) {
+  const [path, setPath] = useState<{ left: number; top: number; x: number; y: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!animation.sourceTargetId || !animation.targetId) return;
+    const combatants = [...document.querySelectorAll<HTMLElement>("[data-combatant-id]")];
+    const source = combatants.find((element) => element.dataset.combatantId === animation.sourceTargetId);
+    const target = combatants.find((element) => element.dataset.combatantId === animation.targetId);
+    if (!source || !target) return;
+    const sourceRect = source.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const sourceX = sourceRect.left + sourceRect.width / 2;
+    const sourceY = sourceRect.top + sourceRect.height / 2;
+    setPath({
+      left: sourceX - 16,
+      top: sourceY - 16,
+      x: targetRect.left + targetRect.width / 2 - sourceX,
+      y: targetRect.top + targetRect.height / 2 - sourceY,
+    });
+  }, [animation.id, animation.sourceTargetId, animation.targetId]);
+
+  if (!path) return null;
+  return (
+    <span
+      className={`combatant-path-effect ${className}`}
+      style={{ left: path.left, top: path.top, "--path-x": `${path.x}px`, "--path-y": `${path.y}px` } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      {children}
+    </span>
+  );
+}
+
+function PandemicSpreadEffect({ animation, statusIds }: { animation: CombatAbilityAnimation; statusIds: StatusEffectId[] }) {
+  const [paths, setPaths] = useState<Array<{ id: string; left: number; top: number; x: number; y: number }>>([]);
+
+  useLayoutEffect(() => {
+    if (!animation.sourceTargetId) return;
+    const combatants = [...document.querySelectorAll<HTMLElement>("[data-combatant-id]")];
+    const source = combatants.find((element) => element.dataset.combatantId === animation.sourceTargetId);
+    if (!source) return;
+    const sourceRect = source.getBoundingClientRect();
+    const sourceX = sourceRect.left + sourceRect.width / 2;
+    const sourceY = sourceRect.top + sourceRect.height / 2;
+    setPaths(combatants
+      .filter((element) => element.dataset.combatantId !== "player" && element.dataset.combatantId !== animation.sourceTargetId && !element.classList.contains("dead"))
+      .map((target) => {
+        const targetRect = target.getBoundingClientRect();
+        return {
+          id: target.dataset.combatantId ?? `${targetRect.left}-${targetRect.top}`,
+          left: sourceX - 15,
+          top: sourceY - 15,
+          x: targetRect.left + targetRect.width / 2 - sourceX,
+          y: targetRect.top + targetRect.height / 2 - sourceY,
+        };
+      }));
+  }, [animation.id, animation.sourceTargetId]);
+
+  return (
+    <>
+      {paths.map((path, pathIndex) => (
+        <span
+          key={path.id}
+          className="pandemic-flight"
+          style={{ left: path.left, top: path.top, "--path-x": `${path.x}px`, "--path-y": `${path.y}px`, "--path-delay": `${pathIndex * 55}ms` } as React.CSSProperties}
+          aria-hidden="true"
+        >
+          {(statusIds.length > 0 ? statusIds.slice(0, 4) : ["poison" as const]).map((statusId, index) => {
+            const Icon = STATUS_ICONS[statusId];
+            return <Icon key={`${statusId}-${index}`} style={{ "--status-flight-index": index } as React.CSSProperties} />;
+          })}
+          <i />
+        </span>
+      ))}
+    </>
   );
 }
 

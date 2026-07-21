@@ -8,7 +8,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   guard: {
     id: "guard", name: "Guard", description: "Gain 6 Guard until the next turn.", energyCost: 2,
-    target: "self", icon: "◆", branch: "core", effect: "guard",
+    target: "self", icon: "◆", branch: "core", effect: "guard", vfx: "guard",
   },
   quickSlash: {
     id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 50% of your Physical Power.", energyCost: 1,
@@ -45,15 +45,15 @@ export const ABILITIES: Record<string, Ability> = {
   VenomousStrike: {
     id: "VenomousStrike", name: "Venomous Strike", description: "Deal Physical Damage equal to 100% of your Physical Power and apply 2 Poison. Deals double damage if the target is already Poisoned.", energyCost: 4,
     cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 1, icon: "†", branch: "shadow", effect: "poison", statusStacks: 2,
-    damageModifiers: [{ id: "venomous-strike-poisoned", name: "Venomous Strike", description: "Deals double damage to Poisoned targets.", multiplier: 2, targetHasAnyStatus: ["poison"] }],
+    damageModifiers: [{ id: "venomous-strike-poisoned", name: "Venomous Strike", description: "Deals double damage to Poisoned targets.", multiplier: 2, targetHasAnyStatus: ["poison"] }], vfx: "venomous_strike",
   },
   Flurry: {
     id: "Flurry", name: "Flurry", description: "Attack five times, dealing Physical Damage equal to 40% of your Physical Power per hit. Each hit chooses a random enemy and can trigger on-hit effects.", energyCost: 4,
-    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, hits: 5, randomTargetPerHit: true, attackSequenceDurationMultiplier: 1.4, icon: "≋", branch: "shadow",
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, hits: 5, randomTargetPerHit: true, attackSequenceDurationMultiplier: 1.4, icon: "≋", branch: "shadow", vfx: "flurry",
   },
   Ambush: {
     id: "Ambush", name: "Ambush", description: "Can only be used while Stealthed. Deal Physical Damage equal to 150% of your Physical Power with +50% Critical Strike Chance.", energyCost: 2,
-    target: "enemy", damageType: "physical", powerScaling: 1.5, requiredSelfStatus: "stealth", critChanceBonusWithStatus: { status: "stealth", bonus: 0.5 }, icon: "◈", branch: "shadow",
+    target: "enemy", damageType: "physical", powerScaling: 1.5, requiredSelfStatus: "stealth", critChanceBonusWithStatus: { status: "stealth", bonus: 0.5 }, icon: "◈", branch: "shadow", vfx: "ambush",
   },
   ToxicExplosion: {
     id: "ToxicExplosion", name: "Toxic Explosion", description: "Detonate all Poison on the target, dealing its remaining duration damage immediately and removing Poison.", energyCost: 5,
@@ -65,7 +65,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   LightningStrike: {
     id: "LightningStrike", name: "Lightning Strike", description: "Deal 50% Physical Power as Physical Damage and 50% Magical Power as Lightning Damage, then apply Electrified for 3 turns.", energyCost: 4,
-    cooldownTurns: 4, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 0.5 }], effect: "electrified", statusDuration: 3, icon: "ϟ", branch: "shadow",
+    cooldownTurns: 4, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 0.5 }], effect: "electrified", statusDuration: 3, icon: "ϟ", branch: "shadow", vfx: "lightning_strike",
   },
   Focus: {
     id: "Focus", name: "Focus", description: "Reset all your other ability cooldowns.", energyCost: 1,
@@ -77,26 +77,26 @@ export const ABILITIES: Record<string, Ability> = {
   },
   SharpenedBlade: {
     id: "SharpenedBlade", name: "Sharpened Blade", description: "Deal 100% Physical Power as damage. This attack ignores Guard and Barrier.", energyCost: 2,
-    cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 1, ignoresAbsorption: true, icon: "†", branch: "shadow",
+    cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 1, ignoresAbsorption: true, icon: "†", branch: "shadow", vfx: "sharpened_blade",
   },
   SlowingVenom: {
     id: "SlowingVenom", name: "Slowing Venom", description: "Consume 50% of the target's Poison, apply Slowed, and deal 75% Physical Power as damage.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 0.75, requiredTargetStatus: "poison", consumeTargetStatus: "poison", consumeTargetStatusRatio: 0.5,
-    statusApplications: [{ status: "slowed" }], icon: "⌁", branch: "shadow",
+    statusApplications: [{ status: "slowed" }], icon: "⌁", branch: "shadow", vfx: "slowing_venom",
   },
   WeakeningVenom: {
     id: "WeakeningVenom", name: "Weakening Venom", description: "Consume 50% of the target's Poison, apply Vulnerable and Weaken, and deal 60% Physical Power as damage.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 0.6, requiredTargetStatus: "poison", consumeTargetStatus: "poison", consumeTargetStatusRatio: 0.5,
-    statusApplications: [{ status: "vulnerable" }, { status: "weaken" }], icon: "⌁", branch: "shadow",
+    statusApplications: [{ status: "vulnerable" }, { status: "weaken" }], icon: "⌁", branch: "shadow", vfx: "weakening_venom",
   },
   RabidVenom: {
     id: "RabidVenom", name: "Rabid Venom", description: "Consume 50% of the target's Poison, apply Reckless, and deal 75% Physical Power as damage.", energyCost: 3,
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.75, requiredTargetStatus: "poison", consumeTargetStatus: "poison", consumeTargetStatusRatio: 0.5,
-    statusApplications: [{ status: "reckless" }], icon: "⌁", branch: "shadow",
+    statusApplications: [{ status: "reckless" }], icon: "⌁", branch: "shadow", vfx: "rabid_venom",
   },
   PinpointSlice: {
     id: "PinpointSlice", name: "Pinpoint Slice", description: "Deal 75% Physical Power as damage. Your next damaging ability is guaranteed to critically strike.", energyCost: 3,
-    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.75, grantsNextCritical: true, icon: "⊙", branch: "shadow",
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.75, grantsNextCritical: true, icon: "⊙", branch: "shadow", vfx: "pinpoint_slice",
   },
   TraumaticPuncture: {
     id: "TraumaticPuncture", name: "Traumatic Puncture", description: "Deal 75% Physical Power as damage. A critical strike also applies Weaken and 2 Bleed.", energyCost: 3,
@@ -106,7 +106,7 @@ export const ABILITIES: Record<string, Ability> = {
   SliceAndDice: {
     id: "SliceAndDice", name: "Slice and Dice", description: "Attack six times for 15% Physical Power per hit. Critical hits apply Exhausted. Each hit triggers on-hit effects.", energyCost: 5,
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.15, hits: 6, attackSequenceDurationMultiplier: 1.4,
-    statusApplications: [{ status: "exhausted", onlyOnCritical: true }], icon: "≋", branch: "shadow",
+    statusApplications: [{ status: "exhausted", onlyOnCritical: true }], icon: "≋", branch: "shadow", vfx: "slice_and_dice",
   },
   CheapShot: {
     id: "CheapShot", name: "Cheap Shot", description: "Stun the target and apply 5 Bleed. Can only be used while Stealthed.", energyCost: 4,
@@ -115,33 +115,33 @@ export const ABILITIES: Record<string, Ability> = {
   },
   Pandemic: {
     id: "Pandemic", name: "Pandemic", description: "Copy every debuff on the target to all other living enemies.", energyCost: 4,
-    cooldownTurns: 3, target: "enemy", dealsDamage: false, spreadAllTargetDebuffs: true, icon: "☣", branch: "shadow",
+    cooldownTurns: 3, target: "enemy", dealsDamage: false, spreadAllTargetDebuffs: true, icon: "☣", branch: "shadow", vfx: "pandemic",
   },
   LightSpeed: {
     id: "LightSpeed", name: "Light Speed", description: "Deal 50% Physical Power as Physical Damage and 100% Magical Power as Lightning Damage, apply Electrified, then immediately begin a new turn.", energyCost: 6,
     cooldownTurns: 5,
     target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 1 }],
-    statusApplications: [{ status: "electrified" }], grantsImmediateTurn: true, icon: "ϟ", branch: "shadow",
+    statusApplications: [{ status: "electrified" }], grantsImmediateTurn: true, icon: "ϟ", branch: "shadow", vfx: "light_speed", immediateTurnVfx: "light_speed_turn",
   },
   ChainAssassination: {
     id: "ChainAssassination", name: "Chain Assassination", description: "Deal 125% Physical Power as damage. While Stealthed, gain +25% Critical Strike Chance. A kill refunds the Energy spent and resets the cooldown.", energyCost: 5,
     cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 1.25,
-    critChanceBonusWithStatus: { status: "stealth", bonus: 0.25 }, refundEnergyOnKill: true, resetCooldownOnKill: true, icon: "◈", branch: "shadow",
+    critChanceBonusWithStatus: { status: "stealth", bonus: 0.25 }, refundEnergyOnKill: true, resetCooldownOnKill: true, killVfx: "chain_assassination", icon: "◈", branch: "shadow",
   },
   CullTheWeak: {
     id: "CullTheWeak", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Magical Power as Arcane Damage. Both gain 20% damage per unique debuff on the target.", energyCost: 5,
     cooldownTurns: 3, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.25 }, { damageType: "arcane", powerScaling: 0.25 }],
-    damagePerTargetDebuff: 0.2, icon: "◎", branch: "shadow",
+    damagePerTargetDebuff: 0.2, icon: "◎", branch: "shadow", vfx: "cull_the_weak",
   },
   Epidemic: {
     id: "Epidemic", name: "Epidemic", description: "Apply 10 Poison to all enemies and gain Stealth until the end of your next turn.", energyCost: 3,
     cooldownTurns: 10, target: "all_enemies", dealsDamage: false, effect: "poison", statusStacks: 10,
-    selfStatusApplications: [{ status: "stealth", duration: 2, expiresAtTurnStart: false }], icon: "☣", branch: "shadow",
+    selfStatusApplications: [{ status: "stealth", duration: 2, expiresAtTurnStart: false }], icon: "☣", branch: "shadow", vfx: "epidemic",
   },
   VoltageStab: {
     id: "VoltageStab", name: "Voltage Stab", description: "Deal Lightning Damage equal to 35% of your Magical Power. If the target is Electrified, restore 2% of your maximum Health and gain +2 Energy regeneration next turn.", energyCost: 0,
     cooldownTurns: 2, target: "enemy", damageType: "lightning", powerScaling: 0.35,
-    conditionalSelfEffects: [{ targetHasStatus: "electrified", healPercentMaxHp: 0.02, nextTurnEnergyRegen: 2 }], icon: "ϟ", branch: "shadow",
+    conditionalSelfEffects: [{ targetHasStatus: "electrified", healPercentMaxHp: 0.02, nextTurnEnergyRegen: 2, vfx: "voltage_siphon" }], icon: "ϟ", branch: "shadow",
   },
   crushingBlow: {
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,

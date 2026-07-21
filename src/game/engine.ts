@@ -990,7 +990,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       playerStatuses = addOrRefreshStatus(playerStatuses, createStatusEffect("guard", { stacks: guardAmount, description: `Absorbs ${guardAmount} incoming damage.` }));
       const guardStatus = playerStatuses.find((status) => status.id === "guard")!;
       logs.push(makeLog(`You gain ${guardAmount} Guard.`, statusInfo(guardStatus)));
+      const guardEventIndex = events.length;
       queueStatus(events, pendingEffects, `You gain ${guardAmount} Guard.`, "player", guardStatus);
+      if (ability.vfx) queueAbilityVfx(pendingEffects, guardEventIndex, ability.vfx, "player", "player");
     } else if (ability.energyRestorePercentOfMax) {
       const restored = Math.min(combat.maxEnergy - energy, Math.max(1, Math.round(combat.maxEnergy * ability.energyRestorePercentOfMax)));
       energy += restored;
@@ -1018,18 +1020,20 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (ability.spreadAllTargetDebuffs) {
         const debuffs = target.statuses.filter((status) => status.kind === "debuff");
         const destinations = enemies.filter((enemy) => enemy.hp > 0 && enemy.instanceId !== target.instanceId && !isEnemyStealthed(enemy));
+        const spreadEventIndex = events.length;
+        const names = debuffs.map((status) => status.name).join(", ");
+        events.push(destinations.length > 0 && debuffs.length > 0 ? `${ability.name} spreads every debuff.` : `${ability.name} finds nothing to spread.`);
         destinations.forEach((destination) => {
           debuffs.forEach((status) => {
             const copiedStatus = { ...status };
             enemies = enemies.map((enemy) => enemy.instanceId === destination.instanceId
               ? { ...enemy, stunned: enemy.stunned || copiedStatus.id === "stunned", statuses: addOrRefreshStatus(enemy.statuses, copiedStatus) }
               : enemy);
-            queueStatus(events, pendingEffects, `${destination.name} gains ${copiedStatus.name}.`, destination.instanceId, copiedStatus, copiedStatus.id === "stunned");
+            queueStatus(events, pendingEffects, `${destination.name} gains ${copiedStatus.name}.`, destination.instanceId, copiedStatus, copiedStatus.id === "stunned", spreadEventIndex, target.instanceId);
           });
         });
-        const names = debuffs.map((status) => status.name).join(", ");
         logs.push(makeLog(`${ability.name} spreads ${names || "no debuffs"} from ${target.name}.`, abilityInfo));
-        if (destinations.length === 0 || debuffs.length === 0) events.push(`${ability.name} finds nothing to spread.`);
+        if (destinations.length > 0 && debuffs.length > 0 && ability.vfx) queueAbilityVfx(pendingEffects, spreadEventIndex, ability.vfx, undefined, target.instanceId);
         continue;
       }
       if (ability.spreadTargetStatus) {
@@ -1157,6 +1161,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier });
       queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
+      if (ability.vfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, target.instanceId, "player");
       if (ability.effect === "bleed") {
         const bleed = createPlayerAppliedStatus("bleed", derived);
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, bleed) } : enemy);
@@ -1242,6 +1247,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           events.push(text);
         }
         if (regeneration > 0) queueNextTurnEnergyRegeneration(pendingEffects, eventIndex, regeneration);
+        if (effect.vfx) queueAbilityVfx(pendingEffects, eventIndex, effect.vfx, "player", target.instanceId);
       });
 
       if (ability.consumeTargetStatus) {
@@ -1295,6 +1301,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           abilityCooldowns = remainingCooldowns;
           events.push(`${ability.name}'s cooldown is reset.`);
         }
+        if (ability.killVfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.killVfx, target.instanceId, "player");
       }
       if (hasStatus(playerStatuses, "reckless") && damage > 0) {
         const recoil = Math.max(1, Math.round(damage * 0.5 * getEnergyDefenseMultiplier(derived, energy)));
@@ -1347,6 +1354,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     );
     const turnEventIndex = events.length;
     queueTurn(events, pendingEffects, "Your turn.", combat.activeTurnIndex, combat.turn + 1, false, playerStatuses, energy, 0, refreshedCooldowns);
+    if (ability.immediateTurnVfx) queueAbilityVfx(pendingEffects, turnEventIndex, ability.immediateTurnVfx, "player", "player");
     const statusesBeforeStart = playerStatuses;
     const playerStart = processTurnStart(playerHp, combat.playerMaxHp, playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier, getEnergyDefenseMultiplier(derived, energy), derived.armor, derived.magicResistance);
     playerHp = playerStart.hp;

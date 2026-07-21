@@ -182,7 +182,32 @@ export interface GearSetBonusDefinition extends CombatFeatureBundle {
   description: string;
 }
 
-export type CombatAbilityVfxKind = "poison_cloud" | "neurotoxin" | "toxic_explosion" | "venomborn" | "evasion" | "focus" | "recuperate";
+export type CombatAbilityVfxKind =
+  | "poison_cloud"
+  | "neurotoxin"
+  | "toxic_explosion"
+  | "venomborn"
+  | "evasion"
+  | "focus"
+  | "recuperate"
+  | "guard"
+  | "ambush"
+  | "venomous_strike"
+  | "flurry"
+  | "slice_and_dice"
+  | "lightning_strike"
+  | "sharpened_blade"
+  | "slowing_venom"
+  | "weakening_venom"
+  | "rabid_venom"
+  | "pinpoint_slice"
+  | "pandemic"
+  | "light_speed"
+  | "light_speed_turn"
+  | "chain_assassination"
+  | "cull_the_weak"
+  | "epidemic"
+  | "voltage_siphon";
 
 export interface Ability {
   id: string;
@@ -231,6 +256,8 @@ export interface Ability {
     targetHasStatus: StatusEffectId;
     healPercentMaxHp?: number;
     nextTurnEnergyRegen?: number;
+    /** Presentation emitted only when this conditional benefit resolves. */
+    vfx?: CombatAbilityVfxKind;
   }>;
   /** Incoming Guard and Barrier do not absorb this ability's direct damage. */
   ignoresAbsorption?: boolean;
@@ -246,6 +273,10 @@ export interface Ability {
   refundEnergyOnKill?: boolean;
   /** Clear this ability's cooldown when it kills its target. */
   resetCooldownOnKill?: boolean;
+  /** Presentation emitted only when this ability kills its target. */
+  killVfx?: CombatAbilityVfxKind;
+  /** Presentation emitted when an immediate extra turn is announced. */
+  immediateTurnVfx?: CombatAbilityVfxKind;
   /** Multiplies the complete direct-attack animation sequence without changing combat rules. */
   attackSequenceDurationMultiplier?: number;
   /** Presentation effect emitted when this ability resolves. */
