@@ -53,6 +53,10 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Combustion | 4 | 3 | Burning enemy | Consumes Burn and deals its remaining-duration damage immediately. If the detonation kills, half the consumed stacks, rounded up, spread to every other living enemy. |
 | Arcane Combustion | 4 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds, deals 50% Magical Power as Fire damage per consumed stack, and applies the same number of Burn stacks. |
 | Thundersnow | 5 | 3 | All enemies | Deals a combined 60% Magical Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
+| Self Immolation | 1 | 5 | Enemy | Applies 5 Burn to the player and selected enemy. Feel the Burn heals for the self-Burn's full remaining damage before application; Refreshing Fires grants +2 Energy regeneration next turn. |
+| Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Magical Power for 3 turns; Improved Barrier raises this to 75%. |
+| Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
+| Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player for 1 turn. Electrified Hug also applies Electrified to every enemy. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -68,7 +72,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 110 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 27 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 28, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 128 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 45 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 46, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -185,6 +189,24 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_103 | Combustion | Ability | Fire Within | Any | Unlocks Combustion. |
 | talent_104 | Arcane Combustion | Ability | Fire Within or Invigorate | Any | Unlocks Arcane Combustion. |
 | talent_105 | Thundersnow | Ability | Increased Voltage or Comparative Momentum | Any | Unlocks Thundersnow. |
+| talent_106 | Arcane Knowledge | Passive | Arcane Overload | Any | +2 Intelligence; Arcane Wounds grant Arcane Blast 15% damage per stack. |
+| talent_107 | Lower Temperature | Passive | Deep Freeze | Any | Frostbolt has a 50% base chance to apply Frozen. |
+| talent_108 | Rain | Passive | Thundersnow | Any | Thundersnow applies Wet to every enemy instead of Slowed. |
+| talent_109 | Intense Beam | Passive | Thunderstorm | Any | All four Lightning Beam hits strike the selected target. |
+| talent_110 | Feedback | Passive | Arcane Combustion | Any | +1 Energy regeneration. |
+| talent_111 | Charring Fires | Passive | Combustion | Any | Burn deals 10% more damage. |
+| talent_112 | Self Immolation | Ability | Charring Fires | Any | Unlocks Self Immolation. |
+| talent_113 | Arcane Barrier | Ability | Arcane Knowledge or Charring Fires | Any | Unlocks Arcane Barrier. |
+| talent_114 | Frozen Path | Ability | Lower Temperature or Intense Beam | Any | Unlocks Frozen Path. |
+| talent_115 | Conductor | Ability | Intense Beam | Any | Unlocks Conductor. |
+| talent_116 | Improved Barrier | Passive | Arcane Barrier | Any | Arcane Barrier scales at 75% Magical Power. |
+| talent_117 | Reflective Barrier | Passive | Improved Barrier | Any | Reflects 20% of damage absorbed specifically by Barrier. |
+| talent_118 | Barbed Boots | Passive | Frozen Path | Any | Frozen Path grants +40% Dodge Chance. |
+| talent_119 | Ice Spikes | Passive | Barbed Boots | Any | An enemy that misses takes 20% Magical Power as Frost damage. |
+| talent_120 | Feel the Burn | Passive | Self Immolation | Any | Self Immolation heals for the self-Burn's full remaining damage before applying it. |
+| talent_121 | Refreshing Fires | Passive | Feel the Burn | Any | Self Immolation grants +2 Energy regeneration next turn. |
+| talent_122 | Electrified Hug | Passive | Conductor | Any | Conductor also Electrifies all enemies. |
+| talent_123 | Shell Shocked | Passive | Electrified Hug | Any | While Stunned, the player takes only 20% damage from all sources. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 
@@ -208,6 +230,7 @@ The duration is the default duration created by the status library. Ability or t
 | Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default, subject to the 50% Dodge cap; Enduring Evasion changes magnitude and duration. |
 | Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
 | Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |
+| Frozen Path | 3 turns | No | Grants +30% Dodge Chance by default, subject to the 50% Dodge cap. |
 
 ### Debuffs
 
@@ -227,6 +250,7 @@ The duration is the default duration created by the status library. Ability or t
 | Electrified | 3 turns | No | Has a 10% chance at turn start to become Stunned and skip that turn. |
 | Cold | 3 turns | No | Takes 50% more Frost damage and 50% less Lightning damage. |
 | Charred | 3 turns | No | Takes 50% more Fire damage and 50% less Frost damage. |
+| Frozen | 1 turn | No | Cannot act and skips the next turn; ends immediately when damage is taken. |
 | Arcane Wound | 3 turns | Yes | Each stack increases Arcane Blast damage against the afflicted target by 10%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |

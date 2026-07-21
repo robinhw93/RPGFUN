@@ -65,6 +65,8 @@ export type StatusEffectId =
   | "charred"
   | "arcaneWound"
   | "arcaneCharge"
+  | "frozen"
+  | "frozenPath"
   | "sleep";
 
 export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
@@ -107,6 +109,8 @@ export interface PassiveBonuses {
   statusApplicationCompanions?: Partial<Record<StatusEffectId, StatusEffectId[]>>;
   /** Incoming damage reduction per point of currently unspent Energy. */
   incomingDamageReductionPerEnergy?: number;
+  /** Final incoming-damage multiplier while the character is Stunned. */
+  incomingDamageMultiplierWhileStunned?: number;
   /** Fraction of Max Health restored the first time lethal damage is taken each combat. */
   deathPreventionHealRatio?: number;
   /** Stealth duration granted by the combat's death-prevention effect. */
@@ -121,12 +125,13 @@ export interface CombatTriggerCondition {
   minimumDamage?: number;
   targetHasAnyStatus?: string[];
   appliedAnyStatus?: StatusEffectId[];
+  absorbedByAnyStatus?: Array<"guard" | "barrier">;
   /** Matches only when direct damage crosses from at-or-above to below this Health ratio. */
   targetHealthCrossedBelow?: number;
 }
 
 export type CombatEffectDefinition =
-  | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scaling?: number }
+  | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scalingPower?: "physical" | "magical"; scaling?: number; triggerDamageRatio?: number; triggerAbsorbedStatus?: "guard" | "barrier" }
   | { type: "damage_percent_current_hp"; ratio: number; target?: CombatEffectTarget; damageType?: DamageType }
   | { type: "apply_status"; status: StatusEffect; target?: CombatEffectTarget }
   | { type: "heal"; amount: number; target?: "self" }
@@ -174,6 +179,13 @@ export interface AbilityModifierDefinition {
   statusDuration?: number;
   statusMagnitude?: number;
   statusExpiresAtTurnStart?: boolean;
+  statusStackPowerScaling?: { power: "physical" | "magical"; scaling: number };
+  replaceStatusApplication?: { from: StatusEffectId; to: StatusEffectId };
+  additionalStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
+  randomTargetPerHit?: boolean;
+  damagePerTargetStatusStackMultiplierDelta?: number;
+  preHealSelfStatusRemainingDamage?: StatusEffectId;
+  nextTurnEnergyRegenBonus?: number;
   applyStatusAfterConsume?: { status: StatusEffectId; stacks?: number; duration?: number };
   detonationRetainedStackRatio?: number;
   statusConsumptionRatio?: number;
@@ -234,7 +246,11 @@ export type CombatAbilityVfxKind =
   | "combustion"
   | "combustion_spread"
   | "arcane_combustion"
-  | "thundersnow";
+  | "thundersnow"
+  | "self_immolation"
+  | "arcane_barrier"
+  | "frozen_path"
+  | "conductor";
 
 export interface Ability {
   id: string;
@@ -290,6 +306,10 @@ export interface Ability {
   freeAgainstTargetStatus?: StatusEffectId;
   /** Statuses applied to the player after the ability resolves. */
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; expiresAtTurnStart?: boolean }>;
+  /** Presentation emitted when the ability applies one of its configured self statuses. */
+  selfStatusVfx?: CombatAbilityVfxKind;
+  /** Scales the primary status stack amount from one of the character's powers. */
+  statusStackPowerScaling?: { power: "physical" | "magical"; scaling: number };
   /** Reusable self-benefits granted when the struck target already has a required status. */
   conditionalSelfEffects?: Array<{
     targetHasStatus: StatusEffectId;

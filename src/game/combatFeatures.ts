@@ -42,6 +42,9 @@ export interface CombatTriggerContext {
   damageType?: DamageType;
   critical?: boolean;
   damage?: number;
+  absorbedDamage?: number;
+  absorbedByStatusIds?: Array<"guard" | "barrier">;
+  absorbedDamageByStatus?: Partial<Record<"guard" | "barrier", number>>;
   targetStatusIds?: string[];
   appliedStatusIds?: StatusEffect["id"][];
   targetHpBeforePercent?: number;
@@ -85,6 +88,7 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   lootRarity: 0,
   chanceEffect: 0,
   incomingDamageReductionPerEnergy: 0,
+  incomingDamageMultiplierWhileStunned: 1,
   deathPreventionHealRatio: 0,
   deathPreventionStealthDuration: 0,
   statusDamage: {},
@@ -120,6 +124,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.lootRarity += passive.lootRarity ?? 0;
   target.chanceEffect += passive.chanceEffect ?? 0;
   target.incomingDamageReductionPerEnergy += passive.incomingDamageReductionPerEnergy ?? 0;
+  target.incomingDamageMultiplierWhileStunned = Math.min(target.incomingDamageMultiplierWhileStunned, passive.incomingDamageMultiplierWhileStunned ?? 1);
   target.deathPreventionHealRatio = Math.max(target.deathPreventionHealRatio, passive.deathPreventionHealRatio ?? 0);
   target.deathPreventionStealthDuration = Math.max(target.deathPreventionStealthDuration, passive.deathPreventionStealthDuration ?? 0);
   Object.entries(passive.statusDamage ?? {}).forEach(([statusId, amount]) => {
@@ -305,6 +310,7 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   if (conditions.minimumDamage !== undefined && (context.damage ?? 0) < conditions.minimumDamage) return false;
   if (conditions.targetHasAnyStatus?.length && !conditions.targetHasAnyStatus.some((id) => context.targetStatusIds?.includes(id))) return false;
   if (conditions.appliedAnyStatus?.length && !conditions.appliedAnyStatus.some((id) => context.appliedStatusIds?.includes(id))) return false;
+  if (conditions.absorbedByAnyStatus?.length && !conditions.absorbedByAnyStatus.some((id) => context.absorbedByStatusIds?.includes(id))) return false;
   if (conditions.targetHealthCrossedBelow !== undefined) {
     const threshold = conditions.targetHealthCrossedBelow;
     if (context.targetHpBeforePercent === undefined || context.targetHpAfterPercent === undefined) return false;

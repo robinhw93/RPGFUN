@@ -258,6 +258,8 @@ This sequencing guarantees that:
 - Combustion erupts on its target. A lethal detonation sends visible fire trails to every surviving enemy before the copied Burn appears.
 - Arcane Combustion collapses Arcane Wounds into a mixed arcane-fire impact, scaling both Fire damage and new Burn stacks from the consumed stack count.
 - Thundersnow combines frost and lightning feedback on every enemy and selects one random target for Electrified.
+- Self Immolation erupts on both caster and target; Arcane Barrier forms a violet shield seal; Frozen Path creates a fast icy trail; Conductor fills the enemy side with a synchronized lightning field while shocking the caster.
+- Frozen applications flash with an ice seal, and Frozen combatants retain a clear blue treatment until the control ends or damage breaks it.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
 - The turn-order highlight moves when the turn message is shown.

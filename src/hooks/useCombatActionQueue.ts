@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { ABILITIES } from "../game/data";
-import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCostForTarget } from "../game/combatFeatures";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "../game/combatFeatures";
 import { endPlayerTurn, selectEnemyTarget, useAbility } from "../game/engine";
 import { isCombatSequencePending } from "../game/combatSequence";
 import { isStatusEffectId } from "../game/statusEffects";
@@ -37,13 +37,19 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     }
     const ability = ABILITIES[action.abilityId];
     if (!ability) return;
+    const modifiers = getCharacterAbilityModifiers(character, ability.id);
     const targetStatuses = targetStatusIds.get(action.targetId) ?? new Set<StatusEffectId>();
     const cost = nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(character, ability, targetStatuses);
     energy = Math.max(0, energy - cost);
     nextAbilityIsFree = false;
     if (ability.freeAgainstTargetStatus) targetStatuses.delete(ability.freeAgainstTargetStatus);
     const affectedTargetStatusSets = ability.target === "all_enemies" ? [...targetStatusIds.values()] : [targetStatuses];
-    ability.statusApplications?.forEach((application) => affectedTargetStatusSets.forEach((statuses) => statuses.add(application.status)));
+    const replacements = modifiers.flatMap((modifier) => modifier.replaceStatusApplication ? [modifier.replaceStatusApplication] : []);
+    const applications = [...(ability.statusApplications ?? []), ...modifiers.flatMap((modifier) => modifier.additionalStatusApplications ?? [])];
+    applications.forEach((application) => {
+      const replacement = replacements.find((candidate) => candidate.from === application.status);
+      affectedTargetStatusSets.forEach((statuses) => statuses.add(replacement?.to ?? application.status));
+    });
     if (ability.effect && ability.target !== "self" && isStatusEffectId(ability.effect)) {
       affectedTargetStatusSets.forEach((statuses) => statuses.add(ability.effect as StatusEffectId));
     }
@@ -80,7 +86,7 @@ export function useCombatActionQueue(
       const ability = ABILITIES[abilityId];
       if (!combat || !ability || combat.outcome !== "active" || !combat.initiativeRevealed || activeActor?.kind !== "player") return current;
       if (!currentGame.character.equippedAbilities.includes(abilityId)) return current;
-      if (combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep")) return current;
+      if (combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return current;
       const projection = projectCombatActionQueue(combat, currentGame.character, current);
       const targetStatuses = projection.targetStatusIds.get(combat.selectedEnemyId) ?? [];
       const energyCost = projection.nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(currentGame.character, ability, targetStatuses);
@@ -106,7 +112,7 @@ export function useCombatActionQueue(
     const combat = game.adventure.combat;
     if (!action || !combat || combat.outcome !== "active" || !combat.initiativeRevealed) return;
     const activeActor = combat.turnOrder[combat.activeTurnIndex];
-    if (activeActor?.kind !== "player" || combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep")) return;
+    if (activeActor?.kind !== "player" || combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
     const sequencePending = isCombatSequencePending(combat);
     const canInterruptTurnAnnouncement = sequencePending && playerTurnReadyEventId === combat.eventId;
     if ((sequencePending && !canInterruptTurnAnnouncement) || combat.attackingActorId) return;

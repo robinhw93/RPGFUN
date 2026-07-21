@@ -44,6 +44,8 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   charred: { id: "charred", name: "Charred", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 50% more Fire Damage and 50% less Frost Damage." },
   arcaneWound: { id: "arcaneWound", name: "Arcane Wound", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Each stack increases Arcane Blast damage against this target by 10%." },
   arcaneCharge: { id: "arcaneCharge", name: "Arcane Charge", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "For 3 turns, your next Arcane Blast against this target costs 0 Energy and consumes Arcane Charge." },
+  frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
+  frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
 };
 
@@ -165,8 +167,11 @@ export function getCriticalChanceBonus(statuses: StatusEffect[]): number {
 }
 
 export function getDodgeChanceBonus(statuses: StatusEffect[]): number {
-  const evasion = statuses.find((status) => status.id === "evasion");
-  return evasion ? evasion.magnitude ?? 0.6 : 0;
+  return statuses.reduce((bonus, status) => {
+    if (status.id === "evasion") return bonus + (status.magnitude ?? 0.6);
+    if (status.id === "frozenPath") return bonus + (status.magnitude ?? 0.3);
+    return bonus;
+  }, 0);
 }
 
 export function getEnergyRegeneration(regeneration: number, statuses: StatusEffect[]): number {

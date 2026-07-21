@@ -177,6 +177,8 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   electrified: Zap,
   cold: Snowflake,
   charred: Flame,
+  frozen: Snowflake,
+  frozenPath: Footprints,
   arcaneWound: CircleDot,
   arcaneCharge: Sparkles,
   sleep: Moon,
@@ -794,6 +796,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
   const bleedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "bleed");
   const electrifiedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "electrified");
+  const frozenAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "frozen");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
   const poisonCloudAnimations = abilityAnimations.filter((animation) => animation.kind === "poison_cloud");
@@ -808,6 +811,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const lightSpeedAnimations = abilityAnimations.filter((animation) => animation.kind === "light_speed");
   const voltageSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "voltage_siphon");
   const combustionSpreadAnimations = abilityAnimations.filter((animation) => animation.kind === "combustion_spread");
+  const conductorAnimations = abilityAnimations.filter((animation) => animation.kind === "conductor" && !animation.targetId);
   const arcanistProjectileAnimations = abilityAnimations.filter((animation) => (
     animation.kind === "arcane_bolt"
     || animation.kind === "frostbolt"
@@ -821,7 +825,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
-  const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep");
+  const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen");
   const playerInputUnavailable = initiativePlaying || playerIncapacitated;
   const handleCombatEventShown = (eventId: number, eventIndex: number) => {
     if (eventRevealsPlayerTurn(combat, eventIndex)) onPlayerTurnReady(eventId);
@@ -838,11 +842,12 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         <article
           key="player"
           data-combatant-id="player"
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${playerStealthed ? "stealthed" : ""} ${evasionAnimations.length > 0 ? "evasion-cast" : ""} ${focusAnimations.length > 0 ? "focus-cast" : ""} ${recuperateAnimations.length > 0 ? "recuperate-cast" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${playerStealthed ? "stealthed" : ""} ${combat.playerStatuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${evasionAnimations.length > 0 ? "evasion-cast" : ""} ${focusAnimations.length > 0 ? "focus-cast" : ""} ${recuperateAnimations.length > 0 ? "recuperate-cast" : ""}`}
         >
           {poisonAnimations.filter((animation) => animation.targetId === "player").map((animation) => <PoisonApplicationEffect key={animation.id} />)}
           {bleedAnimations.filter((animation) => animation.targetId === "player").map((animation) => <BleedApplicationEffect key={animation.id} />)}
           {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
+          {frozenAnimations.some((animation) => animation.targetId === "player") && <FrozenApplicationEffect />}
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
           {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}
@@ -863,6 +868,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
           {poisonCloudAnimations.map((animation) => <PoisonCloudEffect key={animation.id} />)}
           {epidemicAnimations.map((animation) => <EpidemicEffect key={animation.id} />)}
+          {conductorAnimations.map((animation) => <ConductorFieldEffect key={animation.id} />)}
           {combat.enemies.map((enemy) => {
             const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
             const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
@@ -875,7 +881,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               tabIndex={targetable ? 0 : -1}
               aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -888,6 +894,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {poisonAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <PoisonApplicationEffect key={animation.id} />)}
               {bleedAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <BleedApplicationEffect key={animation.id} />)}
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
+              {frozenAnimations.some((animation) => animation.targetId === enemy.instanceId) && <FrozenApplicationEffect />}
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
@@ -1373,6 +1380,14 @@ function RecuperateCastEffect() {
   );
 }
 
+function FrozenApplicationEffect() {
+  return <span className="frozen-application-effect" aria-hidden="true"><Snowflake /><i /><i /><i /><i /></span>;
+}
+
+function ConductorFieldEffect() {
+  return <span className="conductor-field-effect" aria-hidden="true"><Zap />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--conductor-x": `${5 + index * 15}%`, "--conductor-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
+}
+
 function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "guard") {
     return <span className="ability-impact-effect guard-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /></span>;
@@ -1439,6 +1454,18 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   }
   if (kind === "thundersnow") {
     return <span className="ability-impact-effect thundersnow-impact" aria-hidden="true"><Snowflake /><Zap />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--thundersnow-x": `${8 + index * 17}%`, "--thundersnow-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
+  }
+  if (kind === "self_immolation") {
+    return <span className="ability-impact-effect self-immolation-impact" aria-hidden="true"><Flame />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--immolation-angle": `${index * 51}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "arcane_barrier") {
+    return <span className="ability-impact-effect arcane-barrier-impact" aria-hidden="true"><ShieldPlus /><i /><i /><i /></span>;
+  }
+  if (kind === "frozen_path") {
+    return <span className="ability-impact-effect frozen-path-impact" aria-hidden="true"><Footprints /><Snowflake /><i /><i /><i /></span>;
+  }
+  if (kind === "conductor") {
+    return <span className="ability-impact-effect conductor-impact" aria-hidden="true"><Zap /><i /><i /><i /><i /></span>;
   }
   return null;
 }
