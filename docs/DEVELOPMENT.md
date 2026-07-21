@@ -159,6 +159,7 @@ Each talent defines:
 - `requires` stores one side of each bidirectional connection. Runtime also discovers talents that point back to the node, so never store the same edge in both directions.
 - Every connection uses the same rule: any one unlocked adjacent node is enough.
 - Optional `abilityId`.
+- Ability talents receive editor-facing Energy cost and cooldown metadata from that live ability definition, keeping existing nodes synchronized without duplicating combat rules.
 - Optional data-driven `combat` bundle.
 
 Changing or removing IDs is a save-migration decision. Existing saves store unlocked talent IDs and equipped ability IDs.

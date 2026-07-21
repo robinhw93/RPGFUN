@@ -152,8 +152,8 @@ function createInitialDraft(): TalentDraft {
         shape: talent.shape,
         passiveBonuses: passiveBonusesFromTalent(talent),
         abilityId: talent.abilityId ?? "",
-        abilityEnergyCost: ability?.energyCost ?? 0,
-        abilityCooldownTurns: ability?.cooldownTurns ?? 0,
+        abilityEnergyCost: talent.abilityEnergyCost ?? ability?.energyCost ?? 0,
+        abilityCooldownTurns: talent.abilityCooldownTurns ?? ability?.cooldownTurns ?? 0,
         effectNotes: talent.effectNotes ?? "",
       };
     }),

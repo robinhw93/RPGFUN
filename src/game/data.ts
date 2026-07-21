@@ -99,7 +99,7 @@ export const ABILITIES: Record<string, Ability> = {
 
 export const TALENT_TREE_CANVAS = { width: 3410, height: 2400 } as const;
 
-export const TALENTS: Talent[] = [
+const TALENT_NODES: Talent[] = [
   { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 32.258, y: 50 }, icon: "✦", shape: "square" },
   { id: "brute_1", name: "Brute", description: "+2 Strength.", branch: "brute", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 27.419, y: 50 }, icon: "◆", shape: "square", combat: { passive: { stats: { strength: 2 } } } },
   { id: "shadow_1", name: "Shadow", description: "+2 Agility. Unlocks Quick Slash.", branch: "shadow", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 37.097, y: 50 }, icon: "◈", shape: "square", abilityId: "quickSlash", combat: { passive: { stats: { agility: 2 } } } },
@@ -144,6 +144,15 @@ export const TALENTS: Talent[] = [
   { id: "talent_38", name: "Contagion", description: "Copy all Poison stacks from the selected enemy to another random living enemy.", branch: "shadow", kind: "ability", tier: 4, cost: 1, requires: ["talent_3"], position: { x: 45.96774193548387, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "Contagion", effectNotes: "Cost: 2 Energy\nCooldown: 3 turns\nCopy all Poison stacks from the selected enemy to another random living enemy." },
   { id: "talent_39", name: "New Talent", description: "Describe what this talent does for the player.", branch: "shadow", kind: "ability", tier: 4, cost: 1, requires: ["talent_2"], position: { x: 45.96774193548387, y: 39.84375 }, icon: "✦", shape: "square" },
 ];
+
+export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {
+  const ability = talent.kind === "ability" && talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
+  return ability ? {
+    ...talent,
+    abilityEnergyCost: ability.energyCost,
+    abilityCooldownTurns: ability.cooldownTurns ?? 0,
+  } : talent;
+});
 
 export const ENEMIES: Record<string, EnemyTemplate> = {
   ashHound: { id: "ashHound", name: "Ash Hound", title: "Feral Beast", maxHp: 28, power: 7, armor: 1, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.08, damageType: "physical", energyCost: 3, intentText: "Raking Claws · 7 damage", attackDescription: "Rakes the target with ash-caked claws. Costs 3 Energy and applies Bleed when it deals damage.", onHitEffect: "bleed", accent: "#d47a43" },

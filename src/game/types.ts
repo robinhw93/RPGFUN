@@ -215,6 +215,10 @@ export interface Talent {
   icon: string;
   shape: "circle" | "square";
   abilityId?: string;
+  /** Editor metadata mirrored from the referenced live ability definition. */
+  abilityEnergyCost?: number;
+  /** Editor metadata mirrored from the referenced live ability definition. */
+  abilityCooldownTurns?: number;
   /** Design notes shown when this node becomes the starting point for a fresh devtool draft. */
   effectNotes?: string;
   combat?: CombatFeatureBundle;
