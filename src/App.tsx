@@ -20,7 +20,7 @@ import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progr
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
-import { areTalentRequirementsMet } from "./game/talentRequirements";
+import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
@@ -336,7 +336,7 @@ function App() {
       if (current.adventure.combat?.outcome === "active") return current;
       const talent = TALENTS.find((item) => item.id === talentId);
       if (!talent || current.character.unlockedTalents.includes(talentId) || talent.cost > current.character.talentPoints) return current;
-      if (!areTalentRequirementsMet(talent, current.character.unlockedTalents)) return current;
+      if (!areTalentRequirementsMet(talent, current.character.unlockedTalents, TALENTS)) return current;
       const equipped = talent.abilityId && current.character.equippedAbilities.length < 6
         ? [...current.character.equippedAbilities, talent.abilityId]
         : current.character.equippedAbilities;
@@ -1558,10 +1558,10 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
 }) {
   const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
   const unlocked = character.unlockedTalents.includes(talent.id);
-  const available = areTalentRequirementsMet(talent, character.unlockedTalents);
+  const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
   const abilityEquipped = Boolean(ability && character.equippedAbilities.includes(ability.id));
   const loadoutFull = character.equippedAbilities.length >= 6;
-  const requiredNames = talent.requires
+  const requiredNames = getTalentConnectionIds(talent.id, TALENTS)
     .filter((id) => !character.unlockedTalents.includes(id))
     .map((id) => TALENTS.find((candidate) => candidate.id === id)?.name ?? id);
   const canUnlock = !locked && available && character.talentPoints >= talent.cost && !unlocked;
@@ -1761,7 +1761,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
             </svg>
             {TALENTS.map((talent) => {
               const unlocked = character.unlockedTalents.includes(talent.id);
-              const available = areTalentRequirementsMet(talent, character.unlockedTalents);
+              const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
               const state = unlocked ? "unlocked" : available ? "available" : "locked";
               const position = nodePositions.get(talent.id)!;
               const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";

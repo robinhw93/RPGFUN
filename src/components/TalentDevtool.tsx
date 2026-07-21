@@ -212,11 +212,29 @@ function ensureCanvasRoom(draft: TalentDraft): TalentDraft {
   };
 }
 
+function normalizeUndirectedConnections(draft: TalentDraft): TalentDraft {
+  const nodeIds = new Set(draft.nodes.map((node) => node.id));
+  const seen = new Set<string>();
+  return {
+    ...draft,
+    nodes: draft.nodes.map((node) => ({
+      ...node,
+      requires: node.requires.filter((connectionId) => {
+        if (connectionId === node.id || !nodeIds.has(connectionId)) return false;
+        const edgeId = [node.id, connectionId].sort().join("::");
+        if (seen.has(edgeId)) return false;
+        seen.add(edgeId);
+        return true;
+      }),
+    })),
+  };
+}
+
 function loadDraft(): TalentDraft {
   try {
     const stored = window.localStorage.getItem(TALENT_DRAFT_STORAGE_KEY);
     const parsed: unknown = stored ? JSON.parse(stored) : null;
-    const loaded = isStoredTalentDraft(parsed) ? normalizeDraft(parsed) : createInitialDraft();
+    const loaded = normalizeUndirectedConnections(isStoredTalentDraft(parsed) ? normalizeDraft(parsed) : createInitialDraft());
     if (window.localStorage.getItem(TALENT_REQUIREMENT_ANY_MIGRATION_KEY) === "true") return loaded;
     const migrated = { ...loaded, nodes: loaded.nodes.map((node) => ({ ...node, requireMode: "any" as const })) };
     window.localStorage.setItem(TALENT_DRAFT_STORAGE_KEY, JSON.stringify(migrated));
@@ -396,10 +414,19 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
 
   const toggleRequirement = (requirementId: string) => {
     if (!selected || requirementId === selected.id) return;
-    const requires = selected.requires.includes(requirementId)
-      ? selected.requires.filter((id) => id !== requirementId)
-      : [...selected.requires, requirementId];
-    updateSelected({ requires });
+    const reverse = draft.nodes.find((node) => node.id === requirementId);
+    const connected = selected.requires.includes(requirementId) || Boolean(reverse?.requires.includes(selected.id));
+    setDraft((current) => ({
+      ...current,
+      nodes: current.nodes.map((node) => {
+        if (node.id === selected.id) {
+          const withoutConnection = node.requires.filter((id) => id !== requirementId);
+          return { ...node, requires: connected ? withoutConnection : [...withoutConnection, requirementId] };
+        }
+        if (node.id === requirementId) return { ...node, requires: node.requires.filter((id) => id !== selected.id) };
+        return node;
+      }),
+    }));
   };
 
   const addPassiveBonus = () => {
@@ -667,7 +694,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
               <div className="talent-requirement-list">
                 {draft.nodes.filter((node) => node.id !== selected.id).map((node) => (
                   <label key={node.id}>
-                    <input type="checkbox" checked={selected.requires.includes(node.id)} onChange={() => toggleRequirement(node.id)} />
+                    <input type="checkbox" checked={selected.requires.includes(node.id) || node.requires.includes(selected.id)} onChange={() => toggleRequirement(node.id)} />
                     <span className={`branch-dot ${node.branch}`} />
                     <strong>{node.name}</strong>
                     <small>{node.id}</small>

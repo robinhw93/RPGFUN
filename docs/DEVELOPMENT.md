@@ -156,7 +156,8 @@ Each talent defines:
 - Stable `id` used by saves and connections.
 - Player-facing name and description.
 - Branch, kind, tier, point cost, position, icon, and shape.
-- `requires` plus optional `requireMode` (`any` by default; use `all` only for an explicit multi-path requirement).
+- `requires` stores one side of each bidirectional connection. Runtime also discovers talents that point back to the node, so never store the same edge in both directions.
+- Optional `requireMode` is `any` by default; use `all` only when every adjacent node must be unlocked.
 - Optional `abilityId`.
 - Optional data-driven `combat` bundle.
 
@@ -235,7 +236,7 @@ The editor supports:
 - Player-facing descriptions, branches, class/passive/ability types, tiers, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
 - Ability-ID references and free-form effect/proc notes.
-- AND (**All connected talents**) or OR (**Any connected talent**) prerequisite rules.
+- Bidirectional connections with AND (**All connected talents**) or OR (**Any connected talent**) unlock rules.
 - Searchable buff/debuff reference.
 - Toggleable snap-to-grid.
 - Pan, zoom from 15% to 200%, and fit-to-view.

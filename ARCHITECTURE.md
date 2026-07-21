@@ -310,9 +310,12 @@ The UI may preview and compare, but only these helpers authorize the transaction
 
 `areTalentRequirementsMet` is shared by visual availability and the actual unlock action:
 
-- Empty `requires` is available.
+- `getTalentConnectionIds` treats every stored edge as undirected by combining a node's own `requires` IDs with every node that references it.
+- A node with no adjacent connections is available.
 - Missing or `requireMode: "any"` uses `some` and is the default.
-- `requireMode: "all"` uses `every` only when explicitly configured.
+- `requireMode: "all"` uses `every` across all adjacent nodes only when explicitly configured.
+
+Each edge should be stored once. The runtime tree draws that one line, while availability and modal requirement text work from either end. The Talent Editor presents the checkbox as connected from both node perspectives, removes either stored orientation when disconnected, and normalizes duplicate reciprocal edges on load.
 
 The runtime tree derives its minimum bounding box from node world positions inside `TALENT_TREE_CANVAS`, then adds padding. It pans by scroll offset and zooms a scaled world surface between 20% and 160%. Fit uses the available viewport. The editor has independent zoom/canvas rules.
 

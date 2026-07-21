@@ -1,12 +1,23 @@
 import type { Talent } from "./types";
 
+export function getTalentConnectionIds(talentId: string, talents: readonly Talent[]): string[] {
+  const talent = talents.find((candidate) => candidate.id === talentId);
+  if (!talent) return [];
+  return [...new Set([
+    ...talent.requires,
+    ...talents.filter((candidate) => candidate.requires.includes(talentId)).map((candidate) => candidate.id),
+  ])];
+}
+
 export function areTalentRequirementsMet(
-  talent: Pick<Talent, "requires" | "requireMode">,
+  talent: Pick<Talent, "id" | "requires" | "requireMode">,
   unlockedTalents: readonly string[],
+  talents: readonly Talent[],
 ): boolean {
-  if (talent.requires.length === 0) return true;
+  const connections = getTalentConnectionIds(talent.id, talents);
+  if (connections.length === 0) return true;
   const unlocked = new Set(unlockedTalents);
   return talent.requireMode === "all"
-    ? talent.requires.every((requirement) => unlocked.has(requirement))
-    : talent.requires.some((requirement) => unlocked.has(requirement));
+    ? connections.every((connection) => unlocked.has(connection))
+    : connections.some((connection) => unlocked.has(connection));
 }

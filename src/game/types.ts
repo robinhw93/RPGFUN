@@ -206,6 +206,7 @@ export interface Talent {
   branch: TalentBranch;
   tier: number;
   cost: number;
+  /** Stores each undirected connection once; runtime also discovers nodes that point back to this talent. */
   requires: string[];
   /** Defaults to any. Use all only when every connected talent must be unlocked. */
   requireMode?: TalentRequirementMode;

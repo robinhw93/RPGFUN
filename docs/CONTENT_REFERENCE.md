@@ -44,9 +44,9 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 The live tree has 41 nodes: the origin, three first-direction class nodes, and 37 later Shadow nodes. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
-**Any** is the default: one listed prerequisite is enough. **All** is available only for nodes explicitly configured to require every listed prerequisite.
+Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. **Any** is the default, so one adjacent unlocked node is enough. **All** is available only for nodes explicitly configured to require every adjacent node.
 
-| ID | Talent | Type | Prerequisite | Rule | Effect |
+| ID | Talent | Type | Declared connection(s) | Rule | Effect |
 | --- | --- | --- | --- | --- | --- |
 | origin | Wayfarer's Spark | Class | None | — | Starting node; unlocks Strike and Guard. |
 | brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength. |
@@ -61,8 +61,8 @@ The live tree has 41 nodes: the origin, three first-direction class nodes, and 3
 | talent_7 | Stamina | Passive | Honed Skills | Any | +1 Max Energy. |
 | talent_8 | Setup | Passive | Precision | Any | +2 Initiative. |
 | talent_9 | Spell Dodger | Passive | Precision | Any | +2 Magic Resistance. |
-| talent_10 | Poison Cloud | Ability | Spell Dodger or Fatality | Any | Unlocks Poison Cloud. |
-| talent_11 | Stealth | Ability | Stamina or Fatality | Any | Unlocks Stealth. |
+| talent_10 | Poison Cloud | Ability | Spell Dodger | Any | Unlocks Poison Cloud. Fatality declares the other edge. |
+| talent_11 | Stealth | Ability | Stamina | Any | Unlocks Stealth. Fatality declares the other edge. |
 | talent_12 | Poison Coating | Passive | Setup | Any | Every hit has a 50% chance, plus Luck's chance-effect bonus, to apply 1 Poison. |
 | talent_13 | Adrenaline | Passive | Evasion (passive) | Any | Every hit has a 10% chance, plus Luck's chance-effect bonus, to restore 1 Energy. |
 | talent_14 | Evasion | Ability | Adrenaline | Any | Unlocks Evasion. |
