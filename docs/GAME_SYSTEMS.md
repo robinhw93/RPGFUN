@@ -242,6 +242,7 @@ This sequencing guarantees that:
 - Energy cannot exceed Max Energy and cannot be spent below zero.
 - A cooldown is measured in player turns and decreases only when the next player turn begins.
 - Focus clears every other cooldown, then keeps its own six-turn cooldown.
+- Recuperate presents its cast and Energy restoration as one `You gain X Energy.` combat message.
 
 The segmented Energy bar previews Energy that will be available after the next regeneration.
 

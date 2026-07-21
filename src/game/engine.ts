@@ -807,6 +807,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     : (combat.abilityCooldowns ?? {});
   const abilityInfo: InspectableInfo = { title: ability.name, description: `${ability.description} Costs ${ability.energyCost} Energy.`, category: "ability" };
   logs.push(makeLog(`You use ${ability.name}.`, abilityInfo));
+  const abilityUseEventIndex = events.length;
   events.push(`You use ${ability.name}.`);
   if (abilityIsFree) {
     playerStatuses = playerStatuses.filter((status) => status.id !== "distraction");
@@ -856,8 +857,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     } else if (ability.energyRestorePercentOfMax) {
       const restored = Math.min(combat.maxEnergy - energy, Math.max(1, Math.round(combat.maxEnergy * ability.energyRestorePercentOfMax)));
       energy += restored;
-      logs.push(makeLog(`You restore ${restored} Energy.`, abilityInfo));
-      events.push(`You restore ${restored} Energy.`);
+      const energyText = `You gain ${restored} Energy.`;
+      logs.push(makeLog(energyText, abilityInfo));
+      events[abilityUseEventIndex] = energyText;
     } else if (ability.effect && isStatusEffectId(ability.effect) && !derived.statusImmunities.includes(ability.effect)) {
       const status = createPlayerAppliedStatus(ability.effect, derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
       playerStatuses = addOrRefreshStatus(playerStatuses, status);
