@@ -255,7 +255,7 @@ All status damage is rounded to a whole number after multiplying by stacks.
 
 ```text
 Bleed per stack  = 2 + source Physical Power × 0.25
-Poison per stack = 2 + source Magical Power × 0.30
+Poison per stack = 2 + source Magical Power × 0.15
 Burn per stack   = 3 + source Magical Power × 0.30
 ```
 

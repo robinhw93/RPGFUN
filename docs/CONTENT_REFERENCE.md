@@ -162,7 +162,7 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `2 + 30% source Magical Power`. |
+| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `2 + 15% source Magical Power`. |
 | Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `2 + 25% source Physical Power`. |
 | Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `3 + 30% source Magical Power`. |
 | Weaken | 3 turns | No | Deals 25% less damage. |
