@@ -218,6 +218,8 @@ The visible active index remains unchanged until the queued turn event resolves.
 9. Resolves player Bleed and reusable lethal-damage prevention after the ability.
 10. Returns logical resource/cooldown changes immediately but preserves visible Health/status snapshots until pending events resolve.
 
+Non-damaging `all_enemies` status abilities use one shared event index for every target. This keeps their status applications, presentation metadata, and floating text synchronized as a single area effect rather than a target-by-target sequence.
+
 Using an ability sets `playerActed` but does not move turn order. The player may continue using affordable ready abilities until calling `endPlayerTurn`.
 
 ### Enemy turns

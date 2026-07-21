@@ -15,7 +15,7 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Quick Slash | 1 | None | Enemy | Deals 50% Physical Power as Physical damage. |
 | Twin Strike | 3 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
-| Poison Cloud | 3 | 2 | All enemies | Applies 1 Poison without direct damage. |
+| Poison Cloud | 3 | 2 | All enemies | Applies 1 Poison to every target simultaneously without direct damage. |
 | Contagion | 2 | 3 | Poisoned enemy | Copies all Poison stacks to another random living enemy without removing them from the selected enemy. |
 | Stealth | 2 | 3 | Self | Enemies cannot target the player until the end of the player's next turn. |
 | Evasion | 2 | 3 | Self | Grants +60% Dodge Chance until the next player turn. |

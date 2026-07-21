@@ -951,25 +951,31 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (ability.dealsDamage === false) {
         const statusId = ability.effect === "stun" ? "stunned" : ability.effect;
         if (statusId && isStatusEffectId(statusId) && statusId !== "guard") {
+          const groupedAreaApplication = ability.target === "all_enemies";
+          if (groupedAreaApplication && target.instanceId !== targets[0]?.instanceId) continue;
           const status = createPlayerAppliedStatus(statusId, derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
           const consumedStatusId = ability.consumeTargetStatus;
           const followUp = abilityModifiers.find((modifier) => modifier.applyStatusAfterConsume)?.applyStatusAfterConsume;
           const followUpStatus = followUp ? createPlayerAppliedStatus(followUp.status, derived, { stacks: followUp.stacks, duration: followUp.duration }) : null;
           const additionalStatuses = (ability.statusApplications ?? []).map((application) => createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration }));
           const appliedStatuses = [status, ...createPlayerCompanionStatuses(status.id, derived), ...(followUpStatus ? [followUpStatus] : []), ...additionalStatuses.flatMap((applied) => [applied, ...createPlayerCompanionStatuses(applied.id, derived)])];
-          enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
+          const affectedTargets = groupedAreaApplication ? targets : [target];
+          enemies = enemies.map((enemy) => affectedTargets.some((affected) => affected.instanceId === enemy.instanceId) ? {
             ...enemy,
             stunned: enemy.stunned || appliedStatuses.some((applied) => applied.id === "stunned"),
             statuses: appliedStatuses.reduce(addOrRefreshStatus, consumedStatusId ? enemy.statuses.filter((existing) => existing.id !== consumedStatusId) : enemy.statuses),
           } : enemy);
-          const statusText = `${target.name} gains ${appliedStatuses.map((applied) => `${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`).join(" and ")}.`;
+          const statusNames = appliedStatuses.map((applied) => `${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`).join(" and ");
+          const statusText = groupedAreaApplication ? `All enemies gain ${statusNames}.` : `${target.name} gains ${statusNames}.`;
           const statusEventIndex = events.length;
           events.push(statusText);
-          appliedStatuses.forEach((applied) => {
-            logs.push(makeLog(`${target.name} gains ${applied.name}.`, statusInfo(applied)));
-            queueStatus(events, pendingEffects, statusText, target.instanceId, applied, applied.id === "stunned", statusEventIndex);
+          logs.push(makeLog(statusText, statusInfo(status)));
+          affectedTargets.forEach((affectedTarget) => appliedStatuses.forEach((applied) => {
+            queueStatus(events, pendingEffects, statusText, affectedTarget.instanceId, applied, applied.id === "stunned", statusEventIndex);
+          }));
+          affectedTargets.forEach((affectedTarget) => {
+            if (consumedStatusId) queueStatusRemoval(pendingEffects, statusEventIndex, affectedTarget.instanceId, consumedStatusId);
           });
-          if (consumedStatusId) queueStatusRemoval(pendingEffects, statusEventIndex, target.instanceId, consumedStatusId);
         }
         continue;
       }
