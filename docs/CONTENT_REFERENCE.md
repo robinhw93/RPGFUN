@@ -62,7 +62,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 87 nodes: the origin, three first-direction class nodes, 78 later Shadow nodes, and 5 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 6, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 104 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 21 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 22, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -72,6 +72,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength. |
 | shadow_1 | Shadow | Class | Wayfarer's Spark | Any | +2 Agility and unlocks Quick Slash. |
 | arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence and unlocks Arcane Bolt. |
+| cultist_1 | Cultist | Class | Wayfarer's Spark | Any | Unlocks the Cultist path. |
 | talent_1 | Immaculate Timing | Passive | Shadow | Any | +2 Agility and +5 Initiative. |
 | talent_2 | Twin Strike | Ability | Immaculate Timing | Any | Unlocks Twin Strike. |
 | talent_3 | Poison Stab | Ability | Immaculate Timing | Any | Unlocks Poison Stab. |
@@ -155,6 +156,22 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_81 | Arcane Blast | Ability | Arcane Mind | Any | Unlocks Arcane Blast. |
 | talent_82 | Fireball | Ability | Arcane Mind | Any | Unlocks Fireball. |
 | talent_83 | Lightning Beam | Ability | Arcane Mind | Any | Unlocks Lightning Beam. |
+| talent_84 | Critical Burn | Passive | Fireball | Any | +2% Critical Strike Chance. |
+| talent_85 | Aimed Spells | Passive | Arcane Blast | Any | +2% Hit Chance. |
+| talent_86 | Frozen Armor | Passive | Frostbolt | Any | +2 Armor. |
+| talent_87 | Lightning Fast | Passive | Lightning Beam | Any | +2 Initiative. |
+| talent_88 | Kindled Precision | Passive | Critical Burn | Any | +2% Critical Strike Chance. |
+| talent_89 | Fire Within | Passive | Critical Burn | Any | +1 Max Energy. |
+| talent_90 | Charged Reflexes | Passive | Lightning Fast | Any | +2 Initiative. |
+| talent_91 | Increased Voltage | Passive | Lightning Fast | Any | +1 Max Energy. |
+| talent_92 | Arcane Accuracy | Passive | Aimed Spells | Any | +2% Hit Chance. |
+| talent_93 | Glacial Plating | Passive | Frozen Armor | Any | +2 Armor. |
+| talent_94 | Engulf | Passive | Kindled Precision | Any | Critical strikes with Arcanist spells apply 1 Burn. |
+| talent_95 | Elemental Surprise | Passive | Charged Reflexes | Any | Deals 20% more damage until the player first takes damage each combat. |
+| talent_96 | Invigorate | Passive | Aimed Spells | Any | Hits against an enemy with Arcane Wound have a 20% base chance to restore 2 Energy. |
+| talent_97 | Comparative Momentum | Passive | Frozen Armor | Any | Applying Slowed has a 30% base chance to restore 1 Energy. |
+| talent_98 | Confidence | Passive | Arcane Accuracy | Any | Deals 20% more damage until the player's first miss each combat. |
+| talent_99 | Weight of Frost | Passive | Glacial Plating | Any | −10 Initiative; direct hits gain flat damage equal to 5% of Armor, rounded up. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 

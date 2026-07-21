@@ -1,7 +1,7 @@
 import type { CharacterAvatarId } from "./avatars";
 
 export type StatName = "strength" | "agility" | "intelligence" | "vitality" | "luck";
-export type TalentBranch = "core" | "brute" | "shadow" | "arcanist";
+export type TalentBranch = "core" | "brute" | "shadow" | "arcanist" | "cultist";
 export type GearSlot = "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring1" | "ring2";
 export type GearType = Exclude<GearSlot, "ring1" | "ring2"> | "ring";
 export type ArmorMaterial = "plate" | "leather" | "cloth";
@@ -66,7 +66,7 @@ export type StatusEffectId =
   | "arcaneWound"
   | "sleep";
 
-export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
+export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
 export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
 
 export interface PassiveBonuses {
@@ -84,6 +84,8 @@ export interface PassiveBonuses {
   hitChance?: number;
   dodgeChance?: number;
   initiative?: number;
+  /** Flat direct damage added to every hit as a fraction of current Armor. */
+  bonusDirectDamageFromArmorRatio?: number;
   guardGeneration?: number;
   healingReceived?: number;
   bleedDamageReduction?: number;
@@ -112,10 +114,12 @@ export interface PassiveBonuses {
 
 export interface CombatTriggerCondition {
   abilityIds?: string[];
+  abilityBranches?: TalentBranch[];
   damageTypes?: DamageType[];
   critical?: boolean;
   minimumDamage?: number;
   targetHasAnyStatus?: string[];
+  appliedAnyStatus?: StatusEffectId[];
   /** Matches only when direct damage crosses from at-or-above to below this Health ratio. */
   targetHealthCrossedBelow?: number;
 }
@@ -151,6 +155,10 @@ export interface CombatDamageModifierDefinition {
   targetHasAnyStatus?: StatusEffectId[];
   /** Additional multiplicative damage per unique debuff on the target. */
   multiplierPerTargetDebuff?: number;
+  /** Active only before the player has taken damage in the current combat. */
+  requiresPlayerUndamaged?: boolean;
+  /** Active only before the player's first miss in the current combat. */
+  requiresNoPlayerMiss?: boolean;
 }
 
 export interface AbilityModifierDefinition {
@@ -439,6 +447,8 @@ export interface CombatState {
   pendingEffects: CombatPendingEffect[];
   procUsage: Record<string, { lastTriggeredTurn: number }>;
   deathPreventionUsed: boolean;
+  playerHasTakenDamage: boolean;
+  playerHasMissed: boolean;
   nextTurnEnergyRegenBonus: number;
   damagedTargets: string[];
   missedTargets: string[];

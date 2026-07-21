@@ -254,7 +254,7 @@ bajs321
 The editor supports:
 
 - Creating, deleting, selecting, and dragging nodes.
-- Live Shadow, Arcanist, and Brute node counters in the editor header.
+- Live Shadow, Arcanist, Brute, and Cultist node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
 - Ability-ID references, Energy cost, cooldown turns, and free-form effect/proc notes.

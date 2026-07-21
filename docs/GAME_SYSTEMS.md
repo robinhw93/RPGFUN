@@ -354,7 +354,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first three directions are Brute, Shadow, and Arcanist. Shadow is the first complete branch. Arcanist now begins with Arcane Mind and four elemental/arcane ability choices, while Brute currently contains only its first class node.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. Shadow is the first complete branch. Arcanist currently extends from Arcane Mind into four elemental/arcane ability paths and their first passives. Brute and Cultist currently contain only their first class nodes.
 
 ### Unlock rules
 
@@ -371,7 +371,9 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 - Other unlocked abilities can be equipped or removed outside combat.
 - Selecting any equipped or empty loadout slot opens the in-game ability picker. An occupied slot can replace or swap its ability with another equipped slot, while **Unequip Slot** removes its current ability.
 - Ability descriptions are resolved from the character's unlocked talents. Combat tooltips, talent details, the loadout picker, and new combat-log entries therefore describe the modified effect rather than the ability's original base effect.
-- Enemy misses and newly applied Stuns are reusable passive-trigger events. Recovery, Spotting Opportunity, Biding Time, Break, and Mischief attach their results to the triggering combat moment without slowing the event sequence.
+- Enemy misses, newly applied statuses, and newly applied Stuns are reusable passive-trigger events. Recovery, Spotting Opportunity, Biding Time, Break, Mischief, and Comparative Momentum attach their results to the triggering combat moment without slowing the event sequence.
+- Combat tracks whether the player has taken damage or missed since combat began. Elemental Surprise and Confidence read those combat-scoped flags rather than checking talent IDs in the engine.
+- Weight of Frost uses the shared passive-stat pipeline to add 5% of current Armor, rounded up, as flat damage to each direct hit.
 - Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
 - Circular passive nodes are 25% smaller than square class/ability nodes. Unlocked nodes receive a gold outer outline, and the connection layer is masked beneath every node so lines cannot show through transparent locked nodes.
 - The player can pan, zoom, and fit the talent tree on desktop and mobile.

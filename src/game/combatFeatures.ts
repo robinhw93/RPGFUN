@@ -12,6 +12,7 @@ import type {
   PassiveBonuses,
   StatusEffect,
   Stats,
+  TalentBranch,
 } from "./types";
 
 export interface ResolvedCombatTrigger extends CombatTriggerDefinition {
@@ -37,10 +38,12 @@ export interface ResolvedAbilityModifier extends AbilityModifierDefinition {
 
 export interface CombatTriggerContext {
   abilityId?: string;
+  abilityBranch?: TalentBranch;
   damageType?: DamageType;
   critical?: boolean;
   damage?: number;
   targetStatusIds?: string[];
+  appliedStatusIds?: StatusEffect["id"][];
   targetHpBeforePercent?: number;
   targetHpAfterPercent?: number;
 }
@@ -75,6 +78,7 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   hitChance: 0,
   dodgeChance: 0,
   initiative: 0,
+  bonusDirectDamageFromArmorRatio: 0,
   guardGeneration: 0,
   healingReceived: 0,
   bleedDamageReduction: 0,
@@ -109,6 +113,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.hitChance += passive.hitChance ?? 0;
   target.dodgeChance += passive.dodgeChance ?? 0;
   target.initiative += passive.initiative ?? 0;
+  target.bonusDirectDamageFromArmorRatio += passive.bonusDirectDamageFromArmorRatio ?? 0;
   target.guardGeneration += passive.guardGeneration ?? 0;
   target.healingReceived += passive.healingReceived ?? 0;
   target.bleedDamageReduction += passive.bleedDamageReduction ?? 0;
@@ -228,8 +233,9 @@ export function getCharacterDamageMultiplier(
   attackerStatuses: StatusEffect[],
   targetStatuses: StatusEffect[],
   damageType?: DamageType,
+  combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> = { playerHasTakenDamage: false, playerHasMissed: false },
 ): number {
-  return getDamageModifierMultiplier(getCharacterCombatFeatures(character).damageModifiers, attackerStatuses, targetStatuses, damageType);
+  return getDamageModifierMultiplier(getCharacterCombatFeatures(character).damageModifiers, attackerStatuses, targetStatuses, damageType, combatContext);
 }
 
 export function getDamageModifierMultiplier(
@@ -237,11 +243,14 @@ export function getDamageModifierMultiplier(
   attackerStatuses: StatusEffect[],
   targetStatuses: StatusEffect[],
   damageType?: DamageType,
+  combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> = { playerHasTakenDamage: false, playerHasMissed: false },
 ): number {
   return modifiers.reduce((multiplier, modifier) => {
     if (modifier.damageTypes?.length && (!damageType || !modifier.damageTypes.includes(damageType))) return multiplier;
     if (modifier.attackerHasAnyStatus?.length && !modifier.attackerHasAnyStatus.some((id) => attackerStatuses.some((status) => status.id === id))) return multiplier;
     if (modifier.targetHasAnyStatus?.length && !modifier.targetHasAnyStatus.some((id) => targetStatuses.some((status) => status.id === id))) return multiplier;
+    if (modifier.requiresPlayerUndamaged && combatContext.playerHasTakenDamage) return multiplier;
+    if (modifier.requiresNoPlayerMiss && combatContext.playerHasMissed) return multiplier;
     const uniqueDebuffs = new Set(targetStatuses.filter((status) => status.kind === "debuff").map((status) => status.id)).size;
     const dynamicMultiplier = 1 + uniqueDebuffs * (modifier.multiplierPerTargetDebuff ?? 0);
     return multiplier * modifier.multiplier * dynamicMultiplier;
@@ -281,10 +290,12 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   const conditions = trigger.conditions;
   if (!conditions) return true;
   if (conditions.abilityIds && (!context.abilityId || !conditions.abilityIds.includes(context.abilityId))) return false;
+  if (conditions.abilityBranches && (!context.abilityBranch || !conditions.abilityBranches.includes(context.abilityBranch))) return false;
   if (conditions.damageTypes && (!context.damageType || !conditions.damageTypes.includes(context.damageType))) return false;
   if (conditions.critical !== undefined && Boolean(context.critical) !== conditions.critical) return false;
   if (conditions.minimumDamage !== undefined && (context.damage ?? 0) < conditions.minimumDamage) return false;
   if (conditions.targetHasAnyStatus?.length && !conditions.targetHasAnyStatus.some((id) => context.targetStatusIds?.includes(id))) return false;
+  if (conditions.appliedAnyStatus?.length && !conditions.appliedAnyStatus.some((id) => context.appliedStatusIds?.includes(id))) return false;
   if (conditions.targetHealthCrossedBelow !== undefined) {
     const threshold = conditions.targetHealthCrossedBelow;
     if (context.targetHpBeforePercent === undefined || context.targetHpAfterPercent === undefined) return false;

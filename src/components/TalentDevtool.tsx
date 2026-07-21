@@ -76,6 +76,7 @@ const BRANCH_OPTIONS: Array<{ id: TalentBranch; label: string }> = [
   { id: "brute", label: "Brute" },
   { id: "shadow", label: "Shadow" },
   { id: "arcanist", label: "Arcanist" },
+  { id: "cultist", label: "Cultist" },
 ];
 
 const PASSIVE_OPTIONS: Array<{ id: PassiveBonus; label: string }> = [
@@ -443,6 +444,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     shadow: draft.nodes.filter((node) => node.branch === "shadow").length,
     arcanist: draft.nodes.filter((node) => node.branch === "arcanist").length,
     brute: draft.nodes.filter((node) => node.branch === "brute").length,
+    cultist: draft.nodes.filter((node) => node.branch === "cultist").length,
   }), [draft.nodes]);
   const [selectedId, setSelectedId] = useState("origin");
   const [snapToGrid, setSnapToGrid] = useState(loadSnapPreference);
@@ -710,6 +712,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
             <span className="shadow"><small>Shadow</small><strong>{branchCounts.shadow}</strong></span>
             <span className="arcanist"><small>Arcanist</small><strong>{branchCounts.arcanist}</strong></span>
             <span className="brute"><small>Brute</small><strong>{branchCounts.brute}</strong></span>
+            <span className="cultist"><small>Cultist</small><strong>{branchCounts.cultist}</strong></span>
           </div>
           <p>Place nodes, define their effects, and connect the paths players can follow.</p>
         </div>

@@ -46,6 +46,7 @@ export interface DerivedStats extends Stats {
   hitChance: number;
   dodgeChance: number;
   initiativeBonus: number;
+  bonusDirectDamageFromArmorRatio: number;
   guardMultiplier: number;
   healingReceivedMultiplier: number;
   bleedDamageTakenMultiplier: number;
@@ -105,6 +106,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     hitChance: 0.95 + stats.agility * 0.005 + features.passive.hitChance,
     dodgeChance: getEffectiveDodgeChance(0.02 + stats.agility * 0.004 + features.passive.dodgeChance),
     initiativeBonus: Math.round(stats.agility * 0.5 + stats.intelligence * 0.25 + features.passive.initiative),
+    bonusDirectDamageFromArmorRatio: features.passive.bonusDirectDamageFromArmorRatio,
     guardMultiplier: 1 + stats.strength * 0.01 + features.passive.guardGeneration,
     healingReceivedMultiplier: 1 + stats.vitality * 0.005 + features.passive.healingReceived,
     bleedDamageTakenMultiplier: Math.max(0, 1 - features.passive.bleedDamageReduction),
