@@ -265,6 +265,8 @@ Direct attack damage has two presentation phases:
 
 Statuses attached to that same event index resolve at impact with damage. Non-attack effects resolve as soon as their floating message appears.
 
+Pending effects sharing an event resolve in insertion order. A consume-and-reapply ability must therefore queue removal of the consumed status before its replacement status; otherwise the removal would erase the newly applied copy at presentation time.
+
 Multi-hit abilities attach their total hit count to every direct-damage event. The sequencer divides animation duration and impact delay by that count, while `getCombatEventDurationMs` gives each direct-hit message the same shortened slot. This removes normal floating-message waits between hits and keeps the complete hit sequence within one normal attack-duration budget. `attackAnimationId` alternates equivalent CSS keyframes so consecutive hits by the same combatant always restart the lunge animation.
 
 An ability may apply a presentation-only duration multiplier to that complete sequence. Flurry and Slice and Dice currently use `1.4`, making their five- and six-hit sequences 40% longer while leaving damage, hit timing order, and other multi-hit abilities unchanged.

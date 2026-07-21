@@ -1082,12 +1082,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           const statusEventIndex = events.length;
           events.push(statusText);
           logs.push(makeLog(statusText, statusInfo(status)));
-          affectedTargets.forEach((affectedTarget) => appliedStatuses.forEach((applied) => {
-            queueStatus(events, pendingEffects, statusText, affectedTarget.instanceId, applied, applied.id === "stunned", statusEventIndex);
-          }));
+          // Consumption must resolve before a same-status follow-up such as Reapply's new Poison.
           affectedTargets.forEach((affectedTarget) => {
             if (consumedStatusId) queueStatusRemoval(pendingEffects, statusEventIndex, affectedTarget.instanceId, consumedStatusId);
           });
+          affectedTargets.forEach((affectedTarget) => appliedStatuses.forEach((applied) => {
+            queueStatus(events, pendingEffects, statusText, affectedTarget.instanceId, applied, applied.id === "stunned", statusEventIndex);
+          }));
         }
         continue;
       }
