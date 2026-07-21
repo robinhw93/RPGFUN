@@ -1140,17 +1140,18 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
       <span className="round-label">Round {combat.turn}</span>
       <div>
         {combat.turnOrder.map((actor, index) => {
-          const defeated = actor.kind === "player"
-            ? combat.playerHp <= 0
-            : (combat.enemies.find((enemy) => enemy.instanceId === actor.actorId)?.hp ?? 0) <= 0;
+          const enemy = actor.kind === "enemy" ? combat.enemies.find((candidate) => candidate.instanceId === actor.actorId) : null;
+          const defeated = actor.kind === "player" ? combat.playerHp <= 0 : (enemy?.hp ?? 0) <= 0;
+          const currentTarget = Boolean(enemy && enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth"));
           return (
             <span
               key={actor.actorId}
-              className={`${index === combat.activeTurnIndex ? "active" : ""} ${defeated ? "defeated" : ""} ${actor.kind}`}
-              data-game-tooltip={`${actor.name}: ${actor.initiative} Initiative`}
+              className={`${index === combat.activeTurnIndex ? "active" : ""} ${defeated ? "defeated" : ""} ${currentTarget ? "current-target" : ""} ${actor.kind}`}
+              data-game-tooltip={`${actor.name}: ${actor.initiative} Initiative${currentTarget ? " · Current target" : ""}`}
               data-tooltip-placement="bottom"
+              aria-label={`${actor.kind === "player" ? "You" : actor.name}, ${actor.initiative} Initiative${currentTarget ? ", current target" : ""}`}
             >
-              <b>{actor.kind === "player" ? "You" : actor.name}</b>
+              <span className="turn-order-name">{currentTarget && <Target className="turn-order-target-icon" size={10} aria-hidden="true" />}<b>{actor.kind === "player" ? "You" : actor.name}</b></span>
               <small>{actor.initiative}</small>
             </span>
           );

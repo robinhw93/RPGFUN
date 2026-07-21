@@ -423,11 +423,14 @@ main { min-height: calc(100vh - 68px); }
 .turn-order-bar .round-label { color: var(--dim); font-size: .56rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
 .turn-order-bar > div { min-width: 0; display: flex; justify-content: center; gap: .3rem; overflow: visible; }
 .turn-order-bar > div > span { min-width: 0; max-width: 180px; display: flex; align-items: center; justify-content: space-between; gap: .4rem; flex: 1 1 0; padding: .25rem .42rem; color: #737a74; border: 1px solid #2d332f; background: #151816; transition: .2s ease; }
+.turn-order-name { min-width: 0; display: flex; align-items: center; gap: .22rem; overflow: hidden; }.turn-order-target-icon { flex: 0 0 auto; color: #d5df91; filter: drop-shadow(0 0 4px rgba(197,218,107,.38)); }
 .turn-order-bar b { min-width: 0; overflow: hidden; font-family: Georgia, serif; font-size: .66rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .turn-order-bar small { color: #5f665f; font-size: .54rem; }
 .turn-order-bar > div > span.active { color: var(--text); border-color: var(--gold); background: #211d14; box-shadow: 0 0 13px rgba(201,168,103,.14); }
 .turn-order-bar > div > span.active small { color: var(--gold-bright); }
 .turn-order-bar > div > span.enemy.active { border-color: #9c6651; background: #211714; }
+.turn-order-bar > div > span.current-target { color: #d9ddcf; outline: 1px solid #899b58; outline-offset: -2px; background-image: linear-gradient(180deg, rgba(151,169,87,.1), rgba(151,169,87,.025)); box-shadow: inset 0 -2px rgba(190,210,112,.42), 0 0 10px rgba(132,153,72,.12); }
+.turn-order-bar > div > span.current-target.active { box-shadow: inset 0 -2px rgba(211,226,137,.58), 0 0 14px rgba(201,168,103,.18); }
 .turn-order-bar > div > span.defeated { opacity: .3; filter: grayscale(1); }
 .compact-arena { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: clamp(.7rem, 3vw, 2rem); }
 .compact-combatant { min-width: 0; position: relative; padding: 1rem; color: var(--text); border: 1px solid #343a36; background: linear-gradient(145deg, #171b19, #101311); }
