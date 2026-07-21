@@ -179,6 +179,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   charred: Flame,
   frozen: Snowflake,
   frozenPath: Footprints,
+  blind: EyeOff,
   arcaneWound: CircleDot,
   arcaneCharge: Sparkles,
   sleep: Moon,

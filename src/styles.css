@@ -547,6 +547,7 @@ main { min-height: calc(100vh - 68px); }
 .status-badge.status-charred { --status-ring: #b85c35; color: #ef956d; background: radial-gradient(circle, #35211a 0 57%, #100e0d 58%); }
 .status-badge.status-frozen { --status-ring: #8ddded; color: #dcfaff; background: radial-gradient(circle, #1b4a5a 0 57%, #0d171b 58%); }
 .status-badge.status-frozenPath { --status-ring: #71c5db; color: #c7f4ff; background: radial-gradient(circle, #173d4a 0 57%, #0d171a 58%); }
+.status-badge.status-blind { --status-ring: #9183a8; color: #c9bddb; background: radial-gradient(circle, #30283d 0 57%, #141118 58%); }
 .status-badge.status-arcaneWound { --status-ring: #a778ee; color: #d4b5ff; background: radial-gradient(circle, #342052 0 57%, #15101d 58%); }
 .status-badge.status-arcaneCharge { --status-ring: #68aeea; color: #cae8ff; background: radial-gradient(circle, #1c3d5b 0 57%, #0e1720 58%); }
 .status-badge.status-sleep { --status-ring: #7569b5; color: #aaa0e5; background: radial-gradient(circle, #25203f 0 57%, #111017 58%); }

@@ -251,6 +251,7 @@ The duration is the default duration created by the status library. Ability or t
 | Cold | 3 turns | No | Takes 50% more Frost damage and 50% less Lightning damage. |
 | Charred | 3 turns | No | Takes 50% more Fire damage and 50% less Frost damage. |
 | Frozen | 1 turn | No | Cannot act and skips the next turn; ends immediately when damage is taken. |
+| Blind | 3 turns | No | Raw Hit Chance is reduced by 75% before the target's Dodge Chance and the global 20% minimum final Hit Chance are applied. |
 | Arcane Wound | 3 turns | Yes | Each stack increases Arcane Blast damage against the afflicted target by 10%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |

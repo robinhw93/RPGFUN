@@ -12,6 +12,7 @@ import {
   getEffectiveArmor,
   getEnergyRegeneration,
   getIncomingDamageMultiplier,
+  getHitChanceMultiplier,
   getOutgoingDamageMultiplier,
   getStatusDamage,
   getStatusHealing,
@@ -1312,7 +1313,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         continue;
       }
       const targetDodgeChance = getEffectiveDodgeChance(target.dodgeChance, getDodgeChanceBonus(target.statuses));
-      if (!rollHit(derived.hitChance, targetDodgeChance)) {
+      if (!rollHit(derived.hitChance * getHitChanceMultiplier(playerStatuses), targetDodgeChance)) {
         playerHasMissed = true;
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
         queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, missed: true });
@@ -1753,7 +1754,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
     events.push(`${enemy.name} uses ${attackName}.`);
     const playerDodgeChance = getEffectiveDodgeChance(derived.dodgeChance, getDodgeChanceBonus(playerStatuses));
-    if (!rollHit(enemy.hitChance, playerDodgeChance)) {
+    if (!rollHit(enemy.hitChance * getHitChanceMultiplier(enemy.statuses), playerDodgeChance)) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, missed: true });
       const missedTriggers = runPlayerTriggerEvent(

@@ -95,6 +95,7 @@ The final opposed result is clamped between 20% and 100%. This means:
 - The final chance can never exceed 100%.
 - Raw Hit Chance can exceed 100% and can cancel high Dodge. For example, 155% Hit against 40% Dodge resolves to 115%, then becomes 100%.
 - Temporary Dodge effects are added before the 50% Dodge cap. Evasion therefore reduces a 95% Hit Chance enemy to 45% final Hit Chance while active.
+- Blind multiplies the afflicted combatant's raw Hit Chance by 25% before Dodge is subtracted. The normal 20% minimum final Hit Chance still applies.
 
 ### Critical strikes
 

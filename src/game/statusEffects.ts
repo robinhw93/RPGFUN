@@ -46,6 +46,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   arcaneCharge: { id: "arcaneCharge", name: "Arcane Charge", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "For 3 turns, your next Arcane Blast against this target costs 0 Energy and consumes Arcane Charge." },
   frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
+  blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },
   sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
 };
 
@@ -172,6 +173,11 @@ export function getDodgeChanceBonus(statuses: StatusEffect[]): number {
     if (status.id === "frozenPath") return bonus + (status.magnitude ?? 0.3);
     return bonus;
   }, 0);
+}
+
+/** Blind reduces the afflicted combatant's raw Hit Chance before Dodge is opposed. */
+export function getHitChanceMultiplier(statuses: StatusEffect[]): number {
+  return hasStatus(statuses, "blind") ? 0.25 : 1;
 }
 
 export function getEnergyRegeneration(regeneration: number, statuses: StatusEffect[]): number {

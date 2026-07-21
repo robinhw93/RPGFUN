@@ -67,6 +67,7 @@ export type StatusEffectId =
   | "arcaneCharge"
   | "frozen"
   | "frozenPath"
+  | "blind"
   | "sleep";
 
 export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
