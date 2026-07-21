@@ -47,6 +47,8 @@ export type StatusEffectId =
   | "taunt"
   | "stealth"
   | "evasion"
+  | "distraction"
+  | "pinpoint"
   | "poison"
   | "bleed"
   | "burn"
@@ -91,6 +93,10 @@ export interface PassiveBonuses {
   /** Statuses kept when an ability would normally consume them through detonation. */
   preserveStatusOnDetonation?: StatusEffectId[];
   startingStatuses?: StatusEffect[];
+  /** Status effects that cannot be applied to the character. */
+  statusImmunities?: StatusEffectId[];
+  /** Additional stacks whenever the character applies a matching status. */
+  statusApplicationStacks?: Partial<Record<StatusEffectId, number>>;
 }
 
 export interface CombatTriggerCondition {
@@ -107,6 +113,7 @@ export type CombatEffectDefinition =
   | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scaling?: number }
   | { type: "apply_status"; status: StatusEffect; target?: CombatEffectTarget }
   | { type: "heal"; amount: number; target?: "self" }
+  | { type: "heal_percent_max_hp"; ratio: number; target?: "self" }
   | { type: "gain_energy"; amount: number; target?: "self" }
   | { type: "gain_guard"; amount: number; duration?: number; target?: "self" };
 
@@ -144,6 +151,7 @@ export interface AbilityModifierDefinition {
   statusExpiresAtTurnStart?: boolean;
   applyStatusAfterConsume?: { status: StatusEffectId; stacks?: number; duration?: number };
   detonationRetainedStackRatio?: number;
+  statusConsumptionRatio?: number;
 }
 
 export interface CombatFeatureBundle {
@@ -190,9 +198,19 @@ export interface Ability {
   /** Deals all remaining damage from this status immediately. */
   detonateStatus?: StatusEffectId;
   consumeTargetStatus?: StatusEffectId;
+  /** Fraction of the target status stacks consumed. Defaults to all stacks. */
+  consumeTargetStatusRatio?: number;
   consumeStatusForHealing?: StatusEffectId;
   /** Copies this status from the selected target to another random living enemy. */
   spreadTargetStatus?: StatusEffectId;
+  /** Statuses applied by a damaging ability after a successful hit. */
+  statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; onlyOnCritical?: boolean }>;
+  /** Incoming Guard and Barrier do not absorb this ability's direct damage. */
+  ignoresAbsorption?: boolean;
+  /** Restore this fraction of maximum Energy after paying the ability cost. */
+  energyRestorePercentOfMax?: number;
+  /** The next damaging ability used by the player is guaranteed to critically strike. */
+  grantsNextCritical?: boolean;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;

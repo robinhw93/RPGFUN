@@ -339,6 +339,11 @@ export function TalentDevtoolAccessDialog({ onClose, onUnlock }: { onClose: () =
 
 export function TalentDevtool({ onExit }: { onExit: () => void }) {
   const [draft, setDraft] = useState<TalentDraft>(loadDraft);
+  const branchCounts = useMemo(() => ({
+    shadow: draft.nodes.filter((node) => node.branch === "shadow").length,
+    arcanist: draft.nodes.filter((node) => node.branch === "arcanist").length,
+    brute: draft.nodes.filter((node) => node.branch === "brute").length,
+  }), [draft.nodes]);
   const [selectedId, setSelectedId] = useState("origin");
   const [snapToGrid, setSnapToGrid] = useState(loadSnapPreference);
   const [canvasZoom, setCanvasZoom] = useState(DEFAULT_CANVAS_ZOOM);
@@ -599,7 +604,16 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
   return (
     <section className="talent-devtool-page">
       <header className="talent-devtool-header">
-        <div><p className="eyebrow"><Wrench size={13} /> Developer Tool</p><h1>Talent Editor</h1><p>Place nodes, define their effects, and connect the paths players can follow.</p></div>
+        <div className="talent-devtool-heading">
+          <p className="eyebrow"><Wrench size={13} /> Developer Tool</p>
+          <h1>Talent Editor</h1>
+          <div className="talent-branch-counters" aria-label="Talent nodes by branch">
+            <span className="shadow"><small>Shadow</small><strong>{branchCounts.shadow}</strong></span>
+            <span className="arcanist"><small>Arcanist</small><strong>{branchCounts.arcanist}</strong></span>
+            <span className="brute"><small>Brute</small><strong>{branchCounts.brute}</strong></span>
+          </div>
+          <p>Place nodes, define their effects, and connect the paths players can follow.</p>
+        </div>
         <div className="talent-devtool-actions">
           <span aria-live="polite">{message}</span>
           <button type="button" onClick={saveDraft}><Save size={15} /> Save</button>

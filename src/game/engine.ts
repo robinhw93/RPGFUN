@@ -58,7 +58,9 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     maxEnergy: derived.maxEnergy,
     selectedEnemyId: enemies[0].instanceId,
     enemies,
-    playerStatuses: features.passive.startingStatuses.map((status) => ({ ...status })),
+    playerStatuses: features.passive.startingStatuses
+      .filter((status) => !derived.statusImmunities.includes(status.id))
+      .map((status) => ({ ...status })),
     log: [makeLog(`The ${enemies.map((enemy) => enemy.name).join(" and ")} bar your path.`)],
     outcome: "active",
   };
@@ -289,7 +291,8 @@ function createPlayerAppliedStatus(
   const sourcePower = statusId === "bleed" ? derived.physicalPower
     : statusId === "poison" || statusId === "burn" || statusId === "regenerate" ? derived.magicalPower
       : undefined;
-  return createStatusEffect(statusId, { sourcePower, sourceId: "player", ...options });
+  const stacks = (options.stacks ?? 1) + (derived.statusApplicationStacks[statusId] ?? 0);
+  return createStatusEffect(statusId, { sourcePower, sourceId: "player", ...options, stacks });
 }
 
 function wakeFromDamage(statuses: StatusEffect[], damage: number): StatusEffect[] {
@@ -566,7 +569,7 @@ function applyPlayerProcs(
     events.push(`${proc.sourceName}: ${proc.name}.`);
 
     proc.effects.forEach((effect) => {
-      const targetMode = effect.target ?? (effect.type === "heal" || effect.type === "gain_energy" || effect.type === "gain_guard" ? "self" : "target");
+      const targetMode = effect.target ?? (effect.type === "heal" || effect.type === "heal_percent_max_hp" || effect.type === "gain_energy" || effect.type === "gain_guard" ? "self" : "target");
       const livingEnemies = enemies.filter((enemy) => enemy.hp > 0);
       const enemyTargets = targetMode === "all_enemies"
         ? livingEnemies
@@ -611,8 +614,10 @@ function applyPlayerProcs(
         const sourcePower = effect.status.id === "bleed" ? derived.physicalPower
           : effect.status.id === "poison" || effect.status.id === "burn" || effect.status.id === "regenerate" ? derived.magicalPower
             : effect.status.sourcePower;
-        const status = { ...effect.status, sourcePower, sourceId: effect.status.sourceId ?? ("player" as const) };
+        const bonusStacks = targetMode === "self" ? 0 : derived.statusApplicationStacks[effect.status.id] ?? 0;
+        const status = { ...effect.status, stacks: effect.status.stacks + bonusStacks, sourcePower, sourceId: effect.status.sourceId ?? ("player" as const) };
         if (targetMode === "self") {
+          if (derived.statusImmunities.includes(status.id)) return;
           playerStatuses = addOrRefreshStatus(playerStatuses, status);
           logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
           queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status);
@@ -629,7 +634,14 @@ function applyPlayerProcs(
         const amount = Math.max(0, Math.round(effect.amount * derived.healingReceivedMultiplier));
         playerHp = Math.min(combat.playerMaxHp, playerHp + amount);
         logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
-        events.push(`You recover ${amount} Health.`);
+        queueHeal(events, pendingEffects, `You recover ${amount} Health.`, "player", amount);
+      }
+
+      if (effect.type === "heal_percent_max_hp") {
+        const amount = Math.min(combat.playerMaxHp - playerHp, Math.max(1, Math.round(combat.playerMaxHp * effect.ratio * derived.healingReceivedMultiplier)));
+        playerHp += amount;
+        logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
+        queueHeal(events, pendingEffects, `You recover ${amount} Health.`, "player", amount);
       }
 
       if (effect.type === "gain_energy") {
@@ -675,7 +687,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const ability = ABILITIES[abilityId];
   const activeActor = combat.turnOrder[combat.activeTurnIndex];
   const remainingCooldown = combat.abilityCooldowns?.[abilityId] ?? 0;
-  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0 || ability.energyCost > combat.energy) return combat;
+  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0) return combat;
+  const abilityIsFree = hasStatus(combat.playerStatuses, "distraction");
+  const effectiveEnergyCost = abilityIsFree ? 0 : ability.energyCost;
+  if (effectiveEnergyCost > combat.energy) return combat;
   const derived = getDerivedStats(character);
   const abilityModifiers = getCharacterAbilityModifiers(character, ability.id);
   let enemies = normalizeEnemies(combat.enemies);
@@ -685,6 +700,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
+  const forceCritical = ability.dealsDamage !== false && ability.target !== "self" && hasStatus(playerStatuses, "pinpoint");
   const selfRequirementMissing = Boolean(ability.requiredSelfStatus && !hasStatus(playerStatuses, ability.requiredSelfStatus));
   if (selfRequirementMissing && !abilityModifiers.some((modifier) => modifier.allowWithoutRequiredSelfStatus)) return combat;
   const effectivePowerScaling = selfRequirementMissing
@@ -698,13 +714,21 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const events: string[] = [];
   const damagedTargets: string[] = [];
   const pendingEffects: CombatPendingEffect[] = [];
-  let energy = combat.energy - ability.energyCost;
+  let energy = combat.energy - effectiveEnergyCost;
   let abilityCooldowns = ability.cooldownTurns
     ? { ...(combat.abilityCooldowns ?? {}), [ability.id]: ability.cooldownTurns }
     : (combat.abilityCooldowns ?? {});
   const abilityInfo: InspectableInfo = { title: ability.name, description: `${ability.description} Costs ${ability.energyCost} Energy.`, category: "ability" };
   logs.push(makeLog(`You use ${ability.name}.`, abilityInfo));
   events.push(`You use ${ability.name}.`);
+  if (abilityIsFree) {
+    playerStatuses = playerStatuses.filter((status) => status.id !== "distraction");
+    queueStatusRemoval(pendingEffects, 0, "player", "distraction");
+  }
+  if (forceCritical) {
+    playerStatuses = playerStatuses.filter((status) => status.id !== "pinpoint");
+    queueStatusRemoval(pendingEffects, 0, "player", "pinpoint");
+  }
   const beforeAbility = runPlayerTriggerEvent(
     "before_ability",
     { abilityId: ability.id, damageType: ability.damageType },
@@ -742,7 +766,12 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const guardStatus = playerStatuses.find((status) => status.id === "guard")!;
       logs.push(makeLog(`You gain ${guardAmount} Guard.`, statusInfo(guardStatus)));
       queueStatus(events, pendingEffects, `You gain ${guardAmount} Guard.`, "player", guardStatus);
-    } else if (ability.effect && isStatusEffectId(ability.effect)) {
+    } else if (ability.energyRestorePercentOfMax) {
+      const restored = Math.min(combat.maxEnergy - energy, Math.max(1, Math.round(combat.maxEnergy * ability.energyRestorePercentOfMax)));
+      energy += restored;
+      logs.push(makeLog(`You restore ${restored} Energy.`, abilityInfo));
+      events.push(`You restore ${restored} Energy.`);
+    } else if (ability.effect && isStatusEffectId(ability.effect) && !derived.statusImmunities.includes(ability.effect)) {
       const status = createPlayerAppliedStatus(ability.effect, derived, { duration: effectiveStatusDuration, stacks: ability.statusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
       playerStatuses = addOrRefreshStatus(playerStatuses, status);
       logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
@@ -839,7 +868,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, "player");
         continue;
       }
-      const critical = Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses) + (ability.critChanceBonus ?? 0);
+      const critical = forceCritical || Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses) + (ability.critChanceBonus ?? 0);
       const damageComponents = ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: effectivePowerScaling }];
       const incomingDamage = damageComponents.reduce((total, component) => {
         const offensivePower = getOffensivePower(derived, component.damageType);
@@ -849,7 +878,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, component.damageType);
         return total + getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier)), playerStatuses, target.statuses, component.damageType);
       }, 0);
-      const absorption = absorbIncomingDamage(target.statuses, incomingDamage);
+      const absorption = ability.ignoresAbsorption
+        ? { damage: incomingDamage, statuses: target.statuses, absorbed: 0, absorbedBy: {} }
+        : absorbIncomingDamage(target.statuses, incomingDamage);
       const damage = absorption.damage;
       const targetHpBeforePercent = target.hp / target.maxHp;
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(absorption.statuses, damage) } : enemy);
@@ -895,6 +926,49 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage${absorptionSuffix(absorption.absorbed)} and applies ${status.name}.`;
         queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status, false, damageEventIndex);
+      }
+
+      const extraStatuses = (ability.statusApplications ?? []).filter((application) => !application.onlyOnCritical || critical);
+      extraStatuses.forEach((application) => {
+        const status = createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration });
+        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
+          ...enemy,
+          stunned: enemy.stunned || status.id === "stunned",
+          statuses: addOrRefreshStatus(enemy.statuses, status),
+        } : enemy);
+        logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
+        queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status, status.id === "stunned", damageEventIndex);
+      });
+      if (extraStatuses.length > 0) {
+        const labels = extraStatuses.map((application) => {
+          const stacks = (application.stacks ?? 1) + (derived.statusApplicationStacks[application.status] ?? 0);
+          return `${stacks > 1 ? `${stacks} ` : ""}${createStatusEffect(application.status).name}`;
+        });
+        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage${absorptionSuffix(absorption.absorbed)} and applies ${labels.join(" and ")}.`;
+      }
+
+      if (ability.consumeTargetStatus) {
+        const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
+        const consumed = currentTarget?.statuses.find((status) => status.id === ability.consumeTargetStatus);
+        if (consumed) {
+          const modifierRatio = abilityModifiers.find((modifier) => modifier.statusConsumptionRatio !== undefined)?.statusConsumptionRatio;
+          const ratio = Math.max(0, Math.min(1, modifierRatio ?? ability.consumeTargetStatusRatio ?? 1));
+          const consumedStacks = Math.max(1, Math.ceil(consumed.stacks * ratio));
+          const remainingStacks = Math.max(0, consumed.stacks - consumedStacks);
+          enemies = enemies.map((enemy) => enemy.instanceId !== target.instanceId ? enemy : {
+            ...enemy,
+            statuses: enemy.statuses.flatMap((status) => status.id !== consumed.id ? [status] : remainingStacks > 0 ? [{ ...status, stacks: remainingStacks }] : []),
+          });
+          if (remainingStacks > 0) queueStatusSet(pendingEffects, damageEventIndex, target.instanceId, { ...consumed, stacks: remainingStacks });
+          else queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, consumed.id);
+          events[damageEventIndex] = `${events[damageEventIndex].replace(/\.$/, "")} and consumes ${consumedStacks} ${consumed.name}.`;
+        }
+      }
+
+      if (ability.grantsNextCritical) {
+        const pinpoint = createStatusEffect("pinpoint", { duration: 1, sourceId: "player" });
+        playerStatuses = addOrRefreshStatus(playerStatuses, pinpoint);
+        queueStatus(events, pendingEffects, "Your next damaging ability is guaranteed to critically strike.", "player", pinpoint, false, damageEventIndex);
       }
 
       const triggerContext = {
@@ -1054,7 +1128,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       logs.push(makeLog(`${enemy.name} uses ${attackName} for ${damage}${critical ? " critical" : ""}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, enemy.instanceId);
       queueAbsorptionChanges(pendingEffects, damageEventIndex, "player", absorption);
-      if (damage > 0 && enemy.onHitEffect === "bleed") {
+      if (damage > 0 && enemy.onHitEffect === "bleed" && !derived.statusImmunities.includes("bleed")) {
         const bleed = createStatusEffect("bleed", { sourcePower: enemy.power, sourceId: enemy.instanceId });
         playerStatuses = addOrRefreshStatus(playerStatuses, bleed);
         logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));

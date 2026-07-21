@@ -112,6 +112,8 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   taunt: Megaphone,
   stealth: EyeOff,
   evasion: Footprints,
+  distraction: Sparkles,
+  pinpoint: Crosshair,
   poison: FlaskConical,
   bleed: Droplets,
   burn: Flame,
@@ -722,7 +724,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           const selfRequirementMet = !ability.requiredSelfStatus
             || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
-          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          const effectiveEnergyCost = combat.playerStatuses.some((status) => status.id === "distraction") ? 0 : ability.energyCost;
+          return <HoldAbilityButton key={id} ability={ability} energyCost={effectiveEnergyCost} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || effectiveEnergyCost > combat.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1168,7 +1171,7 @@ function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: (
   );
 }
 
-function HoldAbilityButton({ ability, index, cooldown, disabled, onUse }: { ability: Ability; index: number; cooldown: number; disabled: boolean; onUse: () => void }) {
+function HoldAbilityButton({ ability, energyCost, index, cooldown, disabled, onUse }: { ability: Ability; energyCost: number; index: number; cooldown: number; disabled: boolean; onUse: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -1210,14 +1213,14 @@ function HoldAbilityButton({ ability, index, cooldown, disabled, onUse }: { abil
       onPointerCancel={endHold}
       onPointerLeave={endHold}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`${ability.name}, ${ability.energyCost} Energy${cooldown > 0 ? `, ${cooldown} turn cooldown remaining` : ""}. Hold for details.`}
+      aria-label={`${ability.name}, ${energyCost} Energy${cooldown > 0 ? `, ${cooldown} turn cooldown remaining` : ""}. Hold for details.`}
     >
       <span className="compact-ability-key">{index + 1}</span>
       <span className="compact-ability-icon">{ability.icon}</span>
       <strong>{ability.name}</strong>
-      <span className="compact-ability-cost">{ability.energyCost}<Sparkles size={10} /></span>
+      <span className="compact-ability-cost">{energyCost}<Sparkles size={10} /></span>
       {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true">{cooldown}</span>}
-      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{ability.energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>
+      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>
     </button>
   );
 }

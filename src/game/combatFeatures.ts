@@ -45,11 +45,13 @@ export interface CombatTriggerContext {
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks">> & {
     stats: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
     startingStatuses: StatusEffect[];
+    statusImmunities: StatusEffect["id"][];
+    statusApplicationStacks: Partial<Record<StatusEffect["id"], number>>;
   };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
@@ -78,6 +80,8 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   statusDamage: {},
   preserveStatusOnDetonation: [],
   startingStatuses: [],
+  statusImmunities: [],
+  statusApplicationStacks: {},
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -110,6 +114,13 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
     if (!target.preserveStatusOnDetonation.includes(statusId)) target.preserveStatusOnDetonation.push(statusId);
   });
   (passive.startingStatuses ?? []).forEach((status) => target.startingStatuses.push({ ...status }));
+  (passive.statusImmunities ?? []).forEach((statusId) => {
+    if (!target.statusImmunities.includes(statusId)) target.statusImmunities.push(statusId);
+  });
+  Object.entries(passive.statusApplicationStacks ?? {}).forEach(([statusId, amount]) => {
+    const id = statusId as StatusEffect["id"];
+    target.statusApplicationStacks[id] = (target.statusApplicationStacks[id] ?? 0) + (amount ?? 0);
+  });
 }
 
 function addBundle(
@@ -150,6 +161,8 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
       statusDamage: { ...EMPTY_PASSIVE.statusDamage },
       preserveStatusOnDetonation: [...EMPTY_PASSIVE.preserveStatusOnDetonation],
       startingStatuses: EMPTY_PASSIVE.startingStatuses.map((status) => ({ ...status })),
+      statusImmunities: [...EMPTY_PASSIVE.statusImmunities],
+      statusApplicationStacks: { ...EMPTY_PASSIVE.statusApplicationStacks },
     },
     triggers: [],
     damageModifiers: [],

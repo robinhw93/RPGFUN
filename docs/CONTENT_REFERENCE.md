@@ -27,6 +27,14 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Venomborn | 2 | 6 | Poisoned enemy | Consumes Poison and heals the player for three turns of that Poison's current damage. |
 | Lightning Strike | 5 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Magical Power as Lightning damage, then applies Electrified for three turns. |
 | Focus | 1 | 6 | Self | Resets every other ability cooldown. Focus keeps its own cooldown. |
+| Recouperate | 1 | 4 | Self | Restores 50% of Max Energy after paying its Energy cost. |
+| Sharpened Blade | 2 | 1 | Enemy | Deals 100% Physical Power and ignores Guard and Barrier. |
+| Slowing Venom | 2 | None | Poisoned enemy | Deals 75% Physical Power, consumes 50% of Poison, and applies Slowed. |
+| Weakening Venom | 2 | None | Poisoned enemy | Deals 60% Physical Power, consumes 50% of Poison, and applies Vulnerable and Weaken. |
+| Rabid Venom | 3 | 1 | Poisoned enemy | Deals 75% Physical Power, consumes 50% of Poison, and applies Reckless. |
+| Pinpoint Slice | 3 | 2 | Enemy | Deals 75% Physical Power; the next damaging ability is guaranteed to critically strike. |
+| Traumatic Puncture | 3 | 1 | Enemy | Deals 75% Physical Power; a critical strike applies Weaken and 2 Bleed. |
+| Slice and Dice | 5 | 2 | Enemy | Hits six times for 15% Physical Power. Critical hits apply Exhausted and each hit triggers on-hit effects. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -43,7 +51,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 43 nodes: the origin, three first-direction class nodes, and 39 later Shadow nodes. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 57 nodes: the origin, three first-direction class nodes, and 53 later Shadow nodes. Branch counts are Shadow 54, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -62,8 +70,8 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_7 | Stamina | Passive | Honed Skills | Any | +1 Max Energy. |
 | talent_8 | Setup | Passive | Precision | Any | +2 Initiative. |
 | talent_9 | Spell Dodger | Passive | Precision | Any | +2 Magic Resistance. |
-| talent_10 | Poison Cloud | Ability | Spell Dodger | Any | Unlocks Poison Cloud. Fatality declares the other edge. |
-| talent_11 | Stealth | Ability | Stamina | Any | Unlocks Stealth. Fatality declares the other edge. |
+| talent_10 | Poison Cloud | Ability | Spell Dodger or Recouperate | Any | Unlocks Poison Cloud. |
+| talent_11 | Stealth | Ability | Stamina or Recouperate | Any | Unlocks Stealth. |
 | talent_12 | Poison Coating | Passive | Setup | Any | Every hit has a 50% chance, plus Luck's chance-effect bonus, to apply 1 Poison. |
 | talent_13 | Adrenaline | Passive | Evasion (passive) | Any | Every hit has a 10% chance, plus Luck's chance-effect bonus, to restore 1 Energy. |
 | talent_14 | Evasion | Ability | Adrenaline | Any | Unlocks Evasion. |
@@ -86,12 +94,26 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_31 | Enduring Evasion | Passive | Evasion (ability) | Any | Evasion grants +40% Dodge instead of +60%, but lasts one additional turn. |
 | talent_32 | Self Medicate | Passive | Venomous Strike | Any | Start combat with 2 Poison. An enemy that directly damages the player gains 1 Poison. |
 | talent_33 | Shock Stabs | Passive | Flurry | Any | Hits against Electrified enemies have a 5% chance, plus Luck's chance-effect bonus, to Stun. |
-| talent_34 | Fatality | Passive | Stealth or Poison Cloud | Any | Direct damage that crosses an enemy from at least 50% Health to below 50% grants Strengthened for three turns. |
+| talent_34 | Recouperate | Ability | Connections are declared by Stealth and Poison Cloud | Any | Restores 50% of Max Energy. |
 | talent_35 | Venomborn | Ability | Self Medicate | Any | Unlocks Venomborn. |
 | talent_36 | Lightning Strike | Ability | Shock Stabs | Any | Unlocks Lightning Strike. |
 | talent_37 | Focus | Ability | Toxic Explosion or Ambush | Any | Unlocks Focus. |
 | talent_38 | Contagion | Ability | Poison Stab | Any | Unlocks Contagion. |
-| talent_39 | New Talent | Ability | Twin Strike | Any | Reserved design node; no ability or mechanical effect is assigned yet. |
+| talent_39 | Sharpened Blade | Ability | Twin Strike | Any | Unlocks Sharpened Blade. |
+| talent_40 | Resistance | Passive | Venomborn | Any | Makes the player immune to Poison. |
+| talent_41 | Thunderstruck | Passive | Lightning Strike | Any | Makes the player immune to Electrified. |
+| talent_42 | Perfected Formula | Passive | Focus | Any | Player-applied Poison gains 1 additional stack. |
+| talent_43 | Distraction | Passive | Focus | Any | Kills grant Stealth and make the next ability cost 0 Energy. |
+| talent_44 | Extra Dose | Passive | Poison Coating | Any | Critical strikes apply 2 Poison. |
+| talent_45 | Flow | Passive | Adrenaline | Any | Critical strikes restore 1 Energy. |
+| talent_46 | Slowing Venom | Ability | Extra Dose | Any | Unlocks Slowing Venom. |
+| talent_47 | Weakening Venom | Ability | Extra Dose | Any | Unlocks Weakening Venom. |
+| talent_48 | Rabid Venom | Ability | Extra Dose | Any | Unlocks Rabid Venom. |
+| talent_49 | Precise Incisions | Passive | Any venom ability | Any | The three venom abilities consume 25% of Poison instead of 50%. |
+| talent_50 | Pinpoint Slice | Ability | Flow | Any | Unlocks Pinpoint Slice. |
+| talent_51 | Traumatic Puncture | Ability | Flow | Any | Unlocks Traumatic Puncture. |
+| talent_52 | Slice and Dice | Ability | Flow | Any | Unlocks Slice and Dice. |
+| talent_53 | Taste for Blood | Passive | Any of the three critical-strike abilities | Any | Critical strikes restore 1% of Max Health. |
 
 Two nodes are both named **Potency** and intentionally provide separate +10% Poison bonuses.
 
@@ -113,6 +135,8 @@ The duration is the default duration created by the status library. Ability or t
 | Taunt | Permanent | No | Forces the player to target this living, visible enemy with single-target attacks. |
 | Stealth | 1-turn library default | No | Cannot be targeted by enemies. The Stealth ability supplies its own duration/expiration behavior. |
 | Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default; Enduring Evasion changes magnitude and duration. |
+| Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
+| Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |
 
 ### Debuffs
 

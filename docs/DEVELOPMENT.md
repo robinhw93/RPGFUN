@@ -142,7 +142,9 @@ Important fields:
 - `hits` and `randomTargetPerHit` define multi-hit behavior.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `dealsDamage: false` creates a status/control utility ability.
-- `effect`, status options, detonation, consumption, healing, and status spreading fields route through engine-supported behaviors.
+- `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
+- `statusApplications` supports one or more on-hit statuses, including critical-only applications.
+- `ignoresAbsorption`, `consumeTargetStatusRatio`, `energyRestorePercentOfMax`, and `grantsNextCritical` support the current advanced Shadow abilities.
 - `damageModifiers` applies conditional multipliers owned by the ability.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
@@ -192,7 +194,7 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, preserved detonations, and starting statuses. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, preserved detonations, starting statuses, status immunities, and additional applied-status stacks. Derived stats aggregate every active source.
 
 ### Triggers
 
@@ -201,7 +203,7 @@ A `CombatTriggerDefinition` contains:
 - An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `damage_taken`, or `turn_end`.
 - Optional ability, damage type, critical, minimum-damage, target-status, or Health-threshold conditions.
 - Optional chance, once-per-turn rule, or cooldown.
-- One or more data-driven effects: damage, status application, healing, Energy, or Guard.
+- One or more data-driven effects: damage, status application, flat or Max-Health-based healing, Energy, or Guard.
 
 Luck's chance-effect bonus is added only when `chance` is explicitly present. Final proc chance is clamped to 0–100%.
 
@@ -220,6 +222,7 @@ Ability modifiers can currently:
 - Override status duration, magnitude, or start-expiration behavior.
 - Apply a status after consuming another status.
 - Retain a ratio of status stacks after detonation.
+- Override the fraction of target-status stacks consumed by supported abilities.
 
 Use these for talents that alter an existing ability rather than branching the engine on a talent ID.
 
@@ -234,6 +237,7 @@ bajs321
 The editor supports:
 
 - Creating, deleting, selecting, and dragging nodes.
+- Live Shadow, Arcanist, and Brute node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, tiers, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
 - Ability-ID references, Energy cost, cooldown turns, and free-form effect/proc notes.

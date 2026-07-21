@@ -25,6 +25,8 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
   stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 1, description: "Cannot be targeted by enemies this round." },
   evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn." },
+  distraction: { id: "distraction", name: "Distraction", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next ability costs 0 Energy." },
+  pinpoint: { id: "pinpoint", name: "Pinpoint", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next damaging ability is guaranteed to critically strike." },
   poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Magic Damage at the end of each turn. Damage scales with the applier's Magical Power." },
   bleed: { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Physical Damage whenever it uses an ability. Damage scales with the applier's Physical Power." },
   burn: { id: "burn", name: "Burn", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Fire Damage at the start of each turn. Damage scales with the applier's Magical Power." },

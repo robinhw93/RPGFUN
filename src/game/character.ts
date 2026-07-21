@@ -53,6 +53,8 @@ export interface DerivedStats extends Stats {
   chanceEffectBonus: number;
   statusDamageMultipliers: Partial<Record<StatusEffectId, number>>;
   preserveStatusOnDetonation: StatusEffectId[];
+  statusImmunities: StatusEffectId[];
+  statusApplicationStacks: Partial<Record<StatusEffectId, number>>;
 }
 
 export function getDerivedStats(character: CharacterState): DerivedStats {
@@ -105,5 +107,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     chanceEffectBonus: stats.luck * 0.0025 + features.passive.chanceEffect,
     statusDamageMultipliers: Object.fromEntries(Object.entries(features.passive.statusDamage).map(([id, bonus]) => [id, 1 + bonus])),
     preserveStatusOnDetonation: [...features.passive.preserveStatusOnDetonation],
+    statusImmunities: [...features.passive.statusImmunities],
+    statusApplicationStacks: { ...features.passive.statusApplicationStacks },
   };
 }
