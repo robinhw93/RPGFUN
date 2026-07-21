@@ -1,0 +1,383 @@
+# Game systems
+
+This document describes the rules currently implemented in Emberfall Chronicles. Percentages are written as player-facing percentages even though the code stores them as decimals.
+
+## Core loop
+
+1. Create and name a character, then choose one of ten appearances.
+2. Review equipment, allocate earned attribute points, choose talents, and prepare up to six active abilities.
+3. Begin **The Ashen Road**.
+4. Resolve combat and event nodes while carrying remaining Health between nodes.
+5. After each victory, receive experience, gold, and potentially loot on the score screen.
+6. Equip loot or adjust the build between fights.
+7. Defeat the final boss to complete the current adventure.
+
+Death is permanent. When combat reaches defeat, the browser save is deleted. The defeat screen returns the player to character creation, and the previous character, equipment, talents, and adventure progress cannot be recovered through the game UI.
+
+## Character creation and starting state
+
+Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect.
+
+Every new character starts with:
+
+- Level 1 and 0 experience.
+- 18 gold.
+- 3 talent points.
+- No unspent attribute points.
+- Wayfarer's Spark unlocked.
+- Strike and Guard equipped.
+- Strength 5, Agility 5, Intelligence 5, Vitality 6, and Luck 3.
+- A full eight-slot equipment loadout and a large testing inventory. See [Content reference](CONTENT_REFERENCE.md#starting-equipment-and-inventory).
+
+## Attributes
+
+Attributes are whole numbers. Equipment and talent bonuses are added to base attributes, and the result is rounded before derived stats are calculated.
+
+| Attribute | Current effects |
+| --- | --- |
+| Strength | +1 Physical Power per point and +1% Guard gained per point. |
+| Agility | +0.3 Physical Power, +0.5% raw Hit Chance, +0.4% Dodge Chance, and +1 Initiative per point. |
+| Intelligence | +1 Magical Power and +0.5 Initiative per point. |
+| Vitality | +10 Max Health and +0.5% healing received per point. |
+| Luck | +0.75% Critical Strike Chance, +1% loot-rarity bonus, and +0.25% to explicitly chance-based combat triggers per point. |
+
+Luck does not turn guaranteed effects into random effects. Its special-effect bonus is only added to triggers that already define a chance.
+
+## Derived stats
+
+All displayed stats are rounded to whole numbers. Percentage values are displayed as rounded whole percentages.
+
+| Stat | Current rule |
+| --- | --- |
+| Max Health | `20 + Vitality × 10 + flat bonuses` |
+| Max Energy | `10 + flat bonuses` |
+| Energy Regeneration | `1 + flat bonuses` at the start of the owner's turn. |
+| Physical Power | `Strength + Agility × 0.3 + gear/talent Physical Power` |
+| Magical Power | `Intelligence + gear/talent Magical Power` |
+| Armor | Sum of equipped item, set, and talent Armor. Shatter can halve the effective value. |
+| Magic Resistance | Sum of equipped item, set, and talent Magic Resistance. |
+| Critical Strike Chance | `5% + Luck × 0.75% + bonuses` |
+| Hit Chance | `95% + Agility × 0.5% + bonuses` |
+| Dodge Chance | `2% + Agility × 0.4% + bonuses`, capped at 50%. |
+| Initiative bonus | `Agility + Intelligence × 0.5 + bonuses` |
+| Guard multiplier | `100% + Strength × 1% + bonuses` |
+| Healing received | `100% + Vitality × 0.5% + bonuses` |
+| Loot-rarity bonus | `Luck × 1% + bonuses` |
+| Chance-effect bonus | `Luck × 0.25% + bonuses` |
+
+Raw Hit Chance and Critical Strike Chance have no maximum cap. Dodge Chance is capped at 50%.
+
+### Hit versus Dodge
+
+The final chance to hit is:
+
+```text
+raw Hit Chance - capped target Dodge Chance
+```
+
+The final opposed result is clamped between 20% and 100%. This means:
+
+- An attack always has at least a 20% chance to hit.
+- The final chance can never exceed 100%.
+- Raw Hit Chance can exceed 100% and can cancel high Dodge. For example, 155% Hit against 40% Dodge resolves to 115%, then becomes 100%.
+
+### Critical strikes
+
+Direct attacks roll Critical Strike Chance after a successful hit. A critical strike multiplies the pre-status direct-damage value by 1.6. Critical Strike Chance itself is uncapped, so a value of 100% or more always critically strikes.
+
+## Damage types and defenses
+
+The implemented damage types are Physical, Arcane, Shadow, Fire, Frost, and Lightning.
+
+| Damage type | Offensive power | Defense |
+| --- | --- | --- |
+| Physical | Physical Power | Armor |
+| Arcane | Magical Power | Magic Resistance |
+| Fire | Magical Power | Magic Resistance |
+| Frost | Magical Power | Magic Resistance |
+| Lightning | Magical Power | Magic Resistance |
+| Shadow | Physical Power in the current engine | Magic Resistance |
+
+Shadow's mixed rule is the current implementation, not a general design promise for future content.
+
+### Player direct damage
+
+Each damage component follows this order:
+
+1. Add the ability's flat power to the relevant derived power multiplied by its scaling.
+2. Subtract the target's effective Armor or Magic Resistance.
+3. Apply the 1.6 critical multiplier when the hit is critical.
+4. Apply data-driven talent/gear damage modifiers.
+5. Apply outgoing status modifiers such as Strengthened, Enlightened, or Weaken.
+6. Apply incoming status modifiers such as Shielded, Vulnerable, Wet, Cold, or Charred.
+7. Round to a whole number, with a minimum of 1 damage for a successful damaging component.
+
+Multi-component abilities calculate each component separately and add the results. Lightning Strike is the current example: one Physical component and one Lightning component.
+
+### Enemy direct damage
+
+Enemy attacks currently use a lighter defense reduction:
+
+```text
+enemy Power - floor(player defense × 0.35)
+```
+
+The result has a minimum of 1 before critical and status modifiers. Guard then absorbs damage before Health is lost.
+
+## Combat flow
+
+### Combat start
+
+- The player enters with carried Health, limited to current Max Health.
+- Player Energy starts full.
+- Every enemy starts with 10/10 Energy.
+- Starting statuses from talents or gear are added.
+- Every combatant rolls initiative.
+
+### Initiative
+
+- The player rolls a whole-number d100 and adds the Initiative bonus.
+- Enemies roll a whole-number d100 with no bonus.
+- Highest total acts first.
+- On an exact player/enemy tie, the player is ordered first.
+- Remaining enemy ties are resolved by stable actor ID.
+- Slowed combatants are reordered behind combatants that are not Slowed.
+
+The initiative UI rapidly cycles random values, locks the raw rolls, applies bonuses, then animates the final cards into the turn-order row. The current timing values are documented in [Architecture](../ARCHITECTURE.md#initiative-presentation).
+
+### Player turn
+
+At the start of the player's turn:
+
+- One-round start-expiring defenses are removed.
+- Burn, Regenerate, Sleep, Stunned, and Electrified are processed.
+- Energy is regenerated, limited by Max Energy.
+- Exhausted limits that regeneration to at most 1.
+- Ability cooldowns decrease by one player turn.
+- The floating **Your turn.** event activates the UI at the same moment the turn state becomes active.
+
+The player may use any number of abilities during the turn as long as:
+
+- It is still the player's turn.
+- Enough Energy remains.
+- The ability is not on cooldown.
+- A valid target exists.
+- Any required self or target status is present, unless a talent modifier overrides that requirement.
+
+Using an ability never ends the turn automatically. The player presses **End Turn** when finished.
+
+At the end of the player's turn, Poison resolves and normal status durations decrease.
+
+### Enemy turn
+
+At the start of an enemy's turn:
+
+- The same start-of-turn status checks are resolved.
+- The enemy regenerates 1 Energy, up to 10.
+- If it lacks the Energy required by its attack, it gathers Energy instead of attacking.
+- If the player is Stealthed, the enemy cannot target the player.
+- Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
+
+Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease.
+
+### Targeting
+
+- Dead enemies remain visible but cannot be targeted.
+- Stealthed enemies cannot be targeted.
+- A living, visible enemy with Taunt forces all single-target attacks to that enemy.
+- Area abilities target all living enemies that are not Stealthed.
+- Flurry chooses a new valid random enemy independently for every hit.
+
+### Damage, status, and turn presentation
+
+Combat calculations can prepare future results, but visible HP, status, and active-turn changes are delayed until their corresponding floating combat message is shown. Direct attacks start their lunge animation with the damage message and apply damage at the configured impact frame.
+
+This sequencing guarantees that:
+
+- Damage appears when the attack lands.
+- HP bars animate from the old value to the new value.
+- Statuses appear with the message that applies them.
+- The turn-order highlight moves when the turn message is shown.
+- Victory waits for the final death result and the **Victory.** message before the score screen appears.
+
+### Victory and defeat
+
+- Victory grants the current node's reward once and opens the score screen after all queued combat presentation is complete.
+- The score screen animates experience, shows gold and loot, and allows access to the Character screen before continuing.
+- Defeat clears the save immediately and presents the permadeath screen.
+
+## Energy and cooldowns
+
+- Default Max Energy: 10.
+- Default player Energy regeneration: 1 at the start of the player's own turn.
+- Default enemy Energy regeneration: 1 at the start of that enemy's own turn.
+- Energy cannot exceed Max Energy and cannot be spent below zero.
+- A cooldown is measured in player turns and decreases only when the next player turn begins.
+- Focus clears every other cooldown, then keeps its own six-turn cooldown.
+
+The segmented Energy bar previews Energy that will be available after the next regeneration.
+
+## Guard
+
+Guard is a temporary, stackable absorption status, but it is intentionally not displayed in the normal buff/debuff icon row. The Guard ability grants a base of 6 Guard multiplied by the character's Guard multiplier. Incoming damage removes Guard first; only the remainder reduces Health. Normal Guard expires when its owner's next turn begins.
+
+## Status system
+
+Unless specified otherwise, statuses last three turns. The status icon uses a fixed three-segment duration ring: elapsed segments become empty and the remaining segments never stretch to fill the missing space. Stack count is shown separately in the icon.
+
+Applying a status that is already present:
+
+- Adds stacks when the status is stackable.
+- Keeps the greater remaining duration instead of adding durations.
+- Keeps the greater source power.
+- Refreshes the source ID to the latest applier when provided.
+
+Detailed status definitions and formulas are in [Content reference](CONTENT_REFERENCE.md#status-effects).
+
+### Damage-over-time formulas
+
+All status damage is rounded to a whole number after multiplying by stacks.
+
+```text
+Bleed per stack  = 2 + source Physical Power × 0.25
+Poison per stack = 2 + source Magical Power × 0.30
+Burn per stack   = 3 + source Magical Power × 0.30
+```
+
+- Bleed triggers whenever the afflicted combatant uses an ability or enemy attack.
+- Poison triggers at the end of each afflicted combatant's turn.
+- Burn triggers at the start of each afflicted combatant's turn.
+- Bleed is Physical damage, Poison is Arcane damage, and Burn is Fire damage.
+- The status stores the applier's power when applied; later stat changes do not rewrite an existing status's source power.
+- Player Poison damage can be modified by talent bonuses such as Potency.
+
+Regenerate uses:
+
+```text
+healing per stack = 3 + source Magical Power × 0.20
+```
+
+The result is then multiplied by the target's healing-received multiplier and limited by missing Health.
+
+## Adventures and events
+
+The current adventure is **The Ashen Road**, containing four ordered nodes. See the exact encounter list and rewards in [Content reference](CONTENT_REFERENCE.md#adventure-the-ashen-road).
+
+Remaining Health carries from one node to the next. Between nodes, the game shows an animated travel transition followed by the next encounter/event announcement.
+
+The Forgotten Shrine currently offers:
+
+- **Rest:** restore 24 carried Health, capped at Max Health.
+- **Take the ember:** lose 10 carried Health, never falling below 1, and gain 1 talent point.
+
+## Experience and levels
+
+Experience required for the next level is:
+
+```text
+100 + (current level - 1) × 50
+```
+
+Excess experience carries into later levels, and one reward can grant multiple levels. Each gained level awards:
+
+- 3 attribute points.
+- 1 talent point.
+
+Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
+
+## Talents and ability loadout
+
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first three directions are Brute, Shadow, and Arcanist. The current expanded content is primarily the Shadow branch; Brute and Arcanist currently contain only their first class node, although extra non-tree ability definitions exist for future work.
+
+### Unlock rules
+
+- A node costs its configured number of talent points.
+- All prerequisite connections are required by default.
+- A node with `requireMode: "any"` requires any one connected prerequisite.
+- Unlocking is permanent for the current character; there is no respec UI.
+- Unlocking an ability talent automatically equips the ability if fewer than six abilities are equipped.
+
+### Loadout
+
+- The combat loadout has six slots.
+- Strike and Guard are permanent core abilities and cannot be unequipped.
+- Other unlocked abilities can be equipped or removed outside combat.
+- Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
+- The player can pan, zoom, and fit the talent tree on desktop and mobile.
+
+The complete current tree is listed in [Content reference](CONTENT_REFERENCE.md#talent-tree).
+
+## Equipment and inventory
+
+### Slots
+
+The character has eight equipment slots:
+
+- Head
+- Chest
+- Pants
+- Boots
+- Main Hand
+- Off Hand
+- Ring I
+- Ring II
+
+### Weapon hand rules
+
+| Classification | Equipping rule |
+| --- | --- |
+| Main Hand | Can only be equipped in Main Hand. |
+| One-Hand | Can be equipped in Main Hand or Off Hand. |
+| Off Hand | Can only be equipped in Off Hand. |
+| Two-Hand | Equips in Main Hand, moves the previous Main Hand and Off Hand items to inventory, and locks Off Hand. |
+
+Equipping a replacement returns the previously equipped item to inventory. Unequipping returns the item to inventory. Rings can be placed in either ring slot.
+
+### Armor materials and weapon kinds
+
+Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mace, Dagger, Wand, Shield, Tome, Staff, and Polearm icon/category variants.
+
+### Item presentation
+
+- Rarity levels are Common, Uncommon, Rare, and Epic.
+- Item names use their rarity color in inventory, equipment, details, and comparison.
+- Item cards show identity and flavor, while all mechanical stats appear in the item details modal.
+- Stats are sorted alphabetically and use stat icons.
+- A compatible equipment slot opens a filtered list of equippable inventory items.
+- Compare shows the equipped and candidate items with green positive and red negative differences.
+- Item and equipment modals lock background scrolling.
+- Inventory can be filtered by gear category and sorted by rarity or name.
+
+### Gear sets
+
+Set items show all thresholds for their own set. Fulfilled thresholds are green; unfulfilled thresholds are gray. Items without a set show no set section. Only equipped pieces count toward active set bonuses.
+
+The current Ashborn Warplate thresholds are in [Content reference](CONTENT_REFERENCE.md#gear-set-bonuses).
+
+## Loot and gold
+
+Each combat reward defines experience, gold, and whether loot is rolled. Loot is immediately added to inventory and shown on the score screen.
+
+Regular encounters currently roll from the seven-item reward pool with base rarity weights:
+
+| Rarity | Base weight |
+| --- | ---: |
+| Common | 55 |
+| Uncommon | 28 |
+| Rare | 13 |
+| Epic | 4 |
+
+Luck's loot-rarity bonus increases Uncommon, Rare, and Epic weights by their rarity tier while leaving Common's weight unchanged. The final boss currently awards Warden's Broken Crown directly.
+
+Gold is stored on the character and displayed in the top bar and reward screens. There is no shop or gold-spending system yet.
+
+## Saving and reset behavior
+
+- The game automatically writes the full `GameState` to browser `localStorage` under `emberfall-save-v1` after state changes.
+- Refreshing or reopening the same site origin restores the character and in-progress adventure.
+- Saves are local to the browser profile and exact site origin; they are not cloud-synced.
+- The reset button uses a game-owned confirmation dialog and deletes the save.
+- Defeat deletes the save without retaining a recoverable character.
+- Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, and reward state where possible.
+
+Developer Talent Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset.

@@ -1,40 +1,407 @@
 # Emberfall architecture
 
-## Boundaries
+## Architectural goals
 
-- `src/game/engine.ts` owns deterministic combat state transitions. UI components should not calculate damage, statuses, turn order, or outcomes.
-- `src/game/combatFeatures.ts` resolves data-driven gear, set, and talent triggers before the engine applies their effects.
-- `src/game/character.ts` is the only place that turns attributes plus passive gear/set/talent bonuses into derived character stats.
-- `src/game/combatMath.ts` owns opposed combat rules such as Hit Chance versus Dodge Chance and their final bounds.
-- `src/game/timing.ts` is the source of truth for JavaScript animation and event timings.
-- `src/hooks/useCombatEventSequencer.ts` coordinates floating combat messages, attack wind-up, and the delayed impact state transition.
-- `src/game/initiativeLayout.ts` contains the pure FLIP geometry used to move initiative cards between layouts.
-- `src/components/` contains reusable game-owned UI overlays and controls.
+The project is a browser-only vertical slice optimized for rapid content iteration and mobile play. The architecture separates rules from presentation so combat results remain coherent while UI animation, floating text, and touch interaction evolve independently.
+
+Primary rules:
+
+- Game modules calculate outcomes; React renders and schedules presentation.
+- Content is data-driven where a stable general contract exists.
+- Damage, statuses, turns, and HP become visible at the event that describes them.
+- Saved IDs remain stable and old state is normalized at the boundary.
+- Game-owned UI replaces browser-native prompts, confirmations, and tooltips.
+
+## Runtime layers
+
+```text
+React UI and interaction (App.tsx, components)
+                |
+                v
+Application actions and event sequencer
+                |
+                v
+Pure-ish game transitions (engine, gear, rewards, progression)
+                |
+                v
+Content and rules (data, statuses, combat features, math)
+                |
+                v
+Browser localStorage and static assets
+```
+
+There is no server authority. React owns the current `GameState`, and every non-defeat update is automatically serialized to browser storage.
+
+## Module ownership
+
+### Application and UI
+
+- `src/App.tsx` owns top-level React state, navigation, character creation, adventure progression, event choices, reward presentation, runtime talent interaction, character/inventory interaction, and the high-level commands sent to game modules.
+- `src/hooks/useCombatEventSequencer.ts` schedules visible combat events and applies their pending state effects at the correct message/impact time.
+- `src/components/FloatingCombatText.tsx` presents the event queue and reports when each entry appears and when the sequence completes.
+- `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
+- `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
+- `src/components/TalentDevtool.tsx` owns the isolated developer draft model and export workflow; it does not mutate live game content.
+- `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
+
+### Domain and content
+
+- `src/game/types.ts` is the shared domain schema.
+- `src/game/data.ts` is the canonical static catalog for abilities, talents, tree canvas, enemies, items, set thresholds, and adventure nodes.
+- `src/game/statusEffects.ts` is the canonical status catalog and owns generic status stacking, duration, multipliers, ticking damage, and healing formulas.
+- `src/game/avatars.ts` owns the appearance catalog and normalization.
+
+### Rules and transitions
+
+- `src/game/engine.ts` owns combat creation, initiative, turn movement, targeting, abilities, enemy behavior, status timing, procs, pending effects, and outcomes.
+- `src/game/character.ts` is the only module that converts base attributes plus equipment/set/talent passives into `DerivedStats`.
+- `src/game/combatMath.ts` owns opposed Hit/Dodge rules and caps.
+- `src/game/combatFeatures.ts` aggregates data-driven gear, set, and talent combat features.
+- `src/game/talentRequirements.ts` owns All/Any prerequisite evaluation for both UI state and unlock authorization.
+- `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, item category normalization, and loot selection.
+- `src/game/progression.ts` owns experience thresholds and level rewards.
+- `src/game/rewards.ts` applies a combat reward exactly once and stores the immutable score-screen snapshot.
+- `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
+- `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
+- `src/game/timing.ts` is the source of truth for combat/initiative presentation durations.
+- `src/game/save.ts` owns storage and migration.
+
+## State model
+
+`GameState` contains:
+
+- `characterCreated`: whether creation has completed.
+- `character`: persistent identity, progression, inventory, equipment, talents, and ability loadout.
+- `adventure`: current node, carried Health, combat, event state, reward snapshot, loot, and completion.
+
+`CombatState` contains both authoritative logical results and presentation synchronization state:
+
+- Turn number, sorted initiative entries, active index, and initiative-reveal state.
+- Player/enemy Health, Energy, statuses, targeting, and cooldowns.
+- `floatingEvents`: ordered player-facing messages for the current sequence.
+- `pendingEffects`: state changes indexed to those messages.
+- `eventId` and `completedSequenceEventId`: queue-generation identity and completion guard.
+- Attack actor/effect IDs and damaged targets for animation.
+- Proc usage for once-per-turn and cooldown trigger rules.
+- Combat log and active/victory/defeat outcome.
+
+### Immutability
+
+Game actions return new state objects. React state setters call the relevant transition and embed the result back into `GameState`. Avoid mutating saved arrays or nested objects in place; delayed presentation depends on previous visible values remaining intact.
+
+## Character-stat pipeline
+
+`getDerivedStats(character)` performs this order:
+
+1. Clone base attributes.
+2. Add equipped item attributes, Armor, Magic Resistance, and direct powers.
+3. Resolve all active combat-feature sources.
+4. Add talent/set/gear passive attributes and round the five attributes.
+5. Add other direct passive values.
+6. Calculate derived powers, resources, chances, initiative, Guard/healing multipliers, loot/chance bonuses, status modifiers, and detonation preservation.
+
+UI modules display these results but never reproduce their formulas.
+
+### Stat contract
+
+- Raw Hit Chance and Critical Strike Chance are intentionally uncapped.
+- Dodge Chance is capped at 50%.
+- Final Hit Chance is `raw Hit - capped Dodge`, clamped to 20–100%.
+- Strength and Agility feed Physical Power.
+- Intelligence feeds Magical Power.
+- Abilities use their relevant derived power exactly once. `scalingStat` remains legacy/category metadata for older definitions and is not independently added to damage.
+- All visible stats and initiative values are rounded whole numbers.
+
+## Data-driven combat features
+
+`CombatFeatureBundle` is shared by gear items, set thresholds, and talents. `getCharacterCombatFeatures` collects sources in this order:
+
+1. Equipped gear bundles and set-piece counts.
+2. Bundles from unlocked talents.
+3. Active set-threshold bundles.
+
+Every resolved trigger/modifier carries source ID, source name, source kind, and a stable runtime ID.
+
+### Passive bonuses
+
+Passives aggregate additively into:
+
+- Attributes and direct derived stats.
+- Resources, regeneration, chances, and initiative.
+- Guard generation and healing received.
+- Bleed reduction, loot rarity, and probabilistic-effect chance.
+- Per-status damage bonuses.
+- Status-preservation behavior.
+- Starting combat statuses.
+
+New generally reusable static bonuses belong in `PassiveBonuses`, not UI conditions or talent-ID branches.
+
+### Triggers
+
+Trigger events are typed as:
+
+```text
+combat_start | turn_start | before_ability | on_hit | on_crit |
+on_kill | damage_taken | turn_end
+```
+
+Conditions can filter by ability, damage type, critical result, minimum damage, target status, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
+
+Effect definitions support:
+
+- Damage to self, target, all enemies, or a random enemy.
+- Status application to those target modes.
+- Self healing.
+- Self Energy gain.
+- Self Guard gain.
+
+Luck's chance-effect bonus is added only to triggers with an explicit `chance` field. Final trigger chance is clamped from 0 to 1. Guaranteed triggers remain guaranteed.
+
+The type contract is slightly broader than the currently emitted engine events. Before adding content for an event, confirm that the engine calls `runPlayerTriggerEvent` at the intended point.
+
+### Damage modifiers
+
+Damage modifiers are conditional multipliers filtered by:
+
+- Damage type.
+- Any matching attacker status.
+- Any matching target status.
+
+Every matching modifier multiplies the running result. Status-system outgoing/incoming multipliers are a separate later step.
+
+### Ability modifiers
+
+Ability modifiers target one or more ability IDs and currently support:
+
+- Bypassing a required self status.
+- Alternative scaling when bypassing that requirement.
+- Status duration, magnitude, and expiration overrides.
+- Applying a new status after consuming another.
+- Retaining a ratio of stacks after detonation.
+
+This is the preferred extension point for talents that transform an existing ability, such as Maneuvers, Reapply, Enduring Evasion, and Longevity.
+
+## Combat transition model
+
+### Creation and normalization
+
+`createCombat` builds enemy instances, initializes Energy/statuses, rolls initiative, and applies starting statuses. `ensureCombatState` repairs older saved combats by adding missing fields, normalizing definitions, rounding legacy initiative values, correcting selection, and recreating initiative when absent.
+
+### Turn order
+
+Base order is descending initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. `reorderCombat` puts Slowed actors after actors without Slowed while preserving initiative rules inside those groups.
+
+`moveToNextActor`:
+
+1. Detects defeat or victory.
+2. Finds the next living actor.
+3. Advances the combat round counter when wrapping.
+4. Queues the next actor's turn announcement.
+5. Prepares player-turn start effects and regeneration when applicable.
+
+The visible active index remains unchanged until the queued turn event resolves.
+
+### Ability use
+
+`useAbility` validates turn, outcome, Energy, cooldown, targets, and status requirements. It then:
+
+1. Captures visible Health/status snapshots.
+2. Resolves active ability modifiers.
+3. Spends Energy and starts cooldown.
+4. Emits the ability-use message.
+5. Runs `before_ability` triggers.
+6. Resolves self utility, status consumption/detonation, or direct hit loops.
+7. For direct hits, rolls Hit, Critical, component damage, status application, on-hit/on-crit/on-kill triggers, and Reckless recoil.
+8. Resolves player Bleed after the ability.
+9. Returns logical resource/cooldown changes immediately but preserves visible Health/status snapshots until pending events resolve.
+
+Using an ability sets `playerActed` but does not move turn order. The player may continue using affordable ready abilities until calling `endPlayerTurn`.
+
+### Enemy turns
+
+`takeEnemyTurn` runs start statuses, regenerates Energy, handles insufficient Energy/Stealth, rolls the attack, applies defense/Guard/status effects, runs player `damage_taken` triggers, resolves enemy Bleed and Poison, then calls `moveToNextActor`.
+
+Enemy AI currently has one fixed attack per enemy template and no ability selection tree.
 
 ## Combat timing contract
 
-An attack damage event has two phases:
+Combat rules often calculate a future result before the player sees it. The visible state must remain at the pre-result snapshot until the matching message.
 
-1. `primeCombatAttack` starts the attacker animation when its damage message appears.
-2. `resolveCombatEvent` applies HP loss and the target reaction at the configured impact time.
+### Pending effects
 
-Status and turn effects continue to resolve when their own floating message appears. This keeps visible feedback and state changes synchronized.
+Each pending effect has an `eventIndex` into `floatingEvents`:
 
-Player turns are explicitly ended with `endPlayerTurn`; using an ability never advances the active actor. `CombatState.abilityCooldowns` stores cooldowns in player turns, and the engine decrements them only when the next player turn begins. This lets a player chain any number of affordable, ready abilities without coupling action count to turn order.
+- `damage`
+- `heal`
+- `status`
+- `remove_status`
+- `set_status`
+- `turn`
 
-## Stat and content contract
+When `FloatingCombatText` reveals an index, the sequencer resolves all effects attached to that index.
 
-- Gear, set bonuses, and talents all contribute through `PassiveBonuses`. New direct derived-stat bonuses belong there instead of in UI or ability-specific conditionals.
-- Raw Hit Chance and Critical Strike Chance are intentionally uncapped. Dodge Chance is capped at 50%. The opposed final hit roll is `Hit Chance - Dodge Chance`, clamped to 20–100%.
-- Strength and Agility feed Physical Power. Intelligence feeds Magical Power. Abilities use the matching derived power once; their old `scalingStat` metadata is retained for content categorization and save compatibility, not added a second time to base damage.
-- Luck bonuses to chance-based effects apply only to explicitly probabilistic triggers. Effects without a `chance` field remain guaranteed.
+### Direct-attack two-phase contract
 
-## UI rules
+Direct attack damage has two presentation phases:
 
-- All player-facing copy explains the game in the language of the character and player. Internal formulas, implementation terms, and developer-oriented rules do not belong in game UI.
-- Never use browser-native `alert`, `confirm`, or `prompt` dialogs.
-- Never use HTML `title` attributes for tooltips. Hover and keyboard hints use the game-owned `data-game-tooltip` UI; detailed touch interactions use game-owned modals.
-- Confirmations and destructive actions use components from `src/components/`.
-- Combat must remain usable without page scrolling at the mobile breakpoint.
-- Combatant cards keep stable React keys so resource bars can interpolate between values and local damage/heal feedback can animate without remounting the card.
-- Any animation that lands on persistent UI should measure the real destination geometry instead of assuming fixed widths.
+1. `primeCombatAttack` runs as the damage message appears, marks the attacker, and starts the backstep/charge animation.
+2. After `attackImpactMs`, `resolveCombatEvent` applies damage, wakes Sleep when relevant, marks the damaged target, and updates the HP bar.
+
+Statuses attached to that same event index resolve at impact with damage. Non-attack effects resolve as soon as their floating message appears.
+
+Never update visible target HP/status early to simplify an animation; doing so breaks the event rhythm and can show victory before the final blow.
+
+### Current combat timing
+
+From `src/game/timing.ts`:
+
+| Timing | Value |
+| --- | ---: |
+| Floating message slot | 1800 ms |
+| Full attack animation | 730 ms |
+| Attack impact after message | 320 ms |
+
+`eventId` prevents stale timers from resolving into a newer action sequence. `completedSequenceEventId` prevents score screens or enemy automation from advancing before all current messages complete.
+
+## Initiative presentation
+
+Initiative uses precomputed `TurnOrderEntry` values containing raw roll, bonus, and final initiative. The UI only presents the roll; it does not reroll or reorder combat.
+
+Current milestones:
+
+| Milestone | Time from start |
+| --- | ---: |
+| Counter tick interval | 45 ms |
+| Raw rolls lock | 1600 ms |
+| Bonuses shown/applied | 3700 ms |
+| Final order phase | 5800 ms |
+| Card flight duration | 1400 ms |
+| Initiative presentation complete | 7600 ms |
+
+`initiativeLayout.ts` measures real source and target rectangles. FLIP transforms include translation and scale from the source card to its final turn-order slot. This avoids the desktop-only snap/shrink bug caused by assuming natural row widths.
+
+## Adventure and reward flow
+
+`AdventureProgress` stores carried Health independently of active combat.
+
+- `beginAdventure` creates the first combat at Max Health.
+- Victory triggers `grantCombatReward` through a React effect.
+- Reward identity plus node index prevents duplicate application.
+- The score screen reads `pendingReward`, which records before/after level and XP values even though the character has already received the reward.
+- Continuing carries final Health into the next combat or event.
+- The event modifies carried Health or talent points.
+- Completing the final node clears active combat and marks the adventure completed.
+
+Travel transitions are UI-only timing; they do not modify rules until `advanceJourney` executes.
+
+## Gear transaction rules
+
+Equip and unequip helpers return a new `CharacterState` and transfer item objects between inventory and equipment.
+
+- Equipping a replacement pushes the previous item into inventory.
+- Equipping a Two-Hand item clears both hand slots into inventory before placing it in Main Hand.
+- Off Hand is locked while Main Hand contains a Two-Hand item.
+- One-Hand items accept an explicit preferred hand, otherwise the helper chooses an available hand.
+- Ring placement accepts an explicit ring slot, otherwise it chooses the first empty ring, then Ring I.
+
+The UI may preview and compare, but only these helpers authorize the transaction.
+
+## Talent prerequisites and runtime tree
+
+`areTalentRequirementsMet` is shared by visual availability and the actual unlock action:
+
+- Empty `requires` is available.
+- `requireMode: "any"` uses `some`.
+- Missing or `"all"` uses `every` for backward compatibility.
+
+The runtime tree derives its minimum bounding box from node world positions inside `TALENT_TREE_CANVAS`, then adds padding. It pans by scroll offset and zooms a scaled world surface between 20% and 160%. Fit uses the available viewport. The editor has independent zoom/canvas rules.
+
+## Talent Editor isolation
+
+The editor owns a `TalentDraft`, not live `Talent[]` data. Its storage keys are:
+
+```text
+emberfall.talent-devtool.v1
+emberfall.talent-devtool.snap-to-grid
+```
+
+The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format.
+
+Canvas positions are percentages, but grid spacing is stored as fixed world units. When nodes approach an edge, `ensureCanvasRoom` expands that side and recalculates percentages so existing absolute alignment remains stable.
+
+An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions.
+
+## Save boundary and migration
+
+The game save key is `emberfall-save-v1`.
+
+`loadGame` is a defensive boundary:
+
+- Invalid JSON returns no save.
+- Removed talent IDs are filtered and known costs refunded.
+- Equipped abilities are restricted to core abilities and abilities granted by still-unlocked talents.
+- Item metadata is hydrated from current definitions.
+- Invalid legacy Two-Hand plus Off Hand combinations are repaired.
+- Avatar, stat points, and pending rewards receive fallbacks.
+
+`ensureCombatState` performs the separate in-combat migration because combat definitions and animation fields evolve more frequently.
+
+On defeat, `clearSave` runs instead of `saveGame`. Reset also clears the save and returns to a deep clone of `INITIAL_GAME`.
+
+## UI contracts
+
+- All player-facing copy is English and uses player vocabulary.
+- Internal rule labels such as “Hit rule” must not appear in player UI.
+- Browser-native `alert`, `confirm`, and `prompt` are forbidden.
+- HTML `title` tooltips are forbidden for game interaction.
+- Short hints use the game-owned `data-game-tooltip` system.
+- Detailed touch/click information uses game-owned modals.
+- Tap and long-press must remain distinguishable for combat abilities.
+- Opening a detail/choice modal must lock background scrolling and restore the prior scroll position.
+- Combatant cards require stable React keys so HP interpolation and local hit/heal animations do not remount.
+- Combat must remain usable without page scrolling at mobile breakpoints.
+- Dead enemy cards remain mounted, grayed out, and untargetable.
+- Armor is a derived defense, not a visible combat status icon.
+- Status duration rings always reserve three fixed segments; elapsed segments become empty.
+- Animations that land on persistent UI must measure real destination geometry.
+
+## Extension checklist
+
+### New derived stat
+
+1. Add it to the relevant types.
+2. Add its passive accumulation contract.
+3. Calculate it in `character.ts`.
+4. Use it in rule modules, not UI.
+5. Add a stat icon and player-facing tooltip/summary if displayed.
+6. Add save fallbacks if persisted.
+7. Update game systems and content documentation.
+
+### New status
+
+1. Extend `StatusEffectId`.
+2. Add `STATUS_EFFECTS` metadata.
+3. Add its combat icon.
+4. Add generic or special timing/mechanics.
+5. Ensure queued application/removal matches floating text.
+6. Add it to the Content reference.
+
+### New talent effect
+
+Prefer, in order:
+
+1. Existing passive bonus.
+2. Existing trigger/effect combination.
+3. Existing damage modifier.
+4. Existing ability modifier.
+5. A new general data contract and engine handler.
+
+Avoid checking a talent ID directly inside damage or UI code unless the behavior genuinely cannot be generalized.
+
+### New persistent field
+
+1. Add it to the type.
+2. Initialize fresh state.
+3. Normalize old saves.
+4. Preserve immutable state transitions.
+5. Test refresh during the affected screen or combat phase.
