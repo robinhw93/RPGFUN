@@ -1138,10 +1138,61 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
 }
 
 function TurnOrderBar({ combat }: { combat: CombatState }) {
+  const rowElement = useRef<HTMLDivElement | null>(null);
+  const cardElements = useRef(new Map<string, HTMLSpanElement>());
+  const previousPositions = useRef(new Map<string, DOMRect>());
+  const reorderAnimations = useRef(new Map<string, Animation>());
+  const orderSignature = combat.turnOrder.map((actor) => actor.actorId).join("|");
+
+  useLayoutEffect(() => {
+    reorderAnimations.current.forEach((animation) => animation.cancel());
+    reorderAnimations.current.clear();
+
+    const nextPositions = new Map<string, DOMRect>();
+    cardElements.current.forEach((element, actorId) => nextPositions.set(actorId, element.getBoundingClientRect()));
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!reducedMotion && previousPositions.current.size > 0) {
+      nextPositions.forEach((nextPosition, actorId) => {
+        const previousPosition = previousPositions.current.get(actorId);
+        const element = cardElements.current.get(actorId);
+        if (!previousPosition || !element) return;
+        const x = previousPosition.left - nextPosition.left;
+        const y = previousPosition.top - nextPosition.top;
+        if (Math.abs(x) < 0.5 && Math.abs(y) < 0.5) return;
+        const animation = element.animate(
+          [{ transform: `translate3d(${x}px, ${y}px, 0)` }, { transform: "translate3d(0, 0, 0)" }],
+          { duration: COMBAT_TIMING.turnOrderReorderMs, easing: "cubic-bezier(.2,.82,.2,1)" },
+        );
+        reorderAnimations.current.set(actorId, animation);
+        animation.onfinish = () => reorderAnimations.current.delete(actorId);
+        animation.oncancel = () => reorderAnimations.current.delete(actorId);
+      });
+    }
+
+    previousPositions.current = nextPositions;
+  }, [orderSignature]);
+
+  useEffect(() => {
+    const updatePositions = () => {
+      if (reorderAnimations.current.size > 0) return;
+      previousPositions.current = new Map(
+        [...cardElements.current].map(([actorId, element]) => [actorId, element.getBoundingClientRect()]),
+      );
+    };
+    const resizeObserver = new ResizeObserver(updatePositions);
+    if (rowElement.current) resizeObserver.observe(rowElement.current);
+    return () => {
+      resizeObserver.disconnect();
+      reorderAnimations.current.forEach((animation) => animation.cancel());
+      reorderAnimations.current.clear();
+    };
+  }, []);
+
   return (
     <div className="turn-order-bar" aria-label={`Turn order, round ${combat.turn}`}>
       <span className="round-label">Round {combat.turn}</span>
-      <div>
+      <div ref={rowElement}>
         {combat.turnOrder.map((actor, index) => {
           const enemy = actor.kind === "enemy" ? combat.enemies.find((candidate) => candidate.instanceId === actor.actorId) : null;
           const defeated = actor.kind === "player" ? combat.playerHp <= 0 : (enemy?.hp ?? 0) <= 0;
@@ -1150,6 +1201,11 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
           return (
             <span
               key={actor.actorId}
+              ref={(element) => {
+                if (element) cardElements.current.set(actor.actorId, element);
+                else cardElements.current.delete(actor.actorId);
+              }}
+              data-turn-actor={actor.actorId}
               className={`${index === combat.activeTurnIndex ? "active" : ""} ${defeated ? "defeated" : ""} ${currentTarget ? "current-target" : ""} ${actor.kind}`}
               data-game-tooltip={`${actor.name}: ${initiative} Initiative${currentTarget ? " · Current target" : ""}`}
               data-tooltip-placement="bottom"

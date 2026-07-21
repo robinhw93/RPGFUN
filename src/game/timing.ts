@@ -2,6 +2,7 @@ export const COMBAT_TIMING = {
   floatingMessageMs: 1800,
   attackDurationMs: 730,
   attackImpactMs: 320,
+  turnOrderReorderMs: 480,
 } as const;
 
 export const INITIATIVE_TIMING = {

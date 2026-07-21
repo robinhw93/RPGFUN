@@ -274,12 +274,15 @@ From `src/game/timing.ts`:
 | Floating message slot | 1800 ms |
 | Full attack animation | 730 ms |
 | Attack impact after message | 320 ms |
+| Turn-order reorder | 480 ms |
 
 `eventId` prevents stale timers from resolving into a newer action sequence. `completedSequenceEventId` prevents score screens or enemy automation from advancing before all current messages complete.
 
 ## Initiative presentation
 
 Initiative uses precomputed `TurnOrderEntry` values containing raw roll, bonus, and final initiative. The UI only presents the roll; it does not reroll or reorder combat.
+
+Runtime changes to effective Initiative, such as Slowed setting a combatant to 0, reorder the rules state immediately. `TurnOrderBar` uses stable actor IDs and FLIP position measurements to animate the existing cards from their previous screen positions into the new responsive order.
 
 Current milestones:
 
