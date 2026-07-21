@@ -212,6 +212,8 @@ Triggered passives do not add presentation events. Their damage, healing, and st
 
 Player `You use ...` action events are presentation-hidden and use `COMBAT_TIMING.silentEventMs`. Keep the event as the synchronization anchor for Energy expenditure and `before_ability` triggers; the ability-use combat-log entry remains player-inspectable.
 
+`FloatingCombatText` snapshots hidden event indexes when a sequence mounts. Pending damage effects are consumed as soon as their event resolves, so recalculating visibility from live pending effects would reveal the hidden damage sentence for the remainder of that event.
+
 Luck's chance-effect bonus is added only when `chance` is explicitly present. Final proc chance is clamped to 0–100%.
 
 Some trigger event names are part of the general contract but are not yet emitted from every theoretically possible engine location. Verify the desired event in `engine.ts` before depending on it for new content.

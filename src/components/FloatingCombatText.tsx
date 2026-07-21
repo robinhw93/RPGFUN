@@ -13,6 +13,7 @@ interface FloatingCombatTextProps {
 export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexes = [], eventId, onEventShown, onSequenceComplete }: FloatingCombatTextProps) {
   const [index, setIndex] = useState(0);
   const eventDurations = useRef(eventDurationsMs ?? []);
+  const hiddenEvents = useRef(new Set(hiddenEventIndexes));
   const eventCallback = useRef(onEventShown);
   const completeCallback = useRef(onSequenceComplete);
 
@@ -31,7 +32,7 @@ export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexe
   }, [eventDurationMs, eventId, events.length, index]);
 
   const message = events[index];
-  const hidden = hiddenEventIndexes.includes(index);
+  const hidden = hiddenEvents.current.has(index);
   useEffect(() => {
     if (message) eventCallback.current(eventId, index);
   }, [eventId, index, message]);
