@@ -33,7 +33,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   weaken: { id: "weaken", name: "Weaken", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Deals 25% less damage." },
   shatter: { id: "shatter", name: "Shatter", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Armor is reduced by 50%." },
   vulnerable: { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 25% more damage from all sources." },
-  stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, description: "Skips the next turn." },
+  stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stackable: false, description: "Skips the next turn. Cannot stack." },
   exhausted: { id: "exhausted", name: "Exhausted", kind: "debuff", duration: 1, description: "Regains only 1 Energy at the start of the next turn." },
   slowed: { id: "slowed", name: "Slowed", kind: "debuff", duration: 1, description: "Initiative is reduced to 0 until the end of the next turn." },
   reckless: { id: "reckless", name: "Reckless", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes damage equal to 50% of the damage it deals." },
@@ -70,17 +70,18 @@ export function isStatusEffectId(value: string): value is StatusEffectId {
 }
 
 export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffect): StatusEffect[] {
+  const stackable = STATUS_EFFECTS[status.id].stackable === true;
+  const normalizedStatus = stackable ? status : { ...status, stacks: 1 };
   const existing = statuses.find((item) => item.id === status.id);
-  if (!existing) return [...statuses, status];
-  const stackable = STATUS_EFFECTS[status.id].stackable;
+  if (!existing) return [...statuses, normalizedStatus];
   return statuses.map((item) => item.id === status.id ? {
     ...item,
-    duration: item.permanent ? item.duration : Math.max(item.duration, status.duration),
-    stacks: stackable ? item.stacks + status.stacks : 1,
-    sourcePower: Math.max(item.sourcePower ?? 0, status.sourcePower ?? 0) || undefined,
-    sourceId: status.sourceId ?? item.sourceId,
-    magnitude: status.magnitude ?? item.magnitude,
-    expiresAtTurnStart: status.expiresAtTurnStart ?? item.expiresAtTurnStart,
+    duration: item.permanent ? item.duration : Math.max(item.duration, normalizedStatus.duration),
+    stacks: stackable ? item.stacks + normalizedStatus.stacks : 1,
+    sourcePower: Math.max(item.sourcePower ?? 0, normalizedStatus.sourcePower ?? 0) || undefined,
+    sourceId: normalizedStatus.sourceId ?? item.sourceId,
+    magnitude: normalizedStatus.magnitude ?? item.magnitude,
+    expiresAtTurnStart: normalizedStatus.expiresAtTurnStart ?? item.expiresAtTurnStart,
   } : item);
 }
 

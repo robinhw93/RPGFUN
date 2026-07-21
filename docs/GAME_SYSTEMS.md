@@ -192,6 +192,8 @@ Epidemic applies 10 Poison to every living, targetable enemy and then grants Ste
 
 At the end of the player's turn, Poison resolves and normal status durations decrease.
 
+Stunned always has one stack. Applying Stunned again can never increase its stack count.
+
 ### Enemy turn
 
 At the start of an enemy's turn:
