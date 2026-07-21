@@ -672,13 +672,10 @@ function applyPlayerProcs(
 ): ProcApplicationState {
   let { enemies, playerStatuses, playerHp, energy } = state;
   if (procs.length === 0) return state;
-  const passiveEventIndex = events.length;
-  const summaries: string[] = [];
-  events.push("");
+  const passiveEventIndex = events.length - 1;
 
   procs.forEach((proc) => {
     const procInfo: InspectableInfo = { title: proc.name, description: proc.description, category: "ability" };
-    const results: string[] = [];
     logs.push(makeLog(`${proc.name} triggers.`, procInfo));
 
     proc.effects.forEach((effect) => {
@@ -701,17 +698,16 @@ function applyPlayerProcs(
           const damage = absorption.damage;
           playerHp = Math.max(0, playerHp - damage);
           playerStatuses = wakeFromDamage(absorption.statuses, damage);
+          logs.push(makeLog(`${proc.name} deals ${damage} damage to you${absorptionSuffix(absorption.absorbed)}.`, procInfo));
           queueDamageAtEvent(pendingEffects, passiveEventIndex, "player", damage);
           queueAbsorptionChanges(pendingEffects, passiveEventIndex, "player", absorption);
-          results.push(`deals ${damage} damage to you${absorptionSuffix(absorption.absorbed)}`);
         } else {
-          let totalDamage = 0;
           enemyTargets.forEach((target) => {
             const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId) ?? target;
             const absorption = absorbIncomingDamage(currentTarget.statuses, getModifiedDamage(baseDamage, playerStatuses, currentTarget.statuses, effect.damageType));
             const damage = absorption.damage;
-            totalDamage += damage;
             enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(absorption.statuses, damage) } : enemy);
+            logs.push(makeLog(`${proc.name} deals ${damage} damage to ${currentTarget.name}${absorptionSuffix(absorption.absorbed)}.`, procInfo));
             queueDamageAtEvent(pendingEffects, passiveEventIndex, currentTarget.instanceId, damage);
             queueAbsorptionChanges(pendingEffects, passiveEventIndex, currentTarget.instanceId, absorption);
             if (hasStatus(playerStatuses, "reckless") && damage > 0) {
@@ -719,11 +715,11 @@ function applyPlayerProcs(
               const recoilAbsorption = absorbIncomingDamage(playerStatuses, recoil);
               playerHp = Math.max(0, playerHp - recoilAbsorption.damage);
               playerStatuses = wakeFromDamage(recoilAbsorption.statuses, recoilAbsorption.damage);
+              logs.push(makeLog(`Reckless deals ${recoilAbsorption.damage} damage to you${absorptionSuffix(recoilAbsorption.absorbed)}.`, statusInfo(playerStatuses.find((status) => status.id === "reckless") ?? createStatusEffect("reckless"))));
               queueDamageAtEvent(pendingEffects, passiveEventIndex, "player", recoilAbsorption.damage);
               queueAbsorptionChanges(pendingEffects, passiveEventIndex, "player", recoilAbsorption);
             }
           });
-          if (enemyTargets.length > 0) results.push(`deals ${totalDamage} damage${enemyTargets.length > 1 ? ` across ${enemyTargets.length} enemies` : ` to ${enemyTargets[0].name}`}`);
         }
       }
 
@@ -740,7 +736,6 @@ function applyPlayerProcs(
             playerStatuses = addOrRefreshStatus(playerStatuses, applied);
             logs.push(makeLog(`You gain ${applied.name}.`, statusInfo(applied)));
             queueStatus(events, pendingEffects, `You gain ${applied.name}.`, "player", applied, false, passiveEventIndex);
-            results.push(`grants ${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`);
           });
         } else {
           enemyTargets.forEach((target) => {
@@ -750,10 +745,6 @@ function applyPlayerProcs(
               queueStatus(events, pendingEffects, `${target.name} gains ${applied.name}.`, target.instanceId, applied, applied.id === "stunned", passiveEventIndex);
             });
           });
-          appliedStatuses.forEach((applied) => {
-            const targetLabel = enemyTargets.length > 1 ? ` to ${enemyTargets.length} enemies` : "";
-            results.push(`applies ${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}${targetLabel}`);
-          });
         }
       }
 
@@ -762,7 +753,6 @@ function applyPlayerProcs(
         playerHp = Math.min(combat.playerMaxHp, playerHp + amount);
         logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
         queueHealAtEvent(pendingEffects, passiveEventIndex, "player", amount);
-        results.push(`restores ${amount} Health`);
       }
 
       if (effect.type === "heal_percent_max_hp") {
@@ -770,13 +760,11 @@ function applyPlayerProcs(
         playerHp += amount;
         logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
         queueHealAtEvent(pendingEffects, passiveEventIndex, "player", amount);
-        results.push(`restores ${amount} Health`);
       }
 
       if (effect.type === "gain_energy") {
         energy = Math.min(combat.maxEnergy, energy + effect.amount);
         logs.push(makeLog(`${proc.name} restores ${effect.amount} Energy.`, procInfo));
-        results.push(`restores ${effect.amount} Energy`);
       }
 
       if (effect.type === "gain_guard") {
@@ -785,13 +773,9 @@ function applyPlayerProcs(
         playerStatuses = addOrRefreshStatus(playerStatuses, guard);
         logs.push(makeLog(`You gain ${amount} Guard.`, statusInfo(guard)));
         queueStatus(events, pendingEffects, `You gain ${amount} Guard.`, "player", guard, false, passiveEventIndex);
-        results.push(`grants ${amount} Guard`);
       }
     });
-    summaries.push(`${proc.name} ${results.length > 0 ? results.join(" and ") : "triggers"}`);
   });
-
-  events[passiveEventIndex] = `Passives — ${summaries.join(" · ")}.`;
   return { enemies, playerStatuses, playerHp, energy };
 }
 

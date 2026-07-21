@@ -218,13 +218,13 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 - Area abilities target all living enemies that are not Stealthed.
 - Non-damaging area status abilities such as Poison Cloud apply to every target in one shared event, producing one floating status message and simultaneous status feedback on all affected enemies.
 - Flurry chooses a new valid random enemy independently for every hit.
-- Data-driven passives triggered by the same hit are condensed into one shorter **Passives** digest. The digest names each proc and its result, while the combat log keeps separate inspectable entries.
+- Passives and on-hit effects do not create floating combat messages. Their effects resolve with the action that triggered them, while the combat log records separate inspectable entries for the trigger and its results.
 
 ### Damage, status, and turn presentation
 
 Combat calculations can prepare future results, but visible HP, status, and active-turn changes are delayed until their corresponding floating combat message is shown. Direct attacks start their lunge animation with the damage message and apply damage at the configured impact frame.
 
-Damage events do not render central floating sentences. Damage is communicated by the large number over the affected Health bar, the Health-bar movement, and the combatant's impact reaction. The hidden sequencing event remains responsible for attack timing and state application; non-attack damage slots last only as long as the damage-number animation. Passive digests remain visible even when a triggered passive deals damage.
+Damage events do not render central floating sentences. Damage is communicated by the large number over the affected Health bar, the Health-bar movement, and the combatant's impact reaction. The hidden sequencing event remains responsible for attack timing and state application; non-attack damage slots last only as long as the damage-number animation.
 
 Every hit of a multi-hit ability receives its own lunge and impact reaction. Animation speed is multiplied by the number of hits, so two hits animate at twice normal speed and the total motion time remains equal to one standard attack animation. Direct-hit floating messages use the same shortened slots, causing the hit animations to run consecutively without normal floating-text pauses between them.
 

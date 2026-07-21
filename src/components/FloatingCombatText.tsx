@@ -37,6 +37,6 @@ export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexe
   }, [eventId, index, message]);
   if (!message) return null;
   if (hidden) return null;
-  const tone = message.startsWith("Passives —") ? "passive" : /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
+  const tone = /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
   return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`} style={{ animationDuration: `${eventDurationMs}ms` }}>{message}</span></div>;
 }

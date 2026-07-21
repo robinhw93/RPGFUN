@@ -11,13 +11,12 @@ export function eventRevealsPlayerTurn(combat: CombatState, eventIndex: number):
 }
 
 export function isHiddenDamageEvent(combat: CombatState, eventIndex: number): boolean {
-  return !combat.floatingEvents[eventIndex]?.startsWith("Passives —") && combat.pendingEffects.some((effect) => (
+  return combat.pendingEffects.some((effect) => (
     effect.eventIndex === eventIndex && "damage" in effect
   ));
 }
 
 export function getCombatEventDurationMs(combat: CombatState, eventIndex: number): number {
-  if (combat.floatingEvents[eventIndex]?.startsWith("Passives —")) return COMBAT_TIMING.passiveDigestMs;
   const directAttack = combat.pendingEffects.find((effect) => (
     effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId)
   ));
