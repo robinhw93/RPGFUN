@@ -335,7 +335,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 ### Loadout
 
 - The combat loadout has six slots.
-- Strike and Guard are permanent core abilities and cannot be unequipped.
+- Strike and Guard are permanently unlocked core abilities. They can be equipped or unequipped from Wayfarer's Spark like other available abilities.
 - Other unlocked abilities can be equipped or removed outside combat.
 - Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
 - The player can pan, zoom, and fit the talent tree on desktop and mobile.

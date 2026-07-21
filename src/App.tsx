@@ -455,7 +455,6 @@ function App() {
   };
 
   const toggleAbility = (abilityId: string) => {
-    if (abilityId === "strike" || abilityId === "guard") return;
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
       const equipped = current.character.equippedAbilities;
@@ -1749,6 +1748,7 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
   onToggleAbility: (id: string) => void;
 }) {
   const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
+  const coreAbilities = talent.id === "origin" ? [ABILITIES.strike, ABILITIES.guard] : [];
   const unlocked = character.unlockedTalents.includes(talent.id);
   const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
   const abilityEquipped = Boolean(ability && character.equippedAbilities.includes(ability.id));
@@ -1804,7 +1804,25 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
           <div><p className="eyebrow">{typeLabel}</p><h2>{talent.name}</h2></div>
           <span className={`talent-detail-state ${unlocked ? "unlocked" : available ? "available" : "locked"}`}>{talent.id === "origin" ? "Starting Node" : unlocked ? "Unlocked" : available ? "Available" : "Locked"}</span>
         </div>
-        {ability ? (
+        {coreAbilities.length > 0 ? (
+          <div className="talent-core-abilities">
+            {coreAbilities.map((coreAbility) => {
+              const equipped = character.equippedAbilities.includes(coreAbility.id);
+              const cannotEquip = !equipped && loadoutFull;
+              return (
+                <section className="talent-core-ability" key={coreAbility.id}>
+                  <div className="talent-core-ability-heading"><span aria-hidden="true">{coreAbility.icon}</span><strong>{coreAbility.name}</strong></div>
+                  <div className="talent-ability-metrics">
+                    <span><small>Energy</small><strong>{coreAbility.energyCost}</strong></span>
+                    <span><small>Cooldown</small><strong>{coreAbility.cooldownTurns ? `${coreAbility.cooldownTurns} ${coreAbility.cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
+                  </div>
+                  <p>{coreAbility.description}</p>
+                  <button type="button" disabled={locked || cannotEquip} onClick={() => onToggleAbility(coreAbility.id)}>{equipped ? "Unequip Ability" : cannotEquip ? "Loadout Full" : "Equip Ability"}</button>
+                </section>
+              );
+            })}
+          </div>
+        ) : ability ? (
           <>
             {talent.kind === "class" && (
               <div className="talent-ability-grant">
@@ -1930,7 +1948,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility }: { charact
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       <div className="loadout-panel paper-panel">
         <div><p className="eyebrow">Active Loadout</p><h3>Equipped Abilities</h3></div>
-        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} data-game-tooltip={ability && ability.id !== "strike" && ability.id !== "guard" ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
+        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} disabled={locked} className={ability ? ability.branch : "empty"} onClick={() => ability && onToggleAbility(ability.id)} data-game-tooltip={ability ? "Click to unequip" : undefined}>{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
       </div>
       <div className="runtime-talent-toolbar">
         <span><Hand size={14} /> Drag empty space to pan</span>
