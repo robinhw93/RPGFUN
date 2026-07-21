@@ -19,7 +19,7 @@ import {
   isMagicalDamage,
   isStatusEffectId,
 } from "./statusEffects";
-import { getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
+import { getCharacterAbilityDescription, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
@@ -915,7 +915,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   let abilityCooldowns = ability.cooldownTurns
     ? { ...(combat.abilityCooldowns ?? {}), [ability.id]: ability.cooldownTurns }
     : (combat.abilityCooldowns ?? {});
-  const abilityInfo: InspectableInfo = { title: ability.name, description: `${ability.description} Costs ${ability.energyCost} Energy.`, category: "ability" };
+  const abilityInfo: InspectableInfo = { title: ability.name, description: `${getCharacterAbilityDescription(character, ability)} Costs ${ability.energyCost} Energy.`, category: "ability" };
   logs.push(makeLog(`You use ${ability.name}.`, abilityInfo));
   const abilityUseEventIndex = events.length;
   events.push(`You use ${ability.name}.`);

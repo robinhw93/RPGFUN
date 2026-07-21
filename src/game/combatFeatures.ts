@@ -1,5 +1,6 @@
 import { GEAR_SET_BONUSES, TALENTS } from "./data";
 import type {
+  Ability,
   CharacterState,
   AbilityModifierDefinition,
   CombatDamageModifierDefinition,
@@ -249,6 +250,13 @@ export function getDamageModifierMultiplier(
 
 export function getCharacterAbilityModifiers(character: CharacterState, abilityId: string): ResolvedAbilityModifier[] {
   return getCharacterCombatFeatures(character).abilityModifiers.filter((modifier) => modifier.abilityIds.includes(abilityId));
+}
+
+export function getCharacterAbilityDescription(character: CharacterState, ability: Ability): string {
+  return getCharacterAbilityModifiers(character, ability.id).reduce(
+    (description, modifier) => modifier.descriptionOverride ?? description,
+    ability.description,
+  );
 }
 
 function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerContext): boolean {

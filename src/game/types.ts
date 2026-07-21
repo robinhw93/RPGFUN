@@ -156,6 +156,8 @@ export interface AbilityModifierDefinition {
   name: string;
   description: string;
   abilityIds: string[];
+  /** Complete player-facing ability description while this modifier is active. */
+  descriptionOverride?: string;
   allowWithoutRequiredSelfStatus?: boolean;
   powerScalingWhenRequirementMissing?: number;
   statusDuration?: number;

@@ -235,8 +235,9 @@ Ability modifiers can currently:
 - Apply a status after consuming another status.
 - Retain a ratio of status stacks after detonation.
 - Override the fraction of target-status stacks consumed by supported abilities.
+- Replace the player-facing ability description while the modifier is active.
 
-Use these for talents that alter an existing ability rather than branching the engine on a talent ID.
+Use these for talents that alter an existing ability rather than branching the engine on a talent ID. Every modifier that changes what the player should expect must define a matching `descriptionOverride`; otherwise the mechanics and tooltip can disagree.
 
 Abilities can also declare reusable `selfStatusApplications` and `conditionalSelfEffects`. Conditional self effects currently check for a status on the struck target and can restore a percentage of Max Health or add temporary Energy regeneration for the player's next turn. Keep these rules on the ability definition instead of checking ability IDs in the engine.
 
