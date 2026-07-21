@@ -210,6 +210,8 @@ A `CombatTriggerDefinition` contains:
 
 Triggered passives do not add presentation events. Their damage, healing, and status pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Separate combat-log entries preserve inspectable trigger and result details.
 
+Player `You use ...` action events are presentation-hidden and use `COMBAT_TIMING.silentEventMs`. Keep the event as the synchronization anchor for Energy expenditure and `before_ability` triggers; the ability-use combat-log entry remains player-inspectable.
+
 Luck's chance-effect bonus is added only when `chance` is explicitly present. Final proc chance is clamped to 0–100%.
 
 Some trigger event names are part of the general contract but are not yet emitted from every theoretically possible engine location. Verify the desired event in `engine.ts` before depending on it for new content.

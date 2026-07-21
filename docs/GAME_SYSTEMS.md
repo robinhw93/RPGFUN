@@ -226,6 +226,8 @@ Combat calculations can prepare future results, but visible HP, status, and acti
 
 Damage events do not render central floating sentences. Damage is communicated by the large number over the affected Health bar, the Health-bar movement, and the combatant's impact reaction. The hidden sequencing event remains responsible for attack timing and state application; non-attack damage slots last only as long as the damage-number animation.
 
+Player ability-use announcements such as **You use Strike** are also hidden. The selected ability remains recorded as an inspectable combat-log entry, while visible outcome messages such as gained statuses, healing, Energy, turn changes, and Victory remain in the central presentation. Enemy ability announcements remain visible.
+
 Every hit of a multi-hit ability receives its own lunge and impact reaction. Animation speed is multiplied by the number of hits, so two hits animate at twice normal speed and the total motion time remains equal to one standard attack animation. Direct-hit floating messages use the same shortened slots, causing the hit animations to run consecutively without normal floating-text pauses between them.
 
 This sequencing guarantees that:
