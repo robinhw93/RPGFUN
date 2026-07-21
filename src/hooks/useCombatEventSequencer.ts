@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { primeCombatAttack, resolveCombatEvent } from "../game/engine";
+import { finishCombatAttack, primeCombatAttack, resolveCombatEvent } from "../game/engine";
 import { COMBAT_TIMING } from "../game/timing";
 import type { CombatPendingEffect, GameState } from "../game/types";
 
@@ -25,6 +25,8 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
       const scheduleKey = `${eventId}:${attackEffect.id}`;
       if (scheduledEffects.current.has(scheduleKey)) return;
       scheduledEffects.current.add(scheduleKey);
+      const animationHitCount = Math.max(1, attackEffect.animationHitCount ?? 1);
+      const animationId = (visibleCombat.attackAnimationId ?? 0) + 1;
       setGame((current) => {
         const combat = current.adventure.combat;
         if (!combat) return current;
@@ -44,8 +46,21 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
         });
         scheduledEffects.current.delete(scheduleKey);
         impactTimers.current = impactTimers.current.filter((timer) => timer !== impactTimer);
-      }, COMBAT_TIMING.attackImpactMs / Math.max(1, attackEffect.animationHitCount ?? 1));
+      }, COMBAT_TIMING.attackImpactMs / animationHitCount);
       impactTimers.current.push(impactTimer);
+
+      let finishTimer = 0;
+      finishTimer = window.setTimeout(() => {
+        setGame((current) => {
+          const combat = current.adventure.combat;
+          if (!combat) return current;
+          const finished = finishCombatAttack(combat, eventId, animationId);
+          if (finished === combat) return current;
+          return { ...current, adventure: { ...current.adventure, combat: finished } };
+        });
+        impactTimers.current = impactTimers.current.filter((timer) => timer !== finishTimer);
+      }, COMBAT_TIMING.attackDurationMs / animationHitCount);
+      impactTimers.current.push(finishTimer);
       return;
     }
 

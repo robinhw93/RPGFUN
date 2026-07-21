@@ -261,6 +261,8 @@ Statuses attached to that same event index resolve at impact with damage. Non-at
 
 Multi-hit abilities attach their total hit count to every direct-damage event. The sequencer divides both animation duration and impact delay by that count, keeping the combined motion budget equal to one normal attack. `attackAnimationId` alternates equivalent CSS keyframes so consecutive hits by the same combatant always restart the lunge animation.
 
+Attack impact and animation completion are separate lifecycle points. Damage resolves at impact, while the attacker stays animated until the full return movement completes. A turn handoff attached to a damage event must therefore preserve the current attacker until the sequencer's animation-completion timer releases it.
+
 Never update visible target HP/status early to simplify an animation; doing so breaks the event rhythm and can show victory before the final blow.
 
 ### Current combat timing

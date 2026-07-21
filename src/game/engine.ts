@@ -1508,6 +1508,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let attackingActorId = combat.attackingActorId;
   let attackAnimationId = combat.attackAnimationId ?? 0;
   let attackEffectId = combat.attackEffectId ?? null;
+  const resolvesAttackImpact = matchingEffects.some((effect) => "damage" in effect && Boolean(effect.attackerId));
   const damagedTargets: string[] = [];
   const statusAnimations = matchingEffects.flatMap((effect) => effect.type === "status"
     ? [{ id: effect.id, statusId: effect.status.id, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId }]
@@ -1552,7 +1553,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       playerStatuses = effect.playerStatuses ?? playerStatuses;
       energy = effect.energy ?? energy;
       nextTurnEnergyRegenBonus = effect.nextTurnEnergyRegenBonus ?? nextTurnEnergyRegenBonus;
-      attackingActorId = null;
+      if (!resolvesAttackImpact) attackingActorId = null;
       return;
     }
     if (effect.type === "heal") {
@@ -1582,6 +1583,11 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
   return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, statusAnimations, selectedEnemyId, outcome });
+}
+
+export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
+  if (combat.eventId !== eventId || combat.attackAnimationId !== animationId || !combat.attackingActorId) return combat;
+  return { ...combat, attackingActorId: null, attackEffectId: null };
 }
 
 export function primeCombatAttack(combat: CombatState, eventId: number, eventIndex: number): CombatState {
