@@ -796,6 +796,24 @@ function applyPlayerProcs(
         }
       }
 
+      if (effect.type === "damage_percent_current_hp") {
+        enemyTargets.forEach((target) => {
+          const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId) ?? target;
+          const baseDamage = Math.max(1, Math.round(currentTarget.hp * Math.max(0, effect.ratio)));
+          const absorption = absorbIncomingDamage(currentTarget.statuses, getModifiedDamage(baseDamage, playerStatuses, currentTarget.statuses, effect.damageType));
+          const damage = absorption.damage;
+          enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? {
+            ...enemy,
+            hp: Math.max(0, enemy.hp - damage),
+            statuses: wakeFromDamage(absorption.statuses, damage),
+          } : enemy);
+          logs.push(makeLog(`${proc.name} deals ${damage} damage to ${currentTarget.name}${absorptionSuffix(absorption.absorbed)}.`, procInfo));
+          markPassive(currentTarget.instanceId, proc.name);
+          queueDamageAtEvent(pendingEffects, passiveEventIndex, currentTarget.instanceId, damage);
+          queueAbsorptionChanges(pendingEffects, passiveEventIndex, currentTarget.instanceId, absorption);
+        });
+      }
+
       if (effect.type === "apply_status") {
         const sourcePower = effect.status.id === "bleed" ? derived.physicalPower
           : effect.status.id === "poison" || effect.status.id === "burn" || effect.status.id === "regenerate" ? derived.magicalPower
@@ -1017,6 +1035,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         ? randomTargets[Math.floor(Math.random() * randomTargets.length)]
         : enemies.find((enemy) => enemy.instanceId === initialTarget.instanceId);
       if (!target || target.hp <= 0) break;
+      const targetWasStunned = hasStatus(target.statuses, "stunned");
       if (ability.spreadAllTargetDebuffs) {
         const debuffs = target.statuses.filter((status) => status.kind === "debuff");
         const destinations = enemies.filter((enemy) => enemy.hp > 0 && enemy.instanceId !== target.instanceId && !isEnemyStealthed(enemy));
@@ -1108,10 +1127,17 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           const additionalStatuses = (ability.statusApplications ?? []).map((application) => createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration }));
           const appliedStatuses = [status, ...createPlayerCompanionStatuses(status.id, derived), ...(followUpStatus ? [followUpStatus] : []), ...additionalStatuses.flatMap((applied) => [applied, ...createPlayerCompanionStatuses(applied.id, derived)])];
           const affectedTargets = groupedAreaApplication ? targets : [target];
+          const modifierRatio = abilityModifiers.find((modifier) => modifier.statusConsumptionRatio !== undefined)?.statusConsumptionRatio;
+          const consumptionRatio = Math.max(0, Math.min(1, modifierRatio ?? 1));
           enemies = enemies.map((enemy) => affectedTargets.some((affected) => affected.instanceId === enemy.instanceId) ? {
             ...enemy,
             stunned: enemy.stunned || appliedStatuses.some((applied) => applied.id === "stunned"),
-            statuses: appliedStatuses.reduce(addOrRefreshStatus, consumedStatusId ? enemy.statuses.filter((existing) => existing.id !== consumedStatusId) : enemy.statuses),
+            statuses: appliedStatuses.reduce(addOrRefreshStatus, consumedStatusId ? enemy.statuses.flatMap((existing) => {
+              if (existing.id !== consumedStatusId) return [existing];
+              const consumedStacks = Math.max(1, Math.ceil(existing.stacks * consumptionRatio));
+              const remainingStacks = Math.max(0, existing.stacks - consumedStacks);
+              return remainingStacks > 0 ? [{ ...existing, stacks: remainingStacks }] : [];
+            }) : enemy.statuses),
           } : enemy);
           const statusNames = appliedStatuses.map((applied) => `${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`).join(" and ");
           const statusText = groupedAreaApplication ? `All enemies gain ${statusNames}.` : `${target.name} gains ${statusNames}.`;
@@ -1120,12 +1146,54 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           logs.push(makeLog(statusText, statusInfo(status)));
           // Consumption must resolve before a same-status follow-up such as Reapply's new Poison.
           affectedTargets.forEach((affectedTarget) => {
-            if (consumedStatusId) queueStatusRemoval(pendingEffects, statusEventIndex, affectedTarget.instanceId, consumedStatusId);
+            if (!consumedStatusId) return;
+            const consumedStatus = affectedTarget.statuses.find((existing) => existing.id === consumedStatusId);
+            if (!consumedStatus) return;
+            const consumedStacks = Math.max(1, Math.ceil(consumedStatus.stacks * consumptionRatio));
+            const remainingStacks = Math.max(0, consumedStatus.stacks - consumedStacks);
+            if (remainingStacks > 0) queueStatusSet(pendingEffects, statusEventIndex, affectedTarget.instanceId, { ...consumedStatus, stacks: remainingStacks });
+            else queueStatusRemoval(pendingEffects, statusEventIndex, affectedTarget.instanceId, consumedStatusId);
           });
           affectedTargets.forEach((affectedTarget) => appliedStatuses.forEach((applied) => {
             queueStatus(events, pendingEffects, statusText, affectedTarget.instanceId, applied, applied.id === "stunned", statusEventIndex);
           }));
           if (ability.vfx) queueAbilityVfx(pendingEffects, statusEventIndex, ability.vfx, groupedAreaApplication ? undefined : target.instanceId, "player");
+          if (appliedStatuses.some((applied) => applied.id === "stunned")) {
+            affectedTargets.filter((affectedTarget) => !hasStatus(affectedTarget.statuses, "stunned")).forEach((affectedTarget) => {
+              const stunnedTriggers = runPlayerTriggerEvent(
+                "enemy_stunned",
+                { abilityId: ability.id, targetStatusIds: enemies.find((enemy) => enemy.instanceId === affectedTarget.instanceId)?.statuses.map((current) => current.id) ?? [] },
+                affectedTarget.instanceId,
+                character,
+                combat,
+                derived,
+                { enemies, playerStatuses, playerHp, energy },
+                procUsage,
+                logs,
+                events,
+                pendingEffects,
+              );
+              procUsage = stunnedTriggers.procUsage;
+              ({ enemies, playerStatuses, playerHp, energy } = stunnedTriggers.state);
+              if ((enemies.find((enemy) => enemy.instanceId === affectedTarget.instanceId)?.hp ?? 1) <= 0) {
+                const killTriggers = runPlayerTriggerEvent(
+                  "on_kill",
+                  { abilityId: ability.id, targetStatusIds: enemies.find((enemy) => enemy.instanceId === affectedTarget.instanceId)?.statuses.map((current) => current.id) ?? [], targetHpBeforePercent: affectedTarget.hp / affectedTarget.maxHp, targetHpAfterPercent: 0 },
+                  affectedTarget.instanceId,
+                  character,
+                  combat,
+                  derived,
+                  { enemies, playerStatuses, playerHp, energy },
+                  procUsage,
+                  logs,
+                  events,
+                  pendingEffects,
+                );
+                procUsage = killTriggers.procUsage;
+                ({ enemies, playerStatuses, playerHp, energy } = killTriggers.state);
+              }
+            });
+          }
         }
         continue;
       }
@@ -1287,6 +1355,23 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const hitTriggers = runPlayerTriggerEvents(triggerEvents, triggerContext, target.instanceId, character, combat, derived, { enemies, playerStatuses, playerHp, energy }, procUsage, logs, events, pendingEffects);
       procUsage = hitTriggers.procUsage;
       ({ enemies, playerStatuses, playerHp, energy } = hitTriggers.state);
+      if (!targetWasStunned && hasStatus(enemies.find((enemy) => enemy.instanceId === target.instanceId)?.statuses ?? [], "stunned")) {
+        const stunnedTriggers = runPlayerTriggerEvent(
+          "enemy_stunned",
+          { ...triggerContext, targetStatusIds: enemies.find((enemy) => enemy.instanceId === target.instanceId)?.statuses.map((status) => status.id) ?? [] },
+          target.instanceId,
+          character,
+          combat,
+          derived,
+          { enemies, playerStatuses, playerHp, energy },
+          procUsage,
+          logs,
+          events,
+          pendingEffects,
+        );
+        procUsage = stunnedTriggers.procUsage;
+        ({ enemies, playerStatuses, playerHp, energy } = stunnedTriggers.state);
+      }
       if ((enemies.find((enemy) => enemy.instanceId === target.instanceId)?.hp ?? 1) <= 0) {
         const result = runPlayerTriggerEvent("on_kill", triggerContext, target.instanceId, character, combat, derived, { enemies, playerStatuses, playerHp, energy }, procUsage, logs, events, pendingEffects);
         procUsage = result.procUsage;
@@ -1469,6 +1554,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
+  let playerEnergy = combat.energy;
   let procUsage = { ...(combat.procUsage ?? {}) };
   const enemyIndex = enemies.findIndex((enemy) => enemy.instanceId === activeActor.actorId);
   if (enemyIndex < 0) return moveToNextActor(combat, character, logs, events, pendingEffects);
@@ -1479,7 +1565,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(1, enemyStart.statuses));
   let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false };
   enemies[enemyIndex] = enemy;
-  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses };
+  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy };
 
   if (enemy.hp <= 0) {
     logs.push(makeLog(`${enemy.name} falls.`));
@@ -1501,11 +1587,29 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     if (!rollHit(enemy.hitChance, playerDodgeChance)) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, missed: true });
+      const missedTriggers = runPlayerTriggerEvent(
+        "enemy_missed",
+        { abilityId: attackName, damageType: enemy.damageType, damage: 0, targetStatusIds: enemy.statuses.map((status) => status.id) },
+        enemy.instanceId,
+        character,
+        combat,
+        derived,
+        { enemies, playerStatuses, playerHp, energy: playerEnergy },
+        procUsage,
+        logs,
+        events,
+        pendingEffects,
+      );
+      procUsage = missedTriggers.procUsage;
+      enemies = missedTriggers.state.enemies;
+      playerStatuses = missedTriggers.state.playerStatuses;
+      playerHp = missedTriggers.state.playerHp;
+      playerEnergy = missedTriggers.state.energy;
     } else {
       const defense = getDefense(derived.armor, derived.magicResistance, playerStatuses, enemy.damageType);
       const critical = Math.random() < getCriticalChanceBonus(enemy.statuses);
       const baseIncoming = Math.max(1, Math.round((enemy.power - Math.floor(defense * 0.35)) * (critical ? 1.6 : 1)));
-      const incoming = Math.max(0, Math.round(getModifiedDamage(baseIncoming, enemy.statuses, playerStatuses, enemy.damageType) * getEnergyDefenseMultiplier(derived, combat.energy)));
+      const incoming = Math.max(0, Math.round(getModifiedDamage(baseIncoming, enemy.statuses, playerStatuses, enemy.damageType) * getEnergyDefenseMultiplier(derived, playerEnergy)));
       const absorption = absorbIncomingDamage(playerStatuses, incoming);
       const blocked = absorption.absorbed;
       const damage = absorption.damage;
@@ -1529,7 +1633,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
           character,
           combat,
           derived,
-          { enemies, playerStatuses, playerHp, energy: combat.energy },
+          { enemies, playerStatuses, playerHp, energy: playerEnergy },
           procUsage,
           logs,
           events,
@@ -1539,6 +1643,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         enemies = result.state.enemies;
         playerStatuses = result.state.playerStatuses;
         playerHp = result.state.playerHp;
+        playerEnergy = result.state.energy;
       }
       if (hasStatus(enemy.statuses, "reckless") && damage > 0) {
         const reckless = enemy.statuses.find((status) => status.id === "reckless")!;
@@ -1556,7 +1661,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId
       ? { ...candidate, ...enemy, energy: Math.max(0, enemy.energy - enemy.energyCost) }
       : candidate);
-    nextBase = { ...nextBase, enemies, playerHp, playerStatuses, procUsage };
+    nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, procUsage };
   }
 
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
@@ -1584,7 +1689,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         character,
         combat,
         derived,
-        { enemies, playerStatuses, playerHp, energy: combat.energy },
+        { enemies, playerStatuses, playerHp, energy: playerEnergy },
         procUsage,
         logs,
         events,
@@ -1594,11 +1699,12 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       enemies = result.state.enemies;
       playerStatuses = result.state.playerStatuses;
       playerHp = result.state.playerHp;
+      playerEnergy = result.state.energy;
     }
   } else {
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, statuses: decrementStatusDurations(candidate.statuses) } : candidate);
   }
-  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, procUsage };
+  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, procUsage };
 
   const resolvedEnemyStatuses = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId)?.statuses ?? [];
   const reconciliationEventIndex = statusResolutionEventIndex ?? events.length - 1;

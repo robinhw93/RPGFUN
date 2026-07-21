@@ -145,7 +145,7 @@ Important fields:
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
 - `statusApplications` supports one or more on-hit statuses, including critical-only applications.
-- `ignoresAbsorption`, `consumeTargetStatusRatio`, `energyRestorePercentOfMax`, and `grantsNextCritical` support the current advanced Shadow abilities.
+- `ignoresAbsorption`, `consumeTargetStatusRatio`, Energy restoration, and `grantsNextCritical` support the current advanced Shadow abilities. Ability modifiers can override status-consumption ratios, including Neurotoxin's partial Poison consumption.
 - `spreadAllTargetDebuffs`, `damagePerTargetDebuff`, conditional Critical Chance, immediate turns, and on-kill refund/reset fields support the late Shadow tree without hard-coding talent IDs.
 - `damageModifiers` applies conditional multipliers owned by the ability.
 
@@ -204,10 +204,10 @@ Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources,
 
 A `CombatTriggerDefinition` contains:
 
-- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `damage_taken`, or `turn_end`.
+- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
 - Optional ability, damage type, critical, minimum-damage, target-status, or Health-threshold conditions.
 - Optional chance, once-per-turn rule, or cooldown.
-- One or more data-driven effects: damage, status application, flat or Max-Health-based healing, Energy, or Guard.
+- One or more data-driven effects: flat/scaling damage, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, or Guard.
 
 Triggered passives do not add central presentation events. Their damage, healing, status, and `passive_text` pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Proc names are grouped per affected target and appended to `combat.passiveAnimations`; the combatant-local CSS animation runs independently of the sequencer. Separate combat-log entries preserve inspectable trigger and result details.
 

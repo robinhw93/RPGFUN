@@ -369,6 +369,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 - Other unlocked abilities can be equipped or removed outside combat.
 - Selecting any equipped or empty loadout slot opens the in-game ability picker. An occupied slot can replace or swap its ability with another equipped slot, while **Unequip Slot** removes its current ability.
 - Ability descriptions are resolved from the character's unlocked talents. Combat tooltips, talent details, the loadout picker, and new combat-log entries therefore describe the modified effect rather than the ability's original base effect.
+- Enemy misses and newly applied Stuns are reusable passive-trigger events. Recovery, Spotting Opportunity, Biding Time, Break, and Mischief attach their results to the triggering combat moment without slowing the event sequence.
 - Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
 - Circular passive nodes are 25% smaller than square class/ability nodes. Unlocked nodes receive a gold outer outline, and the connection layer is masked beneath every node so lines cannot show through transparent locked nodes.
 - The player can pan, zoom, and fit the talent tree on desktop and mobile.

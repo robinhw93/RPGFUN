@@ -65,7 +65,7 @@ export type StatusEffectId =
   | "charred"
   | "sleep";
 
-export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_taken" | "turn_end";
+export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
 export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
 
 export interface PassiveBonuses {
@@ -121,6 +121,7 @@ export interface CombatTriggerCondition {
 
 export type CombatEffectDefinition =
   | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scaling?: number }
+  | { type: "damage_percent_current_hp"; ratio: number; target?: CombatEffectTarget; damageType?: DamageType }
   | { type: "apply_status"; status: StatusEffect; target?: CombatEffectTarget }
   | { type: "heal"; amount: number; target?: "self" }
   | { type: "heal_percent_max_hp"; ratio: number; target?: "self" }

@@ -58,7 +58,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 70 nodes: the origin, three first-direction class nodes, and 66 later Shadow nodes. Branch counts are Shadow 67, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 80 nodes: the origin, three first-direction class nodes, and 76 later Shadow nodes. Branch counts are Shadow 77, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -134,6 +134,16 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_64 | Epidemic | Ability | Spot Weakness | Any | Unlocks Epidemic. |
 | talent_65 | Panic | Passive | Hit and Run | Any | The first lethal hit each combat restores 20% of Max Health and grants Stealth for 2 turns. |
 | talent_66 | Voltage Stab | Ability | Avoidance | Any | Unlocks Voltage Stab. |
+| talent_67 | Recovery | Passive | Enduring Evasion | Any | Enemy misses have a 50% base chance to restore 1 Energy. |
+| talent_68 | Fleetfooted | Passive | Recovery | Any | +2% Dodge Chance. |
+| talent_69 | Spotting Opportunity | Passive | Fleetfooted | Any | An enemy that misses the player gains Vulnerable. |
+| talent_70 | Untouchable | Passive | Spotting Opportunity | Any | +2% Dodge Chance. |
+| talent_71 | Biding Time | Passive | Untouchable | Any | Enemy misses grant Fierce for 1 turn. |
+| talent_72 | Precise Strikes | Passive | Reapply | Any | +2% Hit Chance. |
+| talent_73 | Break | Passive | Precise Strikes | Any | Stunning an enemy restores 2% of Max Health. |
+| talent_74 | Calculated Strikes | Passive | Break | Any | +2% Hit Chance. |
+| talent_75 | Mischief | Passive | Calculated Strikes | Any | Stunning an enemy deals damage equal to 10% of its current Health. |
+| talent_76 | Regenerating Toxin | Passive | Mischief | Any | Neurotoxin consumes only 50% of the target's Poison. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 

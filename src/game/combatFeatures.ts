@@ -253,10 +253,16 @@ export function getCharacterAbilityModifiers(character: CharacterState, abilityI
 }
 
 export function getCharacterAbilityDescription(character: CharacterState, ability: Ability): string {
-  return getCharacterAbilityModifiers(character, ability.id).reduce(
+  const modifiers = getCharacterAbilityModifiers(character, ability.id);
+  const description = modifiers.reduce(
     (description, modifier) => modifier.descriptionOverride ?? description,
     ability.description,
   );
+  const followUp = modifiers.find((modifier) => modifier.applyStatusAfterConsume)?.applyStatusAfterConsume;
+  if (!followUp) return description;
+  const followUpLabel = `${followUp.stacks ?? 1} ${followUp.status.charAt(0).toUpperCase()}${followUp.status.slice(1)}`;
+  if (description.toLocaleLowerCase().includes(`apply ${followUpLabel.toLocaleLowerCase()}`)) return description;
+  return `${description.replace(/\.$/, "")}, then apply ${followUpLabel}.`;
 }
 
 function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerContext): boolean {
