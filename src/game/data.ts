@@ -118,7 +118,8 @@ export const ABILITIES: Record<string, Ability> = {
     cooldownTurns: 3, target: "enemy", dealsDamage: false, spreadAllTargetDebuffs: true, icon: "☣", branch: "shadow",
   },
   LightSpeed: {
-    id: "LightSpeed", name: "Light Speed", description: "Deal 50% Physical Power as Physical Damage and 100% Magical Power as Lightning Damage, apply Electrified, then immediately begin a new turn.", energyCost: 0,
+    id: "LightSpeed", name: "Light Speed", description: "Deal 50% Physical Power as Physical Damage and 100% Magical Power as Lightning Damage, apply Electrified, then immediately begin a new turn.", energyCost: 6,
+    cooldownTurns: 5,
     target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 1 }],
     statusApplications: [{ status: "electrified" }], grantsImmediateTurn: true, icon: "ϟ", branch: "shadow",
   },
@@ -131,6 +132,16 @@ export const ABILITIES: Record<string, Ability> = {
     id: "CullTheWeak", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Magical Power as Arcane Damage. Both gain 20% damage per unique debuff on the target.", energyCost: 5,
     cooldownTurns: 3, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.25 }, { damageType: "arcane", powerScaling: 0.25 }],
     damagePerTargetDebuff: 0.2, icon: "◎", branch: "shadow",
+  },
+  Epidemic: {
+    id: "Epidemic", name: "Epidemic", description: "Apply 10 Poison to all enemies and gain Stealth until the end of your next turn.", energyCost: 3,
+    cooldownTurns: 10, target: "all_enemies", dealsDamage: false, effect: "poison", statusStacks: 10,
+    selfStatusApplications: [{ status: "stealth", duration: 2, expiresAtTurnStart: false }], icon: "☣", branch: "shadow",
+  },
+  VoltageStab: {
+    id: "VoltageStab", name: "Voltage Stab", description: "Deal Lightning Damage equal to 35% of your Magical Power. If the target is Electrified, restore 2% of your maximum Health and gain +2 Energy regeneration next turn.", energyCost: 0,
+    cooldownTurns: 2, target: "enemy", damageType: "lightning", powerScaling: 0.35,
+    conditionalSelfEffects: [{ targetHasStatus: "electrified", healPercentMaxHp: 0.02, nextTurnEnergyRegen: 2 }], icon: "ϟ", branch: "shadow",
   },
   crushingBlow: {
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
@@ -228,6 +239,9 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_61", name: "Hit and Run", description: "Whenever you deal damage, you have a 2% chance to gain Stealth.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_56"], position: { x: 86.29032258064517, y: 50 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "hit-and-run", name: "Hit and Run", description: "Damage dealt has a 2% chance to grant Stealth.", event: "on_hit", chance: 0.02, conditions: { minimumDamage: 1 }, effects: [{ type: "apply_status", status: createStatusEffect("stealth", { duration: 1 }), target: "self" }] }] } },
   { id: "talent_62", name: "Spot Weakness", description: "Deal 5% more damage per unique debuff on the target.", branch: "shadow", kind: "passive", tier: 14, cost: 1, requires: ["talent_57"], position: { x: 86.29032258064517, y: 60.15625 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "spot-weakness", name: "Spot Weakness", description: "Deal 5% more damage per unique target debuff.", multiplier: 1, multiplierPerTargetDebuff: 0.05 }] } },
   { id: "talent_63", name: "Avoidance", description: "+1 Max Energy. Take 5% less damage per unspent Energy.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_58"], position: { x: 86.29032258064517, y: 39.84375 }, icon: "✦", shape: "circle", combat: { passive: { maxEnergy: 1, incomingDamageReductionPerEnergy: 0.05 } } },
+  { id: "talent_64", name: "Epidemic", description: "Apply 10 Poison to all enemies and gain Stealth until the end of your next turn.", branch: "shadow", kind: "ability", tier: 15, cost: 1, requires: ["talent_62"], position: { x: 90.32258064516128, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "Epidemic" },
+  { id: "talent_65", name: "Panic", description: "The first time you would die each combat, restore 20% of your maximum Health and gain Stealth for 2 turns.", branch: "shadow", kind: "passive", tier: 14, cost: 1, requires: ["talent_61"], position: { x: 90.32258064516128, y: 50 }, icon: "✦", shape: "circle", combat: { passive: { deathPreventionHealRatio: 0.2, deathPreventionStealthDuration: 2 } } },
+  { id: "talent_66", name: "Voltage Stab", description: "Deal 35% Magical Power as Lightning Damage. Against an Electrified target, restore 2% of maximum Health and gain +2 Energy regeneration next turn.", branch: "shadow", kind: "ability", tier: 14, cost: 1, requires: ["talent_63"], position: { x: 90.32258064516128, y: 39.84375 }, icon: "✦", shape: "square", abilityId: "VoltageStab" },
 ];
 
 export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {

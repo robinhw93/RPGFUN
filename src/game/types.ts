@@ -103,6 +103,10 @@ export interface PassiveBonuses {
   statusApplicationCompanions?: Partial<Record<StatusEffectId, StatusEffectId[]>>;
   /** Incoming damage reduction per point of currently unspent Energy. */
   incomingDamageReductionPerEnergy?: number;
+  /** Fraction of Max Health restored the first time lethal damage is taken each combat. */
+  deathPreventionHealRatio?: number;
+  /** Stealth duration granted by the combat's death-prevention effect. */
+  deathPreventionStealthDuration?: number;
 }
 
 export interface CombatTriggerCondition {
@@ -216,6 +220,14 @@ export interface Ability {
   spreadAllTargetDebuffs?: boolean;
   /** Statuses applied by a damaging ability after a successful hit. */
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; onlyOnCritical?: boolean }>;
+  /** Statuses applied to the player after the ability resolves. */
+  selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; expiresAtTurnStart?: boolean }>;
+  /** Reusable self-benefits granted when the struck target already has a required status. */
+  conditionalSelfEffects?: Array<{
+    targetHasStatus: StatusEffectId;
+    healPercentMaxHp?: number;
+    nextTurnEnergyRegen?: number;
+  }>;
   /** Incoming Guard and Barrier do not absorb this ability's direct damage. */
   ignoresAbsorption?: boolean;
   /** Restore this fraction of maximum Energy after paying the ability cost. */
@@ -335,7 +347,8 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
-  | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number };
+  | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
+  | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number };
 
 export interface CombatState {
   turn: number;
@@ -349,6 +362,8 @@ export interface CombatState {
   floatingEvents: string[];
   pendingEffects: CombatPendingEffect[];
   procUsage: Record<string, { lastTriggeredTurn: number }>;
+  deathPreventionUsed: boolean;
+  nextTurnEnergyRegenBonus: number;
   damagedTargets: string[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;

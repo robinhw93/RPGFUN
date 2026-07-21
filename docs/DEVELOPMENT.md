@@ -195,7 +195,7 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, and Energy-based incoming-damage reduction. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, and reusable death prevention. Derived stats aggregate every active source.
 
 ### Triggers
 
@@ -226,6 +226,8 @@ Ability modifiers can currently:
 - Override the fraction of target-status stacks consumed by supported abilities.
 
 Use these for talents that alter an existing ability rather than branching the engine on a talent ID.
+
+Abilities can also declare reusable `selfStatusApplications` and `conditionalSelfEffects`. Conditional self effects currently check for a status on the struck target and can restore a percentage of Max Health or add temporary Energy regeneration for the player's next turn. Keep these rules on the ability definition instead of checking ability IDs in the engine.
 
 ## Talent Editor
 
@@ -314,6 +316,8 @@ Then test the changed system in a browser. For combat changes, verify at minimum
 - Multiple abilities in one turn and cooldown blocking.
 - Hit, miss, critical, Guard, and one damage-over-time effect.
 - Damage/status application at the matching floating message.
+- Lethal-damage prevention, its delayed heal/status event, and the later real defeat.
+- Temporary next-turn Energy regeneration, including Exhausted and the Energy-bar preview.
 - Final-enemy death, Victory message, reward screen, and continue flow.
 - Defeat and save deletion when relevant.
 - Narrow mobile viewport without combat page scrolling.

@@ -37,9 +37,11 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Slice and Dice | 5 | 2 | Enemy | Hits six times for 15% Physical Power. Critical hits apply Exhausted and each hit triggers on-hit effects. |
 | Cheap Shot | 4 | 1 | Enemy | Requires Stealth. Applies Stunned and 5 Bleed without direct damage. |
 | Pandemic | 4 | 3 | Enemy | Copies every debuff on the target to all other living, targetable enemies. |
-| Light Speed | 0 | None | Enemy | Deals 50% Physical Power as Physical damage plus 100% Magical Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
+| Light Speed | 6 | 5 | Enemy | Deals 50% Physical Power as Physical damage plus 100% Magical Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
 | Chain Assassination | 5 | 3 | Enemy | Deals 125% Physical Power and gains +25% Critical Strike Chance while Stealthed. A kill refunds the Energy actually spent and resets its cooldown. |
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
+| Epidemic | 3 | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
+| Voltage Stab | 0 | 2 | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -56,7 +58,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 67 nodes: the origin, three first-direction class nodes, and 63 later Shadow nodes. Branch counts are Shadow 64, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 70 nodes: the origin, three first-direction class nodes, and 66 later Shadow nodes. Branch counts are Shadow 67, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -129,6 +131,9 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_61 | Hit and Run | Passive | Cheap Shot | Any | Damage dealt has a 2% base chance to grant Stealth. |
 | talent_62 | Spot Weakness | Passive | Pandemic | Any | Deals 5% more damage per unique debuff on the target. |
 | talent_63 | Avoidance | Passive | Light Speed | Any | +1 Max Energy and 5% less incoming damage per unspent Energy. |
+| talent_64 | Epidemic | Ability | Spot Weakness | Any | Unlocks Epidemic. |
+| talent_65 | Panic | Passive | Hit and Run | Any | The first lethal hit each combat restores 20% of Max Health and grants Stealth for 2 turns. |
+| talent_66 | Voltage Stab | Ability | Avoidance | Any | Unlocks Voltage Stab. |
 
 Two nodes are both named **Potency** and intentionally provide separate +10% Poison bonuses.
 

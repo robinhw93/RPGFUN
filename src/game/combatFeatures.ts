@@ -80,6 +80,8 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   lootRarity: 0,
   chanceEffect: 0,
   incomingDamageReductionPerEnergy: 0,
+  deathPreventionHealRatio: 0,
+  deathPreventionStealthDuration: 0,
   statusDamage: {},
   preserveStatusOnDetonation: [],
   startingStatuses: [],
@@ -112,6 +114,8 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.lootRarity += passive.lootRarity ?? 0;
   target.chanceEffect += passive.chanceEffect ?? 0;
   target.incomingDamageReductionPerEnergy += passive.incomingDamageReductionPerEnergy ?? 0;
+  target.deathPreventionHealRatio = Math.max(target.deathPreventionHealRatio, passive.deathPreventionHealRatio ?? 0);
+  target.deathPreventionStealthDuration = Math.max(target.deathPreventionStealthDuration, passive.deathPreventionStealthDuration ?? 0);
   Object.entries(passive.statusDamage ?? {}).forEach(([statusId, amount]) => {
     const id = statusId as StatusEffect["id"];
     target.statusDamage[id] = (target.statusDamage[id] ?? 0) + (amount ?? 0);

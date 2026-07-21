@@ -670,7 +670,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
-          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen} showGain />
+          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen + (combat.nextTurnEnergyRegenBonus ?? 0)} showGain />
         </article>
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>

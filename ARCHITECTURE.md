@@ -83,6 +83,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `eventId` and `completedSequenceEventId`: queue-generation identity and completion guard.
 - Attack actor/effect IDs and damaged targets for animation.
 - Proc usage for once-per-turn and cooldown trigger rules.
+- Per-combat death-prevention usage and temporary next-turn Energy regeneration.
 - Combat log and active/victory/defeat outcome.
 
 ### Immutability
@@ -133,6 +134,7 @@ Passives aggregate additively into:
 - Per-status damage bonuses.
 - Status-preservation behavior.
 - Starting combat statuses.
+- Energy-based incoming-damage reduction and reusable first-lethal-hit prevention.
 
 New generally reusable static bonuses belong in `PassiveBonuses`, not UI conditions or talent-ID branches.
 
@@ -211,9 +213,10 @@ The visible active index remains unchanged until the queued turn event resolves.
 4. Emits the ability-use message.
 5. Runs `before_ability` triggers.
 6. Resolves self utility, status consumption/detonation, or direct hit loops.
-7. For direct hits, rolls Hit, Critical, component damage, status application, on-hit/on-crit/on-kill triggers, and Reckless recoil.
-8. Resolves player Bleed after the ability.
-9. Returns logical resource/cooldown changes immediately but preserves visible Health/status snapshots until pending events resolve.
+7. For direct hits, rolls Hit, Critical, component damage, status application, conditional self benefits, on-hit/on-crit/on-kill triggers, and Reckless recoil.
+8. Applies any ability-owned self statuses.
+9. Resolves player Bleed and reusable lethal-damage prevention after the ability.
+10. Returns logical resource/cooldown changes immediately but preserves visible Health/status snapshots until pending events resolve.
 
 Using an ability sets `playerActed` but does not move turn order. The player may continue using affordable ready abilities until calling `endPlayerTurn`.
 
@@ -236,6 +239,7 @@ Each pending effect has an `eventIndex` into `floatingEvents`:
 - `status`
 - `remove_status`
 - `set_status`
+- `energy_regen_bonus`
 - `turn`
 
 When `FloatingCombatText` reveals an index, the sequencer resolves all effects attached to that index.

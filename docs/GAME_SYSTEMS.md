@@ -170,6 +170,10 @@ Distraction makes the next ability cost 0 Energy and is consumed when that abili
 
 Light Speed performs a complete player turn transition without allowing enemies to act between the two turns. End-of-turn Poison and duration changes resolve, then start-of-turn Burn, Regenerate, Energy regeneration, and cooldown reduction resolve before control returns to the player.
 
+Voltage Stab deals Lightning damage from Magical Power. If the target was already Electrified when the hit landed, it restores 2% of Max Health and adds 2 to the player's next Energy-regeneration event. The temporary regeneration bonus stacks if another source grants the same effect, is previewed by the segmented Energy bar, and is consumed when the next player turn begins. Exhausted still limits the final regeneration to 1.
+
+Epidemic applies 10 Poison to every living, targetable enemy and then grants Stealth until the end of the player's next turn.
+
 At the end of the player's turn, Poison resolves and normal status durations decrease.
 
 ### Enemy turn
@@ -208,6 +212,7 @@ This sequencing guarantees that:
 
 - Victory grants the current node's reward once and opens the score screen after all queued combat presentation is complete.
 - The score screen animates experience, shows gold and loot, and allows access to the Character screen before continuing.
+- Panic prevents the first defeat in each combat: lethal damage is shown first, then the queued Panic event restores 20% of Max Health and grants Stealth for 2 turns. Later lethal damage in the same combat causes defeat normally.
 - Defeat clears the save immediately and presents the permadeath screen.
 
 ## Energy and cooldowns
