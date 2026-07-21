@@ -672,6 +672,11 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     : enemies.filter((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy));
   if (ability.target === "enemy" && targets.length === 0) return combat;
   if (ability.requiredTargetStatus && targets.some((target) => !hasStatus(target.statuses, ability.requiredTargetStatus!))) return combat;
+  if (ability.spreadTargetStatus && !enemies.some((enemy) => (
+    enemy.hp > 0
+    && !isEnemyStealthed(enemy)
+    && targets.every((target) => target.instanceId !== enemy.instanceId)
+  ))) return combat;
 
   if (ability.target === "self") {
     if (ability.effect === "reset_cooldowns") {
@@ -699,6 +704,20 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         ? randomTargets[Math.floor(Math.random() * randomTargets.length)]
         : enemies.find((enemy) => enemy.instanceId === initialTarget.instanceId);
       if (!target || target.hp <= 0) break;
+      if (ability.spreadTargetStatus) {
+        const sourceStatus = target.statuses.find((status) => status.id === ability.spreadTargetStatus);
+        const destinations = enemies.filter((enemy) => enemy.hp > 0 && enemy.instanceId !== target.instanceId && !isEnemyStealthed(enemy));
+        const destination = destinations[Math.floor(Math.random() * destinations.length)];
+        if (!sourceStatus || !destination) continue;
+        const copiedStatus = { ...sourceStatus };
+        enemies = enemies.map((enemy) => enemy.instanceId === destination.instanceId
+          ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, copiedStatus) }
+          : enemy);
+        const statusLabel = copiedStatus.stacks > 1 ? `${copiedStatus.stacks} ${copiedStatus.name}` : copiedStatus.name;
+        logs.push(makeLog(`${ability.name} spreads ${statusLabel} from ${target.name} to ${destination.name}.`, abilityInfo));
+        queueStatus(events, pendingEffects, `You spread ${statusLabel} to ${destination.name}.`, destination.instanceId, copiedStatus);
+        continue;
+      }
       if (ability.consumeStatusForHealing) {
         const consumedStatus = target.statuses.find((status) => status.id === ability.consumeStatusForHealing);
         if (!consumedStatus) continue;

@@ -293,8 +293,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 
 - A node costs its configured number of talent points.
 - Talent connections are bidirectional. If either node stores the connection, unlocking either end can make the node at the other end available.
-- Any one connected node is enough by default.
-- A node with `requireMode: "all"` requires every adjacent connected node instead.
+- Any one connected node is always enough; there is no alternate requirement mode.
 - Unlocking is permanent for the current character; there is no respec UI.
 - Unlocking an ability talent automatically equips the ability if fewer than six abilities are equipped.
 

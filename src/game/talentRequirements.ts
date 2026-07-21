@@ -10,14 +10,12 @@ export function getTalentConnectionIds(talentId: string, talents: readonly Talen
 }
 
 export function areTalentRequirementsMet(
-  talent: Pick<Talent, "id" | "requires" | "requireMode">,
+  talent: Pick<Talent, "id" | "requires">,
   unlockedTalents: readonly string[],
   talents: readonly Talent[],
 ): boolean {
   const connections = getTalentConnectionIds(talent.id, talents);
   if (connections.length === 0) return true;
   const unlocked = new Set(unlockedTalents);
-  return talent.requireMode === "all"
-    ? connections.every((connection) => unlocked.has(connection))
-    : connections.some((connection) => unlocked.has(connection));
+  return connections.some((connection) => unlocked.has(connection));
 }

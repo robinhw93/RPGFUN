@@ -16,6 +16,7 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Twin Strike | 3 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
 | Poison Cloud | 3 | 2 | All enemies | Applies 1 Poison without direct damage. |
+| Contagion | 2 | 3 | Poisoned enemy | Copies all Poison stacks to another random living enemy without removing them from the selected enemy. |
 | Stealth | 2 | 3 | Self | Enemies cannot target the player until the end of the player's next turn. |
 | Evasion | 2 | 3 | Self | Grants +60% Dodge Chance until the next player turn. |
 | Neurotoxin | 3 | 2 | Poisoned enemy | Consumes all Poison and applies Stunned. |
@@ -42,9 +43,9 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 41 nodes: the origin, three first-direction class nodes, and 37 later Shadow nodes. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 43 nodes: the origin, three first-direction class nodes, and 39 later Shadow nodes. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
-Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. **Any** is the default, so one adjacent unlocked node is enough. **All** is available only for nodes explicitly configured to require every adjacent node.
+Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
 | ID | Talent | Type | Declared connection(s) | Rule | Effect |
 | --- | --- | --- | --- | --- | --- |
@@ -89,6 +90,8 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_35 | Venomborn | Ability | Self Medicate | Any | Unlocks Venomborn. |
 | talent_36 | Lightning Strike | Ability | Shock Stabs | Any | Unlocks Lightning Strike. |
 | talent_37 | Focus | Ability | Toxic Explosion or Ambush | Any | Unlocks Focus. |
+| talent_38 | Contagion | Ability | Poison Stab | Any | Unlocks Contagion. |
+| talent_39 | New Talent | Ability | Twin Strike | Any | Reserved design node; no ability or mechanical effect is assigned yet. |
 
 Two nodes are both named **Potency** and intentionally provide separate +10% Poison bonuses.
 

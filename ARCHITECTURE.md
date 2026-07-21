@@ -57,7 +57,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/character.ts` is the only module that converts base attributes plus equipment/set/talent passives into `DerivedStats`.
 - `src/game/combatMath.ts` owns opposed Hit/Dodge rules and caps.
 - `src/game/combatFeatures.ts` aggregates data-driven gear, set, and talent combat features.
-- `src/game/talentRequirements.ts` owns All/Any prerequisite evaluation for both UI state and unlock authorization.
+- `src/game/talentRequirements.ts` owns bidirectional ANY-connection evaluation for both UI state and unlock authorization.
 - `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, item category normalization, and loot selection.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` applies a combat reward exactly once and stores the immutable score-screen snapshot.
@@ -312,8 +312,7 @@ The UI may preview and compare, but only these helpers authorize the transaction
 
 - `getTalentConnectionIds` treats every stored edge as undirected by combining a node's own `requires` IDs with every node that references it.
 - A node with no adjacent connections is available.
-- Missing or `requireMode: "any"` uses `some` and is the default.
-- `requireMode: "all"` uses `every` across all adjacent nodes only when explicitly configured.
+- Every node uses `some`: any one unlocked adjacent node makes it available.
 
 Each edge should be stored once. The runtime tree draws that one line, while availability and modal requirement text work from either end. The Talent Editor presents the checkbox as connected from both node perspectives, removes either stored orientation when disconnected, and normalizes duplicate reciprocal edges on load.
 
@@ -326,10 +325,9 @@ The editor owns a `TalentDraft`, not live `Talent[]` data. Its storage keys are:
 ```text
 emberfall.talent-devtool.v1
 emberfall.talent-devtool.snap-to-grid
-emberfall.talent-devtool.requirement-any-migrated
 ```
 
-The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. The requirement migration key performs a one-time conversion of older default-ALL drafts to the new ANY default; later explicit ALL selections remain intact. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format.
+The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Older drafts are normalized on load: obsolete requirement-mode data is discarded and duplicate reciprocal edges are collapsed. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format without a requirement-mode field.
 
 Canvas positions are percentages, but grid spacing is stored as fixed world units. When nodes approach an edge, `ensureCanvasRoom` expands that side and recalculates percentages so existing absolute alignment remains stable.
 

@@ -117,7 +117,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/progression.ts` | Experience thresholds and level rewards. |
 | `src/game/rewards.ts` | Grants each combat reward once and captures score-screen data. |
 | `src/game/save.ts` | Browser save/load/clear plus backward-compatible migration. |
-| `src/game/talentRequirements.ts` | AND/OR talent prerequisite evaluation. |
+| `src/game/talentRequirements.ts` | Bidirectional ANY talent-connection evaluation. |
 | `src/game/initiativeLayout.ts` | Pure FLIP geometry for initiative-card transitions. |
 | `src/game/avatars.ts` | Appearance catalog and saved-avatar normalization. |
 | `src/components/TalentDevtool.tsx` | Password gate and standalone Talent Editor draft UI. |
@@ -142,7 +142,7 @@ Important fields:
 - `hits` and `randomTargetPerHit` define multi-hit behavior.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `dealsDamage: false` creates a status/control utility ability.
-- `effect`, status options, detonation, consumption, and healing fields route through engine-supported behaviors.
+- `effect`, status options, detonation, consumption, healing, and status spreading fields route through engine-supported behaviors.
 - `damageModifiers` applies conditional multipliers owned by the ability.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
@@ -157,7 +157,7 @@ Each talent defines:
 - Player-facing name and description.
 - Branch, kind, tier, point cost, position, icon, and shape.
 - `requires` stores one side of each bidirectional connection. Runtime also discovers talents that point back to the node, so never store the same edge in both directions.
-- Optional `requireMode` is `any` by default; use `all` only when every adjacent node must be unlocked.
+- Every connection uses the same rule: any one unlocked adjacent node is enough.
 - Optional `abilityId`.
 - Optional data-driven `combat` bundle.
 
@@ -236,7 +236,7 @@ The editor supports:
 - Player-facing descriptions, branches, class/passive/ability types, tiers, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
 - Ability-ID references and free-form effect/proc notes.
-- Bidirectional connections with AND (**All connected talents**) or OR (**Any connected talent**) unlock rules.
+- Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
 - Toggleable snap-to-grid.
 - Pan, zoom from 15% to 200%, and fit-to-view.
@@ -315,7 +315,7 @@ Then test the changed system in a browser. For combat changes, verify at minimum
 For talent changes, also verify:
 
 - Node count and visible names.
-- Prerequisite state for both All and Any nodes.
+- Prerequisite state from either side of every bidirectional connection.
 - Unlock cost and automatic loadout behavior.
 - Ability/passive detail modal content.
 - Pan, zoom, fit, and large-tree bounds.

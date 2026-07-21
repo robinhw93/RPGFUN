@@ -2,7 +2,6 @@ import type { CharacterAvatarId } from "./avatars";
 
 export type StatName = "strength" | "agility" | "intelligence" | "vitality" | "luck";
 export type TalentBranch = "core" | "brute" | "shadow" | "arcanist";
-export type TalentRequirementMode = "all" | "any";
 export type GearSlot = "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring1" | "ring2";
 export type GearType = Exclude<GearSlot, "ring1" | "ring2"> | "ring";
 export type ArmorMaterial = "plate" | "leather" | "cloth";
@@ -191,6 +190,8 @@ export interface Ability {
   detonateStatus?: StatusEffectId;
   consumeTargetStatus?: StatusEffectId;
   consumeStatusForHealing?: StatusEffectId;
+  /** Copies this status from the selected target to another random living enemy. */
+  spreadTargetStatus?: StatusEffectId;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;
@@ -208,8 +209,6 @@ export interface Talent {
   cost: number;
   /** Stores each undirected connection once; runtime also discovers nodes that point back to this talent. */
   requires: string[];
-  /** Defaults to any. Use all only when every connected talent must be unlocked. */
-  requireMode?: TalentRequirementMode;
   kind: "class" | "passive" | "ability";
   position: { x: number; y: number };
   icon: string;

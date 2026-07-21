@@ -713,10 +713,15 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
           const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
           const targetRequirementMet = !ability.requiredTargetStatus || selectedTarget?.statuses.some((status) => status.id === ability.requiredTargetStatus);
+          const spreadTargetAvailable = !ability.spreadTargetStatus || combat.enemies.some((enemy) => (
+            enemy.hp > 0
+            && enemy.instanceId !== selectedTarget?.instanceId
+            && !enemy.statuses.some((status) => status.id === "stealth")
+          ));
           const selfRequirementMet = !ability.requiredSelfStatus
             || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
-          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || ability.energyCost > combat.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1599,9 +1604,7 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
   const unlockLabel = locked
     ? "Locked during combat"
     : !available
-      ? (talent.requireMode ?? "any") === "any"
-        ? `Requires one of: ${requiredNames.join(", ")}`
-        : `Requires ${requiredNames.join(", ")}`
+      ? `Requires one of: ${requiredNames.join(", ")}`
       : character.talentPoints < talent.cost
         ? `Requires ${talent.cost} Talent Point${talent.cost === 1 ? "" : "s"}`
         : `Unlock for ${talent.cost} Talent Point${talent.cost === 1 ? "" : "s"}`;

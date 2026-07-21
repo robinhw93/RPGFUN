@@ -47,7 +47,7 @@ The command runs the TypeScript project build and then creates the production bu
 - A four-node adventure: two regular combats, one choice event, and one boss.
 - Initiative-based combat against up to two enemies in current content; the state model supports larger groups.
 - Energy, cooldowns, multi-action player turns, buffs, debuffs, damage-over-time effects, enemy intent, floating combat text, and an inspectable combat log.
-- A 41-node classless talent tree with AND/OR connections, pan, zoom, and a six-slot ability loadout.
+- A 43-node classless talent tree with bidirectional ANY connections, pan, zoom, and a six-slot ability loadout.
 - Eight equipment slots, weapon-hand rules, rarity, item comparison, inventory filtering/sorting, and the Ashborn Warplate set.
 - Experience, level-ups, stat points, talent points, gold, and loot rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.
