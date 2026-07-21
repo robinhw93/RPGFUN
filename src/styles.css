@@ -433,6 +433,12 @@ main { min-height: calc(100vh - 68px); }
 .compact-combatant { min-width: 0; position: relative; padding: 1rem; color: var(--text); border: 1px solid #343a36; background: linear-gradient(145deg, #171b19, #101311); }
 .compact-combatant h2 { margin: 0 0 1rem; overflow: hidden; font-size: clamp(1rem, 2.4vw, 1.45rem); text-overflow: ellipsis; white-space: nowrap; }
 .player-combatant { width: 100%; max-width: 470px; align-self: center; justify-self: end; border-left: 2px solid var(--gold); }
+.player-combatant.stealthed { opacity: .82; border-color: #6f657f; background: linear-gradient(145deg, rgba(28,27,34,.9), rgba(11,13,14,.82)); box-shadow: inset 0 0 34px rgba(77,66,91,.22), 0 0 20px rgba(38,32,48,.2); transition: opacity .28s ease, border-color .28s ease, box-shadow .28s ease; }
+.stealth-smoke { position: absolute; z-index: 7; width: 54%; height: 76%; border-radius: 50%; background: radial-gradient(ellipse, rgba(105,95,119,.42) 0%, rgba(39,35,47,.58) 43%, transparent 73%); box-shadow: inset 0 0 18px rgba(153,139,172,.12), 0 0 20px rgba(78,69,91,.2); filter: blur(9px); opacity: 0; pointer-events: none; will-change: transform, opacity; }.stealth-smoke::before { content: ""; position: absolute; inset: 18% -6%; border: 4px solid rgba(150,137,167,.26); border-bottom-color: transparent; border-left-color: transparent; border-radius: 50%; filter: blur(2px); }
+.stealth-smoke-one { left: -12%; bottom: -28%; animation: stealth-smoke-drift-one 3.8s ease-in-out infinite; }
+.stealth-smoke-two { right: -15%; top: -31%; animation: stealth-smoke-drift-two 4.4s ease-in-out .6s infinite; }
+@keyframes stealth-smoke-drift-one { 0%, 100% { opacity: .22; transform: translate3d(-5%, 12%, 0) scale(.82) rotate(-8deg); } 48% { opacity: .72; transform: translate3d(46%, -22%, 0) scale(1.16) rotate(12deg); } 72% { opacity: .4; transform: translate3d(73%, -38%, 0) scale(.92) rotate(20deg); } }
+@keyframes stealth-smoke-drift-two { 0%, 100% { opacity: .18; transform: translate3d(8%, -8%, 0) scale(.78) rotate(10deg); } 45% { opacity: .66; transform: translate3d(-42%, 28%, 0) scale(1.12) rotate(-12deg); } 76% { opacity: .36; transform: translate3d(-67%, 43%, 0) scale(.9) rotate(-20deg); } }
 .compact-combatant.active-turn { box-shadow: inset 0 0 0 1px rgba(201,168,103,.24), 0 0 22px rgba(201,168,103,.08); }
 .compact-enemy-stack { min-height: 0; display: grid; grid-auto-rows: max-content; align-content: center; gap: .55rem; }
 .compact-enemy-stack.count-1, .compact-enemy-stack.count-2, .compact-enemy-stack.count-3 { align-content: center; }
@@ -883,4 +889,5 @@ main { min-height: calc(100vh - 68px); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+  .stealth-smoke { animation: none !important; opacity: .26; }
 }

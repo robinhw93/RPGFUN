@@ -220,6 +220,8 @@ function normalizeStatuses(statuses: StatusEffect[] = []): StatusEffect[] {
       stacks: status.stacks,
       sourcePower: status.sourcePower,
       sourceId: status.sourceId,
+      magnitude: status.magnitude,
+      expiresAtTurnStart: status.expiresAtTurnStart,
       description: status.id === "guard" ? status.description : undefined,
     });
     return { ...status, ...normalized };

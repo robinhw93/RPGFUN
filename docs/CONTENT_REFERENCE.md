@@ -153,7 +153,7 @@ The duration is the default duration created by the status library. Ability or t
 | Shielded | 3 turns | No | Takes 25% less damage. |
 | Regenerate | 3 turns | No | Heals at turn start for `3 + 20% source Magical Power` per stack, then applies healing-received modifiers. |
 | Taunt | Permanent | No | Forces the player to target this living, visible enemy with single-target attacks. |
-| Stealth | 1-turn library default | No | Cannot be targeted by enemies. The Stealth ability supplies its own duration/expiration behavior. |
+| Stealth | 1-turn library default | No | Cannot be targeted by enemies. Reapplication refreshes duration but never adds stacks; the Stealth ability supplies its own duration/expiration behavior. |
 | Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default; Enduring Evasion changes magnitude and duration. |
 | Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
 | Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |

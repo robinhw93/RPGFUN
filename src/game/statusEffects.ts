@@ -23,7 +23,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   shielded: { id: "shielded", name: "Shielded", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Reduces damage taken by 25%." },
   regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Magical Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
-  stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 1, description: "Cannot be targeted by enemies this round." },
+  stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 1, stackable: false, description: "Cannot be targeted by enemies this round." },
   evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn." },
   distraction: { id: "distraction", name: "Distraction", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next ability costs 0 Energy." },
   pinpoint: { id: "pinpoint", name: "Pinpoint", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next damaging ability is guaranteed to critically strike." },
@@ -51,7 +51,7 @@ export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<Sta
     name: definition.name,
     kind: definition.kind,
     duration: options.duration ?? definition.duration,
-    stacks: options.stacks ?? 1,
+    stacks: definition.stackable ? options.stacks ?? 1 : 1,
     description: options.description ?? definition.description,
     permanent: definition.permanent,
     sourcePower: options.sourcePower,
@@ -76,9 +76,11 @@ export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffec
   return statuses.map((item) => item.id === status.id ? {
     ...item,
     duration: item.permanent ? item.duration : Math.max(item.duration, status.duration),
-    stacks: stackable ? item.stacks + status.stacks : Math.max(item.stacks, status.stacks),
+    stacks: stackable ? item.stacks + status.stacks : 1,
     sourcePower: Math.max(item.sourcePower ?? 0, status.sourcePower ?? 0) || undefined,
     sourceId: status.sourceId ?? item.sourceId,
+    magnitude: status.magnitude ?? item.magnitude,
+    expiresAtTurnStart: status.expiresAtTurnStart ?? item.expiresAtTurnStart,
   } : item);
 }
 

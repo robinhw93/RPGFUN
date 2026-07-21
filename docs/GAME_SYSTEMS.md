@@ -199,6 +199,7 @@ At the start of an enemy's turn:
 - The enemy regenerates 1 Energy, up to 10.
 - If it lacks the Energy required by its attack, it gathers Energy instead of attacking.
 - If the player is Stealthed, the enemy cannot target the player.
+- While Stealthed, the player's combat card becomes lightly translucent and displays animated shadow-smoke until the status expires.
 - Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
 - Enemy turns do not add a separate floating turn announcement; the turn-order highlight advances with the preceding action's final event.
 
@@ -266,6 +267,7 @@ Applying a status that is already present:
 - Keeps the greater remaining duration instead of adding durations.
 - Keeps the greater source power.
 - Refreshes the source ID to the latest applier when provided.
+- Non-stackable statuses, including Stealth, always retain exactly one stack when reapplied.
 
 Detailed status definitions and formulas are in [Content reference](CONTENT_REFERENCE.md#status-effects).
 

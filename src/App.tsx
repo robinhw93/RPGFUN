@@ -19,7 +19,7 @@ import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquip
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
+import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
@@ -759,6 +759,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const damagedTargets = combat.damagedTargets ?? [];
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
   const poisonPulseTargets = new Set(poisonAnimations.map((animation) => animation.targetId));
+  const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
   const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep");
@@ -776,8 +777,10 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         <article
           key="player"
           data-combatant-id="player"
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""} ${playerStealthed ? "stealthed" : ""}`}
         >
+          {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
+          {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
@@ -1250,7 +1253,9 @@ function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onIn
   const Icon = STATUS_ICONS[id];
   const amountLabel = id === "barrier" || id === "guard"
     ? `${stacks} remaining`
-    : `${stacks} ${stacks === 1 ? "stack" : "stacks"}`;
+    : STATUS_EFFECTS[id].stackable
+      ? `${stacks} ${stacks === 1 ? "stack" : "stacks"}`
+      : "does not stack";
   const label = `${name}, ${amountLabel}, ${permanent ? "permanent" : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`}`;
   const remainingSegments = Math.max(0, Math.min(STATUS_DURATION_SEGMENTS, Math.floor(duration)));
   const gap = 6;
@@ -1277,7 +1282,7 @@ function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onIn
       ))}
     </svg>
   );
-  const stackCounter = <b className="status-stack-count" aria-hidden="true">{stacks}</b>;
+  const stackCounter = STATUS_EFFECTS[id].stackable ? <b className="status-stack-count" aria-hidden="true">{stacks}</b> : null;
 
   useEffect(() => () => {
     if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);

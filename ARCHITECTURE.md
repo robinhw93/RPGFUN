@@ -187,7 +187,7 @@ This is the preferred extension point for talents that transform an existing abi
 
 ### Creation and normalization
 
-`createCombat` builds enemy instances, initializes Energy/statuses, rolls initiative, and applies starting statuses. `ensureCombatState` repairs older saved combats by adding missing fields, normalizing definitions, rounding legacy initiative values, correcting selection, and recreating initiative when absent.
+`createCombat` builds enemy instances, initializes Energy/statuses, rolls initiative, and applies starting statuses. `ensureCombatState` repairs older saved combats by adding missing fields, normalizing definitions while preserving status-specific magnitude and expiration timing, rounding legacy initiative values, correcting selection, and recreating initiative when absent.
 
 ### Turn order
 
