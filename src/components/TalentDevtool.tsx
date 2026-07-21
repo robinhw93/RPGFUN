@@ -40,7 +40,6 @@ interface TalentDraftNode {
   description: string;
   branch: TalentBranch;
   kind: TalentNodeKind;
-  tier: number;
   cost: number;
   requires: string[];
   position: { x: number; y: number };
@@ -54,6 +53,7 @@ interface TalentDraftNode {
 }
 
 interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns"> {
+  tier?: number;
   shape?: TalentNodeShape;
   passiveBonuses?: TalentPassiveBonus[];
   abilityEnergyCost?: number;
@@ -144,7 +144,6 @@ function createInitialDraft(): TalentDraft {
         description: talent.description,
         branch: talent.branch,
         kind: talent.kind,
-        tier: talent.tier,
         cost: talent.cost,
         requires: [...talent.requires],
         position: { ...talent.position },
@@ -190,7 +189,6 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
         description: node.description,
         branch: node.branch,
         kind: node.kind,
-        tier: Number(node.tier) || 0,
         cost: Number(node.cost) || 0,
         requires: [...node.requires],
         position: repairChangedGrid ? {
@@ -404,7 +402,6 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       description: "Describe what this talent does for the player.",
       branch: parent?.branch === "core" ? "brute" : parent?.branch ?? "brute",
       kind: "passive",
-      tier: Math.max(1, (parent?.tier ?? 0) + 1),
       cost: 1,
       requires: parent ? [parent.id] : [],
       position: {
@@ -679,7 +676,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                 >
                   <span>{node.icon || "✦"}</span>
                   <strong>{node.name}</strong>
-                  <small>{node.kind} · tier {node.tier}</small>
+                  <small>{node.kind}</small>
                 </button>
               ))}
               </div>
@@ -699,7 +696,6 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
               <label><span>Branch</span><select value={selected.branch} onChange={(event) => updateSelected({ branch: event.target.value as TalentBranch })}>{BRANCH_OPTIONS.map((branch) => <option key={branch.id} value={branch.id}>{branch.label}</option>)}</select></label>
               <label><span>Talent type</span><select value={selected.kind} onChange={(event) => updateSelected({ kind: event.target.value as TalentNodeKind })}><option value="class">Class node</option><option value="passive">Passive</option><option value="ability">Ability</option></select></label>
               <label><span>Node shape</span><select value={selected.shape} onChange={(event) => updateSelected({ shape: event.target.value as TalentNodeShape })}><option value="circle">Circle</option><option value="square">Square</option></select></label>
-              <label><span>Tier</span><input type="number" min={0} value={selected.tier} onChange={(event) => updateSelected({ tier: Math.max(0, Number(event.target.value)) })} /></label>
               <label><span>Point cost</span><input type="number" min={0} value={selected.cost} onChange={(event) => updateSelected({ cost: Math.max(0, Number(event.target.value)) })} /></label>
             </div>
 

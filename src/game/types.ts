@@ -182,7 +182,7 @@ export interface GearSetBonusDefinition extends CombatFeatureBundle {
   description: string;
 }
 
-export type CombatAbilityVfxKind = "poison_cloud" | "neurotoxin" | "toxic_explosion" | "venomborn";
+export type CombatAbilityVfxKind = "poison_cloud" | "neurotoxin" | "toxic_explosion" | "venomborn" | "evasion" | "focus" | "recuperate";
 
 export interface Ability {
   id: string;

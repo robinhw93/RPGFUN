@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Backpack, BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
   EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
@@ -102,13 +102,13 @@ function GoldIcon() {
   return <img className="gold-icon" src="/assets/resource-icons/gold.png" alt="" aria-hidden="true" draggable={false} decoding="sync" />;
 }
 
-const IMAGE_PRELOAD_CACHE = new Map<string, Promise<void>>();
+const IMAGE_PRELOAD_CACHE = new Map<string, { image: HTMLImageElement; promise: Promise<void> }>();
 
 function preloadImage(url: string): Promise<void> {
   const cached = IMAGE_PRELOAD_CACHE.get(url);
-  if (cached) return cached;
+  if (cached) return cached.promise;
+  const image = new Image();
   const promise = new Promise<void>((resolve) => {
-    const image = new Image();
     let finished = false;
     const finish = () => {
       if (finished) return;
@@ -121,7 +121,9 @@ function preloadImage(url: string): Promise<void> {
     image.src = url;
     if (image.complete) finish();
   });
-  IMAGE_PRELOAD_CACHE.set(url, promise);
+  // Keep the decoded image alive for the lifetime of the app. A cached network
+  // response alone does not guarantee that a new DOM image is already decoded.
+  IMAGE_PRELOAD_CACHE.set(url, { image, promise });
   return promise;
 }
 
@@ -578,9 +580,11 @@ function App() {
             onCharacter={() => navigate("character")}
           />
         )}
-        {view === "character" && (characterAssetsReady
-          ? <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
-          : <CharacterLoadingScreen />)}
+        {view === "character" && (
+          <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
+            <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+          </CharacterAssetBoundary>
+        )}
         {view === "talents" && <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />}
         {view === "talentDevtool" && devtoolUnlocked && <TalentDevtool onExit={() => navigate("talents")} />}
       </main>
@@ -786,6 +790,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const missedTargets = combat.missedTargets ?? [];
   const passiveAnimations = combat.passiveAnimations ?? [];
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
+  const bleedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "bleed");
   const electrifiedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "electrified");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
@@ -793,6 +798,9 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const neurotoxinAnimations = abilityAnimations.filter((animation) => animation.kind === "neurotoxin");
   const toxicExplosionAnimations = abilityAnimations.filter((animation) => animation.kind === "toxic_explosion");
   const venombornAnimations = abilityAnimations.filter((animation) => animation.kind === "venomborn");
+  const evasionAnimations = abilityAnimations.filter((animation) => animation.kind === "evasion" && animation.targetId === "player");
+  const focusAnimations = abilityAnimations.filter((animation) => animation.kind === "focus" && animation.targetId === "player");
+  const recuperateAnimations = abilityAnimations.filter((animation) => animation.kind === "recuperate" && animation.targetId === "player");
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
@@ -813,11 +821,14 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         <article
           key="player"
           data-combatant-id="player"
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${playerStealthed ? "stealthed" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${playerStealthed ? "stealthed" : ""} ${evasionAnimations.length > 0 ? "evasion-cast" : ""} ${focusAnimations.length > 0 ? "focus-cast" : ""} ${recuperateAnimations.length > 0 ? "recuperate-cast" : ""}`}
         >
           {poisonAnimations.filter((animation) => animation.targetId === "player").map((animation) => <PoisonApplicationEffect key={animation.id} />)}
+          {bleedAnimations.filter((animation) => animation.targetId === "player").map((animation) => <BleedApplicationEffect key={animation.id} />)}
           {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
+          {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
+          {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
@@ -856,6 +867,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               }}
             >
               {poisonAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <PoisonApplicationEffect key={animation.id} />)}
+              {bleedAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <BleedApplicationEffect key={animation.id} />)}
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
@@ -1272,6 +1284,16 @@ function PoisonApplicationEffect() {
   return <span className="poison-application-effect" aria-hidden="true" />;
 }
 
+function BleedApplicationEffect() {
+  return (
+    <span className="bleed-application-effect" aria-hidden="true">
+      {Array.from({ length: 7 }).map((_, index) => (
+        <i key={index} style={{ "--blood-left": `${8 + index * 14}%`, "--blood-delay": `${index * 38}ms`, "--blood-distance": `${100 + (index % 3) * 24}px` } as React.CSSProperties} />
+      ))}
+    </span>
+  );
+}
+
 function PoisonCloudEffect() {
   return (
     <span className="poison-cloud-effect" aria-hidden="true">
@@ -1294,6 +1316,30 @@ function ToxicExplosionEffect() {
       <b>☣</b>
       <i className="toxic-wave" />
       {Array.from({ length: 7 }).map((_, index) => <i className="toxic-particle" key={index} style={{ "--particle-angle": `${index * (360 / 7)}deg`, "--particle-delay": `${index * 18}ms` } as React.CSSProperties} />)}
+    </span>
+  );
+}
+
+function FocusCastEffect() {
+  return (
+    <span className="focus-cast-effect" aria-hidden="true">
+      <i className="focus-ring focus-ring-outer" />
+      <i className="focus-ring focus-ring-inner" />
+      <Crosshair />
+      <b />
+    </span>
+  );
+}
+
+function RecuperateCastEffect() {
+  return (
+    <span className="recuperate-cast-effect" aria-hidden="true">
+      <i className="recuperate-wave recuperate-wave-one" />
+      <i className="recuperate-wave recuperate-wave-two" />
+      <BatteryLow />
+      {Array.from({ length: 6 }).map((_, index) => (
+        <b key={index} style={{ "--energy-particle-x": `${14 + index * 14}%`, "--energy-particle-delay": `${index * 42}ms` } as React.CSSProperties} />
+      ))}
     </span>
   );
 }
@@ -1632,6 +1678,53 @@ function CharacterLoadingScreen() {
       <p className="eyebrow">Preparing Character</p>
       <h1>Gathering your equipment…</h1>
     </section>
+  );
+}
+
+function waitForRenderedImage(image: HTMLImageElement): Promise<void> {
+  const loaded = image.complete
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => {
+      image.addEventListener("load", () => resolve(), { once: true });
+      image.addEventListener("error", () => resolve(), { once: true });
+    });
+  return loaded.then(() => typeof image.decode === "function" ? image.decode().catch(() => undefined) : undefined);
+}
+
+function CharacterAssetBoundary({ preloaded, assetKey, children }: {
+  preloaded: boolean;
+  assetKey: string;
+  children: ReactNode;
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [renderedAssetsReady, setRenderedAssetsReady] = useState(false);
+
+  useLayoutEffect(() => {
+    let cancelled = false;
+    let revealFrame = 0;
+    setRenderedAssetsReady(false);
+    if (!preloaded || !contentRef.current) return () => { cancelled = true; };
+
+    const images = [...contentRef.current.querySelectorAll<HTMLImageElement>("img")];
+    Promise.all(images.map(waitForRenderedImage)).then(() => {
+      revealFrame = window.requestAnimationFrame(() => {
+        if (!cancelled) setRenderedAssetsReady(true);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      if (revealFrame) window.cancelAnimationFrame(revealFrame);
+    };
+  }, [preloaded, assetKey]);
+
+  return (
+    <div className="character-asset-boundary">
+      <div ref={contentRef} className={`character-assets-stage ${renderedAssetsReady ? "ready" : "loading"}`} aria-hidden={!renderedAssetsReady}>
+        {children}
+      </div>
+      {!renderedAssetsReady && <CharacterLoadingScreen />}
+    </div>
   );
 }
 

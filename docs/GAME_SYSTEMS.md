@@ -115,6 +115,8 @@ The implemented damage types are Physical, Arcane, Shadow, Fire, Frost, and Ligh
 
 Shadow's mixed rule is the current implementation, not a general design promise for future content.
 
+Damage-over-time defenses are applied once after all stacks for that trigger are combined. Bleed subtracts 50% of effective Armor; Poison and Burn subtract 50% of Magic Resistance. Shatter therefore also weakens Armor against Bleed. Remaining damage is then processed by status multipliers and absorption.
+
 ### Player direct damage
 
 Each damage component follows this order:
@@ -242,8 +244,9 @@ This sequencing guarantees that:
 - Enemies pulse green once when Poison is applied.
 - Refreshing or adding stacks to an existing Poison also restarts that green pulse.
 - Poison Cloud sends a fading green smoke burst across the complete enemy side while all affected enemies pulse together.
+- Applying Bleed flashes the afflicted combatant red and sends temporary blood drops down across its card.
 - Neurotoxin shakes and flashes its target green before the persistent yellow Stunned treatment remains visible.
-- Toxic Explosion creates a toxic burst on its target at the damage impact.
+- Toxic Explosion deals the Poison's remaining-duration damage immediately, then creates a toxic burst on its target at the damage impact.
 - Venomborn pulls a Poison icon from its target toward the player and finishes with a green healing effect.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
@@ -308,6 +311,7 @@ Burn per stack   = 3 + source Magical Power × 0.30
 - Poison triggers at the end of each afflicted combatant's turn.
 - Burn triggers at the start of each afflicted combatant's turn.
 - Bleed is Physical damage, Poison is Arcane damage, and Burn is Fire damage.
+- Armor is 50% effective against each combined Bleed trigger. Magic Resistance is 50% effective against each combined Poison or Burn tick.
 - The status stores the applier's power when applied; later stat changes do not rewrite an existing status's source power.
 - Player Poison damage can be modified by talent bonuses such as Toxicology and Virulence.
 - Leech restores Health equal to 5% of actual Health damage dealt by player-applied Poison ticks or detonations, rounded up and limited by missing Health.

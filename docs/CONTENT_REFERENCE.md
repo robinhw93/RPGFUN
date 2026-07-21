@@ -13,19 +13,19 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Strike | 0 | 1 | Enemy | Deals `5 + 100% Physical Power` as Physical damage. |
 | Guard | 2 | None | Self | Grants base 6 Guard, multiplied by Guard generation, until the next turn. |
 | Quick Slash | 1 | None | Enemy | Deals 50% Physical Power as Physical damage. |
-| Twin Strike | 3 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
+| Twin Strike | 2 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
-| Poison Cloud | 3 | 2 | All enemies | Applies 1 Poison to every target simultaneously without direct damage. |
+| Poison Cloud | 3 | 2 | All enemies | Applies 2 Poison to every target simultaneously without direct damage. |
 | Contagion | 2 | 3 | Poisoned enemy | Copies all Poison stacks to another random living enemy without removing them from the selected enemy. |
 | Stealth | 2 | 3 | Self | Enemies cannot target the player until the end of the player's next turn. |
 | Evasion | 2 | 3 | Self | Grants +60% Dodge Chance until the next player turn. |
 | Neurotoxin | 3 | 2 | Poisoned enemy | Consumes all Poison and applies Stunned. |
 | Venomous Strike | 4 | 3 | Enemy | Deals 100% Physical Power, applies 2 Poison, and deals double direct damage if the target was already Poisoned. |
-| Flurry | 4 | 2 | Random enemies | Makes five attacks for 50% Physical Power each. Every hit independently selects a valid random enemy and triggers on-hit effects. |
+| Flurry | 4 | 2 | Random enemies | Makes five attacks for 40% Physical Power each. Every hit independently selects a valid random enemy and triggers on-hit effects. |
 | Ambush | 2 | None | Enemy | Requires Stealth. Deals 150% Physical Power with +50% Critical Strike Chance. |
-| Toxic Explosion | 5 | 2 | Poisoned enemy | Deals three turns of the target's current Poison damage immediately and removes Poison. |
+| Toxic Explosion | 5 | 2 | Poisoned enemy | Deals the target's remaining Poison duration immediately and removes Poison. |
 | Venomborn | 2 | 6 | Poisoned enemy | Consumes Poison and heals the player for three turns of that Poison's current damage. |
-| Lightning Strike | 5 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Magical Power as Lightning damage, then applies Electrified for three turns. |
+| Lightning Strike | 4 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Magical Power as Lightning damage, then applies Electrified for three turns. |
 | Focus | 1 | 6 | Self | Resets every other ability cooldown. Focus keeps its own cooldown. |
 | Recuperate | 1 | 4 | Self | Restores 50% of Max Energy after paying its Energy cost. |
 | Sharpened Blade | 2 | 1 | Enemy | Deals 100% Physical Power and ignores Guard and Barrier. |
@@ -71,11 +71,11 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_1 | Immaculate Timing | Passive | Shadow | Any | +2 Agility and +5 Initiative. |
 | talent_2 | Twin Strike | Ability | Immaculate Timing | Any | Unlocks Twin Strike. |
 | talent_3 | Poison Stab | Ability | Immaculate Timing | Any | Unlocks Poison Stab. |
-| talent_4 | Honed Skills | Passive | Twin Strike | Any | +2% Critical Strike Chance. |
-| talent_5 | Precision | Passive | Poison Stab | Any | +2% Hit Chance. |
-| talent_6 | Elusiveness | Passive | Honed Skills | Any | +2% Dodge Chance. |
+| talent_4 | Honed Skills | Passive | Twin Strike | Any | +3% Critical Strike Chance. |
+| talent_5 | Precision | Passive | Poison Stab | Any | +3% Hit Chance. |
+| talent_6 | Elusiveness | Passive | Honed Skills | Any | +3% Dodge Chance. |
 | talent_7 | Stamina | Passive | Honed Skills | Any | +1 Max Energy. |
-| talent_8 | Setup | Passive | Precision | Any | +2 Initiative. |
+| talent_8 | Setup | Passive | Precision | Any | +4 Initiative. |
 | talent_9 | Spell Dodger | Passive | Precision | Any | +2 Magic Resistance. |
 | talent_10 | Poison Cloud | Ability | Spell Dodger or Recuperate | Any | Unlocks Poison Cloud. |
 | talent_11 | Stealth | Ability | Stamina or Recuperate | Any | Unlocks Stealth. |
@@ -96,7 +96,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_26 | Ambush | Ability | Energized | Any | Unlocks Ambush. |
 | talent_27 | Toxic Explosion | Ability | Virulence | Any | Unlocks Toxic Explosion. |
 | talent_28 | Longevity | Passive | Toxic Explosion | Any | Toxic Explosion retains half of the consumed Poison stacks, rounded up. |
-| talent_29 | Maneuvers | Passive | Ambush | Any | Ambush can be used without Stealth at 100% Physical Power; it remains 150% while Stealthed. |
+| talent_29 | Maneuvers | Passive | Ambush | Any | Ambush can be used without Stealth at 100% Physical Power, but gains no bonus Critical Strike Chance unless the player is Stealthed. |
 | talent_30 | Reapply | Passive | Neurotoxin | Any | After Neurotoxin consumes Poison, it applies 2 new Poison. |
 | talent_31 | Enduring Evasion | Passive | Evasion (ability) | Any | Evasion grants +40% Dodge instead of +60%, but lasts one additional turn. |
 | talent_32 | Self Medicate | Passive | Venomous Strike | Any | Start combat with 2 Poison. An enemy that directly damages the player gains 1 Poison. |
@@ -162,9 +162,9 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `2 + 15% source Magical Power`. |
-| Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `2 + 25% source Physical Power`. |
-| Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `3 + 30% source Magical Power`. |
+| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `2 + 15% source Magical Power`; Magic Resistance is 50% effective against the combined tick. |
+| Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `2 + 25% source Physical Power`; Armor is 50% effective against the combined trigger. |
+| Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `3 + 30% source Magical Power`; Magic Resistance is 50% effective against the combined tick. |
 | Weaken | 3 turns | No | Deals 25% less damage. |
 | Shatter | 3 turns | No | Effective Armor is reduced by 50%. |
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |

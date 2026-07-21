@@ -159,7 +159,7 @@ Each talent defines:
 
 - Stable `id` used by saves and connections.
 - Player-facing name and description.
-- Branch, kind, tier, point cost, position, icon, and shape.
+- Branch, kind, point cost, position, icon, and shape.
 - `requires` stores one side of each bidirectional connection. Runtime also discovers talents that point back to the node, so never store the same edge in both directions.
 - Every connection uses the same rule: any one unlocked adjacent node is enough.
 - Optional `abilityId`.
@@ -253,7 +253,7 @@ The editor supports:
 
 - Creating, deleting, selecting, and dragging nodes.
 - Live Shadow, Arcanist, and Brute node counters in the editor header.
-- Player-facing descriptions, branches, class/passive/ability types, tiers, costs, icons, and circle/square shapes.
+- Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
 - Ability-ID references, Energy cost, cooldown turns, and free-form effect/proc notes.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
