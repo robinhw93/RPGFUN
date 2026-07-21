@@ -63,6 +63,7 @@ export type StatusEffectId =
   | "electrified"
   | "cold"
   | "charred"
+  | "arcaneWound"
   | "sleep";
 
 export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
@@ -212,7 +213,12 @@ export type CombatAbilityVfxKind =
   | "chain_assassination"
   | "cull_the_weak"
   | "epidemic"
-  | "voltage_siphon";
+  | "voltage_siphon"
+  | "arcane_bolt"
+  | "frostbolt"
+  | "arcane_blast"
+  | "fireball"
+  | "lightning_beam";
 
 export interface Ability {
   id: string;
@@ -253,7 +259,7 @@ export interface Ability {
   /** Copies every debuff from the selected target to all other living enemies. */
   spreadAllTargetDebuffs?: boolean;
   /** Statuses applied by a damaging ability after a successful hit. */
-  statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; onlyOnCritical?: boolean }>;
+  statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
   /** Statuses applied to the player after the ability resolves. */
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; expiresAtTurnStart?: boolean }>;
   /** Reusable self-benefits granted when the struck target already has a required status. */
@@ -272,6 +278,8 @@ export interface Ability {
   grantsNextCritical?: boolean;
   /** Direct damage gains this multiplier for every unique target debuff. */
   damagePerTargetDebuff?: number;
+  /** Direct damage gains this additive multiplier for every stack of one target status. */
+  damagePerTargetStatusStack?: { status: StatusEffectId; multiplier: number };
   /** Resolves a complete player turn ending and immediately starts a new player turn. */
   grantsImmediateTurn?: boolean;
   /** Refund the Energy actually spent when this ability kills its target. */

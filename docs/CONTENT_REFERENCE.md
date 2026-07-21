@@ -42,6 +42,11 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
 | Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
+| Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
+| Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
+| Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. |
+| Fireball | 4 | 2 | Enemy | Deals 100% Magical Power as Fire damage and applies 2 Burn. |
+| Lightning Beam | 3 | 2 | Random enemies | Hits four times for 20% Magical Power as Lightning damage. Every hit independently selects a valid random enemy and has a 20% base chance, plus Luck's chance-effect bonus, to apply Electrified. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -53,12 +58,11 @@ These definitions are executable, but a normal new character cannot unlock or eq
 | Ground Slam | 6 | None | Physical area attack with 7 flat power plus Physical Power; each target has a base 45% Stun chance plus Luck's chance-effect bonus. |
 | Sever | 3 | None | Shadow attack with 7 flat power plus Physical Power; applies Bleed. |
 | Venom Edge | 4 | None | Shadow attack with 5 flat power plus Physical Power; applies Poison. |
-| Arcane Bolt | 3 | None | Arcane attack with 9 flat power plus Magical Power. |
 | Essence Siphon | 4 | None | Arcane attack with 7 flat power plus Magical Power; restores 2 Energy after use. |
 
 ## Talent tree
 
-The live tree has 82 nodes: the origin, three first-direction class nodes, and 78 later Shadow nodes. Branch counts are Shadow 79, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 87 nodes: the origin, three first-direction class nodes, 78 later Shadow nodes, and 5 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 6, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -67,7 +71,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | origin | Wayfarer's Spark | Class | None | — | Starting node; unlocks Strike and Guard. |
 | brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength. |
 | shadow_1 | Shadow | Class | Wayfarer's Spark | Any | +2 Agility and unlocks Quick Slash. |
-| arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence. |
+| arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence and unlocks Arcane Bolt. |
 | talent_1 | Immaculate Timing | Passive | Shadow | Any | +2 Agility and +5 Initiative. |
 | talent_2 | Twin Strike | Ability | Immaculate Timing | Any | Unlocks Twin Strike. |
 | talent_3 | Poison Stab | Ability | Immaculate Timing | Any | Unlocks Poison Stab. |
@@ -146,6 +150,11 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_76 | Regenerating Toxin | Passive | Mischief | Any | Neurotoxin consumes only 50% of the target's Poison. |
 | talent_77 | New Current | Passive | Voltage Stab | Any | Reduces Voltage Stab's cooldown by 1 turn. |
 | talent_78 | Efficient Spread | Passive | Epidemic | Any | Reduces Epidemic's Energy cost by 1. |
+| talent_79 | Arcane Mind | Passive | Arcanist | Any | +2 Intelligence and +3 Magic Resistance. |
+| talent_80 | Frostbolt | Ability | Arcane Mind | Any | Unlocks Frostbolt. |
+| talent_81 | Arcane Blast | Ability | Arcane Mind | Any | Unlocks Arcane Blast. |
+| talent_82 | Fireball | Ability | Arcane Mind | Any | Unlocks Fireball. |
+| talent_83 | Lightning Beam | Ability | Arcane Mind | Any | Unlocks Lightning Beam. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 
@@ -188,6 +197,7 @@ The duration is the default duration created by the status library. Ability or t
 | Electrified | 3 turns | No | Has a 10% chance at turn start to become Stunned and skip that turn. |
 | Cold | 3 turns | No | Takes 50% more Frost damage and 50% less Lightning damage. |
 | Charred | 3 turns | No | Takes 50% more Fire damage and 50% less Frost damage. |
+| Arcane Wound | 3 turns | Yes | Each stack increases Arcane Blast damage against the afflicted target by 10%. |
 | Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |
 
 ## Enemies

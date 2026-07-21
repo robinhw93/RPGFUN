@@ -177,6 +177,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   electrified: Zap,
   cold: Snowflake,
   charred: Flame,
+  arcaneWound: CircleDot,
   sleep: Moon,
 };
 
@@ -805,6 +806,13 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const pandemicAnimations = abilityAnimations.filter((animation) => animation.kind === "pandemic");
   const lightSpeedAnimations = abilityAnimations.filter((animation) => animation.kind === "light_speed");
   const voltageSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "voltage_siphon");
+  const arcanistProjectileAnimations = abilityAnimations.filter((animation) => (
+    animation.kind === "arcane_bolt"
+    || animation.kind === "frostbolt"
+    || animation.kind === "arcane_blast"
+    || animation.kind === "fireball"
+    || animation.kind === "lightning_beam"
+  ));
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
@@ -899,6 +907,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       {pandemicAnimations.map((animation) => <PandemicSpreadEffect key={animation.id} animation={animation} statusIds={combat.enemies.find((enemy) => enemy.instanceId === animation.sourceTargetId)?.statuses.filter((status) => status.kind === "debuff").map((status) => status.id) ?? []} />)}
       {lightSpeedAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="light-speed-path"><Zap /><i /><i /></CombatantPathEffect>)}
       {voltageSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="voltage-siphon-path"><Zap /><HeartPulse /><i /></CombatantPathEffect>)}
+      {arcanistProjectileAnimations.map((animation) => <ArcanistProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
@@ -1391,6 +1400,21 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "light_speed_turn") {
     return <span className="ability-impact-effect light-speed-turn-impact" aria-hidden="true"><Zap /><Sparkles /><i /><i /></span>;
   }
+  if (kind === "arcane_bolt") {
+    return <span className="ability-impact-effect arcane-bolt-impact" aria-hidden="true"><Sparkles /><i /><i /><i /></span>;
+  }
+  if (kind === "frostbolt") {
+    return <span className="ability-impact-effect frostbolt-impact" aria-hidden="true"><Snowflake /><i /><i /><i /><i /></span>;
+  }
+  if (kind === "arcane_blast") {
+    return <span className="ability-impact-effect arcane-blast-impact" aria-hidden="true"><CircleDot /><i /><i /><i /></span>;
+  }
+  if (kind === "fireball") {
+    return <span className="ability-impact-effect fireball-impact" aria-hidden="true"><Flame /><i /><i /><i /><i /></span>;
+  }
+  if (kind === "lightning_beam") {
+    return <span className="ability-impact-effect lightning-beam-impact" aria-hidden="true"><Zap /><i /><i /><i /></span>;
+  }
   return null;
 }
 
@@ -1436,6 +1460,22 @@ function CombatantPathEffect({ animation, className, children }: { animation: Co
       {children}
     </span>
   );
+}
+
+function ArcanistProjectileEffect({ animation }: { animation: CombatAbilityAnimation }) {
+  if (animation.kind === "frostbolt") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
+  }
+  if (animation.kind === "fireball") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path fireball-path"><Flame /><i /><i /></CombatantPathEffect>;
+  }
+  if (animation.kind === "lightning_beam") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path lightning-beam-path"><Zap /><i /><i /></CombatantPathEffect>;
+  }
+  if (animation.kind === "arcane_blast") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-blast-path"><CircleDot /><i /><i /></CombatantPathEffect>;
+  }
+  return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-bolt-path"><Sparkles /><i /><i /></CombatantPathEffect>;
 }
 
 function PandemicSpreadEffect({ animation, statusIds }: { animation: CombatAbilityAnimation; statusIds: StatusEffectId[] }) {

@@ -354,7 +354,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first three directions are Brute, Shadow, and Arcanist. The current expanded content is primarily the Shadow branch; Brute and Arcanist currently contain only their first class node, although extra non-tree ability definitions exist for future work.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first three directions are Brute, Shadow, and Arcanist. Shadow is the first complete branch. Arcanist now begins with Arcane Mind and four elemental/arcane ability choices, while Brute currently contains only its first class node.
 
 ### Unlock rules
 

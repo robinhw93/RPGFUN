@@ -1126,7 +1126,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           const consumedStatusId = ability.consumeTargetStatus;
           const followUp = abilityModifiers.find((modifier) => modifier.applyStatusAfterConsume)?.applyStatusAfterConsume;
           const followUpStatus = followUp ? createPlayerAppliedStatus(followUp.status, derived, { stacks: followUp.stacks, duration: followUp.duration }) : null;
-          const additionalStatuses = (ability.statusApplications ?? []).map((application) => createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration }));
+          const additionalStatuses = (ability.statusApplications ?? [])
+            .filter((application) => application.chance === undefined || Math.random() < Math.min(1, application.chance + derived.chanceEffectBonus))
+            .map((application) => createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration }));
           const appliedStatuses = [status, ...createPlayerCompanionStatuses(status.id, derived), ...(followUpStatus ? [followUpStatus] : []), ...additionalStatuses.flatMap((applied) => [applied, ...createPlayerCompanionStatuses(applied.id, derived)])];
           const affectedTargets = groupedAreaApplication ? targets : [target];
           const modifierRatio = abilityModifiers.find((modifier) => modifier.statusConsumptionRatio !== undefined)?.statusConsumptionRatio;
@@ -1210,6 +1212,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         : 0;
       const critical = forceCritical || Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses) + (ability.critChanceBonus ?? 0) + conditionalCritBonus;
       const damageComponents = ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: effectivePowerScaling }];
+      const targetStatusStackMultiplier = ability.damagePerTargetStatusStack
+        ? 1 + (target.statuses.find((status) => status.id === ability.damagePerTargetStatusStack!.status)?.stacks ?? 0) * ability.damagePerTargetStatusStack.multiplier
+        : 1;
       const incomingDamage = damageComponents.reduce((total, component) => {
         const offensivePower = getOffensivePower(derived, component.damageType);
         const defense = getDefense(target.armor, target.magicResistance, target.statuses, component.damageType);
@@ -1218,7 +1223,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, component.damageType);
         const uniqueDebuffs = new Set(target.statuses.filter((status) => status.kind === "debuff").map((status) => status.id)).size;
         const debuffMultiplier = 1 + uniqueDebuffs * (ability.damagePerTargetDebuff ?? 0);
-        return total + getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier * debuffMultiplier)), playerStatuses, target.statuses, component.damageType);
+        return total + getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier * debuffMultiplier * targetStatusStackMultiplier)), playerStatuses, target.statuses, component.damageType);
       }, 0);
       const absorption = ability.ignoresAbsorption
         ? { damage: incomingDamage, statuses: target.statuses, absorbed: 0, absorbedBy: {} }
@@ -1274,7 +1279,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage${absorptionSuffix(absorption.absorbed)} and applies ${appliedStatuses.map((applied) => applied.name).join(" and ")}.`;
       }
 
-      const extraStatuses = (ability.statusApplications ?? []).filter((application) => !application.onlyOnCritical || critical);
+      const extraStatuses = (ability.statusApplications ?? []).filter((application) => (
+        (!application.onlyOnCritical || critical)
+        && (application.chance === undefined || Math.random() < Math.min(1, application.chance + derived.chanceEffectBonus))
+      ));
       const appliedExtraStatuses: StatusEffect[] = [];
       extraStatuses.forEach((application) => {
         const status = createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration });

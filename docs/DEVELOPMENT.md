@@ -144,10 +144,11 @@ Important fields:
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
-- `statusApplications` supports one or more on-hit statuses, including critical-only applications.
+- `statusApplications` supports one or more on-hit statuses, including critical-only applications and independent base proc chances augmented by the character's chance-effect bonus.
 - `ignoresAbsorption`, `consumeTargetStatusRatio`, Energy restoration, and `grantsNextCritical` support the current advanced Shadow abilities. Ability modifiers can override status-consumption ratios, including Neurotoxin's partial Poison consumption.
-- `spreadAllTargetDebuffs`, `damagePerTargetDebuff`, conditional Critical Chance, immediate turns, and on-kill refund/reset fields support the late Shadow tree without hard-coding talent IDs.
+- `spreadAllTargetDebuffs`, `damagePerTargetDebuff`, `damagePerTargetStatusStack`, conditional Critical Chance, immediate turns, and on-kill refund/reset fields support talent mechanics without hard-coding talent IDs. Arcane Blast uses the status-stack multiplier for Arcane Wound.
 - `damageModifiers` applies conditional multipliers owned by the ability.
+- `vfx` emits presentation metadata at the exact event where the ability resolves. Add the matching `CombatAbilityVfxKind` and UI renderer without putting animation timing into combat rules.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
 

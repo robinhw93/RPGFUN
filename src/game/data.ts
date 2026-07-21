@@ -160,8 +160,24 @@ export const ABILITIES: Record<string, Ability> = {
     target: "enemy", damageType: "shadow", power: 5, scalingStat: "agility", icon: "⌁", branch: "shadow", effect: "poison",
   },
   arcaneBolt: {
-    id: "arcaneBolt", name: "Arcane Bolt", description: "Focused arcane damage resisted by Magic Resistance.", energyCost: 3,
-    target: "enemy", damageType: "arcane", power: 9, scalingStat: "intelligence", icon: "✧", branch: "arcanist",
+    id: "arcaneBolt", name: "Arcane Bolt", description: "Deal Arcane Damage equal to 75% of your Magical Power.", energyCost: 1,
+    cooldownTurns: 1, target: "enemy", damageType: "arcane", powerScaling: 0.75, icon: "✧", branch: "arcanist", vfx: "arcane_bolt",
+  },
+  Frostbolt: {
+    id: "Frostbolt", name: "Frostbolt", description: "Deal Frost Damage equal to 50% of your Magical Power and have a 50% chance to apply Slowed.", energyCost: 3,
+    cooldownTurns: 1, target: "enemy", damageType: "frost", powerScaling: 0.5, statusApplications: [{ status: "slowed", chance: 0.5 }], icon: "❄", branch: "arcanist", vfx: "frostbolt",
+  },
+  ArcaneBlast: {
+    id: "ArcaneBlast", name: "Arcane Blast", description: "Deal Arcane Damage equal to 20% of your Magical Power and apply 1 Arcane Wound. Each Arcane Wound increases Arcane Blast damage by 10%.", energyCost: 1,
+    target: "enemy", damageType: "arcane", powerScaling: 0.2, statusApplications: [{ status: "arcaneWound" }], damagePerTargetStatusStack: { status: "arcaneWound", multiplier: 0.1 }, icon: "✦", branch: "arcanist", vfx: "arcane_blast",
+  },
+  Fireball: {
+    id: "Fireball", name: "Fireball", description: "Deal Fire Damage equal to 100% of your Magical Power and apply 2 Burn.", energyCost: 4,
+    cooldownTurns: 2, target: "enemy", damageType: "fire", powerScaling: 1, statusApplications: [{ status: "burn", stacks: 2 }], icon: "●", branch: "arcanist", vfx: "fireball",
+  },
+  LightningBeam: {
+    id: "LightningBeam", name: "Lightning Beam", description: "Strike random enemies four times for 20% Magical Power as Lightning Damage per hit. Each hit has a 20% chance to apply Electrified.", energyCost: 3,
+    cooldownTurns: 2, target: "enemy", damageType: "lightning", powerScaling: 0.2, hits: 4, randomTargetPerHit: true, statusApplications: [{ status: "electrified", chance: 0.2 }], icon: "ϟ", branch: "arcanist", vfx: "lightning_beam",
   },
   siphon: {
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
@@ -175,7 +191,7 @@ const TALENT_NODES: Talent[] = [
   { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 32.258, y: 50 }, icon: "✦", shape: "square" },
   { id: "brute_1", name: "Brute", description: "+2 Strength.", branch: "brute", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 27.419, y: 50 }, icon: "◆", shape: "square", combat: { passive: { stats: { strength: 2 } } } },
   { id: "shadow_1", name: "Shadow", description: "+2 Agility. Unlocks Quick Slash.", branch: "shadow", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 37.097, y: 50 }, icon: "◈", shape: "square", abilityId: "quickSlash", combat: { passive: { stats: { agility: 2 } } } },
-  { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence.", branch: "arcanist", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 32.258, y: 43.75 }, icon: "✧", shape: "square", combat: { passive: { stats: { intelligence: 2 } } } },
+  { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence. Unlocks Arcane Bolt.", branch: "arcanist", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 32.258, y: 43.75 }, icon: "✧", shape: "square", abilityId: "arcaneBolt", effectNotes: "Passive Bonus: +2 Intelligence.\nAbility: Arcane Bolt\nCost: 1 Energy\nCooldown: 1 turn\nDeal 75% Magical Power as Arcane Damage.", combat: { passive: { stats: { intelligence: 2 } } } },
   { id: "talent_1", name: "Immaculate Timing", description: "+2 Agility. +5 Initiative.", branch: "shadow", kind: "passive", tier: 2, cost: 1, requires: ["shadow_1"], position: { x: 41.935, y: 50 }, icon: "✦", shape: "circle", combat: { passive: { stats: { agility: 2 }, initiative: 5 } } },
   { id: "talent_2", name: "Twin Strike", description: "Strike twice for 50% Physical Power per hit. Each hit triggers on-hit effects.", branch: "shadow", kind: "ability", tier: 3, cost: 1, requires: ["talent_1"], position: { x: 45.967, y: 45.312 }, icon: "✦", shape: "square", abilityId: "TwinStrike" },
   { id: "talent_3", name: "Poison Stab", description: "Deal 50% Physical Power as damage and apply 1 Poison.", branch: "shadow", kind: "ability", tier: 3, cost: 1, requires: ["talent_1"], position: { x: 45.967, y: 54.688 }, icon: "✦", shape: "square", abilityId: "PoisonStab" },
@@ -258,6 +274,11 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_76", name: "Regenerating Toxin", description: "Neurotoxin consumes only 50% of the target's Poison.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_75"], position: { x: 74.19354838709677, y: 75.78125 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "regenerating-toxin", name: "Regenerating Toxin", description: "Neurotoxin consumes only 50% of the target's Poison.", abilityIds: ["Neurotoxin"], descriptionOverride: "Consume 50% of the target's Poison to Stun it.", statusConsumptionRatio: 0.5 }] } },
   { id: "talent_77", name: "New Current", description: "Reduces the cooldown of Voltage Stab by 1 turn.", branch: "shadow", kind: "passive", tier: 15, cost: 1, requires: ["talent_66"], position: { x: 76.71232876712328, y: 34.375 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "new-current", name: "New Current", description: "Reduces the cooldown of Voltage Stab by 1 turn.", abilityIds: ["VoltageStab"], cooldownTurnsDelta: -1 }] } },
   { id: "talent_78", name: "Efficient Spread", description: "Reduces the energy cost of Epidemic by 1.", branch: "shadow", kind: "passive", tier: 16, cost: 1, requires: ["talent_64"], position: { x: 76.71232876712328, y: 65.625 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "efficient-spread", name: "Efficient Spread", description: "Reduces the energy cost of Epidemic by 1.", abilityIds: ["Epidemic"], energyCostDelta: -1 }] } },
+  { id: "talent_79", name: "Arcane Mind", description: "+2 Intelligence. +3 Magic Resistance.", branch: "arcanist", kind: "passive", tier: 2, cost: 1, requires: ["arcanist_1"], position: { x: 27.397260273972602, y: 36.71875 }, icon: "✦", shape: "circle", combat: { passive: { stats: { intelligence: 2 }, magicResistance: 3 } } },
+  { id: "talent_80", name: "Frostbolt", description: "Deal 50% Magical Power as Frost Damage and have a 50% chance to apply Slowed.", branch: "arcanist", kind: "ability", tier: 3, cost: 1, requires: ["talent_79"], position: { x: 29.45205479452055, y: 31.25 }, icon: "✦", shape: "square", abilityId: "Frostbolt" },
+  { id: "talent_81", name: "Arcane Blast", description: "Deal 20% Magical Power as Arcane Damage and apply 1 Arcane Wound. Each stack increases Arcane Blast damage by 10%.", branch: "arcanist", kind: "ability", tier: 3, cost: 1, requires: ["talent_79"], position: { x: 25.34246575342466, y: 31.25 }, icon: "✦", shape: "square", abilityId: "ArcaneBlast", effectNotes: "Arcane Wound lasts 3 turns. Each stack increases Arcane Blast damage against the target by 10%." },
+  { id: "talent_82", name: "Fireball", description: "Deal 100% Magical Power as Fire Damage and apply 2 Burn.", branch: "arcanist", kind: "ability", tier: 3, cost: 1, requires: ["talent_79"], position: { x: 21.232876712328768, y: 32.03125 }, icon: "✦", shape: "square", abilityId: "Fireball" },
+  { id: "talent_83", name: "Lightning Beam", description: "Hit random enemies four times for 20% Magical Power as Lightning Damage per hit. Each hit has a 20% chance to apply Electrified.", branch: "arcanist", kind: "ability", tier: 3, cost: 1, requires: ["talent_79"], position: { x: 33.56164383561644, y: 32.03125 }, icon: "✦", shape: "square", abilityId: "LightningBeam" },
 ];
 
 const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
@@ -343,11 +364,16 @@ const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
   talent_76: { x: 63.014, y: 75.781 },
   talent_77: { x: 76.71232876712328, y: 34.375 },
   talent_78: { x: 76.71232876712328, y: 65.625 },
+  talent_79: { x: 27.397260273972602, y: 36.71875 },
+  talent_80: { x: 29.45205479452055, y: 31.25 },
+  talent_81: { x: 25.34246575342466, y: 31.25 },
+  talent_82: { x: 21.232876712328768, y: 32.03125 },
+  talent_83: { x: 33.56164383561644, y: 32.03125 },
 };
 
 export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {
   const positionedTalent = { ...talent, position: TALENT_TREE_LAYOUT[talent.id] ?? talent.position };
-  const ability = talent.kind === "ability" && talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
+  const ability = talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
   return ability ? {
     ...positionedTalent,
     abilityEnergyCost: ability.energyCost,
