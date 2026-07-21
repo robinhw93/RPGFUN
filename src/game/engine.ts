@@ -19,7 +19,7 @@ import {
   isMagicalDamage,
   isStatusEffectId,
 } from "./statusEffects";
-import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
 
@@ -934,7 +934,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const remainingCooldown = combat.abilityCooldowns?.[abilityId] ?? 0;
   if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0) return combat;
   const abilityIsFree = hasStatus(combat.playerStatuses, "distraction");
-  const modifiedEnergyCost = getCharacterAbilityEnergyCost(character, ability);
+  const selectedTargetStatuses = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId)?.statuses ?? [];
+  const targetMakesAbilityFree = Boolean(ability.freeAgainstTargetStatus && hasStatus(selectedTargetStatuses, ability.freeAgainstTargetStatus));
+  const modifiedEnergyCost = getCharacterAbilityEnergyCostForTarget(character, ability, selectedTargetStatuses.map((status) => status.id));
   const effectiveEnergyCost = abilityIsFree ? 0 : modifiedEnergyCost;
   if (effectiveEnergyCost > combat.energy) return combat;
   const derived = getDerivedStats(character);
@@ -1004,6 +1006,15 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     && !isEnemyStealthed(enemy)
     && targets.every((target) => target.instanceId !== enemy.instanceId)
   ))) return combat;
+  const randomSingleStatusTargetId = ability.randomSingleStatusApplication
+    ? targets[Math.floor(Math.random() * targets.length)]?.instanceId
+    : undefined;
+  if (targetMakesAbilityFree && ability.freeAgainstTargetStatus) {
+    enemies = enemies.map((enemy) => enemy.instanceId === combat.selectedEnemyId
+      ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== ability.freeAgainstTargetStatus) }
+      : enemy);
+    queueStatusRemoval(pendingEffects, abilityUseEventIndex, combat.selectedEnemyId, ability.freeAgainstTargetStatus);
+  }
 
   if (ability.target === "self") {
     if (ability.effect === "reset_cooldowns") {
@@ -1113,6 +1124,25 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         if (retainedStatus) queueStatusSet(pendingEffects, damageEventIndex, target.instanceId, retainedStatus);
         else queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, detonatedStatus.id);
         if (ability.vfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, target.instanceId, "player");
+        const targetWasKilled = (enemies.find((enemy) => enemy.instanceId === target.instanceId)?.hp ?? 1) <= 0;
+        if (targetWasKilled && ability.spreadDetonatedStatusOnKillRatio) {
+          const spreadStacks = Math.max(1, Math.ceil(detonatedStatus.stacks * ability.spreadDetonatedStatusOnKillRatio));
+          const destinations = enemies.filter((enemy) => enemy.hp > 0 && enemy.instanceId !== target.instanceId);
+          destinations.forEach((destination) => {
+            const spreadStatus = createPlayerAppliedStatus(detonatedStatus.id, derived, {
+              stacks: spreadStacks,
+              duration: detonatedStatus.duration,
+              magnitude: detonatedStatus.magnitude,
+              expiresAtTurnStart: detonatedStatus.expiresAtTurnStart,
+            });
+            enemies = enemies.map((enemy) => enemy.instanceId === destination.instanceId
+              ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, spreadStatus) }
+              : enemy);
+            queueStatus(events, pendingEffects, `${destination.name} gains ${spreadStacks} ${spreadStatus.name}.`, destination.instanceId, spreadStatus, false, damageEventIndex, target.instanceId);
+            if (ability.spreadOnKillVfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.spreadOnKillVfx, destination.instanceId, target.instanceId);
+          });
+          if (destinations.length > 0) logs.push(makeLog(`${ability.name} spreads ${spreadStacks} ${detonatedStatus.name} to every remaining enemy.`, abilityInfo));
+        }
         const leechRatio = derived.statusDamageLeech[detonatedStatus.id] ?? 0;
         if (damage > 0 && leechRatio > 0) {
           const healing = Math.min(combat.playerMaxHp - playerHp, Math.ceil(damage * leechRatio));
@@ -1241,7 +1271,15 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         ? ability.critChanceBonusWithStatus.bonus
         : 0;
       const critical = forceCritical || Math.random() < derived.critChance + getCriticalChanceBonus(playerStatuses) + (ability.critChanceBonus ?? 0) + conditionalCritBonus;
-      const damageComponents = ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: effectivePowerScaling }];
+      const consumedStatusForDamage = ability.consumeTargetStatusForDamage
+        ? target.statuses.find((status) => status.id === ability.consumeTargetStatusForDamage!.status)
+        : undefined;
+      const damageComponents = ability.consumeTargetStatusForDamage && consumedStatusForDamage
+        ? [{
+          damageType: ability.consumeTargetStatusForDamage.damageType,
+          powerScaling: ability.consumeTargetStatusForDamage.powerScalingPerStack * consumedStatusForDamage.stacks,
+        }]
+        : ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: effectivePowerScaling }];
       const targetStatusStackMultiplier = ability.damagePerTargetStatusStack
         ? 1 + (target.statuses.find((status) => status.id === ability.damagePerTargetStatusStack!.status)?.stacks ?? 0) * ability.damagePerTargetStatusStack.multiplier
         : 1;
@@ -1320,13 +1358,27 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage${absorptionSuffix(absorption.absorbed)} and applies ${appliedStatuses.map((applied) => applied.name).join(" and ")}.`;
       }
 
-      const extraStatuses = (ability.statusApplications ?? []).filter((application) => (
+      const configuredExtraStatuses = [...(ability.statusApplications ?? [])];
+      if (ability.randomSingleStatusApplication && target.instanceId === randomSingleStatusTargetId) {
+        configuredExtraStatuses.push(ability.randomSingleStatusApplication);
+      }
+      if (ability.consumeTargetStatusForDamage?.applyStatus && consumedStatusForDamage) {
+        configuredExtraStatuses.push({
+          status: ability.consumeTargetStatusForDamage.applyStatus,
+          stacks: Math.max(1, Math.round(consumedStatusForDamage.stacks * (ability.consumeTargetStatusForDamage.appliedStacksPerConsumedStack ?? 1))),
+        });
+      }
+      const extraStatuses = configuredExtraStatuses.filter((application) => (
         (!application.onlyOnCritical || critical)
         && (application.chance === undefined || Math.random() < Math.min(1, application.chance + derived.chanceEffectBonus))
       ));
       const appliedExtraStatuses: StatusEffect[] = [];
       extraStatuses.forEach((application) => {
-        const status = createPlayerAppliedStatus(application.status, derived, { stacks: application.stacks, duration: application.duration });
+        const replacement = ability.conditionalStatusReplacement;
+        const statusId = replacement && application.status === replacement.status && hasStatus(target.statuses, replacement.whenTargetHas)
+          ? replacement.replacement
+          : application.status;
+        const status = createPlayerAppliedStatus(statusId, derived, { stacks: application.stacks, duration: application.duration });
         const statuses = [status, ...createPlayerCompanionStatuses(status.id, derived)];
         appliedExtraStatuses.push(...statuses);
         appliedStatusIds.push(...statuses.map((applied) => applied.id));

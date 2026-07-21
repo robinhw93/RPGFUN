@@ -188,6 +188,8 @@ Using an ability never ends the turn automatically. The player presses **End Tur
 
 Ability input remains available while an earlier ability is animating. Further ability presses are added to a first-in, first-out queue and execute as soon as each preceding combat sequence and return animation finishes. The queue reserves Energy and cooldown availability before accepting each press, shows the queued count on affected ability buttons, and remembers the selected target for each cast. **End Turn** can also be queued; it executes after every ability already ahead of it and prevents later actions from being added.
 
+Queue projection also tracks target statuses. This allows a queued Arcane Overload to enable a queued free Arcane Blast against the same target, and lets status-consuming abilities become available after an earlier queued cast applies their requirement. Arcane Charge belongs to its target, so changing targets does not transfer the free cast.
+
 Distraction makes the next ability cost 0 Energy and is consumed when that ability is used. Pinpoint guarantees critical strikes for every hit of the next damaging ability and is consumed when that ability begins. Both persist until consumed or combat ends.
 
 Light Speed performs a complete player turn transition without allowing enemies to act between the two turns. End-of-turn Poison and duration changes resolve, then start-of-turn Burn, Regenerate, Energy regeneration, and cooldown reduction resolve before control returns to the player.
@@ -250,6 +252,12 @@ This sequencing guarantees that:
 - Neurotoxin shakes and flashes its target green before the persistent yellow Stunned treatment remains visible.
 - Toxic Explosion deals the Poison's remaining-duration damage immediately, then creates a toxic burst on its target at the damage impact.
 - Venomborn pulls a Poison icon from its target toward the player and finishes with a green healing effect.
+- Thunderstorm repeatedly strikes random enemies from above; Electrified targets take its configured 50% bonus damage.
+- Deep Freeze launches a dense frost seal, while an already-Slowed target receives Stunned instead of another Slowed application.
+- Arcane Overload uses an expanding violet charge burst and marks its target for a free Arcane Blast.
+- Combustion erupts on its target. A lethal detonation sends visible fire trails to every surviving enemy before the copied Burn appears.
+- Arcane Combustion collapses Arcane Wounds into a mixed arcane-fire impact, scaling both Fire damage and new Burn stacks from the consumed stack count.
+- Thundersnow combines frost and lightning feedback on every enemy and selects one random target for Electrified.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
 - The turn-order highlight moves when the turn message is shown.
@@ -354,7 +362,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. Shadow is the first complete branch. Arcanist currently extends from Arcane Mind into four elemental/arcane ability paths and their first passives. Brute and Cultist currently contain only their first class nodes.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. Shadow is the first complete branch. Arcanist currently extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers. Brute and Cultist currently contain only their first class nodes.
 
 ### Unlock rules
 

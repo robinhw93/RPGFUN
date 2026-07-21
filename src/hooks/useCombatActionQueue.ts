@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { ABILITIES } from "../game/data";
-import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCost } from "../game/combatFeatures";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCostForTarget } from "../game/combatFeatures";
 import { endPlayerTurn, selectEnemyTarget, useAbility } from "../game/engine";
 import { isCombatSequencePending } from "../game/combatSequence";
-import type { CombatState, GameState } from "../game/types";
+import { isStatusEffectId } from "../game/statusEffects";
+import type { CombatState, GameState, StatusEffectId } from "../game/types";
 
 export type QueuedCombatAction =
   | { id: number; type: "ability"; abilityId: string; targetId: string }
@@ -13,6 +14,7 @@ export type QueuedCombatAction =
 export interface CombatActionQueueProjection {
   energy: number;
   cooldownAbilityIds: Set<string>;
+  targetStatusIds: Map<string, Set<StatusEffectId>>;
   nextAbilityIsFree: boolean;
   closed: boolean;
 }
@@ -24,6 +26,7 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
   const cooldownAbilityIds = new Set(
     Object.entries(combat.abilityCooldowns ?? {}).filter(([, turns]) => turns > 0).map(([abilityId]) => abilityId),
   );
+  const targetStatusIds = new Map(combat.enemies.map((enemy) => [enemy.instanceId, new Set(enemy.statuses.map((status) => status.id))]));
   let closed = false;
 
   actions.forEach((action) => {
@@ -34,9 +37,18 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     }
     const ability = ABILITIES[action.abilityId];
     if (!ability) return;
-    const cost = nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCost(character, ability);
+    const targetStatuses = targetStatusIds.get(action.targetId) ?? new Set<StatusEffectId>();
+    const cost = nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(character, ability, targetStatuses);
     energy = Math.max(0, energy - cost);
     nextAbilityIsFree = false;
+    if (ability.freeAgainstTargetStatus) targetStatuses.delete(ability.freeAgainstTargetStatus);
+    const affectedTargetStatusSets = ability.target === "all_enemies" ? [...targetStatusIds.values()] : [targetStatuses];
+    ability.statusApplications?.forEach((application) => affectedTargetStatusSets.forEach((statuses) => statuses.add(application.status)));
+    if (ability.effect && ability.target !== "self" && isStatusEffectId(ability.effect)) {
+      affectedTargetStatusSets.forEach((statuses) => statuses.add(ability.effect as StatusEffectId));
+    }
+    if (ability.consumeTargetStatus) targetStatuses.delete(ability.consumeTargetStatus);
+    if (ability.detonateStatus) targetStatuses.delete(ability.detonateStatus);
     if (ability.energyRestorePercentOfMax) {
       energy = Math.min(combat.maxEnergy, energy + Math.max(1, Math.round(combat.maxEnergy * ability.energyRestorePercentOfMax)));
     } else if (ability.effect === "energy") {
@@ -46,7 +58,7 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     if (getCharacterAbilityCooldownTurns(character, ability) > 0) cooldownAbilityIds.add(ability.id);
   });
 
-  return { energy, cooldownAbilityIds, nextAbilityIsFree, closed };
+  return { energy, cooldownAbilityIds, targetStatusIds, nextAbilityIsFree, closed };
 }
 
 export function useCombatActionQueue(
@@ -70,7 +82,8 @@ export function useCombatActionQueue(
       if (!currentGame.character.equippedAbilities.includes(abilityId)) return current;
       if (combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep")) return current;
       const projection = projectCombatActionQueue(combat, currentGame.character, current);
-      const energyCost = projection.nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCost(currentGame.character, ability);
+      const targetStatuses = projection.targetStatusIds.get(combat.selectedEnemyId) ?? [];
+      const energyCost = projection.nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(currentGame.character, ability, targetStatuses);
       if (projection.closed || projection.cooldownAbilityIds.has(abilityId) || energyCost > projection.energy) return current;
       nextActionId.current += 1;
       return [...current, { id: nextActionId.current, type: "ability", abilityId, targetId: combat.selectedEnemyId }];

@@ -64,6 +64,7 @@ export type StatusEffectId =
   | "cold"
   | "charred"
   | "arcaneWound"
+  | "arcaneCharge"
   | "sleep";
 
 export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
@@ -226,7 +227,14 @@ export type CombatAbilityVfxKind =
   | "frostbolt"
   | "arcane_blast"
   | "fireball"
-  | "lightning_beam";
+  | "lightning_beam"
+  | "thunderstorm"
+  | "deep_freeze"
+  | "arcane_overload"
+  | "combustion"
+  | "combustion_spread"
+  | "arcane_combustion"
+  | "thundersnow";
 
 export interface Ability {
   id: string;
@@ -258,6 +266,10 @@ export interface Ability {
   critChanceBonusWithStatus?: { status: StatusEffectId; bonus: number };
   /** Deals all remaining damage from this status immediately. */
   detonateStatus?: StatusEffectId;
+  /** On a lethal detonation, copy this fraction of the consumed stacks to every other living enemy. */
+  spreadDetonatedStatusOnKillRatio?: number;
+  /** Presentation emitted for every destination of a lethal detonation spread. */
+  spreadOnKillVfx?: CombatAbilityVfxKind;
   consumeTargetStatus?: StatusEffectId;
   /** Fraction of the target status stacks consumed. Defaults to all stacks. */
   consumeTargetStatusRatio?: number;
@@ -268,6 +280,14 @@ export interface Ability {
   spreadAllTargetDebuffs?: boolean;
   /** Statuses applied by a damaging ability after a successful hit. */
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
+  /** Replaces one application when the target already has a configured status. */
+  conditionalStatusReplacement?: { status: StatusEffectId; whenTargetHas: StatusEffectId; replacement: StatusEffectId };
+  /** One living target receives this application when an area ability hits. */
+  randomSingleStatusApplication?: { status: StatusEffectId; stacks?: number; duration?: number };
+  /** Scale direct damage and a follow-up status from stacks consumed on a successful hit. */
+  consumeTargetStatusForDamage?: { status: StatusEffectId; damageType: DamageType; powerScalingPerStack: number; applyStatus?: StatusEffectId; appliedStacksPerConsumedStack?: number };
+  /** This ability costs 0 Energy against a target carrying the marker, then consumes it. */
+  freeAgainstTargetStatus?: StatusEffectId;
   /** Statuses applied to the player after the ability resolves. */
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; expiresAtTurnStart?: boolean }>;
   /** Reusable self-benefits granted when the struck target already has a required status. */

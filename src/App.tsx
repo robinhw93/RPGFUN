@@ -13,7 +13,7 @@ import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } fr
 import { ABILITIES, ADVENTURE, ENDLESS_ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "./game/combatSequence";
-import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityModifiers } from "./game/combatFeatures";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
@@ -178,6 +178,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   cold: Snowflake,
   charred: Flame,
   arcaneWound: CircleDot,
+  arcaneCharge: Sparkles,
   sleep: Moon,
 };
 
@@ -806,12 +807,16 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const pandemicAnimations = abilityAnimations.filter((animation) => animation.kind === "pandemic");
   const lightSpeedAnimations = abilityAnimations.filter((animation) => animation.kind === "light_speed");
   const voltageSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "voltage_siphon");
+  const combustionSpreadAnimations = abilityAnimations.filter((animation) => animation.kind === "combustion_spread");
   const arcanistProjectileAnimations = abilityAnimations.filter((animation) => (
     animation.kind === "arcane_bolt"
     || animation.kind === "frostbolt"
     || animation.kind === "arcane_blast"
     || animation.kind === "fireball"
     || animation.kind === "lightning_beam"
+    || animation.kind === "deep_freeze"
+    || animation.kind === "arcane_overload"
+    || animation.kind === "arcane_combustion"
   ));
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
@@ -907,6 +912,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       {pandemicAnimations.map((animation) => <PandemicSpreadEffect key={animation.id} animation={animation} statusIds={combat.enemies.find((enemy) => enemy.instanceId === animation.sourceTargetId)?.statuses.filter((status) => status.kind === "debuff").map((status) => status.id) ?? []} />)}
       {lightSpeedAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="light-speed-path"><Zap /><i /><i /></CombatantPathEffect>)}
       {voltageSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="voltage-siphon-path"><Zap /><HeartPulse /><i /></CombatantPathEffect>)}
+      {combustionSpreadAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="combustion-spread-path"><Flame /><i /><i /></CombatantPathEffect>)}
       {arcanistProjectileAnimations.map((animation) => <ArcanistProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
@@ -916,7 +922,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           const ability = ABILITIES[id];
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
           const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
-          const targetRequirementMet = !ability.requiredTargetStatus || selectedTarget?.statuses.some((status) => status.id === ability.requiredTargetStatus);
+          const projectedTargetStatuses = queueProjection.targetStatusIds.get(combat.selectedEnemyId) ?? new Set<StatusEffectId>();
+          const targetRequirementMet = !ability.requiredTargetStatus || projectedTargetStatuses.has(ability.requiredTargetStatus);
           const spreadTargetAvailable = !ability.spreadTargetStatus || combat.enemies.some((enemy) => (
             enemy.hp > 0
             && enemy.instanceId !== selectedTarget?.instanceId
@@ -925,7 +932,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           const selfRequirementMet = !ability.requiredSelfStatus
             || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
-          const modifiedEnergyCost = getCharacterAbilityEnergyCost(game.character, ability);
+          const modifiedEnergyCost = getCharacterAbilityEnergyCostForTarget(game.character, ability, projectedTargetStatuses);
           const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : modifiedEnergyCost;
           const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(game.character, ability);
           const queuedCount = queuedActions.filter((action) => action.type === "ability" && action.abilityId === id).length;
@@ -1415,6 +1422,24 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "lightning_beam") {
     return <span className="ability-impact-effect lightning-beam-impact" aria-hidden="true"><Zap /><i /><i /><i /></span>;
   }
+  if (kind === "thunderstorm") {
+    return <span className="ability-impact-effect thunderstorm-impact" aria-hidden="true"><Zap />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--storm-x": `${8 + index * 17}%`, "--storm-delay": `${index * 28}ms` } as React.CSSProperties} />)}</span>;
+  }
+  if (kind === "deep_freeze") {
+    return <span className="ability-impact-effect deep-freeze-impact" aria-hidden="true"><Snowflake /><i /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "arcane_overload") {
+    return <span className="ability-impact-effect arcane-overload-impact" aria-hidden="true"><Sparkles /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "combustion" || kind === "combustion_spread") {
+    return <span className={`ability-impact-effect combustion-impact ${kind}`} aria-hidden="true"><Flame />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--combustion-angle": `${index * 60}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "arcane_combustion") {
+    return <span className="ability-impact-effect arcane-combustion-impact" aria-hidden="true"><CircleDot /><Flame /><i /><i /><i /></span>;
+  }
+  if (kind === "thundersnow") {
+    return <span className="ability-impact-effect thundersnow-impact" aria-hidden="true"><Snowflake /><Zap />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--thundersnow-x": `${8 + index * 17}%`, "--thundersnow-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
+  }
   return null;
 }
 
@@ -1474,6 +1499,15 @@ function ArcanistProjectileEffect({ animation }: { animation: CombatAbilityAnima
   }
   if (animation.kind === "arcane_blast") {
     return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-blast-path"><CircleDot /><i /><i /></CombatantPathEffect>;
+  }
+  if (animation.kind === "deep_freeze") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path deep-freeze-path"><Snowflake /><i /><i /></CombatantPathEffect>;
+  }
+  if (animation.kind === "arcane_overload") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-overload-path"><Sparkles /><i /><i /></CombatantPathEffect>;
+  }
+  if (animation.kind === "arcane_combustion") {
+    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-combustion-path"><CircleDot /><Flame /><i /><i /></CombatantPathEffect>;
   }
   return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-bolt-path"><Sparkles /><i /><i /></CombatantPathEffect>;
 }

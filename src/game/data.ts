@@ -169,7 +169,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   ArcaneBlast: {
     id: "ArcaneBlast", name: "Arcane Blast", description: "Deal Arcane Damage equal to 20% of your Magical Power and apply 1 Arcane Wound. Each Arcane Wound increases Arcane Blast damage by 10%.", energyCost: 1,
-    target: "enemy", damageType: "arcane", powerScaling: 0.2, statusApplications: [{ status: "arcaneWound" }], damagePerTargetStatusStack: { status: "arcaneWound", multiplier: 0.1 }, icon: "✦", branch: "arcanist", vfx: "arcane_blast",
+    target: "enemy", damageType: "arcane", powerScaling: 0.2, statusApplications: [{ status: "arcaneWound" }], damagePerTargetStatusStack: { status: "arcaneWound", multiplier: 0.1 }, freeAgainstTargetStatus: "arcaneCharge", icon: "✦", branch: "arcanist", vfx: "arcane_blast",
   },
   Fireball: {
     id: "Fireball", name: "Fireball", description: "Deal Fire Damage equal to 100% of your Magical Power and apply 2 Burn.", energyCost: 4,
@@ -178,6 +178,36 @@ export const ABILITIES: Record<string, Ability> = {
   LightningBeam: {
     id: "LightningBeam", name: "Lightning Beam", description: "Strike random enemies four times for 20% Magical Power as Lightning Damage per hit. Each hit has a 20% chance to apply Electrified.", energyCost: 3,
     cooldownTurns: 2, target: "enemy", damageType: "lightning", powerScaling: 0.2, hits: 4, randomTargetPerHit: true, statusApplications: [{ status: "electrified", chance: 0.2 }], icon: "ϟ", branch: "arcanist", vfx: "lightning_beam",
+  },
+  Thunderstorm: {
+    id: "Thunderstorm", name: "Thunderstorm", description: "Strike random enemies six times for 30% Magical Power as Lightning Damage per hit. Hits against Electrified enemies deal 50% more damage.", energyCost: 5,
+    cooldownTurns: 3, target: "enemy", damageType: "lightning", powerScaling: 0.3, hits: 6, randomTargetPerHit: true,
+    damageModifiers: [{ id: "thunderstorm-electrified", name: "Conductive Storm", description: "Thunderstorm deals 50% more damage to Electrified enemies.", targetHasAnyStatus: ["electrified"], multiplier: 1.5 }], icon: "ϟ", branch: "arcanist", vfx: "thunderstorm",
+  },
+  DeepFreeze: {
+    id: "DeepFreeze", name: "Deep Freeze", description: "Deal 75% Magical Power as Frost Damage and apply Slowed. If the target is already Slowed, apply Stunned instead.", energyCost: 4,
+    cooldownTurns: 4, target: "enemy", damageType: "frost", powerScaling: 0.75, statusApplications: [{ status: "slowed" }],
+    conditionalStatusReplacement: { status: "slowed", whenTargetHas: "slowed", replacement: "stunned" }, icon: "❄", branch: "arcanist", vfx: "deep_freeze",
+  },
+  ArcaneOverload: {
+    id: "ArcaneOverload", name: "Arcane Overload", description: "Deal 50% Magical Power as Arcane Damage, apply 3 Arcane Wounds, and mark the target with Arcane Charge. Your next Arcane Blast against that target costs 0 Energy.", energyCost: 3,
+    cooldownTurns: 3, target: "enemy", damageType: "arcane", powerScaling: 0.5,
+    statusApplications: [{ status: "arcaneWound", stacks: 3 }, { status: "arcaneCharge" }], icon: "✹", branch: "arcanist", vfx: "arcane_overload",
+  },
+  Combustion: {
+    id: "Combustion", name: "Combustion", description: "Consume all Burn on the target and deal its remaining damage immediately. If this kills the target, spread half its Burn stacks to all other enemies.", energyCost: 4,
+    cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "burn", detonateStatus: "burn",
+    spreadDetonatedStatusOnKillRatio: 0.5, spreadOnKillVfx: "combustion_spread", icon: "🔥", branch: "arcanist", vfx: "combustion",
+  },
+  ArcaneCombustion: {
+    id: "ArcaneCombustion", name: "Arcane Combustion", description: "Consume all Arcane Wounds on the target. Deal 50% Magical Power as Fire Damage per stack consumed and apply an equal number of Burn stacks.", energyCost: 4,
+    cooldownTurns: 3, target: "enemy", requiredTargetStatus: "arcaneWound", consumeTargetStatus: "arcaneWound",
+    consumeTargetStatusForDamage: { status: "arcaneWound", damageType: "fire", powerScalingPerStack: 0.5, applyStatus: "burn", appliedStacksPerConsumedStack: 1 }, icon: "✹", branch: "arcanist", vfx: "arcane_combustion",
+  },
+  Thundersnow: {
+    id: "Thundersnow", name: "Thundersnow", description: "Hit all enemies for a combined 60% Magical Power as Frost and Lightning Damage. Apply Slowed to every target and Electrified to one random target.", energyCost: 5,
+    cooldownTurns: 3, target: "all_enemies", damageComponents: [{ damageType: "frost", powerScaling: 0.3 }, { damageType: "lightning", powerScaling: 0.3 }],
+    statusApplications: [{ status: "slowed" }], randomSingleStatusApplication: { status: "electrified" }, icon: "❄", branch: "arcanist", vfx: "thundersnow",
   },
   siphon: {
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
@@ -296,6 +326,12 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_97", name: "Comparative Momentum", description: "Applying Slowed to an enemy has a 30% chance to restore 1 Energy.", branch: "arcanist", kind: "passive", tier: 6, cost: 1, requires: ["talent_86"], position: { x: 29.45205479452055, y: 21.09375 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "comparative-momentum", name: "Comparative Momentum", description: "Applying Slowed to an enemy has a 30% chance to restore 1 Energy.", event: "status_applied", chance: 0.3, conditions: { appliedAnyStatus: ["slowed"] }, effects: [{ type: "gain_energy", amount: 1, target: "self" }] }] } },
   { id: "talent_98", name: "Confidence", description: "Deal 20% more damage until your first miss each combat.", branch: "arcanist", kind: "passive", tier: 6, cost: 1, requires: ["talent_92"], position: { x: 22.602739726027394, y: 21.09375 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "confidence", name: "Confidence", description: "Deal 20% more damage until your first miss each combat.", multiplier: 1.2, requiresNoPlayerMiss: true }] } },
   { id: "talent_99", name: "Weight of Frost", description: "Lose 10 Initiative. Your direct hits deal extra damage equal to 5% of your Armor, rounded up.", branch: "arcanist", kind: "passive", tier: 6, cost: 1, requires: ["talent_93"], position: { x: 32.19178082191781, y: 21.09375 }, icon: "✦", shape: "circle", combat: { passive: { initiative: -10, bonusDirectDamageFromArmorRatio: 0.05 } } },
+  { id: "talent_100", name: "Thunderstorm", description: "Hit random enemies six times for 30% Magical Power as Lightning Damage. Hits against Electrified enemies deal 50% more damage.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_91"], position: { x: 37.67123287671233, y: 15.625 }, icon: "✦", shape: "square", abilityId: "Thunderstorm" },
+  { id: "talent_101", name: "Deep Freeze", description: "Deal 75% Magical Power as Frost Damage and apply Slowed. If the target is already Slowed, Stun it instead.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_97"], position: { x: 29.45205479452055, y: 15.625 }, icon: "✦", shape: "square", abilityId: "DeepFreeze" },
+  { id: "talent_102", name: "Arcane Overload", description: "Deal 50% Magical Power as Arcane Damage and apply 3 Arcane Wounds. Your next Arcane Blast against the target costs 0 Energy.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_96"], position: { x: 25.34246575342466, y: 15.625 }, icon: "✦", shape: "square", abilityId: "ArcaneOverload" },
+  { id: "talent_103", name: "Combustion", description: "Consume all Burn on the target and immediately deal its remaining damage. If this kills the target, spread half its Burn stacks to all other enemies before consuming them.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_89"], position: { x: 17.123287671232877, y: 15.625 }, icon: "✦", shape: "square", abilityId: "Combustion" },
+  { id: "talent_104", name: "Arcane Combustion", description: "Consume all Arcane Wounds on the target. Deal 50% Magical Power as Fire Damage per stack consumed and apply an equal number of Burn stacks.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_89", "talent_96"], position: { x: 21.232876712328768, y: 15.625 }, icon: "✦", shape: "square", abilityId: "ArcaneCombustion" },
+  { id: "talent_105", name: "Thundersnow", description: "Hit all enemies for 60% Magical Power as Frost and Lightning Damage. Apply Slowed to every target and Electrified to one random target.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_91", "talent_97"], position: { x: 33.56164383561644, y: 15.625 }, icon: "✦", shape: "square", abilityId: "Thundersnow" },
 ];
 
 const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
@@ -403,6 +439,12 @@ const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
   talent_97: { x: 29.45205479452055, y: 21.09375 },
   talent_98: { x: 22.602739726027394, y: 21.09375 },
   talent_99: { x: 32.19178082191781, y: 21.09375 },
+  talent_100: { x: 37.67123287671233, y: 15.625 },
+  talent_101: { x: 29.45205479452055, y: 15.625 },
+  talent_102: { x: 25.34246575342466, y: 15.625 },
+  talent_103: { x: 17.123287671232877, y: 15.625 },
+  talent_104: { x: 21.232876712328768, y: 15.625 },
+  talent_105: { x: 33.56164383561644, y: 15.625 },
 };
 
 export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {

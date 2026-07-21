@@ -44,9 +44,15 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
 | Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
 | Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
-| Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. |
+| Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
 | Fireball | 4 | 2 | Enemy | Deals 100% Magical Power as Fire damage and applies 2 Burn. |
 | Lightning Beam | 3 | 2 | Random enemies | Hits four times for 20% Magical Power as Lightning damage. Every hit independently selects a valid random enemy and has a 20% base chance, plus Luck's chance-effect bonus, to apply Electrified. |
+| Thunderstorm | 5 | 3 | Random enemies | Hits six times for 30% Magical Power as Lightning damage. Each hit independently chooses a living enemy and deals 50% more damage if that enemy is Electrified. |
+| Deep Freeze | 4 | 4 | Enemy | Deals 75% Magical Power as Frost damage. Applies Slowed, or Stunned instead if the target was already Slowed. |
+| Arcane Overload | 3 | 3 | Enemy | Deals 50% Magical Power as Arcane damage, applies 3 Arcane Wounds, and applies Arcane Charge for the next Arcane Blast against that target. |
+| Combustion | 4 | 3 | Burning enemy | Consumes Burn and deals its remaining-duration damage immediately. If the detonation kills, half the consumed stacks, rounded up, spread to every other living enemy. |
+| Arcane Combustion | 4 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds, deals 50% Magical Power as Fire damage per consumed stack, and applies the same number of Burn stacks. |
+| Thundersnow | 5 | 3 | All enemies | Deals a combined 60% Magical Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -62,7 +68,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 104 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 21 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 22, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 110 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 27 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 28, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -173,6 +179,13 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_98 | Confidence | Passive | Arcane Accuracy | Any | Deals 20% more damage until the player's first miss each combat. |
 | talent_99 | Weight of Frost | Passive | Glacial Plating | Any | −10 Initiative; direct hits gain flat damage equal to 5% of Armor, rounded up. |
 
+| talent_100 | Thunderstorm | Ability | Increased Voltage | Any | Unlocks Thunderstorm. |
+| talent_101 | Deep Freeze | Ability | Comparative Momentum | Any | Unlocks Deep Freeze. |
+| talent_102 | Arcane Overload | Ability | Invigorate | Any | Unlocks Arcane Overload. |
+| talent_103 | Combustion | Ability | Fire Within | Any | Unlocks Combustion. |
+| talent_104 | Arcane Combustion | Ability | Fire Within or Invigorate | Any | Unlocks Arcane Combustion. |
+| talent_105 | Thundersnow | Ability | Increased Voltage or Comparative Momentum | Any | Unlocks Thundersnow. |
+
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 
 ## Status effects
@@ -215,6 +228,7 @@ The duration is the default duration created by the status library. Ability or t
 | Cold | 3 turns | No | Takes 50% more Frost damage and 50% less Lightning damage. |
 | Charred | 3 turns | No | Takes 50% more Fire damage and 50% less Frost damage. |
 | Arcane Wound | 3 turns | Yes | Each stack increases Arcane Blast damage against the afflicted target by 10%. |
+| Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |
 
 ## Enemies

@@ -267,6 +267,15 @@ export function getCharacterAbilityEnergyCost(character: CharacterState, ability
   return Math.max(0, Math.round(ability.energyCost + delta));
 }
 
+export function getCharacterAbilityEnergyCostForTarget(
+  character: CharacterState,
+  ability: Ability,
+  targetStatusIds: Iterable<StatusEffect["id"]> = [],
+): number {
+  if (ability.freeAgainstTargetStatus && new Set(targetStatusIds).has(ability.freeAgainstTargetStatus)) return 0;
+  return getCharacterAbilityEnergyCost(character, ability);
+}
+
 export function getCharacterAbilityCooldownTurns(character: CharacterState, ability: Ability): number {
   const delta = getCharacterAbilityModifiers(character, ability.id)
     .reduce((total, modifier) => total + (modifier.cooldownTurnsDelta ?? 0), 0);
