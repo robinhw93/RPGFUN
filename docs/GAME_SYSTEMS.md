@@ -201,7 +201,7 @@ At the start of an enemy's turn:
 - If the player is Stealthed, the enemy cannot target the player.
 - Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
 
-Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease.
+Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease. Status icons retain their pre-turn state while those events are queued; the duration ring updates or the icon disappears only when the final status event is shown and resolved.
 
 ### Targeting
 

@@ -222,7 +222,7 @@ Using an ability sets `playerActed` but does not move turn order. The player may
 
 ### Enemy turns
 
-`takeEnemyTurn` runs start statuses, regenerates Energy, handles insufficient Energy/Stealth, rolls the attack, applies defense/Guard/status effects, runs player `damage_taken` triggers, resolves enemy Bleed and Poison, then calls `moveToNextActor`.
+`takeEnemyTurn` runs start statuses, regenerates Energy, handles insufficient Energy/Stealth, rolls the attack, applies defense/Guard/status effects, runs player `damage_taken` triggers, resolves enemy Bleed and Poison, then calls `moveToNextActor`. It snapshots visible enemy statuses and queues a reconciliation at the final status event, preventing duration changes or removals from appearing before their damage or skip effect resolves.
 
 Enemy AI currently has one fixed attack per enemy template and no ability selection tree.
 

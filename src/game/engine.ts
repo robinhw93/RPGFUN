@@ -119,6 +119,25 @@ function queueStatusSet(pendingEffects: CombatPendingEffect[], eventIndex: numbe
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "set_status", targetId, status: { ...status } });
 }
 
+function queueStatusReconciliation(
+  pendingEffects: CombatPendingEffect[],
+  eventIndex: number,
+  targetId: string,
+  displayedStatuses: StatusEffect[],
+  resolvedStatuses: StatusEffect[],
+): void {
+  displayedStatuses.forEach((displayedStatus) => {
+    const resolvedStatus = resolvedStatuses.find((status) => status.id === displayedStatus.id);
+    if (!resolvedStatus) {
+      queueStatusRemoval(pendingEffects, eventIndex, targetId, displayedStatus.id);
+      return;
+    }
+    if (JSON.stringify(displayedStatus) !== JSON.stringify(resolvedStatus)) {
+      queueStatusSet(pendingEffects, eventIndex, targetId, resolvedStatus);
+    }
+  });
+}
+
 function queueAbsorptionChanges(
   pendingEffects: CombatPendingEffect[],
   eventIndex: number,
@@ -1274,6 +1293,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   const pendingEffects: CombatPendingEffect[] = [];
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
+  const displayedEnemyStatuses = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.statuses]));
   const displayedPlayerHp = combat.playerHp;
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
@@ -1283,6 +1303,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   if (enemyIndex < 0) return moveToNextActor(combat, character, logs, events, pendingEffects);
 
   const originalEnemy = enemies[enemyIndex];
+  let statusResolutionEventIndex: number | null = null;
   const enemyStart = processTurnStart(originalEnemy.hp, originalEnemy.maxHp, originalEnemy.statuses, originalEnemy.instanceId, originalEnemy.name, logs, events, pendingEffects);
   const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(1, enemyStart.statuses));
   let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false };
@@ -1370,7 +1391,9 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
   if (enemy.hp > 0) {
     const hpBeforePoison = enemy.hp;
+    const poisonEventIndex = events.length;
     const enemyEnd = processTurnEnd(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, derived.statusDamageMultipliers.poison ?? 1);
+    if (enemy.statuses.some((status) => status.id === "poison")) statusResolutionEventIndex = poisonEventIndex;
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, hp: enemyEnd.hp, statuses: enemyEnd.statuses } : candidate);
     const poison = enemy.statuses.find((status) => status.id === "poison");
     const leechRatio = poison?.sourceId === "player" ? derived.statusDamageLeech.poison ?? 0 : 0;
@@ -1406,12 +1429,22 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   }
   nextBase = { ...nextBase, enemies, playerHp, playerStatuses, procUsage };
 
+  const resolvedEnemyStatuses = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId)?.statuses ?? [];
+  const reconciliationEventIndex = statusResolutionEventIndex ?? events.length - 1;
+  if (reconciliationEventIndex >= 0) {
+    queueStatusReconciliation(pendingEffects, reconciliationEventIndex, originalEnemy.instanceId, originalEnemy.statuses, resolvedEnemyStatuses);
+  }
+
   const selectedEnemyId = enemies.find((candidate) => candidate.instanceId === nextBase.selectedEnemyId && isEnemyTargetable(enemies, candidate))?.instanceId
     ?? enemies.find((candidate) => isEnemyTargetable(enemies, candidate))?.instanceId
     ?? "";
   nextBase = { ...nextBase, selectedEnemyId };
   const next = moveToNextActor(nextBase, character, logs, events, pendingEffects);
-  const displayedEnemies = next.enemies.map((candidate) => ({ ...candidate, hp: displayedEnemyHp.get(candidate.instanceId) ?? candidate.hp }));
+  const displayedEnemies = next.enemies.map((candidate) => ({
+    ...candidate,
+    hp: displayedEnemyHp.get(candidate.instanceId) ?? candidate.hp,
+    statuses: displayedEnemyStatuses.get(candidate.instanceId) ?? candidate.statuses,
+  }));
   return {
     ...next,
     outcome: pendingEffects.length > 0 ? "active" : next.outcome,
