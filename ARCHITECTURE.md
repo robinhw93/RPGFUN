@@ -312,7 +312,7 @@ The initiative grid receives the live combatant count through a CSS variable. Tw
 - The event modifies carried Health or talent points.
 - Completing the final node clears active combat and marks the adventure completed.
 
-The endless route generates two or three `dummy` enemy IDs before each travel transition, then reuses that exact group when creating combat so the encounter message and battlefield agree. It increments `nodeIndex` as an unbounded fight counter, restores the character to current Max Health, and never marks the adventure completed. `grantCombatReward` calculates the exact XP needed to cross two complete level thresholds from the character's current level and XP; normal story rewards still come from the node definition.
+The endless route generates two or three `dummy` enemy IDs before each travel transition, then reuses that exact group when creating combat so the encounter message and battlefield agree. It increments `nodeIndex` as an unbounded fight counter, restores the character to current Max Health, and never marks the adventure completed. `grantCombatReward` calculates the exact XP needed to cross two complete level thresholds from the character's current level and XP; normal story rewards still come from the node definition. The `unlockTalent` state boundary also treats `endless` as a test-only free-unlock mode: it enforces connections and the combat lock but skips both the point check and point deduction.
 
 Travel transitions are UI-only timing; they do not modify rules until `advanceJourney` executes.
 

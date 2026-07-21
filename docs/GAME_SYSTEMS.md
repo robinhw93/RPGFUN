@@ -23,6 +23,7 @@ The adventure screen also offers a separate endless testing route for developing
 - Every victory awards exactly two complete levels, including six attribute points and two talent points.
 - Training victories award no gold or loot.
 - Health is restored to the character's current maximum before the next training fight.
+- Talent nodes can be unlocked for free while this testing route is active. Requirements between nodes and the active-combat lock still apply, and the character's saved talent-point total is not reduced.
 - The victory screen links directly to Character and Talents so the player can allocate points, unlock talents, and change the six equipped abilities before continuing.
 - Training can be left safely from the victory screen without losing the character or earned progression.
 - The route has no final encounter; its fight counter continues until the character dies or another adventure is started.
@@ -335,7 +336,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 
 ### Unlock rules
 
-- A node costs its configured number of talent points.
+- A node costs its configured number of talent points in normal adventures. Shadow Proving Grounds temporarily makes valid unlocks free without changing the character's stored points.
 - Talent connections are bidirectional. If either node stores the connection, unlocking either end can make the node at the other end available.
 - Any one connected node is always enough; there is no alternate requirement mode.
 - Unlocking is permanent for the current character; there is no respec UI.

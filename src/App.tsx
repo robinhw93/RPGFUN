@@ -448,7 +448,8 @@ function App() {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
       const talent = TALENTS.find((item) => item.id === talentId);
-      if (!talent || current.character.unlockedTalents.includes(talentId) || talent.cost > current.character.talentPoints) return current;
+      const freeTestingUnlock = current.adventure.mode === "endless";
+      if (!talent || current.character.unlockedTalents.includes(talentId) || (!freeTestingUnlock && talent.cost > current.character.talentPoints)) return current;
       if (!areTalentRequirementsMet(talent, current.character.unlockedTalents, TALENTS)) return current;
       const equipped = talent.abilityId && current.character.equippedAbilities.length < 6
         ? [...current.character.equippedAbilities, talent.abilityId]
@@ -457,7 +458,7 @@ function App() {
         ...current,
         character: {
           ...current.character,
-          talentPoints: current.character.talentPoints - talent.cost,
+          talentPoints: freeTestingUnlock ? current.character.talentPoints : current.character.talentPoints - talent.cost,
           unlockedTalents: [...current.character.unlockedTalents, talentId],
           equippedAbilities: equipped,
         },
@@ -594,7 +595,7 @@ function App() {
         {view === "character" && (characterAssetsReady
           ? <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
           : <CharacterLoadingScreen />)}
-        {view === "talents" && <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />}
+        {view === "talents" && <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />}
         {view === "talentDevtool" && devtoolUnlocked && <TalentDevtool onExit={() => navigate("talents")} />}
       </main>
 
@@ -1840,10 +1841,11 @@ const RUNTIME_TALENT_MAX_ZOOM = 1.6;
 const RUNTIME_TALENT_ZOOM_STEP = 0.1;
 const RUNTIME_TALENT_DEFAULT_ZOOM = 0.65;
 
-function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onToggleAbility }: {
+function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, onUnlock, onToggleAbility }: {
   talent: (typeof TALENTS)[number];
   character: CharacterState;
   locked: boolean;
+  freeUnlocks: boolean;
   onClose: () => void;
   onUnlock: (id: string) => void;
   onToggleAbility: (id: string) => void;
@@ -1858,7 +1860,7 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
   const requiredNames = getTalentConnectionIds(talent.id, TALENTS)
     .filter((id) => !character.unlockedTalents.includes(id))
     .map((id) => TALENTS.find((candidate) => candidate.id === id)?.name ?? id);
-  const canUnlock = !locked && available && character.talentPoints >= talent.cost && !unlocked;
+  const canUnlock = !locked && available && (freeUnlocks || character.talentPoints >= talent.cost) && !unlocked;
   const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";
 
   useEffect(() => {
@@ -1894,7 +1896,9 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
     ? "Locked during combat"
     : !available
       ? `Requires one of: ${requiredNames.join(", ")}`
-      : character.talentPoints < talent.cost
+      : freeUnlocks
+        ? "Unlock for Free"
+        : character.talentPoints < talent.cost
         ? `Requires ${talent.cost} Talent Point${talent.cost === 1 ? "" : "s"}`
         : `Unlock for ${talent.cost} Talent Point${talent.cost === 1 ? "" : "s"}`;
 
@@ -2026,7 +2030,7 @@ function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
   );
 }
 
-function TalentsView({ character, locked, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
+function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; freeUnlocks: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [selectedAbilitySlot, setSelectedAbilitySlot] = useState<number | null>(null);
   const [treeZoom, setTreeZoom] = useState(RUNTIME_TALENT_DEFAULT_ZOOM);
@@ -2124,6 +2128,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility, onSetAbilit
     <section className="page talents-page">
       <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className="talent-points"><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
+      {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="loadout-panel paper-panel">
         <div><p className="eyebrow">Active Loadout</p><h3>Equipped Abilities</h3></div>
         <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} type="button" disabled={locked} className={ability ? ability.branch : "empty"} aria-label={`Ability Slot ${index + 1}: ${ability?.name ?? "Empty"}. Choose ability.`} onClick={() => setSelectedAbilitySlot(index)} data-game-tooltip="Choose ability">{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
@@ -2182,7 +2187,7 @@ function TalentsView({ character, locked, onUnlock, onToggleAbility, onSetAbilit
           </div>
         </div>
       </div>
-      {selectedTalent && <TalentDetailModal talent={selectedTalent} character={character} locked={locked} onClose={closeTalentDetails} onUnlock={onUnlock} onToggleAbility={onToggleAbility} />}
+      {selectedTalent && <TalentDetailModal talent={selectedTalent} character={character} locked={locked} freeUnlocks={freeUnlocks} onClose={closeTalentDetails} onUnlock={onUnlock} onToggleAbility={onToggleAbility} />}
       {selectedAbilitySlot !== null && <AbilitySlotPicker slotIndex={selectedAbilitySlot} character={character} onClose={() => setSelectedAbilitySlot(null)} onSetSlot={onSetAbilitySlot} />}
     </section>
   );
