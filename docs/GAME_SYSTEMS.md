@@ -280,6 +280,7 @@ Applying a status that is already present:
 - Keeps the greater source power.
 - Refreshes the source ID to the latest applier when provided.
 - Non-stackable statuses, including Stealth, always retain exactly one stack when reapplied.
+- Stealth always expires at the end of the player's next turn. Ending a turn now reconciles duration changes even when no damage or status message was queued, preventing buffs from retaining their old duration in visible combat state.
 
 Detailed status definitions and formulas are in [Content reference](CONTENT_REFERENCE.md#status-effects).
 

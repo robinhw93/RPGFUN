@@ -212,6 +212,8 @@ Triggered passives do not add central presentation events. Their damage, healing
 
 Player `You use ...` action events are presentation-hidden and use `COMBAT_TIMING.silentEventMs`. Keep the event as the synchronization anchor for Energy expenditure and `before_ability` triggers; the ability-use combat-log entry remains player-inspectable.
 
+`endPlayerTurn` must preserve resolved player-status durations. When turn-end events exist, it queues status reconciliation on the final turn-end event; without a sequence, it returns the resolved status list directly. Do not restore `combat.playerStatuses` unconditionally, or finite buffs such as Stealth will appear permanent.
+
 `FloatingCombatText` snapshots hidden event indexes when a sequence mounts. Pending damage effects are consumed as soon as their event resolves, so recalculating visibility from live pending effects would reveal the hidden damage sentence for the remainder of that event.
 
 Luck's chance-effect bonus is added only when `chance` is explicitly present. Final proc chance is clamped to 0–100%.

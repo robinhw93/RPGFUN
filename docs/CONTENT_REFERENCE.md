@@ -110,7 +110,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_40 | Resistance | Passive | Venomborn | Any | Makes the player immune to Poison. |
 | talent_41 | Thunderstruck | Passive | Lightning Strike | Any | Makes the player immune to Electrified. |
 | talent_42 | Perfected Formula | Passive | Focus | Any | Player-applied Poison gains 1 additional stack. |
-| talent_43 | Distraction | Passive | Focus | Any | Kills grant Stealth and make the next ability cost 0 Energy. |
+| talent_43 | Distraction | Passive | Focus | Any | Kills grant Stealth until the end of the next player turn and make the next ability cost 0 Energy. |
 | talent_44 | Extra Dose | Passive | Poison Coating | Any | Critical strikes apply 2 Poison. |
 | talent_45 | Flow | Passive | Adrenaline | Any | Critical strikes restore 1 Energy. |
 | talent_46 | Slowing Venom | Ability | Extra Dose | Any | Unlocks Slowing Venom. |
@@ -128,7 +128,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_58 | Light Speed | Ability | Distraction or Thunderstruck | Any | Unlocks Light Speed. |
 | talent_59 | Chain Assassination | Ability | Distraction | Any | Unlocks Chain Assassination. |
 | talent_60 | Cull the Weak | Ability | Perfected Formula | Any | Unlocks Cull the Weak. |
-| talent_61 | Hit and Run | Passive | Cheap Shot | Any | Damage dealt has a 2% base chance to grant Stealth. |
+| talent_61 | Hit and Run | Passive | Cheap Shot | Any | Damage dealt has a 2% base chance to grant Stealth until the end of the next player turn. |
 | talent_62 | Spot Weakness | Passive | Pandemic | Any | Deals 5% more damage per unique debuff on the target. |
 | talent_63 | Avoidance | Passive | Light Speed | Any | +1 Max Energy and 3% less incoming damage per unspent Energy. |
 | talent_64 | Epidemic | Ability | Spot Weakness | Any | Unlocks Epidemic. |
@@ -153,7 +153,7 @@ The duration is the default duration created by the status library. Ability or t
 | Shielded | 3 turns | No | Takes 25% less damage. |
 | Regenerate | 3 turns | No | Heals at turn start for `3 + 20% source Magical Power` per stack, then applies healing-received modifiers. |
 | Taunt | Permanent | No | Forces the player to target this living, visible enemy with single-target attacks. |
-| Stealth | 1-turn library default | No | Cannot be targeted by enemies. Reapplication refreshes duration but never adds stacks; the Stealth ability supplies its own duration/expiration behavior. |
+| Stealth | Until the end of your next turn | No | Cannot be targeted by enemies. Reapplication refreshes duration but never adds stacks. |
 | Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default; Enduring Evasion changes magnitude and duration. |
 | Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
 | Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |

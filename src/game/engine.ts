@@ -1359,12 +1359,16 @@ export function endPlayerTurn(combat: CombatState, character: CharacterState): C
   const displayedPlayerHp = combat.playerHp;
   const derived = getDerivedStats(character);
   const turnEnd = processTurnEnd(combat.playerHp, combat.playerStatuses, "player", "You", logs, events, pendingEffects, 1, getEnergyDefenseMultiplier(derived, combat.energy));
+  if (events.length > 0) {
+    queueStatusReconciliation(pendingEffects, events.length - 1, "player", combat.playerStatuses, turnEnd.statuses);
+  }
   const next = moveToNextActor({ ...combat, playerHp: turnEnd.hp, playerStatuses: turnEnd.statuses }, character, logs, events, pendingEffects);
+  const sequencePending = events.length > 0;
   return {
     ...next,
     outcome: pendingEffects.length > 0 ? "active" : next.outcome,
     playerHp: displayedPlayerHp,
-    playerStatuses: combat.playerStatuses,
+    playerStatuses: sequencePending ? combat.playerStatuses : next.playerStatuses,
     eventId: (combat.eventId ?? 0) + 1,
     floatingEvents: events,
     pendingEffects,
