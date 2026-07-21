@@ -35,6 +35,11 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Pinpoint Slice | 3 | 2 | Enemy | Deals 75% Physical Power; the next damaging ability is guaranteed to critically strike. |
 | Traumatic Puncture | 3 | 1 | Enemy | Deals 75% Physical Power; a critical strike applies Weaken and 2 Bleed. |
 | Slice and Dice | 5 | 2 | Enemy | Hits six times for 15% Physical Power. Critical hits apply Exhausted and each hit triggers on-hit effects. |
+| Cheap Shot | 4 | 1 | Enemy | Requires Stealth. Applies Stunned and 5 Bleed without direct damage. |
+| Pandemic | 4 | 3 | Enemy | Copies every debuff on the target to all other living, targetable enemies. |
+| Light Speed | 0 | None | Enemy | Deals 50% Physical Power as Physical damage plus 100% Magical Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
+| Chain Assassination | 5 | 3 | Enemy | Deals 125% Physical Power and gains +25% Critical Strike Chance while Stealthed. A kill refunds the Energy actually spent and resets its cooldown. |
+| Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -51,7 +56,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 57 nodes: the origin, three first-direction class nodes, and 53 later Shadow nodes. Branch counts are Shadow 54, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 67 nodes: the origin, three first-direction class nodes, and 63 later Shadow nodes. Branch counts are Shadow 64, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -114,6 +119,16 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_51 | Traumatic Puncture | Ability | Flow | Any | Unlocks Traumatic Puncture. |
 | talent_52 | Slice and Dice | Ability | Flow | Any | Unlocks Slice and Dice. |
 | talent_53 | Taste for Blood | Passive | Any of the three critical-strike abilities | Any | Critical strikes restore 1% of Max Health. |
+| talent_54 | Leech | Passive | Venomborn | Any | Restores Health equal to 5% of player-applied Poison tick and detonation damage, rounded up. |
+| talent_55 | Sweaty Aftermath | Passive | Lightning Strike | Any | Applying Electrified also applies Wet. |
+| talent_56 | Cheap Shot | Ability | Distraction or Perfected Formula | Any | Unlocks Cheap Shot. |
+| talent_57 | Pandemic | Ability | Resistance or Perfected Formula | Any | Unlocks Pandemic. |
+| talent_58 | Light Speed | Ability | Distraction or Thunderstruck | Any | Unlocks Light Speed. |
+| talent_59 | Chain Assassination | Ability | Distraction | Any | Unlocks Chain Assassination. |
+| talent_60 | Cull the Weak | Ability | Perfected Formula | Any | Unlocks Cull the Weak. |
+| talent_61 | Hit and Run | Passive | Cheap Shot | Any | Damage dealt has a 2% base chance to grant Stealth. |
+| talent_62 | Spot Weakness | Passive | Pandemic | Any | Deals 5% more damage per unique debuff on the target. |
+| talent_63 | Avoidance | Passive | Light Speed | Any | +1 Max Energy and 5% less incoming damage per unspent Energy. |
 
 Two nodes are both named **Potency** and intentionally provide separate +10% Poison bonuses.
 

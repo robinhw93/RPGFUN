@@ -108,6 +108,30 @@ export const ABILITIES: Record<string, Ability> = {
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.15, hits: 6,
     statusApplications: [{ status: "exhausted", onlyOnCritical: true }], icon: "≋", branch: "shadow",
   },
+  CheapShot: {
+    id: "CheapShot", name: "Cheap Shot", description: "Stun the target and apply 5 Bleed. Can only be used while Stealthed.", energyCost: 4,
+    cooldownTurns: 1, target: "enemy", dealsDamage: false, requiredSelfStatus: "stealth", effect: "stun",
+    statusApplications: [{ status: "bleed", stacks: 5 }], icon: "‡", branch: "shadow",
+  },
+  Pandemic: {
+    id: "Pandemic", name: "Pandemic", description: "Copy every debuff on the target to all other living enemies.", energyCost: 4,
+    cooldownTurns: 3, target: "enemy", dealsDamage: false, spreadAllTargetDebuffs: true, icon: "☣", branch: "shadow",
+  },
+  LightSpeed: {
+    id: "LightSpeed", name: "Light Speed", description: "Deal 50% Physical Power as Physical Damage and 100% Magical Power as Lightning Damage, apply Electrified, then immediately begin a new turn.", energyCost: 0,
+    target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 1 }],
+    statusApplications: [{ status: "electrified" }], grantsImmediateTurn: true, icon: "ϟ", branch: "shadow",
+  },
+  ChainAssassination: {
+    id: "ChainAssassination", name: "Chain Assassination", description: "Deal 125% Physical Power as damage. While Stealthed, gain +25% Critical Strike Chance. A kill refunds the Energy spent and resets the cooldown.", energyCost: 5,
+    cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 1.25,
+    critChanceBonusWithStatus: { status: "stealth", bonus: 0.25 }, refundEnergyOnKill: true, resetCooldownOnKill: true, icon: "◈", branch: "shadow",
+  },
+  CullTheWeak: {
+    id: "CullTheWeak", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Magical Power as Arcane Damage. Both gain 20% damage per unique debuff on the target.", energyCost: 5,
+    cooldownTurns: 3, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.25 }, { damageType: "arcane", powerScaling: 0.25 }],
+    damagePerTargetDebuff: 0.2, icon: "◎", branch: "shadow",
+  },
   crushingBlow: {
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
     target: "enemy", damageType: "physical", power: 12, scalingStat: "strength", icon: "✦", branch: "brute", effect: "vulnerable",
@@ -194,6 +218,16 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_51", name: "Traumatic Puncture", description: "Deal 75% Physical Power as damage. A critical strike also applies Weaken and 2 Bleed.", branch: "shadow", kind: "ability", tier: 8, cost: 1, requires: ["talent_45"], position: { x: 50, y: 24.21875 }, icon: "✦", shape: "square", abilityId: "TraumaticPuncture" },
   { id: "talent_52", name: "Slice and Dice", description: "Attack six times for 15% Physical Power per hit. Critical hits apply Exhausted. Each hit triggers on-hit effects.", branch: "shadow", kind: "ability", tier: 8, cost: 1, requires: ["talent_45"], position: { x: 58.06451612903226, y: 24.21875 }, icon: "✦", shape: "square", abilityId: "SliceAndDice" },
   { id: "talent_53", name: "Taste for Blood", description: "Whenever you critically strike, restore 1% of your maximum Health.", branch: "shadow", kind: "passive", tier: 9, cost: 1, requires: ["talent_51", "talent_52", "talent_50"], position: { x: 54.03225806451613, y: 18.75 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "taste-for-blood", name: "Taste for Blood", description: "Critical strikes restore 1% of your maximum Health.", event: "on_crit", effects: [{ type: "heal_percent_max_hp", ratio: 0.01, target: "self" }] }] } },
+  { id: "talent_54", name: "Leech", description: "Restore Health equal to 5% of your Poison damage, rounded up.", branch: "shadow", kind: "passive", tier: 12, cost: 1, requires: ["talent_35"], position: { x: 78.2258064516129, y: 74.21875 }, icon: "✦", shape: "circle", combat: { passive: { statusDamageLeech: { poison: 0.05 } } } },
+  { id: "talent_55", name: "Sweaty Aftermath", description: "Whenever you apply Electrified, also apply Wet.", branch: "shadow", kind: "passive", tier: 12, cost: 1, requires: ["talent_36"], position: { x: 78.2258064516129, y: 25.78125 }, icon: "✦", shape: "circle", combat: { passive: { statusApplicationCompanions: { electrified: ["wet"] } } } },
+  { id: "talent_56", name: "Cheap Shot", description: "Stun the target and apply 5 Bleed. Can only be used while Stealthed.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_43", "talent_42"], position: { x: 82.25806451612904, y: 50 }, icon: "✦", shape: "square", abilityId: "CheapShot" },
+  { id: "talent_57", name: "Pandemic", description: "Copy every debuff on the target to all other living enemies.", branch: "shadow", kind: "ability", tier: 13, cost: 1, requires: ["talent_40", "talent_42"], position: { x: 82.25806451612904, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "Pandemic" },
+  { id: "talent_58", name: "Light Speed", description: "Deal 50% Physical and 100% Magical damage, apply Electrified, and immediately begin a new turn.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_43", "talent_41"], position: { x: 82.25806451612904, y: 39.84375 }, icon: "✦", shape: "square", abilityId: "LightSpeed" },
+  { id: "talent_59", name: "Chain Assassination", description: "Deal 125% Physical Power as damage. While Stealthed, gain +25% Critical Strike Chance. A kill refunds the Energy spent and resets the cooldown.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_43"], position: { x: 74.19354838709677, y: 39.84375 }, icon: "✦", shape: "square", abilityId: "ChainAssassination" },
+  { id: "talent_60", name: "Cull the Weak", description: "Deal 25% Physical and 25% Magical damage. Both gain 20% damage per unique debuff on the target.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_42"], position: { x: 74.19354838709677, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "CullTheWeak" },
+  { id: "talent_61", name: "Hit and Run", description: "Whenever you deal damage, you have a 2% chance to gain Stealth.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_56"], position: { x: 86.29032258064517, y: 50 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "hit-and-run", name: "Hit and Run", description: "Damage dealt has a 2% chance to grant Stealth.", event: "on_hit", chance: 0.02, conditions: { minimumDamage: 1 }, effects: [{ type: "apply_status", status: createStatusEffect("stealth", { duration: 1 }), target: "self" }] }] } },
+  { id: "talent_62", name: "Spot Weakness", description: "Deal 5% more damage per unique debuff on the target.", branch: "shadow", kind: "passive", tier: 14, cost: 1, requires: ["talent_57"], position: { x: 86.29032258064517, y: 60.15625 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "spot-weakness", name: "Spot Weakness", description: "Deal 5% more damage per unique target debuff.", multiplier: 1, multiplierPerTargetDebuff: 0.05 }] } },
+  { id: "talent_63", name: "Avoidance", description: "+1 Max Energy. Take 5% less damage per unspent Energy.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_58"], position: { x: 86.29032258064517, y: 39.84375 }, icon: "✦", shape: "circle", combat: { passive: { maxEnergy: 1, incomingDamageReductionPerEnergy: 0.05 } } },
 ];
 
 export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {

@@ -168,6 +168,8 @@ Using an ability never ends the turn automatically. The player presses **End Tur
 
 Distraction makes the next ability cost 0 Energy and is consumed when that ability is used. Pinpoint guarantees critical strikes for every hit of the next damaging ability and is consumed when that ability begins. Both persist until consumed or combat ends.
 
+Light Speed performs a complete player turn transition without allowing enemies to act between the two turns. End-of-turn Poison and duration changes resolve, then start-of-turn Burn, Regenerate, Energy regeneration, and cooldown reduction resolve before control returns to the player.
+
 At the end of the player's turn, Poison resolves and normal status durations decrease.
 
 ### Enemy turn
@@ -227,6 +229,8 @@ Barrier is a visible, stackable absorption buff that lasts three turns. Its stac
 
 An ability marked to ignore absorption, currently Sharpened Blade, bypasses both Guard and Barrier without consuming either status.
 
+Avoidance reduces all incoming direct and status damage by 5% per currently unspent Energy. The multiplier is recalculated whenever damage resolves, so spending Energy also reduces its protection.
+
 ## Status system
 
 Unless specified otherwise, statuses last three turns. The status icon uses a fixed three-segment duration ring: elapsed segments become empty and the remaining segments never stretch to fill the missing space. Stack count is shown separately in the icon.
@@ -256,6 +260,7 @@ Burn per stack   = 3 + source Magical Power × 0.30
 - Bleed is Physical damage, Poison is Arcane damage, and Burn is Fire damage.
 - The status stores the applier's power when applied; later stat changes do not rewrite an existing status's source power.
 - Player Poison damage can be modified by talent bonuses such as Potency.
+- Leech restores Health equal to 5% of actual Health damage dealt by player-applied Poison ticks or detonations, rounded up and limited by missing Health.
 
 Regenerate uses:
 

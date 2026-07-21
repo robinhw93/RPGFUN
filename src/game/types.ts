@@ -97,6 +97,12 @@ export interface PassiveBonuses {
   statusImmunities?: StatusEffectId[];
   /** Additional stacks whenever the character applies a matching status. */
   statusApplicationStacks?: Partial<Record<StatusEffectId, number>>;
+  /** Healing gained as a fraction of damage dealt by matching statuses. */
+  statusDamageLeech?: Partial<Record<StatusEffectId, number>>;
+  /** Extra statuses applied alongside a matching player-applied status. */
+  statusApplicationCompanions?: Partial<Record<StatusEffectId, StatusEffectId[]>>;
+  /** Incoming damage reduction per point of currently unspent Energy. */
+  incomingDamageReductionPerEnergy?: number;
 }
 
 export interface CombatTriggerCondition {
@@ -137,6 +143,8 @@ export interface CombatDamageModifierDefinition {
   damageTypes?: DamageType[];
   attackerHasAnyStatus?: StatusEffectId[];
   targetHasAnyStatus?: StatusEffectId[];
+  /** Additional multiplicative damage per unique debuff on the target. */
+  multiplierPerTargetDebuff?: number;
 }
 
 export interface AbilityModifierDefinition {
@@ -195,6 +203,7 @@ export interface Ability {
   requiredTargetStatus?: StatusEffectId;
   requiredSelfStatus?: StatusEffectId;
   critChanceBonus?: number;
+  critChanceBonusWithStatus?: { status: StatusEffectId; bonus: number };
   /** Deals all remaining damage from this status immediately. */
   detonateStatus?: StatusEffectId;
   consumeTargetStatus?: StatusEffectId;
@@ -203,6 +212,8 @@ export interface Ability {
   consumeStatusForHealing?: StatusEffectId;
   /** Copies this status from the selected target to another random living enemy. */
   spreadTargetStatus?: StatusEffectId;
+  /** Copies every debuff from the selected target to all other living enemies. */
+  spreadAllTargetDebuffs?: boolean;
   /** Statuses applied by a damaging ability after a successful hit. */
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; onlyOnCritical?: boolean }>;
   /** Incoming Guard and Barrier do not absorb this ability's direct damage. */
@@ -211,6 +222,14 @@ export interface Ability {
   energyRestorePercentOfMax?: number;
   /** The next damaging ability used by the player is guaranteed to critically strike. */
   grantsNextCritical?: boolean;
+  /** Direct damage gains this multiplier for every unique target debuff. */
+  damagePerTargetDebuff?: number;
+  /** Resolves a complete player turn ending and immediately starts a new player turn. */
+  grantsImmediateTurn?: boolean;
+  /** Refund the Energy actually spent when this ability kills its target. */
+  refundEnergyOnKill?: boolean;
+  /** Clear this ability's cooldown when it kills its target. */
+  resetCooldownOnKill?: boolean;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;

@@ -45,13 +45,15 @@ export interface CombatTriggerContext {
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions">> & {
     stats: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
     startingStatuses: StatusEffect[];
     statusImmunities: StatusEffect["id"][];
     statusApplicationStacks: Partial<Record<StatusEffect["id"], number>>;
+    statusDamageLeech: Partial<Record<StatusEffect["id"], number>>;
+    statusApplicationCompanions: Partial<Record<StatusEffect["id"], StatusEffect["id"][]>>;
   };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
@@ -77,11 +79,14 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   bleedDamageReduction: 0,
   lootRarity: 0,
   chanceEffect: 0,
+  incomingDamageReductionPerEnergy: 0,
   statusDamage: {},
   preserveStatusOnDetonation: [],
   startingStatuses: [],
   statusImmunities: [],
   statusApplicationStacks: {},
+  statusDamageLeech: {},
+  statusApplicationCompanions: {},
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -106,6 +111,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.bleedDamageReduction += passive.bleedDamageReduction ?? 0;
   target.lootRarity += passive.lootRarity ?? 0;
   target.chanceEffect += passive.chanceEffect ?? 0;
+  target.incomingDamageReductionPerEnergy += passive.incomingDamageReductionPerEnergy ?? 0;
   Object.entries(passive.statusDamage ?? {}).forEach(([statusId, amount]) => {
     const id = statusId as StatusEffect["id"];
     target.statusDamage[id] = (target.statusDamage[id] ?? 0) + (amount ?? 0);
@@ -120,6 +126,15 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   Object.entries(passive.statusApplicationStacks ?? {}).forEach(([statusId, amount]) => {
     const id = statusId as StatusEffect["id"];
     target.statusApplicationStacks[id] = (target.statusApplicationStacks[id] ?? 0) + (amount ?? 0);
+  });
+  Object.entries(passive.statusDamageLeech ?? {}).forEach(([statusId, amount]) => {
+    const id = statusId as StatusEffect["id"];
+    target.statusDamageLeech[id] = (target.statusDamageLeech[id] ?? 0) + (amount ?? 0);
+  });
+  Object.entries(passive.statusApplicationCompanions ?? {}).forEach(([statusId, companions]) => {
+    const id = statusId as StatusEffect["id"];
+    const existing = target.statusApplicationCompanions[id] ?? [];
+    target.statusApplicationCompanions[id] = [...new Set([...existing, ...(companions ?? [])])];
   });
 }
 
@@ -163,6 +178,8 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
       startingStatuses: EMPTY_PASSIVE.startingStatuses.map((status) => ({ ...status })),
       statusImmunities: [...EMPTY_PASSIVE.statusImmunities],
       statusApplicationStacks: { ...EMPTY_PASSIVE.statusApplicationStacks },
+      statusDamageLeech: { ...EMPTY_PASSIVE.statusDamageLeech },
+      statusApplicationCompanions: Object.fromEntries(Object.entries(EMPTY_PASSIVE.statusApplicationCompanions).map(([id, companions]) => [id, [...(companions ?? [])]])),
     },
     triggers: [],
     damageModifiers: [],
@@ -220,7 +237,9 @@ export function getDamageModifierMultiplier(
     if (modifier.damageTypes?.length && (!damageType || !modifier.damageTypes.includes(damageType))) return multiplier;
     if (modifier.attackerHasAnyStatus?.length && !modifier.attackerHasAnyStatus.some((id) => attackerStatuses.some((status) => status.id === id))) return multiplier;
     if (modifier.targetHasAnyStatus?.length && !modifier.targetHasAnyStatus.some((id) => targetStatuses.some((status) => status.id === id))) return multiplier;
-    return multiplier * modifier.multiplier;
+    const uniqueDebuffs = new Set(targetStatuses.filter((status) => status.kind === "debuff").map((status) => status.id)).size;
+    const dynamicMultiplier = 1 + uniqueDebuffs * (modifier.multiplierPerTargetDebuff ?? 0);
+    return multiplier * modifier.multiplier * dynamicMultiplier;
   }, 1);
 }
 

@@ -145,6 +145,7 @@ Important fields:
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
 - `statusApplications` supports one or more on-hit statuses, including critical-only applications.
 - `ignoresAbsorption`, `consumeTargetStatusRatio`, `energyRestorePercentOfMax`, and `grantsNextCritical` support the current advanced Shadow abilities.
+- `spreadAllTargetDebuffs`, `damagePerTargetDebuff`, conditional Critical Chance, immediate turns, and on-kill refund/reset fields support the late Shadow tree without hard-coding talent IDs.
 - `damageModifiers` applies conditional multipliers owned by the ability.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
@@ -194,7 +195,7 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, preserved detonations, starting statuses, status immunities, and additional applied-status stacks. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, and Energy-based incoming-damage reduction. Derived stats aggregate every active source.
 
 ### Triggers
 
@@ -211,7 +212,7 @@ Some trigger event names are part of the general contract but are not yet emitte
 
 ### Damage modifiers
 
-Damage modifiers multiply matching damage and can filter by damage type, attacker status, or target status. Multiple matching modifiers multiply together. General status multipliers are applied separately by the status system.
+Damage modifiers multiply matching damage and can filter by damage type, attacker status, or target status. They may also scale by the target's number of unique debuffs. Multiple matching modifiers multiply together. General status multipliers are applied separately by the status system.
 
 ### Ability modifiers
 
