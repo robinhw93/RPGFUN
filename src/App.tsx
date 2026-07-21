@@ -536,7 +536,7 @@ function App() {
   return (
     <div
       className={`app-shell ${isCombatScreen ? "in-combat" : ""}`}
-      style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1)}ms` } as React.CSSProperties}
+      style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs * Math.max(0.1, game.adventure.combat?.attackAnimationDurationMultiplier ?? 1) / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1)}ms` } as React.CSSProperties}
     >
       <header className="topbar">
         <button className="brand" onClick={() => navigate("adventure")} aria-label="Go to adventure">

@@ -49,7 +49,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   Flurry: {
     id: "Flurry", name: "Flurry", description: "Attack five times, dealing Physical Damage equal to 50% of your Physical Power per hit. Each hit chooses a random enemy and can trigger on-hit effects.", energyCost: 4,
-    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.5, hits: 5, randomTargetPerHit: true, icon: "≋", branch: "shadow",
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.5, hits: 5, randomTargetPerHit: true, attackSequenceDurationMultiplier: 1.4, icon: "≋", branch: "shadow",
   },
   Ambush: {
     id: "Ambush", name: "Ambush", description: "Can only be used while Stealthed. Deal Physical Damage equal to 150% of your Physical Power with +50% Critical Strike Chance.", energyCost: 2,
@@ -105,7 +105,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   SliceAndDice: {
     id: "SliceAndDice", name: "Slice and Dice", description: "Attack six times for 15% Physical Power per hit. Critical hits apply Exhausted. Each hit triggers on-hit effects.", energyCost: 5,
-    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.15, hits: 6,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.15, hits: 6, attackSequenceDurationMultiplier: 1.4,
     statusApplications: [{ status: "exhausted", onlyOnCritical: true }], icon: "≋", branch: "shadow",
   },
   CheapShot: {

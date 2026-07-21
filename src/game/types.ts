@@ -242,6 +242,8 @@ export interface Ability {
   refundEnergyOnKill?: boolean;
   /** Clear this ability's cooldown when it kills its target. */
   resetCooldownOnKill?: boolean;
+  /** Multiplies the complete direct-attack animation sequence without changing combat rules. */
+  attackSequenceDurationMultiplier?: number;
   /** Conditional multipliers belonging to this ability. */
   damageModifiers?: CombatDamageModifierDefinition[];
   scalingStat?: StatName;
@@ -356,7 +358,7 @@ export interface CombatPassiveAnimation {
 }
 
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number; sourceLabel?: string }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number; animationDurationMultiplier?: number; sourceLabel?: string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
@@ -387,6 +389,7 @@ export interface CombatState {
   attackingActorId: "player" | string | null;
   attackAnimationId: number;
   attackAnimationHitCount: number;
+  attackAnimationDurationMultiplier: number;
   attackEffectId: string | null;
   playerHp: number;
   playerMaxHp: number;

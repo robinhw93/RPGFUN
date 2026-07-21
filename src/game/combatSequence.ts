@@ -25,7 +25,8 @@ export function getCombatEventDurationMs(combat: CombatState, eventIndex: number
     effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId)
   ));
   const hitCount = directAttack && "damage" in directAttack ? Math.max(1, directAttack.animationHitCount ?? 1) : 1;
-  if (directAttack) return COMBAT_TIMING.attackDurationMs / hitCount;
+  const durationMultiplier = directAttack && "damage" in directAttack ? Math.max(0.1, directAttack.animationDurationMultiplier ?? 1) : 1;
+  if (directAttack) return COMBAT_TIMING.attackDurationMs * durationMultiplier / hitCount;
   if (isHiddenDamageEvent(combat, eventIndex)) return COMBAT_TIMING.damageNumberMs;
   if (isHiddenPlayerAbilityEvent(combat, eventIndex)) return COMBAT_TIMING.silentEventMs;
   return COMBAT_TIMING.floatingMessageMs;

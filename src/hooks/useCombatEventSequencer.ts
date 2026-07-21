@@ -26,6 +26,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
       if (scheduledEffects.current.has(scheduleKey)) return;
       scheduledEffects.current.add(scheduleKey);
       const animationHitCount = Math.max(1, attackEffect.animationHitCount ?? 1);
+      const animationDurationMultiplier = Math.max(0.1, attackEffect.animationDurationMultiplier ?? 1);
       const animationId = (visibleCombat.attackAnimationId ?? 0) + 1;
       setGame((current) => {
         const combat = current.adventure.combat;
@@ -46,7 +47,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
         });
         scheduledEffects.current.delete(scheduleKey);
         impactTimers.current = impactTimers.current.filter((timer) => timer !== impactTimer);
-      }, COMBAT_TIMING.attackImpactMs / animationHitCount);
+      }, COMBAT_TIMING.attackImpactMs * animationDurationMultiplier / animationHitCount);
       impactTimers.current.push(impactTimer);
 
       let finishTimer = 0;
@@ -59,7 +60,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
           return { ...current, adventure: { ...current.adventure, combat: finished } };
         });
         impactTimers.current = impactTimers.current.filter((timer) => timer !== finishTimer);
-      }, COMBAT_TIMING.attackDurationMs / animationHitCount);
+      }, COMBAT_TIMING.attackDurationMs * animationDurationMultiplier / animationHitCount);
       impactTimers.current.push(finishTimer);
       return;
     }

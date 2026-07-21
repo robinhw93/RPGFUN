@@ -265,6 +265,8 @@ Statuses attached to that same event index resolve at impact with damage. Non-at
 
 Multi-hit abilities attach their total hit count to every direct-damage event. The sequencer divides animation duration and impact delay by that count, while `getCombatEventDurationMs` gives each direct-hit message the same shortened slot. This removes normal floating-message waits between hits and keeps the complete hit sequence within one normal attack-duration budget. `attackAnimationId` alternates equivalent CSS keyframes so consecutive hits by the same combatant always restart the lunge animation.
 
+An ability may apply a presentation-only duration multiplier to that complete sequence. Flurry and Slice and Dice currently use `1.4`, making their five- and six-hit sequences 40% longer while leaving damage, hit timing order, and other multi-hit abilities unchanged.
+
 Attack impact and animation completion are separate lifecycle points. Damage resolves at impact, while the attacker stays animated until the full return movement completes. A turn handoff attached to a damage event must therefore preserve the current attacker until the sequencer's animation-completion timer releases it.
 
 Never update visible target HP/status early to simplify an animation; doing so breaks the event rhythm and can show victory before the final blow.
