@@ -2596,7 +2596,18 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
           </div>
         </div>
       </div>
-      {selectedTalent && <TalentDetailModal talent={selectedTalent} character={character} locked={locked} freeUnlocks={freeUnlocks} onClose={closeTalentDetails} onUnlock={onUnlock} onToggleAbility={onToggleAbility} />}
+      {selectedTalent && <TalentDetailModal
+        talent={selectedTalent}
+        character={character}
+        locked={locked}
+        freeUnlocks={freeUnlocks}
+        onClose={closeTalentDetails}
+        onUnlock={(talentId) => {
+          onUnlock(talentId);
+          closeTalentDetails();
+        }}
+        onToggleAbility={onToggleAbility}
+      />}
       {selectedAbilitySlot !== null && <AbilitySlotPicker slotIndex={selectedAbilitySlot} character={character} onClose={() => setSelectedAbilitySlot(null)} onSetSlot={onSetAbilitySlot} />}
     </section>
   );
