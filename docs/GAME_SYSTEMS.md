@@ -224,6 +224,8 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 
 Combat calculations can prepare future results, but visible HP, status, and active-turn changes are delayed until their corresponding floating combat message is shown. Direct attacks start their lunge animation with the damage message and apply damage at the configured impact frame.
 
+Damage events do not render central floating sentences. Damage is communicated by the large number over the affected Health bar, the Health-bar movement, and the combatant's impact reaction. The hidden sequencing event remains responsible for attack timing and state application; non-attack damage slots last only as long as the damage-number animation. Passive digests remain visible even when a triggered passive deals damage.
+
 Every hit of a multi-hit ability receives its own lunge and impact reaction. Animation speed is multiplied by the number of hits, so two hits animate at twice normal speed and the total motion time remains equal to one standard attack animation. Direct-hit floating messages use the same shortened slots, causing the hit animations to run consecutively without normal floating-text pauses between them.
 
 This sequencing guarantees that:

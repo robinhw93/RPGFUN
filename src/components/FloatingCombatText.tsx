@@ -4,12 +4,13 @@ import { COMBAT_TIMING } from "../game/timing";
 interface FloatingCombatTextProps {
   events: string[];
   eventDurationsMs?: number[];
+  hiddenEventIndexes?: number[];
   eventId: number;
   onEventShown: (eventId: number, eventIndex: number) => void;
   onSequenceComplete: (eventId: number) => void;
 }
 
-export function FloatingCombatText({ events, eventDurationsMs, eventId, onEventShown, onSequenceComplete }: FloatingCombatTextProps) {
+export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexes = [], eventId, onEventShown, onSequenceComplete }: FloatingCombatTextProps) {
   const [index, setIndex] = useState(0);
   const eventDurations = useRef(eventDurationsMs ?? []);
   const eventCallback = useRef(onEventShown);
@@ -30,10 +31,12 @@ export function FloatingCombatText({ events, eventDurationsMs, eventId, onEventS
   }, [eventDurationMs, eventId, events.length, index]);
 
   const message = events[index];
+  const hidden = hiddenEventIndexes.includes(index);
   useEffect(() => {
     if (message) eventCallback.current(eventId, index);
   }, [eventId, index, message]);
   if (!message) return null;
+  if (hidden) return null;
   const tone = message.startsWith("Passives —") ? "passive" : /damage|fallen/i.test(message) ? "damage" : /gain|reclaim|turn|victory/i.test(message) ? "positive" : "neutral";
   return <div className={`floating-combat-text ${tone}`} aria-live="polite"><span key={`${eventId}-${index}`} style={{ animationDuration: `${eventDurationMs}ms` }}>{message}</span></div>;
 }
