@@ -1390,12 +1390,15 @@ function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onIn
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
   const Icon = STATUS_ICONS[id];
-  const amountLabel = id === "barrier" || id === "guard"
-    ? `${stacks} remaining`
-    : STATUS_EFFECTS[id].stackable
-      ? `${stacks} ${stacks === 1 ? "stack" : "stacks"}`
-      : "does not stack";
-  const label = `${name}, ${amountLabel}, ${permanent ? "permanent" : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`}`;
+  const label = [
+    name,
+    id === "barrier" || id === "guard"
+      ? `${stacks} remaining`
+      : STATUS_EFFECTS[id].stackable
+        ? `${stacks} ${stacks === 1 ? "stack" : "stacks"}`
+        : null,
+    permanent ? null : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`,
+  ].filter(Boolean).join(", ");
   const remainingSegments = Math.max(0, Math.min(STATUS_DURATION_SEGMENTS, Math.floor(duration)));
   const gap = 6;
   const segmentLength = 100 / STATUS_DURATION_SEGMENTS - gap;
