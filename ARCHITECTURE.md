@@ -327,7 +327,7 @@ emberfall.talent-devtool.v1
 emberfall.talent-devtool.snap-to-grid
 ```
 
-The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Older drafts are normalized on load: obsolete requirement-mode data is discarded and duplicate reciprocal edges are collapsed. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format without a requirement-mode field.
+The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Older drafts are normalized on load: obsolete requirement-mode data is discarded, duplicate reciprocal edges are collapsed, and ability Energy/cooldown fields are inferred from live definitions or older notes when absent. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format without a requirement-mode field.
 
 Canvas positions are percentages, but grid spacing is stored as fixed world units. When nodes approach an edge, `ensureCanvasRoom` expands that side and recalculates percentages so existing absolute alignment remains stable.
 

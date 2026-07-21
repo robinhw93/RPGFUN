@@ -38,6 +38,7 @@ export interface StatusEffect {
 
 export type StatusEffectId =
   | "guard"
+  | "barrier"
   | "strengthened"
   | "enlightened"
   | "fierce"

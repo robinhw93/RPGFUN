@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Backpack, BatteryLow, Bolt, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
   EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
-  ShieldCheck, ShieldOff, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
+  ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
@@ -103,6 +103,7 @@ function GoldIcon() {
 
 const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   guard: Shield,
+  barrier: ShieldPlus,
   strengthened: Dumbbell,
   enlightened: Brain,
   fierce: Crosshair,
@@ -1075,7 +1076,10 @@ function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onIn
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
   const Icon = STATUS_ICONS[id];
-  const label = `${name}, ${stacks} ${stacks === 1 ? "stack" : "stacks"}, ${permanent ? "permanent" : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`}`;
+  const amountLabel = id === "barrier" || id === "guard"
+    ? `${stacks} remaining`
+    : `${stacks} ${stacks === 1 ? "stack" : "stacks"}`;
+  const label = `${name}, ${amountLabel}, ${permanent ? "permanent" : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`}`;
   const remainingSegments = Math.max(0, Math.min(STATUS_DURATION_SEGMENTS, Math.floor(duration)));
   const gap = 6;
   const segmentLength = 100 / STATUS_DURATION_SEGMENTS - gap;

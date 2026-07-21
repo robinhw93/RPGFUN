@@ -488,6 +488,7 @@ main { min-height: calc(100vh - 68px); }
 .status-badge.status-strengthened { --status-ring: #df7b4f; color: #ffad78; background: radial-gradient(circle, #452419 0 57%, #17110f 58%); }
 .status-badge.status-enlightened { --status-ring: #718ee0; color: #9bb4ff; background: radial-gradient(circle, #1c2948 0 57%, #10131b 58%); }
 .status-badge.status-fierce { --status-ring: #d9a349; color: #ffd578; background: radial-gradient(circle, #453218 0 57%, #17130d 58%); }
+.status-badge.status-barrier { --status-ring: #57a9d5; color: #9fddff; background: radial-gradient(circle, #17384a 0 57%, #0e171c 58%); }
 .status-badge.status-shielded { --status-ring: #9aa4a7; color: #d4dcde; background: radial-gradient(circle, #2b3335 0 57%, #121617 58%); }
 .status-badge.status-regenerate { --status-ring: #64b97c; color: #91e6a8; background: radial-gradient(circle, #1c3d27 0 57%, #101711 58%); }
 .status-badge.status-taunt { --status-ring: #d88748; color: #ffc27d; background: radial-gradient(circle, #482917 0 57%, #17110d 58%); }

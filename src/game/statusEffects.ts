@@ -16,6 +16,7 @@ export interface StatusEffectDefinition {
 
 export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   guard: { id: "guard", name: "Guard", kind: "buff", duration: 1, stackable: true, description: "Absorbs incoming damage before Health is lost." },
+  barrier: { id: "barrier", name: "Barrier", kind: "buff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Absorbs incoming damage before Health is lost. Incoming damage reduces the remaining Barrier amount." },
   strengthened: { id: "strengthened", name: "Strengthened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Physical Damage." },
   enlightened: { id: "enlightened", name: "Enlightened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Magic Damage." },
   fierce: { id: "fierce", name: "Fierce", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+20% Critical Strike Chance." },
@@ -85,6 +86,41 @@ export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect
     const duration = status.duration - 1;
     return duration > 0 ? [{ ...status, duration }] : [];
   });
+}
+
+export interface DamageAbsorptionResult {
+  damage: number;
+  statuses: StatusEffect[];
+  absorbed: number;
+  absorbedBy: Partial<Record<"guard" | "barrier", number>>;
+}
+
+/** Guard is consumed before Barrier because it expires sooner. */
+export function absorbIncomingDamage(statuses: StatusEffect[], incomingDamage: number): DamageAbsorptionResult {
+  let remainingDamage = Math.max(0, Math.round(incomingDamage));
+  let nextStatuses = [...statuses];
+  const absorbedBy: DamageAbsorptionResult["absorbedBy"] = {};
+  (["guard", "barrier"] as const).forEach((statusId) => {
+    if (remainingDamage <= 0) return;
+    const status = nextStatuses.find((candidate) => candidate.id === statusId);
+    if (!status) return;
+    const absorbed = Math.min(Math.max(0, status.stacks), remainingDamage);
+    if (absorbed <= 0) return;
+    absorbedBy[statusId] = absorbed;
+    remainingDamage -= absorbed;
+    const remainingAmount = status.stacks - absorbed;
+    nextStatuses = nextStatuses.flatMap((candidate) => candidate.id !== statusId
+      ? [candidate]
+      : remainingAmount > 0
+        ? [{ ...candidate, stacks: remainingAmount }]
+        : []);
+  });
+  return {
+    damage: remainingDamage,
+    statuses: nextStatuses,
+    absorbed: Math.max(0, Math.round(incomingDamage)) - remainingDamage,
+    absorbedBy,
+  };
 }
 
 export function isMagicalDamage(damageType?: DamageType): boolean {

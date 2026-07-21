@@ -103,7 +103,8 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Guard | 1 turn | Yes | Absorbs incoming damage before Health. Normally expires at the owner's next turn start and is hidden from the normal status icon row. |
+| Guard | 1 turn | Yes | Absorbs incoming damage before Health and normally expires at the owner's next turn start. |
+| Barrier | 3 turns | Yes | Absorbs incoming damage before Health. Its displayed amount is reduced by absorbed damage and it disappears at zero. |
 | Strengthened | 3 turns | No | Deals 20% more Physical damage. |
 | Enlightened | 3 turns | No | Deals 20% more Arcane, Fire, Frost, and Lightning damage. |
 | Fierce | 3 turns | No | +20% Critical Strike Chance. |

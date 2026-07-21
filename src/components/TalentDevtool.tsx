@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen, Circle, Copy, Download, Grid3X3, Hand, Link2, LockKeyhole, Maximize2, Minus, Plus, Save, Search, Sparkles, Square, Trash2, Wrench, X,
 } from "lucide-react";
-import { TALENTS, TALENT_TREE_CANVAS } from "../game/data";
+import { ABILITIES, TALENTS, TALENT_TREE_CANVAS } from "../game/data";
 import { STATUS_EFFECTS } from "../game/statusEffects";
 import type { StatName, TalentBranch } from "../game/types";
 
@@ -48,12 +48,16 @@ interface TalentDraftNode {
   shape: TalentNodeShape;
   passiveBonuses: TalentPassiveBonus[];
   abilityId: string;
+  abilityEnergyCost: number;
+  abilityCooldownTurns: number;
   effectNotes: string;
 }
 
-interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses"> {
+interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns"> {
   shape?: TalentNodeShape;
   passiveBonuses?: TalentPassiveBonus[];
+  abilityEnergyCost?: number;
+  abilityCooldownTurns?: number;
   passiveBonus?: PassiveBonus | "";
   passiveAmount?: number;
 }
@@ -117,27 +121,42 @@ function passiveBonusesFromTalent(talent: (typeof TALENTS)[number]): TalentPassi
   return bonuses;
 }
 
+function abilityNumbers(abilityId: string, effectNotes: string, energyCost?: number, cooldownTurns?: number): { energyCost: number; cooldownTurns: number } {
+  const ability = abilityId ? ABILITIES[abilityId] : undefined;
+  const notedEnergy = effectNotes.match(/cost:\s*(\d+)\s*energy/i)?.[1];
+  const notedCooldown = effectNotes.match(/cooldown:\s*(\d+)\s*turn/i)?.[1];
+  return {
+    energyCost: Math.max(0, Math.round(Number(energyCost ?? ability?.energyCost ?? notedEnergy ?? 0))),
+    cooldownTurns: Math.max(0, Math.round(Number(cooldownTurns ?? ability?.cooldownTurns ?? notedCooldown ?? 0))),
+  };
+}
+
 function createInitialDraft(): TalentDraft {
   return ensureCanvasRoom({
     version: 1,
     canvas: { width: TALENT_TREE_CANVAS.width, height: TALENT_TREE_CANVAS.height },
     grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
-    nodes: TALENTS.map((talent) => ({
-      id: talent.id,
-      name: talent.name,
-      description: talent.description,
-      branch: talent.branch,
-      kind: talent.kind,
-      tier: talent.tier,
-      cost: talent.cost,
-      requires: [...talent.requires],
-      position: { ...talent.position },
-      icon: talent.icon,
-      shape: talent.shape,
-      passiveBonuses: passiveBonusesFromTalent(talent),
-      abilityId: talent.abilityId ?? "",
-      effectNotes: talent.effectNotes ?? "",
-    })),
+    nodes: TALENTS.map((talent) => {
+      const ability = talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
+      return {
+        id: talent.id,
+        name: talent.name,
+        description: talent.description,
+        branch: talent.branch,
+        kind: talent.kind,
+        tier: talent.tier,
+        cost: talent.cost,
+        requires: [...talent.requires],
+        position: { ...talent.position },
+        icon: talent.icon,
+        shape: talent.shape,
+        passiveBonuses: passiveBonusesFromTalent(talent),
+        abilityId: talent.abilityId ?? "",
+        abilityEnergyCost: ability?.energyCost ?? 0,
+        abilityCooldownTurns: ability?.cooldownTurns ?? 0,
+        effectNotes: talent.effectNotes ?? "",
+      };
+    }),
   });
 }
 
@@ -161,6 +180,7 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
     canvas,
     grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
     nodes: draft.nodes.map((node) => {
+      const numbers = abilityNumbers(node.abilityId ?? "", node.effectNotes ?? "", node.abilityEnergyCost, node.abilityCooldownTurns);
       const migratedBonus = node.passiveBonus
         ? [{ id: `${node.id}-${node.passiveBonus}`, bonus: node.passiveBonus, amount: Number(node.passiveAmount ?? 0) }]
         : [];
@@ -181,6 +201,8 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
         shape: node.shape === "circle" ? "circle" : "square",
         passiveBonuses: Array.isArray(node.passiveBonuses) ? node.passiveBonuses : migratedBonus,
         abilityId: node.abilityId ?? "",
+        abilityEnergyCost: numbers.energyCost,
+        abilityCooldownTurns: numbers.cooldownTurns,
         effectNotes: node.effectNotes ?? "",
       };
     }),
@@ -388,6 +410,8 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       shape: "circle",
       passiveBonuses: [],
       abilityId: "",
+      abilityEnergyCost: 0,
+      abilityCooldownTurns: 0,
       effectNotes: "",
     };
     setDraft((current) => ensureCanvasRoom({ ...current, nodes: [...current.nodes, node] }));
@@ -668,7 +692,13 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
             <div className="talent-inspector-section">
               <h3><Sparkles size={15} /> Effect</h3>
               {selected.kind === "ability" ? (
-                <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => updateSelected({ abilityId: event.target.value })} /></label>
+                <>
+                  <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => updateSelected({ abilityId: event.target.value })} /></label>
+                  <div className="talent-form-grid two-columns">
+                    <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => updateSelected({ abilityEnergyCost: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
+                    <label><span>Cooldown (turns)</span><input type="number" min={0} step={1} value={selected.abilityCooldownTurns} onChange={(event) => updateSelected({ abilityCooldownTurns: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
+                  </div>
+                </>
               ) : null}
               <div className="talent-passive-heading"><span>Passive bonuses</span><button type="button" onClick={addPassiveBonus}><Plus size={13} /> Add bonus</button></div>
               {selected.passiveBonuses.length === 0 ? <p className="talent-passive-empty">No passive bonuses added.</p> : (

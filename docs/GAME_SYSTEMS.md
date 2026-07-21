@@ -217,9 +217,11 @@ This sequencing guarantees that:
 
 The segmented Energy bar previews Energy that will be available after the next regeneration.
 
-## Guard
+## Damage absorption
 
-Guard is a temporary, stackable absorption status, but it is intentionally not displayed in the normal buff/debuff icon row. The Guard ability grants a base of 6 Guard multiplied by the character's Guard multiplier. Incoming damage removes Guard first; only the remainder reduces Health. Normal Guard expires when its owner's next turn begins.
+Guard is a temporary, stackable absorption status. The Guard ability grants a base of 6 Guard multiplied by the character's Guard multiplier. Incoming damage removes Guard first; only the remainder reduces Health. Normal Guard expires when its owner's next turn begins.
+
+Barrier is a visible, stackable absorption buff that lasts three turns. Its stack counter is the remaining Barrier amount. Incoming damage consumes Guard first, then Barrier, then Health. Barrier protects against both direct and status damage, and its amount changes at the same floating-text event as the damage.
 
 ## Status system
 

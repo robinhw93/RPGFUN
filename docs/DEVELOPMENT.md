@@ -235,7 +235,7 @@ The editor supports:
 - Creating, deleting, selecting, and dragging nodes.
 - Player-facing descriptions, branches, class/passive/ability types, tiers, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
-- Ability-ID references and free-form effect/proc notes.
+- Ability-ID references, Energy cost, cooldown turns, and free-form effect/proc notes.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
 - Toggleable snap-to-grid.
@@ -252,7 +252,7 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 - Push to GitHub.
 - Synchronize to another browser or computer.
 
-**Copy for Codex** copies the full export JSON. **Export JSON** downloads `emberfall-talents.json`. Those exports describe layout, connections, basic passive bonuses, ability IDs, and design notes; they still require review and integration into source code.
+**Copy for Codex** copies the full export JSON. **Export JSON** downloads `emberfall-talents.json`. Those exports describe layout, connections, basic passive bonuses, ability IDs, Energy costs, cooldowns, and design notes; they still require review and integration into source code.
 
 ### Editor limitations
 
