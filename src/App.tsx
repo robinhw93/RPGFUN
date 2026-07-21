@@ -10,7 +10,7 @@ import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GearSlotIcon } from "./components/GearSlotIcon";
 import { TalentDevtool, TalentDevtoolAccessDialog } from "./components/TalentDevtool";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
-import { ABILITIES, ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
+import { ABILITIES, ADVENTURE, ENDLESS_ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, isCombatSequencePending } from "./game/combatSequence";
 import { getCharacterAbilityModifiers } from "./game/combatFeatures";
@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -101,6 +101,20 @@ function GoldIcon() {
   return <img className="gold-icon" src="/assets/resource-icons/gold.png" alt="" aria-hidden="true" draggable={false} />;
 }
 
+function getAdventureNode(mode: AdventureMode, index: number): AdventureNode {
+  return mode === "endless"
+    ? { ...ENDLESS_ADVENTURE, eyebrow: `Training Fight ${index + 1}` }
+    : ADVENTURE[index];
+}
+
+function rollDummyEncounter(): string[] {
+  return Array.from({ length: Math.random() < 0.5 ? 2 : 3 }, () => "dummy");
+}
+
+function describeDummyEncounter(enemyIds: string[]): string {
+  return `You encounter ${enemyIds.length} DUMMIES.`;
+}
+
 const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   guard: Shield,
   barrier: ShieldPlus,
@@ -174,7 +188,7 @@ function App() {
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatSequencer = useCombatEventSequencer(game, setGame);
   const combatLocked = game.adventure.combat?.outcome === "active";
-  const activeNode = ADVENTURE[game.adventure.nodeIndex];
+  const activeNode = getAdventureNode(game.adventure.mode, game.adventure.nodeIndex);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
 
   useEffect(() => {
@@ -214,11 +228,12 @@ function App() {
     window.scrollTo({ top: 0 });
   };
 
-  const beginAdventure = () => {
-    const combat = createCombat(game.character, ADVENTURE[0].enemies!, derived.maxHp);
+  const beginAdventure = (mode: AdventureMode) => {
+    const enemyIds = mode === "endless" ? rollDummyEncounter() : ADVENTURE[0].enemies!;
+    const combat = createCombat(game.character, enemyIds, derived.maxHp);
     setGame((current) => ({
       ...current,
-      adventure: { active: true, nodeIndex: 0, carryHp: derived.maxHp, combat, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
+      adventure: { mode, active: true, nodeIndex: 0, carryHp: derived.maxHp, combat, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
     }));
   };
 
@@ -267,13 +282,33 @@ function App() {
     });
   };
 
-  const advanceJourney = () => {
+  const advanceJourney = (endlessEnemyIds?: string[]) => {
     setGame((current) => {
       const adventure = current.adventure;
       const wonCombat = adventure.combat?.outcome === "victory";
       const carryHp = wonCombat ? adventure.combat!.playerHp : (adventure.carryHp ?? getDerivedStats(current.character).maxHp);
       const character = current.character;
       const latestLoot = adventure.pendingReward?.loot ?? adventure.latestLoot;
+
+      if (adventure.mode === "endless") {
+        const maxHp = getDerivedStats(character).maxHp;
+        const nextIndex = adventure.nodeIndex + 1;
+        const combat = createCombat(character, endlessEnemyIds ?? rollDummyEncounter(), maxHp);
+        return {
+          ...current,
+          adventure: {
+            ...adventure,
+            active: true,
+            completed: false,
+            nodeIndex: nextIndex,
+            carryHp: maxHp,
+            combat,
+            eventResolved: false,
+            latestLoot: null,
+            pendingReward: null,
+          },
+        };
+      }
 
       if (adventure.nodeIndex >= ADVENTURE.length - 1) {
         return {
@@ -296,14 +331,17 @@ function App() {
 
   const continueJourney = () => {
     if (travelTransition) return;
-    if (game.adventure.nodeIndex >= ADVENTURE.length - 1) {
+    if (game.adventure.mode === "story" && game.adventure.nodeIndex >= ADVENTURE.length - 1) {
       advanceJourney();
       return;
     }
-    const nextNode = ADVENTURE[game.adventure.nodeIndex + 1];
-    const message = nextNode.enemies
+    const endlessEnemyIds = game.adventure.mode === "endless" ? rollDummyEncounter() : undefined;
+    const nextNode = game.adventure.mode === "endless" ? null : ADVENTURE[game.adventure.nodeIndex + 1];
+    const message = endlessEnemyIds
+      ? describeDummyEncounter(endlessEnemyIds)
+      : nextNode?.enemies
         ? `You encounter ${nextNode.enemies.map((id) => ENEMIES[id].name).join(" and ")}.`
-        : `You discover ${nextNode.title}.`;
+        : `You discover ${nextNode?.title}.`;
     setTravelTransition({ phase: "travel", dots: 1, message });
     const dotInterval = window.setInterval(() => {
       setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
@@ -313,10 +351,30 @@ function App() {
       setTravelTransition({ phase: "encounter", dots: 5, message });
     }, 2500);
     const completeTimer = window.setTimeout(() => {
-      advanceJourney();
+      advanceJourney(endlessEnemyIds);
       setTravelTransition(null);
     }, 4000);
     travelTimers.current = [dotInterval, encounterTimer, completeTimer];
+  };
+
+  const leaveTraining = () => {
+    setGame((current) => {
+      if (current.adventure.mode !== "endless" || current.adventure.combat?.outcome !== "victory") return current;
+      return {
+        ...current,
+        adventure: {
+          mode: "story",
+          active: false,
+          nodeIndex: 0,
+          carryHp: null,
+          combat: null,
+          eventResolved: false,
+          latestLoot: null,
+          pendingReward: null,
+          completed: false,
+        },
+      };
+    });
   };
 
   const resolveEvent = (choice: "rest" | "ember") => {
@@ -448,6 +506,7 @@ function App() {
             onCombatSequenceComplete={combatSequencer.completeSequence}
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
+            onLeaveTraining={leaveTraining}
             onEvent={resolveEvent}
             onPermadeath={returnToCharacterCreation}
             onTalents={() => navigate("talents")}
@@ -482,7 +541,7 @@ function App() {
                 <Footprints /><Footprints />
               </div>
             )}
-            <span>{travelTransition.phase === "travel" ? `Following the ashen road${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+            <span>{travelTransition.phase === "travel" ? `${game.adventure.mode === "endless" ? "Returning to the proving grounds" : "Following the ashen road"}${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
           </div>
         </div>
       )}
@@ -549,10 +608,10 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: Ch
   );
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onInitiativeComplete, onContinue, onEvent, onPermadeath, onTalents, onCharacter }: {
+function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
-  onBegin: () => void;
+  onBegin: (mode: AdventureMode) => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
   onEndTurn: () => void;
@@ -561,6 +620,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   onCombatSequenceComplete: (eventId: number) => void;
   onInitiativeComplete: () => void;
   onContinue: () => void;
+  onLeaveTraining: () => void;
   onEvent: (choice: "rest" | "ember") => void;
   onPermadeath: () => void;
   onTalents: () => void;
@@ -595,7 +655,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         <div className="reward-strip">
           <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
         </div>
-        <button className="primary-button" onClick={onBegin}>Venture Forth Again <ChevronRight size={17} /></button>
+        <button className="primary-button" onClick={() => onBegin("story")}>Venture Forth Again <ChevronRight size={17} /></button>
+        <button className="text-button" onClick={() => onBegin("endless")}>Enter Shadow Proving Grounds</button>
         <button className="text-button" onClick={onTalents}>Spend talent points</button>
       </section>
     );
@@ -610,9 +671,18 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
             <h1>The Ashen Road</h1>
             <p>Caravans vanish on the old imperial road. Follow their trail through the cinderwood and discover what guards the Black Gate.</p>
             <div className="adventure-tags"><span>Recommended Level 1</span><span>4 Encounters</span><span>Rare Loot</span></div>
-            <button className="primary-button" onClick={onBegin}>Begin Journey <ChevronRight size={18} /></button>
+            <button className="primary-button" onClick={() => onBegin("story")}>Begin Journey <ChevronRight size={18} /></button>
           </div>
           <div className="gate-art" aria-hidden="true"><div className="sun"/><div className="tower left"/><div className="tower right"/><div className="gate"/></div>
+        </div>
+        <div className="training-adventure-card">
+          <div>
+            <p className="eyebrow">Testing Adventure</p>
+            <h2>Shadow Proving Grounds</h2>
+            <p>An endless training route built for testing talents, abilities, and Shadow builds.</p>
+            <div className="adventure-tags"><span>2–3 DUMMIES</span><span>100 Health</span><span>+2 Levels per Victory</span></div>
+          </div>
+          <button className="secondary-button" onClick={() => onBegin("endless")}>Begin Testing <ChevronRight size={18} /></button>
         </div>
         <div className="section-heading"><div><p className="eyebrow">Route Preview</p><h2>What lies ahead</h2></div><span className="muted">Progress saves automatically</span></div>
         <div className="route-grid">
@@ -622,11 +692,11 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
     );
   }
 
-  const node = ADVENTURE[adventure.nodeIndex];
+  const node = getAdventureNode(adventure.mode, adventure.nodeIndex);
   if (node.type === "event") {
     return (
       <section className="page narrow-page event-page">
-        <ProgressHeader index={adventure.nodeIndex} />
+        <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} />
         <div className="event-sigil">♢</div>
         <p className="eyebrow">{node.eyebrow}</p>
         <h1>{node.title}</h1>
@@ -655,7 +725,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   };
   return (
     <section className={`combat-page compact-combat ${inspectedInfo ? "inspect-info-open" : ""}`}>
-      <ProgressHeader index={adventure.nodeIndex} />
+      <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
       <div className="compact-arena">
@@ -768,9 +838,13 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       {combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
         <VictoryScoreScreen
           reward={adventure.pendingReward}
+          encounterTitle={node.title}
           onCharacter={onCharacter}
+          onTalents={onTalents}
           onContinue={onContinue}
-          finalEncounter={adventure.nodeIndex === ADVENTURE.length - 1}
+          onLeaveTraining={onLeaveTraining}
+          finalEncounter={adventure.mode === "story" && adventure.nodeIndex === ADVENTURE.length - 1}
+          endless={adventure.mode === "endless"}
         />
       )}
       {combat.outcome === "defeat" && !sequencePending && (
@@ -788,11 +862,15 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   );
 }
 
-function VictoryScoreScreen({ reward, onCharacter, onContinue, finalEncounter }: {
+function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, onContinue, onLeaveTraining, finalEncounter, endless }: {
   reward: CombatReward;
+  encounterTitle: string;
   onCharacter: () => void;
+  onTalents: () => void;
   onContinue: () => void;
+  onLeaveTraining: () => void;
   finalEncounter: boolean;
+  endless: boolean;
 }) {
   const [displayedExperience, setDisplayedExperience] = useState(0);
   const displayedProgress = experienceProgressAfterGain(reward.levelBefore, reward.xpBefore, displayedExperience);
@@ -829,12 +907,12 @@ function VictoryScoreScreen({ reward, onCharacter, onContinue, finalEncounter }:
       <section className="victory-score-card">
         <header className="victory-score-heading">
           <span className="score-trophy"><Trophy size={25} /></span>
-          <div><p className="eyebrow">Encounter Complete</p><h2>{ADVENTURE[reward.nodeIndex].title}</h2></div>
+          <div><p className="eyebrow">Encounter Complete</p><h2>{encounterTitle}</h2></div>
         </header>
 
-        <div className="score-reward-totals">
+        <div className={`score-reward-totals ${reward.gold === 0 ? "single" : ""}`}>
           <span><Sparkles size={15} /><strong>+{reward.experience}</strong><small>Experience</small></span>
-          <span><GoldIcon /><strong>+{reward.gold}</strong><small>Gold</small></span>
+          {reward.gold > 0 && <span><GoldIcon /><strong>+{reward.gold}</strong><small>Gold</small></span>}
         </div>
 
         <div className="score-experience-panel">
@@ -862,8 +940,10 @@ function VictoryScoreScreen({ reward, onCharacter, onContinue, finalEncounter }:
 
         <div className="victory-score-actions">
           <button className="score-character-button" onClick={onCharacter}><UserRound size={16} /> View Character</button>
-          <button className="primary-button" onClick={onContinue}>{finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
+          <button className="score-character-button" onClick={onTalents}><CircleDot size={16} /> Talents & Abilities</button>
+          <button className="primary-button" onClick={onContinue}>{endless ? "Continue Training" : finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
+        {endless && <button className="text-button score-leave-training" onClick={onLeaveTraining}>Leave Training</button>}
       </section>
     </div>
   );
@@ -874,7 +954,10 @@ function RouteCard({ node, index }: { node: AdventureNode; index: number }) {
   return <article className={`route-card ${node.type}`}><span className="route-number">0{index + 1}</span><span className="route-icon">{icons[index]}</span><p className="eyebrow">{node.eyebrow}</p><h3>{node.title}</h3><p>{node.description}</p></article>;
 }
 
-function ProgressHeader({ index }: { index: number }) {
+function ProgressHeader({ index, mode }: { index: number; mode: AdventureMode }) {
+  if (mode === "endless") {
+    return <div className="journey-progress endless"><span>Shadow Proving Grounds</span><div className="journey-progress-track" aria-hidden="true"><i style={{ width: "100%" }} /></div><span>Fight {index + 1}</span></div>;
+  }
   const progress = ((index + 1) / ADVENTURE.length) * 100;
   return <div className="journey-progress"><span>The Ashen Road</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={ADVENTURE.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {ADVENTURE.length}</span></div>;
 }

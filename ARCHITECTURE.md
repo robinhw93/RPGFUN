@@ -286,7 +286,7 @@ Current milestones:
 
 ## Adventure and reward flow
 
-`AdventureProgress` stores carried Health independently of active combat.
+`AdventureProgress` stores the active adventure mode and carried Health independently of active combat. `story` uses the finite `ADVENTURE` node list; `endless` uses the dynamic Shadow Proving Grounds encounter.
 
 - `beginAdventure` creates the first combat at Max Health.
 - Victory triggers `grantCombatReward` through a React effect.
@@ -295,6 +295,8 @@ Current milestones:
 - Continuing carries final Health into the next combat or event.
 - The event modifies carried Health or talent points.
 - Completing the final node clears active combat and marks the adventure completed.
+
+The endless route generates two or three `dummy` enemy IDs before each travel transition, then reuses that exact group when creating combat so the encounter message and battlefield agree. It increments `nodeIndex` as an unbounded fight counter, restores the character to current Max Health, and never marks the adventure completed. `grantCombatReward` calculates the exact XP needed to cross two complete level thresholds from the character's current level and XP; normal story rewards still come from the node definition.
 
 Travel transitions are UI-only timing; they do not modify rules until `advanceJourney` executes.
 
@@ -349,6 +351,7 @@ The game save key is `emberfall-save-v1`.
 - Item metadata is hydrated from current definitions.
 - Invalid legacy Two-Hand plus Off Hand combinations are repaired.
 - Avatar, stat points, and pending rewards receive fallbacks.
+- Missing adventure mode is normalized to `story`.
 
 `ensureCombatState` performs the separate in-combat migration because combat definitions and animation fields evolve more frequently.
 

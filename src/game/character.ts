@@ -31,7 +31,7 @@ export const INITIAL_CHARACTER: CharacterState = {
 export const INITIAL_GAME: GameState = {
   characterCreated: false,
   character: INITIAL_CHARACTER,
-  adventure: { active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
+  adventure: { mode: "story", active: false, nodeIndex: 0, carryHp: null, combat: null, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
 };
 
 export interface DerivedStats extends Stats {

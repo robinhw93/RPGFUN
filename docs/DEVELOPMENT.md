@@ -286,6 +286,7 @@ Current migration behavior:
 - Hydrates armor material and weapon metadata from current item definitions.
 - Resolves legacy two-handed weapon values and moves an invalid Off Hand item into inventory.
 - Restores missing avatar, stat-point, pending-reward, initiative, cooldown, status, and combat-sequencing fields.
+- Restores a missing adventure mode as `story`; new saves may use `endless` for the Shadow Proving Grounds.
 
 ## UI conventions
 

@@ -58,6 +58,7 @@ export function loadGame(): GameState | null {
       },
       adventure: {
         ...state.adventure,
+        mode: state.adventure.mode ?? "story",
         pendingReward: state.adventure.pendingReward ?? null,
       },
     };

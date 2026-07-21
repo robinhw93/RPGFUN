@@ -13,6 +13,19 @@ export function experienceToNextLevel(level: number): number {
   return 100 + Math.max(0, level - 1) * 50;
 }
 
+/** Returns the exact XP required to gain a number of complete levels from the current progress. */
+export function experienceForLevelGains(level: number, xp: number, levels: number): number {
+  let required = 0;
+  let currentLevel = level;
+  let currentXp = Math.max(0, xp);
+  for (let gained = 0; gained < Math.max(0, levels); gained += 1) {
+    required += Math.max(0, experienceToNextLevel(currentLevel) - currentXp);
+    currentLevel += 1;
+    currentXp = 0;
+  }
+  return required;
+}
+
 export function addExperience(character: CharacterState, amount: number): ExperienceResult {
   const levelBefore = character.level;
   const xpBefore = character.xp;

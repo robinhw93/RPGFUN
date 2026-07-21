@@ -433,7 +433,10 @@ export interface CombatReward {
   levelsGained: number;
 }
 
+export type AdventureMode = "story" | "endless";
+
 export interface AdventureProgress {
+  mode: AdventureMode;
   active: boolean;
   nodeIndex: number;
   carryHp: number | null;

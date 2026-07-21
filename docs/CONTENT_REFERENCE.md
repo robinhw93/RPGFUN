@@ -184,6 +184,7 @@ All current enemies start combat with 10 Max Energy and regenerate 1 Energy on t
 
 | Enemy | Health | Power | Armor | Magic Resistance | Hit | Dodge | Cost | Attack |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| DUMMY | 100 | 1 | 0 | 0 | Guaranteed | 0% | 1 | Training Strike; 1 base Physical damage. |
 | Ash Hound | 28 | 7 | 1 | 0 | 95% | 8% | 3 | Raking Claws; Physical and applies Bleed when it deals Health damage. |
 | Cinder Cultist | 34 | 9 | 2 | 2 | 96% | 3% | 4 | Searing Brand; Arcane. |
 | Ember Wisp | 22 | 6 | 0 | 3 | 98% | 12% | 3 | Scorch; Arcane. |
@@ -197,6 +198,15 @@ All current enemies start combat with 10 Max Energy and regenerate 1 Energy on t
 | 2 | Event | The Forgotten Shrine | Rest for 24 Health, or lose 10 Health and gain 1 talent point. | Choice result only. |
 | 3 | Combat | The Charred Pilgrims | Cinder Cultist and Ember Wisp | 75 XP, 14 gold, loot roll. |
 | 4 | Boss | The Black Gate | The Ashen Warden | 125 XP, 32 gold, Warden's Broken Crown. |
+
+## Testing adventure: Shadow Proving Grounds
+
+| Property | Rule |
+| --- | --- |
+| Length | Endless; the fight counter has no maximum. |
+| Encounter | Randomly two or three DUMMIES each fight. |
+| Reward | The exact XP required for two complete levels; no gold or loot. |
+| Between fights | Restore full Health; Character, Talents, and Leave Training remain available from the score screen. |
 
 ## Equipment catalog
 

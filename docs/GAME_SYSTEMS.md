@@ -14,6 +14,19 @@ This document describes the rules currently implemented in Emberfall Chronicles.
 
 Death is permanent. When combat reaches defeat, the browser save is deleted. The defeat screen returns the player to character creation, and the previous character, equipment, talents, and adventure progress cannot be recovered through the game UI.
 
+### Shadow Proving Grounds
+
+The adventure screen also offers a separate endless testing route for developing and validating Shadow builds:
+
+- Every fight contains a newly randomized group of two or three DUMMIES.
+- Each DUMMY has 100 Health, no defense or Dodge, and a guaranteed-hit training attack with 1 base Physical damage.
+- Every victory awards exactly two complete levels, including six attribute points and two talent points.
+- Training victories award no gold or loot.
+- Health is restored to the character's current maximum before the next training fight.
+- The victory screen links directly to Character and Talents so the player can allocate points, unlock talents, and change the six equipped abilities before continuing.
+- Training can be left safely from the victory screen without losing the character or earned progression.
+- The route has no final encounter; its fight counter continues until the character dies or another adventure is started.
+
 ## Character creation and starting state
 
 Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect.

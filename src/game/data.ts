@@ -254,6 +254,7 @@ export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {
 });
 
 export const ENEMIES: Record<string, EnemyTemplate> = {
+  dummy: { id: "dummy", name: "DUMMY", title: "Training Construct", maxHp: 100, power: 1, armor: 0, magicResistance: 0, hitChance: 10, dodgeChance: 0, damageType: "physical", energyCost: 1, intentText: "Training Strike · 1 damage", attackDescription: "A harmless training strike that deals 1 base Physical Damage. Costs 1 Energy.", accent: "#a8a69d" },
   ashHound: { id: "ashHound", name: "Ash Hound", title: "Feral Beast", maxHp: 28, power: 7, armor: 1, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.08, damageType: "physical", energyCost: 3, intentText: "Raking Claws · 7 damage", attackDescription: "Rakes the target with ash-caked claws. Costs 3 Energy and applies Bleed when it deals damage.", onHitEffect: "bleed", accent: "#d47a43" },
   cinderCultist: { id: "cinderCultist", name: "Cinder Cultist", title: "Fanatic", maxHp: 34, power: 9, armor: 2, magicResistance: 2, hitChance: 0.96, dodgeChance: 0.03, damageType: "arcane", energyCost: 4, intentText: "Searing Brand · 9 damage", attackDescription: "Brands the target with a searing sigil. Costs 4 Energy.", accent: "#a46ad4" },
   emberWisp: { id: "emberWisp", name: "Ember Wisp", title: "Restless Flame", maxHp: 22, power: 6, armor: 0, magicResistance: 3, hitChance: 0.98, dodgeChance: 0.12, damageType: "arcane", energyCost: 3, intentText: "Scorch · 6 damage", attackDescription: "Releases a focused burst of living flame. Costs 3 Energy.", accent: "#d6ad53" },
@@ -320,3 +321,12 @@ export const ADVENTURE: AdventureNode[] = [
   { id: "pilgrims", type: "combat", eyebrow: "Encounter II", title: "The Charred Pilgrims", description: "A fanatic raises their torch as a living flame coils at their shoulder.", enemies: ["cinderCultist", "emberWisp"], reward: { experience: 75, gold: 14, loot: true } },
   { id: "gate", type: "boss", eyebrow: "Boss Encounter", title: "The Black Gate", description: "The Warden rises from its throne. Iron groans, and the road behind you disappears.", enemies: ["ashenWarden"], reward: { experience: 125, gold: 32, loot: true } },
 ];
+
+export const ENDLESS_ADVENTURE: AdventureNode = {
+  id: "shadow-proving-grounds",
+  type: "combat",
+  eyebrow: "Endless Training",
+  title: "Shadow Proving Grounds",
+  description: "Test your Shadow build against an endless sequence of training constructs.",
+  enemies: ["dummy", "dummy"],
+};
