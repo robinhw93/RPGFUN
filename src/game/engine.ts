@@ -19,7 +19,7 @@ import {
   isMagicalDamage,
   isStatusEffectId,
 } from "./statusEffects";
-import { getCharacterAbilityDescription, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
 import type { CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "./types";
 
@@ -928,7 +928,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const remainingCooldown = combat.abilityCooldowns?.[abilityId] ?? 0;
   if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0) return combat;
   const abilityIsFree = hasStatus(combat.playerStatuses, "distraction");
-  const effectiveEnergyCost = abilityIsFree ? 0 : ability.energyCost;
+  const modifiedEnergyCost = getCharacterAbilityEnergyCost(character, ability);
+  const effectiveEnergyCost = abilityIsFree ? 0 : modifiedEnergyCost;
   if (effectiveEnergyCost > combat.energy) return combat;
   const derived = getDerivedStats(character);
   const abilityModifiers = getCharacterAbilityModifiers(character, ability.id);
@@ -955,10 +956,11 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const pendingEffects: CombatPendingEffect[] = [];
   let energy = combat.energy - effectiveEnergyCost;
   let nextTurnEnergyRegenBonus = combat.nextTurnEnergyRegenBonus ?? 0;
-  let abilityCooldowns = ability.cooldownTurns
-    ? { ...(combat.abilityCooldowns ?? {}), [ability.id]: ability.cooldownTurns }
+  const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(character, ability);
+  let abilityCooldowns = effectiveCooldownTurns
+    ? { ...(combat.abilityCooldowns ?? {}), [ability.id]: effectiveCooldownTurns }
     : (combat.abilityCooldowns ?? {});
-  const abilityInfo: InspectableInfo = { title: ability.name, description: `${getCharacterAbilityDescription(character, ability)} Costs ${ability.energyCost} Energy.`, category: "ability" };
+  const abilityInfo: InspectableInfo = { title: ability.name, description: `${getCharacterAbilityDescription(character, ability)} Costs ${modifiedEnergyCost} Energy.`, category: "ability" };
   logs.push(makeLog(`You use ${ability.name}.`, abilityInfo));
   const abilityUseEventIndex = events.length;
   events.push(`You use ${ability.name}.`);
@@ -998,7 +1000,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
 
   if (ability.target === "self") {
     if (ability.effect === "reset_cooldowns") {
-      abilityCooldowns = ability.cooldownTurns ? { [ability.id]: ability.cooldownTurns } : {};
+      abilityCooldowns = effectiveCooldownTurns ? { [ability.id]: effectiveCooldownTurns } : {};
       logs.push(makeLog("Your ability cooldowns are reset.", abilityInfo));
       const resetEventIndex = events.length;
       events.push("Your ability cooldowns are reset.");

@@ -182,8 +182,9 @@ Ability modifiers target one or more ability IDs and currently support:
 - Status duration, magnitude, and expiration overrides.
 - Applying a new status after consuming another.
 - Retaining a ratio of stacks after detonation.
+- Changing Energy costs and cooldowns through additive integer deltas, clamped at zero.
 
-Each mechanical ability modifier may also provide a complete player-facing `descriptionOverride`. `getCharacterAbilityDescription` resolves the active character's modifiers and is the single presentation path used by combat hold-to-inspect tooltips, talent ability details, the loadout picker, and inspectable combat-log entries. A talent that changes an ability must update both its mechanical modifier fields and this effective description; UI components must not read the base `ability.description` directly for character-owned abilities.
+Each mechanical ability modifier may also provide a complete player-facing `descriptionOverride`. `getCharacterAbilityDescription` resolves description changes, while `getCharacterAbilityEnergyCost` and `getCharacterAbilityCooldownTurns` resolve numerical rule changes. Combat execution, action-queue projection, combat buttons, talent details, the loadout picker, and inspectable combat-log entries use these shared paths instead of reading character-owned base values directly.
 
 This is the preferred extension point for talents that transform an existing ability, such as Maneuvers, Reapply, Enduring Evasion, and Longevity.
 

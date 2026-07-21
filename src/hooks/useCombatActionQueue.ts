@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { ABILITIES } from "../game/data";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCost } from "../game/combatFeatures";
 import { endPlayerTurn, selectEnemyTarget, useAbility } from "../game/engine";
 import { isCombatSequencePending } from "../game/combatSequence";
 import type { CombatState, GameState } from "../game/types";
@@ -16,7 +17,7 @@ export interface CombatActionQueueProjection {
   closed: boolean;
 }
 
-export function projectCombatActionQueue(combat: CombatState, actions: QueuedCombatAction[]): CombatActionQueueProjection {
+export function projectCombatActionQueue(combat: CombatState, character: GameState["character"], actions: QueuedCombatAction[]): CombatActionQueueProjection {
   let energy = combat.energy;
   let nextAbilityIsFree = combat.playerStatuses.some((status) => status.id === "distraction")
     && !combat.pendingEffects.some((effect) => effect.type === "remove_status" && effect.targetId === "player" && effect.statusId === "distraction");
@@ -33,7 +34,7 @@ export function projectCombatActionQueue(combat: CombatState, actions: QueuedCom
     }
     const ability = ABILITIES[action.abilityId];
     if (!ability) return;
-    const cost = nextAbilityIsFree ? 0 : ability.energyCost;
+    const cost = nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCost(character, ability);
     energy = Math.max(0, energy - cost);
     nextAbilityIsFree = false;
     if (ability.energyRestorePercentOfMax) {
@@ -42,7 +43,7 @@ export function projectCombatActionQueue(combat: CombatState, actions: QueuedCom
       energy = Math.min(combat.maxEnergy, energy + 2);
     }
     if (ability.effect === "reset_cooldowns") cooldownAbilityIds.clear();
-    if (ability.cooldownTurns) cooldownAbilityIds.add(ability.id);
+    if (getCharacterAbilityCooldownTurns(character, ability) > 0) cooldownAbilityIds.add(ability.id);
   });
 
   return { energy, cooldownAbilityIds, nextAbilityIsFree, closed };
@@ -68,8 +69,8 @@ export function useCombatActionQueue(
       if (!combat || !ability || combat.outcome !== "active" || !combat.initiativeRevealed || activeActor?.kind !== "player") return current;
       if (!currentGame.character.equippedAbilities.includes(abilityId)) return current;
       if (combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep")) return current;
-      const projection = projectCombatActionQueue(combat, current);
-      const energyCost = projection.nextAbilityIsFree ? 0 : ability.energyCost;
+      const projection = projectCombatActionQueue(combat, currentGame.character, current);
+      const energyCost = projection.nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCost(currentGame.character, ability);
       if (projection.closed || projection.cooldownAbilityIds.has(abilityId) || energyCost > projection.energy) return current;
       nextActionId.current += 1;
       return [...current, { id: nextActionId.current, type: "ability", abilityId, targetId: combat.selectedEnemyId }];

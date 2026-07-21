@@ -167,6 +167,10 @@ export interface AbilityModifierDefinition {
   applyStatusAfterConsume?: { status: StatusEffectId; stacks?: number; duration?: number };
   detonationRetainedStackRatio?: number;
   statusConsumptionRatio?: number;
+  /** Added to the live Energy cost, then rounded and clamped to zero. */
+  energyCostDelta?: number;
+  /** Added to the live cooldown, then rounded and clamped to zero. */
+  cooldownTurnsDelta?: number;
 }
 
 export interface CombatFeatureBundle {

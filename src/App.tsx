@@ -13,7 +13,7 @@ import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } fr
 import { ABILITIES, ADVENTURE, ENDLESS_ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "./game/combatSequence";
-import { getCharacterAbilityDescription, getCharacterAbilityModifiers } from "./game/combatFeatures";
+import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
 import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
@@ -814,7 +814,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
     if (eventRevealsPlayerTurn(combat, eventIndex)) onPlayerTurnReady(eventId);
     onCombatEvent(eventId, eventIndex);
   };
-  const queueProjection = projectCombatActionQueue(combat, queuedActions);
+  const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
     <section className={`combat-page compact-combat ${inspectedInfo ? "inspect-info-open" : ""}`}>
@@ -916,9 +916,11 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           const selfRequirementMet = !ability.requiredSelfStatus
             || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
-          const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : ability.energyCost;
+          const modifiedEnergyCost = getCharacterAbilityEnergyCost(game.character, ability);
+          const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : modifiedEnergyCost;
+          const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(game.character, ability);
           const queuedCount = queuedActions.filter((action) => action.type === "ability" && action.abilityId === id).length;
-          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} cooldown={cooldown} queuedCount={queuedCount} disabled={playerInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={playerInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1753,7 +1755,7 @@ function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: (
   );
 }
 
-function HoldAbilityButton({ ability, description, energyCost, cooldown, queuedCount, disabled, onUse }: { ability: Ability; description: string; energyCost: number; cooldown: number; queuedCount: number; disabled: boolean; onUse: () => void }) {
+function HoldAbilityButton({ ability, description, energyCost, baseCooldown, cooldown, queuedCount, disabled, onUse }: { ability: Ability; description: string; energyCost: number; baseCooldown: number; cooldown: number; queuedCount: number; disabled: boolean; onUse: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -1795,15 +1797,15 @@ function HoldAbilityButton({ ability, description, energyCost, cooldown, queuedC
       onPointerCancel={endHold}
       onPointerLeave={endHold}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`${ability.name}, ${energyCost} Energy, ${ability.cooldownTurns ?? 0} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
+      aria-label={`${ability.name}, ${energyCost} Energy, ${baseCooldown} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
     >
       <span className="compact-ability-icon">{ability.icon}</span>
       <strong>{ability.name}</strong>
       <span className="compact-ability-cost">{energyCost}<Sparkles size={10} /></span>
-      <span className="compact-ability-cooldown-value"><Hourglass size={9} />{ability.cooldownTurns ?? 0}</span>
+      <span className="compact-ability-cooldown-value"><Hourglass size={9} />{baseCooldown}</span>
       {queuedCount > 0 && <span className="compact-ability-queued" aria-hidden="true">Queued{queuedCount > 1 ? ` ×${queuedCount}` : ""}</span>}
       {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true"><Hourglass size={15} /><b>{cooldown}</b></span>}
-      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{description}</small><em>{energyCost} Energy · {ability.cooldownTurns ? `${ability.cooldownTurns} turn cooldown` : "No cooldown"}</em></span>
+      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{description}</small><em>{energyCost} Energy · {baseCooldown ? `${baseCooldown} turn cooldown` : "No cooldown"}</em></span>
     </button>
   );
 }
@@ -2212,6 +2214,8 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
   const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
   const coreAbilities = talent.id === "origin" ? [ABILITIES.strike, ABILITIES.guard] : [];
   const abilityDescription = ability ? getCharacterAbilityDescription(character, ability) : null;
+  const abilityEnergyCost = ability ? getCharacterAbilityEnergyCost(character, ability) : 0;
+  const abilityCooldownTurns = ability ? getCharacterAbilityCooldownTurns(character, ability) : 0;
   const unlocked = character.unlockedTalents.includes(talent.id);
   const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
   const abilityEquipped = Boolean(ability && character.equippedAbilities.includes(ability.id));
@@ -2274,12 +2278,14 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
             {coreAbilities.map((coreAbility) => {
               const equipped = character.equippedAbilities.includes(coreAbility.id);
               const cannotEquip = !equipped && loadoutFull;
+              const energyCost = getCharacterAbilityEnergyCost(character, coreAbility);
+              const cooldownTurns = getCharacterAbilityCooldownTurns(character, coreAbility);
               return (
                 <section className="talent-core-ability" key={coreAbility.id}>
                   <div className="talent-core-ability-heading"><span aria-hidden="true">{coreAbility.icon}</span><strong>{coreAbility.name}</strong></div>
                   <div className="talent-ability-metrics">
-                    <span><small>Energy</small><strong>{coreAbility.energyCost}</strong></span>
-                    <span><small>Cooldown</small><strong>{coreAbility.cooldownTurns ? `${coreAbility.cooldownTurns} ${coreAbility.cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
+                    <span><small>Energy</small><strong>{energyCost}</strong></span>
+                    <span><small>Cooldown</small><strong>{cooldownTurns ? `${cooldownTurns} ${cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
                   </div>
                   <p>{getCharacterAbilityDescription(character, coreAbility)}</p>
                   <button type="button" disabled={locked || cannotEquip} onClick={() => onToggleAbility(coreAbility.id)}>{equipped ? "Unequip Ability" : cannotEquip ? "Loadout Full" : "Equip Ability"}</button>
@@ -2297,8 +2303,8 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
               </div>
             )}
             <div className="talent-ability-metrics">
-              <span><small>Energy</small><strong>{ability.energyCost}</strong></span>
-              <span><small>Cooldown</small><strong>{ability.cooldownTurns ? `${ability.cooldownTurns} ${ability.cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
+              <span><small>Energy</small><strong>{abilityEnergyCost}</strong></span>
+              <span><small>Cooldown</small><strong>{abilityCooldownTurns ? `${abilityCooldownTurns} ${abilityCooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
             </div>
             <div className="talent-detail-effect"><small>Ability Effect</small><p>{abilityDescription}</p></div>
             {talent.kind === "class" && <div className="talent-detail-effect"><small>Passive Bonus</small><p>{classBonus}</p></div>}
@@ -2358,6 +2364,8 @@ function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
         <div className="ability-slot-picker-list">
           {abilities.map((ability) => {
             const abilityDescription = getCharacterAbilityDescription(character, ability);
+            const energyCost = getCharacterAbilityEnergyCost(character, ability);
+            const cooldownTurns = getCharacterAbilityCooldownTurns(character, ability);
             const equippedSlot = character.equippedAbilities.indexOf(ability.id);
             const equippedHere = equippedSlot === slotIndex;
             const occupiedTarget = currentAbilityId !== null;
@@ -2377,7 +2385,7 @@ function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
               >
                 <span className="ability-slot-picker-icon" aria-hidden="true">{ability.icon}</span>
                 <span className="ability-slot-picker-info"><strong>{ability.name}</strong><small>{abilityDescription}</small></span>
-                <span className="ability-slot-picker-metrics"><small>{ability.energyCost} Energy</small><small>{ability.cooldownTurns ?? 0} CD</small><em>{slotLabel}</em></span>
+                <span className="ability-slot-picker-metrics"><small>{energyCost} Energy</small><small>{cooldownTurns} CD</small><em>{slotLabel}</em></span>
               </button>
             );
           })}

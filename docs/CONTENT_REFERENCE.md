@@ -40,8 +40,8 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Light Speed | 6 | 5 | Enemy | Deals 50% Physical Power as Physical damage plus 100% Magical Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
 | Chain Assassination | 5 | 3 | Enemy | Deals 125% Physical Power and gains +25% Critical Strike Chance while Stealthed. A kill refunds the Energy actually spent and resets its cooldown. |
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
-| Epidemic | 3 | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
-| Voltage Stab | 0 | 2 | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
+| Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
+| Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -58,7 +58,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 80 nodes: the origin, three first-direction class nodes, and 76 later Shadow nodes. Branch counts are Shadow 77, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 82 nodes: the origin, three first-direction class nodes, and 78 later Shadow nodes. Branch counts are Shadow 79, Arcanist 1, and Brute 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -144,6 +144,8 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_74 | Calculated Strikes | Passive | Break | Any | +2% Hit Chance. |
 | talent_75 | Mischief | Passive | Calculated Strikes | Any | Stunning an enemy deals damage equal to 10% of its current Health. |
 | talent_76 | Regenerating Toxin | Passive | Mischief | Any | Neurotoxin consumes only 50% of the target's Poison. |
+| talent_77 | New Current | Passive | Voltage Stab | Any | Reduces Voltage Stab's cooldown by 1 turn. |
+| talent_78 | Efficient Spread | Passive | Epidemic | Any | Reduces Epidemic's Energy cost by 1. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 

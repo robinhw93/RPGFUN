@@ -196,6 +196,8 @@ Voltage Stab deals Lightning damage from Magical Power. If the target was alread
 
 Epidemic applies 10 Poison to every living, targetable enemy and then grants Stealth until the end of the player's next turn.
 
+New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread reduces Epidemic's Energy cost from 3 to 2. Ability cost and cooldown modifiers are additive, use whole numbers, and cannot reduce either value below zero.
+
 At the end of the player's turn, Poison resolves and normal status durations decrease.
 
 Stunned always has one stack. Applying Stunned again can never increase its stack count.

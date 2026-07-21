@@ -235,9 +235,10 @@ Ability modifiers can currently:
 - Apply a status after consuming another status.
 - Retain a ratio of status stacks after detonation.
 - Override the fraction of target-status stacks consumed by supported abilities.
+- Add integer deltas to Energy cost or cooldown, clamped at zero.
 - Replace the player-facing ability description while the modifier is active.
 
-Use these for talents that alter an existing ability rather than branching the engine on a talent ID. Every modifier that changes what the player should expect must define a matching `descriptionOverride`; otherwise the mechanics and tooltip can disagree.
+Use these for talents that alter an existing ability rather than branching the engine on a talent ID. A modifier that changes the ability's prose must define a matching `descriptionOverride`; Energy and cooldown modifiers are shown through the shared effective-value helpers instead.
 
 Abilities can also declare reusable `selfStatusApplications` and `conditionalSelfEffects`. Conditional self effects currently check for a status on the struck target and can restore a percentage of Max Health or add temporary Energy regeneration for the player's next turn. Keep these rules on the ability definition instead of checking ability IDs in the engine.
 
@@ -258,6 +259,7 @@ The editor supports:
 - Ability-ID references, Energy cost, cooldown turns, and free-form effect/proc notes.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
+- Separate content and layout signatures. Canonical content updates preserve local placement, while an intentional canonical layout update migrates the canvas, positions, connections, icons, and shapes in an existing saved draft once.
 - Toggleable snap-to-grid.
 - Pan, zoom from 15% to 200%, and fit-to-view.
 - Automatic canvas growth near every edge while preserving fixed world-grid spacing.

@@ -252,6 +252,18 @@ export function getCharacterAbilityModifiers(character: CharacterState, abilityI
   return getCharacterCombatFeatures(character).abilityModifiers.filter((modifier) => modifier.abilityIds.includes(abilityId));
 }
 
+export function getCharacterAbilityEnergyCost(character: CharacterState, ability: Ability): number {
+  const delta = getCharacterAbilityModifiers(character, ability.id)
+    .reduce((total, modifier) => total + (modifier.energyCostDelta ?? 0), 0);
+  return Math.max(0, Math.round(ability.energyCost + delta));
+}
+
+export function getCharacterAbilityCooldownTurns(character: CharacterState, ability: Ability): number {
+  const delta = getCharacterAbilityModifiers(character, ability.id)
+    .reduce((total, modifier) => total + (modifier.cooldownTurnsDelta ?? 0), 0);
+  return Math.max(0, Math.round((ability.cooldownTurns ?? 0) + delta));
+}
+
 export function getCharacterAbilityDescription(character: CharacterState, ability: Ability): string {
   const modifiers = getCharacterAbilityModifiers(character, ability.id);
   const description = modifiers.reduce(
