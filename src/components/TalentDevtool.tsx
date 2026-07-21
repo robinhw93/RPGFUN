@@ -64,6 +64,7 @@ interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passive
 
 interface TalentDraft {
   version: 1;
+  sourceSignature: string;
   canvas: { width: number; height: number };
   grid: { x: number; y: number };
   nodes: TalentDraftNode[];
@@ -131,35 +132,63 @@ function abilityNumbers(abilityId: string, effectNotes: string, energyCost?: num
   };
 }
 
-function createInitialDraft(): TalentDraft {
-  return ensureCanvasRoom({
-    version: 1,
-    canvas: { width: TALENT_TREE_CANVAS.width, height: TALENT_TREE_CANVAS.height },
-    grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
-    nodes: TALENTS.map((talent) => {
-      const ability = talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
-      return {
-        id: talent.id,
-        name: talent.name,
-        description: talent.description,
-        branch: talent.branch,
-        kind: talent.kind,
-        cost: talent.cost,
-        requires: [...talent.requires],
-        position: { ...talent.position },
-        icon: talent.icon,
-        shape: talent.shape,
-        passiveBonuses: passiveBonusesFromTalent(talent),
-        abilityId: talent.abilityId ?? "",
-        abilityEnergyCost: talent.abilityEnergyCost ?? ability?.energyCost ?? 0,
-        abilityCooldownTurns: talent.abilityCooldownTurns ?? ability?.cooldownTurns ?? 0,
-        effectNotes: talent.effectNotes ?? "",
-      };
-    }),
+function createGameDataNodes(): TalentDraftNode[] {
+  return TALENTS.map((talent) => {
+    const ability = talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
+    return {
+      id: talent.id,
+      name: talent.name,
+      description: talent.description,
+      branch: talent.branch,
+      kind: talent.kind,
+      cost: talent.cost,
+      requires: [...talent.requires],
+      position: { ...talent.position },
+      icon: talent.icon,
+      shape: talent.shape,
+      passiveBonuses: passiveBonusesFromTalent(talent),
+      abilityId: talent.abilityId ?? "",
+      abilityEnergyCost: talent.abilityEnergyCost ?? ability?.energyCost ?? 0,
+      abilityCooldownTurns: talent.abilityCooldownTurns ?? ability?.cooldownTurns ?? 0,
+      effectNotes: talent.effectNotes ?? "",
+    };
   });
 }
 
-function isStoredTalentDraft(value: unknown): value is { version: 1; canvas?: { width: number; height: number }; grid?: { x: number; y: number }; nodes: LegacyTalentDraftNode[] } {
+function getGameDataSignature(nodes: TalentDraftNode[]): string {
+  const content = JSON.stringify(nodes.map((node) => ({
+    id: node.id,
+    name: node.name,
+    description: node.description,
+    branch: node.branch,
+    kind: node.kind,
+    cost: node.cost,
+    passiveBonuses: node.passiveBonuses,
+    abilityId: node.abilityId,
+    abilityEnergyCost: node.abilityEnergyCost,
+    abilityCooldownTurns: node.abilityCooldownTurns,
+    effectNotes: node.effectNotes,
+  })));
+  let hash = 2166136261;
+  for (let index = 0; index < content.length; index += 1) {
+    hash ^= content.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function createInitialDraft(): TalentDraft {
+  const nodes = createGameDataNodes();
+  return ensureCanvasRoom({
+    version: 1,
+    sourceSignature: getGameDataSignature(nodes),
+    canvas: { width: TALENT_TREE_CANVAS.width, height: TALENT_TREE_CANVAS.height },
+    grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
+    nodes,
+  });
+}
+
+function isStoredTalentDraft(value: unknown): value is { version: 1; sourceSignature?: string; canvas?: { width: number; height: number }; grid?: { x: number; y: number }; nodes: LegacyTalentDraftNode[] } {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<TalentDraft>;
   return candidate.version === 1 && Array.isArray(candidate.nodes) && candidate.nodes.every((node) => (
@@ -168,7 +197,7 @@ function isStoredTalentDraft(value: unknown): value is { version: 1; canvas?: { 
   ));
 }
 
-function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: number }; grid?: { x: number; y: number }; nodes: LegacyTalentDraftNode[] }): TalentDraft {
+function normalizeDraft(draft: { version: 1; sourceSignature?: string; canvas?: { width: number; height: number }; grid?: { x: number; y: number }; nodes: LegacyTalentDraftNode[] }): TalentDraft {
   const canvas = {
     width: Math.max(DEFAULT_CANVAS_WIDTH, Number(draft.canvas?.width) || DEFAULT_CANVAS_WIDTH),
     height: Math.max(DEFAULT_CANVAS_HEIGHT, Number(draft.canvas?.height) || DEFAULT_CANVAS_HEIGHT),
@@ -176,6 +205,7 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
   const repairChangedGrid = Boolean(draft.canvas && !draft.grid);
   return ensureCanvasRoom({
     version: 1,
+    sourceSignature: draft.sourceSignature ?? "",
     canvas,
     grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
     nodes: draft.nodes.map((node) => {
@@ -205,6 +235,38 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
       };
     }),
   });
+}
+
+function syncDraftWithGameData(draft: TalentDraft): TalentDraft {
+  const gameNodes = createGameDataNodes();
+  const sourceSignature = getGameDataSignature(gameNodes);
+  if (draft.sourceSignature === sourceSignature) return draft;
+
+  const gameNodesById = new Map(gameNodes.map((node) => [node.id, node]));
+  const draftNodeIds = new Set(draft.nodes.map((node) => node.id));
+  const syncedNodes = draft.nodes.map((node) => {
+    const gameNode = gameNodesById.get(node.id);
+    if (!gameNode) return node;
+    return {
+      ...node,
+      name: gameNode.name,
+      description: gameNode.description,
+      branch: gameNode.branch,
+      kind: gameNode.kind,
+      cost: gameNode.cost,
+      passiveBonuses: gameNode.passiveBonuses,
+      abilityId: gameNode.abilityId,
+      abilityEnergyCost: gameNode.abilityEnergyCost,
+      abilityCooldownTurns: gameNode.abilityCooldownTurns,
+      effectNotes: gameNode.effectNotes,
+    };
+  });
+
+  gameNodes.forEach((node) => {
+    if (!draftNodeIds.has(node.id)) syncedNodes.push(node);
+  });
+
+  return ensureCanvasRoom({ ...draft, sourceSignature, nodes: syncedNodes });
 }
 
 function ensureCanvasRoom(draft: TalentDraft): TalentDraft {
@@ -258,7 +320,8 @@ function loadDraft(): TalentDraft {
   try {
     const stored = window.localStorage.getItem(TALENT_DRAFT_STORAGE_KEY);
     const parsed: unknown = stored ? JSON.parse(stored) : null;
-    return normalizeUndirectedConnections(isStoredTalentDraft(parsed) ? normalizeDraft(parsed) : createInitialDraft());
+    const loaded = isStoredTalentDraft(parsed) ? syncDraftWithGameData(normalizeDraft(parsed)) : createInitialDraft();
+    return normalizeUndirectedConnections(loaded);
   } catch {
     return createInitialDraft();
   }
