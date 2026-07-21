@@ -295,10 +295,12 @@ Current migration behavior:
 - Use `data-game-tooltip` for custom hover/keyboard hints.
 - Use game-owned modals for detailed touch/click inspection.
 - Tap uses an ability; long-press shows its explanation without firing it.
+- Combat ability cards show their content icon, Energy cost, and base cooldown; do not reintroduce keyboard-slot numbers into the card corner.
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
 - Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Magical Power**.
+- Preload and decode Character-screen avatars, gear icons, and stat icons before rendering that screen. Use the game-owned loading state instead of allowing individual icons to pop in.
 - Keep combat usable without page scrolling on mobile.
 
 ## Verification checklist

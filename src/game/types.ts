@@ -341,10 +341,17 @@ export interface TurnOrderEntry {
   initiative: number;
 }
 
+export interface CombatStatusAnimation {
+  id: string;
+  statusId: StatusEffectId;
+  targetId: "player" | string;
+  sourceTargetId?: "player" | string;
+}
+
 export type CombatPendingEffect =
   | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
-  | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean }
+  | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
@@ -365,6 +372,7 @@ export interface CombatState {
   deathPreventionUsed: boolean;
   nextTurnEnergyRegenBonus: number;
   damagedTargets: string[];
+  statusAnimations: CombatStatusAnimation[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;
   attackEffectId: string | null;

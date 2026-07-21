@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Backpack, BatteryLow, Bolt, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
-  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
+  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
-import { GearSlotIcon } from "./components/GearSlotIcon";
+import { GEAR_ICON_URLS, GearSlotIcon } from "./components/GearSlotIcon";
 import { TalentDevtool, TalentDevtoolAccessDialog } from "./components/TalentDevtool";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
 import { ABILITIES, ADVENTURE, ENDLESS_ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -94,11 +94,43 @@ const DERIVED_STAT_ICON_URLS: Record<DerivedStatIconName, string> = {
 const STAT_ICON_URLS: Record<StatIconName, string> = { ...ATTRIBUTE_ICON_URLS, ...DERIVED_STAT_ICON_URLS };
 
 function StatIcon({ stat }: { stat: StatIconName }) {
-  return <img className="stat-icon" src={STAT_ICON_URLS[stat]} alt="" aria-hidden="true" draggable={false} />;
+  return <img className="stat-icon" src={STAT_ICON_URLS[stat]} alt="" aria-hidden="true" draggable={false} decoding="sync" />;
 }
 
 function GoldIcon() {
-  return <img className="gold-icon" src="/assets/resource-icons/gold.png" alt="" aria-hidden="true" draggable={false} />;
+  return <img className="gold-icon" src="/assets/resource-icons/gold.png" alt="" aria-hidden="true" draggable={false} decoding="sync" />;
+}
+
+const IMAGE_PRELOAD_CACHE = new Map<string, Promise<void>>();
+
+function preloadImage(url: string): Promise<void> {
+  const cached = IMAGE_PRELOAD_CACHE.get(url);
+  if (cached) return cached;
+  const promise = new Promise<void>((resolve) => {
+    const image = new Image();
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (typeof image.decode === "function") image.decode().catch(() => undefined).finally(resolve);
+      else resolve();
+    };
+    image.onload = finish;
+    image.onerror = finish;
+    image.src = url;
+    if (image.complete) finish();
+  });
+  IMAGE_PRELOAD_CACHE.set(url, promise);
+  return promise;
+}
+
+function preloadCharacterAssets(avatarUrl: string): Promise<void[]> {
+  return Promise.all([...new Set([
+    avatarUrl,
+    ...Object.values(STAT_ICON_URLS),
+    ...GEAR_ICON_URLS,
+    "/assets/resource-icons/gold.png",
+  ])].map(preloadImage));
 }
 
 function getAdventureNode(mode: AdventureMode, index: number): AdventureNode {
@@ -184,6 +216,7 @@ function App() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [devtoolUnlocked, setDevtoolUnlocked] = useState(false);
+  const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
   const travelTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatSequencer = useCombatEventSequencer(game, setGame);
@@ -209,6 +242,14 @@ function App() {
     return () => document.body.classList.remove("character-creation-open");
   }, [game.characterCreated]);
   useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
+  useEffect(() => {
+    let cancelled = false;
+    setCharacterAssetsReady(false);
+    preloadCharacterAssets(getCharacterAvatar(game.character.avatarId).imageUrl).then(() => {
+      if (!cancelled) setCharacterAssetsReady(true);
+    });
+    return () => { cancelled = true; };
+  }, [game.character.avatarId]);
 
   const navigate = (next: View) => {
     if (view === "talentDevtool" && next !== "talentDevtool") setDevtoolUnlocked(false);
@@ -513,7 +554,9 @@ function App() {
             onCharacter={() => navigate("character")}
           />
         )}
-        {view === "character" && <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />}
+        {view === "character" && (characterAssetsReady
+          ? <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+          : <CharacterLoadingScreen />)}
         {view === "talents" && <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} />}
         {view === "talentDevtool" && devtoolUnlocked && <TalentDevtool onExit={() => navigate("talents")} />}
       </main>
@@ -715,6 +758,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
 
   const combat = adventure.combat!;
   const damagedTargets = combat.damagedTargets ?? [];
+  const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
+  const poisonPulseTargets = new Set(poisonAnimations.map((animation) => animation.targetId));
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
   const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep");
@@ -731,7 +776,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
       <div className="compact-arena">
         <article
           key="player"
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""}`}
+          data-combatant-id="player"
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""}`}
         >
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
@@ -749,11 +795,12 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
             return (
             <article
               key={enemy.instanceId}
+              data-combatant-id={enemy.instanceId}
               role="button"
               tabIndex={targetable ? 0 : -1}
               aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? "attacking-left" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? "attacking-left" : ""} ${poisonPulseTargets.has(enemy.instanceId) ? "poison-applied" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -778,10 +825,12 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         </div>
       </div>
 
+      {poisonAnimations.filter((animation) => animation.sourceTargetId).map((animation) => <PoisonTransferAnimation key={animation.id} animation={animation} />)}
+
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
       <div className="compact-ability-grid">
-        {game.character.equippedAbilities.map((id, index) => {
+        {game.character.equippedAbilities.map((id) => {
           const ability = ABILITIES[id];
           const cooldown = combat.abilityCooldowns?.[id] ?? 0;
           const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
@@ -795,7 +844,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
             || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
           const effectiveEnergyCost = combat.playerStatuses.some((status) => status.id === "distraction") ? 0 : ability.energyCost;
-          return <HoldAbilityButton key={id} ability={ability} energyCost={effectiveEnergyCost} index={index} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || effectiveEnergyCost > combat.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} energyCost={effectiveEnergyCost} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || effectiveEnergyCost > combat.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1042,12 +1091,15 @@ function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplet
         <p className="eyebrow">Combat Begins</p>
         <h2>{phase === "rolling" ? "Rolling Initiative" : phase === "landed" ? "Rolls Locked" : phase === "bonus" ? "Applying Bonuses" : "Turn Order"}</h2>
         <p className="initiative-caption" aria-live="polite">{phase === "rolling" ? "The D100 counters are racing." : phase === "landed" ? "\u00A0" : phase === "bonus" ? "Initiative bonuses are now added." : "Highest initiative acts first."}</p>
-        <div className="initiative-contestants" style={landingRect ? {
-          "--initiative-target-top": `${landingRect.top}px`,
-          "--initiative-target-left": `${landingRect.left}px`,
-          "--initiative-target-width": `${landingRect.width}px`,
-          "--initiative-target-height": `${landingRect.height}px`,
-        } as React.CSSProperties : undefined}>
+        <div className="initiative-contestants" style={{
+          "--initiative-count": participants.length,
+          ...(landingRect ? {
+            "--initiative-target-top": `${landingRect.top}px`,
+            "--initiative-target-left": `${landingRect.left}px`,
+            "--initiative-target-width": `${landingRect.width}px`,
+            "--initiative-target-height": `${landingRect.height}px`,
+          } : {}),
+        } as React.CSSProperties}>
           {participants.map((actor, index) => {
             const geometry = flightGeometry[actor.actorId];
             return (
@@ -1103,6 +1155,41 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
         })}
       </div>
     </div>
+  );
+}
+
+function PoisonTransferAnimation({ animation }: { animation: CombatStatusAnimation }) {
+  const [path, setPath] = useState<{ left: number; top: number; x: number; y: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!animation.sourceTargetId) return;
+    const combatants = [...document.querySelectorAll<HTMLElement>("[data-combatant-id]")];
+    const source = combatants.find((element) => element.dataset.combatantId === animation.sourceTargetId);
+    const target = combatants.find((element) => element.dataset.combatantId === animation.targetId);
+    if (!source || !target) return;
+    const sourceAnchor = source.querySelector<HTMLElement>(".status-poison") ?? source.querySelector<HTMLElement>(".compact-status-row") ?? source;
+    const targetAnchor = target.querySelector<HTMLElement>(".status-poison") ?? target.querySelector<HTMLElement>(".compact-status-row") ?? target;
+    const sourceRect = sourceAnchor.getBoundingClientRect();
+    const targetRect = targetAnchor.getBoundingClientRect();
+    const sourceX = sourceRect.left + sourceRect.width / 2;
+    const sourceY = sourceRect.top + sourceRect.height / 2;
+    setPath({
+      left: sourceX - 12,
+      top: sourceY - 12,
+      x: targetRect.left + targetRect.width / 2 - sourceX,
+      y: targetRect.top + targetRect.height / 2 - sourceY,
+    });
+  }, [animation.id, animation.sourceTargetId, animation.targetId]);
+
+  if (!path) return null;
+  return (
+    <span
+      className="poison-transfer-animation"
+      style={{ left: path.left, top: path.top, "--poison-transfer-x": `${path.x}px`, "--poison-transfer-y": `${path.y}px` } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      <FlaskConical size={13} />
+    </span>
   );
 }
 
@@ -1254,7 +1341,7 @@ function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: (
   );
 }
 
-function HoldAbilityButton({ ability, energyCost, index, cooldown, disabled, onUse }: { ability: Ability; energyCost: number; index: number; cooldown: number; disabled: boolean; onUse: () => void }) {
+function HoldAbilityButton({ ability, energyCost, cooldown, disabled, onUse }: { ability: Ability; energyCost: number; cooldown: number; disabled: boolean; onUse: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -1296,15 +1383,25 @@ function HoldAbilityButton({ ability, energyCost, index, cooldown, disabled, onU
       onPointerCancel={endHold}
       onPointerLeave={endHold}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`${ability.name}, ${energyCost} Energy${cooldown > 0 ? `, ${cooldown} turn cooldown remaining` : ""}. Hold for details.`}
+      aria-label={`${ability.name}, ${energyCost} Energy, ${ability.cooldownTurns ?? 0} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
     >
-      <span className="compact-ability-key">{index + 1}</span>
       <span className="compact-ability-icon">{ability.icon}</span>
       <strong>{ability.name}</strong>
       <span className="compact-ability-cost">{energyCost}<Sparkles size={10} /></span>
-      {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true">{cooldown}</span>}
-      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{energyCost} Energy{ability.cooldownTurns ? ` · ${ability.cooldownTurns} turn cooldown` : ""}</em></span>
+      <span className="compact-ability-cooldown-value"><Hourglass size={9} />{ability.cooldownTurns ?? 0}</span>
+      {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true"><Hourglass size={15} /><b>{cooldown}</b></span>}
+      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{energyCost} Energy · {ability.cooldownTurns ? `${ability.cooldownTurns} turn cooldown` : "No cooldown"}</em></span>
     </button>
+  );
+}
+
+function CharacterLoadingScreen() {
+  return (
+    <section className="character-loading-screen" role="status" aria-live="polite">
+      <span className="character-loading-sigil"><Shield /></span>
+      <p className="eyebrow">Preparing Character</p>
+      <h1>Gathering your equipment…</h1>
+    </section>
   );
 }
 
@@ -1386,7 +1483,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
           <div className="panel-title"><span><Shield size={17} /> Equipment</span></div>
           <div className="equipment-paper-doll">
             <div className="character-silhouette" aria-hidden="true">
-              <img src={avatar.imageUrl} alt="" draggable={false} />
+              <img src={avatar.imageUrl} alt="" draggable={false} decoding="sync" />
             </div>
             {EQUIPMENT_SLOT_ORDER.map((slot) => {
               const item = character.equipment[slot];
@@ -1656,6 +1753,7 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
   const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
   const abilityEquipped = Boolean(ability && character.equippedAbilities.includes(ability.id));
   const loadoutFull = character.equippedAbilities.length >= 6;
+  const classBonus = talent.kind === "class" ? talent.description.replace(/\s*Unlocks?[^.]*\.?$/i, "").trim() : talent.description;
   const requiredNames = getTalentConnectionIds(talent.id, TALENTS)
     .filter((id) => !character.unlockedTalents.includes(id))
     .map((id) => TALENTS.find((candidate) => candidate.id === id)?.name ?? id);
@@ -1708,12 +1806,19 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
         </div>
         {ability ? (
           <>
+            {talent.kind === "class" && (
+              <div className="talent-ability-grant">
+                <small>Ability Granted</small>
+                <strong><span aria-hidden="true">{ability.icon}</span>{ability.name}</strong>
+                <p>Unlocking this class node permanently adds this ability to your available loadout.</p>
+              </div>
+            )}
             <div className="talent-ability-metrics">
               <span><small>Energy</small><strong>{ability.energyCost}</strong></span>
               <span><small>Cooldown</small><strong>{ability.cooldownTurns ? `${ability.cooldownTurns} ${ability.cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
             </div>
-            {talent.kind === "class" && <div className="talent-detail-effect"><small>Class Bonus</small><p>{talent.description}</p></div>}
-            <div className="talent-detail-effect"><small>Effect</small><p>{ability.description}</p></div>
+            {talent.kind === "class" && <div className="talent-detail-effect"><small>Class Bonus</small><p>{classBonus}</p></div>}
+            <div className="talent-detail-effect"><small>Ability Effect</small><p>{ability.description}</p></div>
           </>
         ) : <div className="talent-detail-effect"><small>Effect</small><p>{talent.description}</p></div>}
         <div className="talent-detail-actions">

@@ -45,6 +45,14 @@ const TWO_HAND_ICON_URLS: Partial<Record<WeaponKind, string>> = {
   polearm: "/assets/gear-icons/twohand-polearm.webp",
 };
 
+export const GEAR_ICON_URLS = [...new Set([
+  ...Object.values(ARMOR_ICON_URLS).flatMap((icons) => Object.values(icons)),
+  ...Object.values(MAIN_HAND_ICON_URLS),
+  ...Object.values(OFF_HAND_ICON_URLS),
+  ...Object.values(TWO_HAND_ICON_URLS),
+  "/assets/gear-icons/ring.webp",
+].filter((url): url is string => Boolean(url)))];
+
 function resolveGearIconUrl(slot: GearSlot | GearType, item?: GearItem): string {
   const itemSlot = item?.slot ?? slot;
   if (itemSlot === "ring" || itemSlot === "ring1" || itemSlot === "ring2") return "/assets/gear-icons/ring.webp";
@@ -74,7 +82,7 @@ export function GearSlotIcon({ slot, item, size = 24, className }: {
       width={size}
       height={size}
       draggable={false}
-      decoding="async"
+      decoding="sync"
     />
   );
 }

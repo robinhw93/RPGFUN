@@ -158,6 +158,8 @@ The result has a minimum of 1 before critical and status modifiers. Guard then a
 
 The initiative UI rapidly cycles random values, locks the raw rolls, applies bonuses, then animates the final cards into the turn-order row. The current timing values are documented in [Architecture](../ARCHITECTURE.md#initiative-presentation).
 
+Every contestant remains in one responsive row throughout the presentation. Cards size themselves for the available viewport before shrinking and flying into their exact turn-order positions.
+
 ### Player turn
 
 At the start of the player's turn:
@@ -218,6 +220,8 @@ This sequencing guarantees that:
 - Damage appears when the attack lands.
 - HP bars animate from the old value to the new value.
 - Statuses appear with the message that applies them.
+- Enemies pulse green once when Poison is applied.
+- Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
 - The turn-order highlight moves when the turn message is shown.
 - Victory waits for the final death result and the **Victory.** message before the score screen appears.
 

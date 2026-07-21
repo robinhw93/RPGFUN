@@ -244,6 +244,8 @@ Each pending effect has an `eventIndex` into `floatingEvents`:
 
 When `FloatingCombatText` reveals an index, the sequencer resolves all effects attached to that index.
 
+Resolved status effects also produce short-lived `statusAnimations` presentation metadata. Poison uses it to pulse the receiving combatant green. Contagion includes the source combatant ID on its queued status effect, allowing the UI to measure the live source and destination icons and animate a copied Poison icon between them without coupling animation code to combat rules.
+
 ### Direct-attack two-phase contract
 
 Direct attack damage has two presentation phases:
@@ -283,6 +285,8 @@ Current milestones:
 | Initiative presentation complete | 7600 ms |
 
 `initiativeLayout.ts` measures real source and target rectangles. FLIP transforms include translation and scale from the source card to its final turn-order slot. This avoids the desktop-only snap/shrink bug caused by assuming natural row widths.
+
+The initiative grid receives the live combatant count through a CSS variable. Two to four contestant cards therefore resize into one row before the FLIP flight begins, including three-enemy encounters on narrow screens.
 
 ## Adventure and reward flow
 
@@ -371,6 +375,8 @@ On defeat, `clearSave` runs instead of `saveGame`. Reset also clears the save an
 - Combat must remain usable without page scrolling at mobile breakpoints.
 - Dead enemy cards remain mounted, grayed out, and untargetable.
 - Armor is a derived defense, not a visible combat status icon.
+- Character-screen raster assets are decoded through a shared preload cache before the screen renders; a game-owned loading screen covers a cold cache.
+- Combat ability cards always show their content icon, Energy cost, and base cooldown with an hourglass. Keyboard-slot numbers are not displayed.
 - Status duration rings always reserve three fixed segments; elapsed segments become empty.
 - Animations that land on persistent UI must measure real destination geometry.
 
