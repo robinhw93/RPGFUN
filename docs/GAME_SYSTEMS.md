@@ -234,7 +234,7 @@ Barrier is a visible, stackable absorption buff that lasts three turns. Its stac
 
 An ability marked to ignore absorption, currently Sharpened Blade, bypasses both Guard and Barrier without consuming either status.
 
-Avoidance reduces all incoming direct and status damage by 5% per currently unspent Energy. The multiplier is recalculated whenever damage resolves, so spending Energy also reduces its protection.
+Avoidance reduces all incoming direct and status damage by 3% per currently unspent Energy. The multiplier is recalculated whenever damage resolves, so spending Energy also reduces its protection.
 
 ## Status system
 
@@ -264,7 +264,7 @@ Burn per stack   = 3 + source Magical Power × 0.30
 - Burn triggers at the start of each afflicted combatant's turn.
 - Bleed is Physical damage, Poison is Arcane damage, and Burn is Fire damage.
 - The status stores the applier's power when applied; later stat changes do not rewrite an existing status's source power.
-- Player Poison damage can be modified by talent bonuses such as Potency.
+- Player Poison damage can be modified by talent bonuses such as Toxicology and Virulence.
 - Leech restores Health equal to 5% of actual Health damage dealt by player-applied Poison ticks or detonations, rounded up and limited by missing Health.
 
 Regenerate uses:

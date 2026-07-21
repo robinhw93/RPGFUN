@@ -27,7 +27,7 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Venomborn | 2 | 6 | Poisoned enemy | Consumes Poison and heals the player for three turns of that Poison's current damage. |
 | Lightning Strike | 5 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Magical Power as Lightning damage, then applies Electrified for three turns. |
 | Focus | 1 | 6 | Self | Resets every other ability cooldown. Focus keeps its own cooldown. |
-| Recouperate | 1 | 4 | Self | Restores 50% of Max Energy after paying its Energy cost. |
+| Recuperate | 1 | 4 | Self | Restores 50% of Max Energy after paying its Energy cost. |
 | Sharpened Blade | 2 | 1 | Enemy | Deals 100% Physical Power and ignores Guard and Barrier. |
 | Slowing Venom | 2 | None | Poisoned enemy | Deals 75% Physical Power, consumes 50% of Poison, and applies Slowed. |
 | Weakening Venom | 2 | None | Poisoned enemy | Deals 60% Physical Power, consumes 50% of Poison, and applies Vulnerable and Weaken. |
@@ -73,14 +73,14 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_3 | Poison Stab | Ability | Immaculate Timing | Any | Unlocks Poison Stab. |
 | talent_4 | Honed Skills | Passive | Twin Strike | Any | +2% Critical Strike Chance. |
 | talent_5 | Precision | Passive | Poison Stab | Any | +2% Hit Chance. |
-| talent_6 | Evasion | Passive | Honed Skills | Any | +2% Dodge Chance. |
+| talent_6 | Elusiveness | Passive | Honed Skills | Any | +2% Dodge Chance. |
 | talent_7 | Stamina | Passive | Honed Skills | Any | +1 Max Energy. |
 | talent_8 | Setup | Passive | Precision | Any | +2 Initiative. |
 | talent_9 | Spell Dodger | Passive | Precision | Any | +2 Magic Resistance. |
-| talent_10 | Poison Cloud | Ability | Spell Dodger or Recouperate | Any | Unlocks Poison Cloud. |
-| talent_11 | Stealth | Ability | Stamina or Recouperate | Any | Unlocks Stealth. |
+| talent_10 | Poison Cloud | Ability | Spell Dodger or Recuperate | Any | Unlocks Poison Cloud. |
+| talent_11 | Stealth | Ability | Stamina or Recuperate | Any | Unlocks Stealth. |
 | talent_12 | Poison Coating | Passive | Setup | Any | Every hit has a 50% chance, plus Luck's chance-effect bonus, to apply 1 Poison. |
-| talent_13 | Adrenaline | Passive | Evasion (passive) | Any | Every hit has a 10% chance, plus Luck's chance-effect bonus, to restore 1 Energy. |
+| talent_13 | Adrenaline | Passive | Elusiveness | Any | Every hit has a 10% chance, plus Luck's chance-effect bonus, to restore 1 Energy. |
 | talent_14 | Evasion | Ability | Adrenaline | Any | Unlocks Evasion. |
 | talent_15 | Neurotoxin | Ability | Poison Coating | Any | Unlocks Neurotoxin. |
 | talent_16 | Opportunist | Passive | Stealth | Any | Deals 50% more damage while attacking from Stealth. |
@@ -88,20 +88,20 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_18 | Agile | Passive | Evasion (ability) | Any | +2 Agility. |
 | talent_19 | Smarts | Passive | Neurotoxin | Any | +2 Intelligence. |
 | talent_20 | Venomous Strike | Ability | Smarts | Any | Unlocks Venomous Strike. |
-| talent_21 | Potency | Passive | Smarts | Any | Player-applied Poison deals 10% more damage. |
-| talent_22 | Potency | Passive | Blisters | Any | Player-applied Poison deals 10% more damage. The two Potency nodes combine additively for +20%. |
+| talent_21 | Toxicology | Passive | Smarts | Any | Player-applied Poison deals 10% more damage. |
+| talent_22 | Virulence | Passive | Blisters | Any | Player-applied Poison deals 10% more damage. Toxicology and Virulence combine additively for +20%. |
 | talent_23 | Electrified | Passive | Agile | Any | Every hit has a 20% chance, plus Luck's chance-effect bonus, to apply Electrified. |
 | talent_24 | Flurry | Ability | Agile | Any | Unlocks Flurry. |
 | talent_25 | Energized | Passive | Opportunist | Any | +1 Energy regenerated at the start of the player's turn. |
 | talent_26 | Ambush | Ability | Energized | Any | Unlocks Ambush. |
-| talent_27 | Toxic Explosion | Ability | Potency (Blisters path) | Any | Unlocks Toxic Explosion. |
+| talent_27 | Toxic Explosion | Ability | Virulence | Any | Unlocks Toxic Explosion. |
 | talent_28 | Longevity | Passive | Toxic Explosion | Any | Toxic Explosion retains half of the consumed Poison stacks, rounded up. |
 | talent_29 | Maneuvers | Passive | Ambush | Any | Ambush can be used without Stealth at 100% Physical Power; it remains 150% while Stealthed. |
 | talent_30 | Reapply | Passive | Neurotoxin | Any | After Neurotoxin consumes Poison, it applies 2 new Poison. |
 | talent_31 | Enduring Evasion | Passive | Evasion (ability) | Any | Evasion grants +40% Dodge instead of +60%, but lasts one additional turn. |
 | talent_32 | Self Medicate | Passive | Venomous Strike | Any | Start combat with 2 Poison. An enemy that directly damages the player gains 1 Poison. |
 | talent_33 | Shock Stabs | Passive | Flurry | Any | Hits against Electrified enemies have a 5% chance, plus Luck's chance-effect bonus, to Stun. |
-| talent_34 | Recouperate | Ability | Connections are declared by Stealth and Poison Cloud | Any | Restores 50% of Max Energy. |
+| talent_34 | Recuperate | Ability | Connections are declared by Stealth and Poison Cloud | Any | Restores 50% of Max Energy. |
 | talent_35 | Venomborn | Ability | Self Medicate | Any | Unlocks Venomborn. |
 | talent_36 | Lightning Strike | Ability | Shock Stabs | Any | Unlocks Lightning Strike. |
 | talent_37 | Focus | Ability | Toxic Explosion or Ambush | Any | Unlocks Focus. |
@@ -130,12 +130,12 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_60 | Cull the Weak | Ability | Perfected Formula | Any | Unlocks Cull the Weak. |
 | talent_61 | Hit and Run | Passive | Cheap Shot | Any | Damage dealt has a 2% base chance to grant Stealth. |
 | talent_62 | Spot Weakness | Passive | Pandemic | Any | Deals 5% more damage per unique debuff on the target. |
-| talent_63 | Avoidance | Passive | Light Speed | Any | +1 Max Energy and 5% less incoming damage per unspent Energy. |
+| talent_63 | Avoidance | Passive | Light Speed | Any | +1 Max Energy and 3% less incoming damage per unspent Energy. |
 | talent_64 | Epidemic | Ability | Spot Weakness | Any | Unlocks Epidemic. |
 | talent_65 | Panic | Passive | Hit and Run | Any | The first lethal hit each combat restores 20% of Max Health and grants Stealth for 2 turns. |
 | talent_66 | Voltage Stab | Ability | Avoidance | Any | Unlocks Voltage Stab. |
 
-Two nodes are both named **Potency** and intentionally provide separate +10% Poison bonuses.
+Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 
 ## Status effects
 
