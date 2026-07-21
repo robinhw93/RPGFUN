@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
-  Backpack, BatteryLow, Bolt, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
+  Backpack, BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
   EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
@@ -171,7 +171,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   slowed: Snail,
   reckless: Skull,
   wet: Waves,
-  electrified: Bolt,
+  electrified: Zap,
   cold: Snowflake,
   charred: Flame,
   sleep: Moon,
@@ -799,6 +799,8 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const passiveAnimations = combat.passiveAnimations ?? [];
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
   const poisonPulseTargets = new Set(poisonAnimations.map((animation) => animation.targetId));
+  const electrifiedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "electrified");
+  const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
@@ -819,6 +821,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           data-combatant-id="player"
           className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""} ${playerStealthed ? "stealthed" : ""}`}
         >
+          {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
@@ -853,6 +856,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
                 }
               }}
             >
+              {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
@@ -1326,6 +1330,16 @@ function PassiveProcFloats({ animations }: { animations: CombatPassiveAnimation[
         <strong key={animation.id} className="passive-proc-float" style={{ "--passive-proc-offset": `${animation.lane * 14}px` } as React.CSSProperties}>{animation.text}</strong>
       ))}
     </div>
+  );
+}
+
+function ElectrifiedApplicationEffect() {
+  return (
+    <span className="electrified-application-effect" aria-hidden="true">
+      <Zap className="electrified-bolt electrified-bolt-one" />
+      <Zap className="electrified-bolt electrified-bolt-two" />
+      <Zap className="electrified-bolt electrified-bolt-three" />
+    </span>
   );
 }
 

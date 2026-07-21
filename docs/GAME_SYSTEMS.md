@@ -236,6 +236,7 @@ This sequencing guarantees that:
 - HP bars animate from the old value to the new value.
 - Statuses appear with the message that applies them.
 - Enemies pulse green once when Poison is applied.
+- A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
 - The turn-order highlight moves when the turn message is shown.
 - Victory waits for the final death result and the **Victory.** message before the score screen appears.
