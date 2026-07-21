@@ -249,7 +249,7 @@ Each pending effect has an `eventIndex` into `floatingEvents`:
 
 When `FloatingCombatText` reveals an index, the sequencer resolves all effects attached to that index.
 
-Resolved status effects also produce short-lived `statusAnimations` presentation metadata. Poison uses it to pulse the receiving combatant green, while Electrified flashes its target yellow with a local lightning overlay. Contagion includes the source combatant ID on its queued status effect, allowing the UI to measure the live source and destination icons and animate a copied Poison icon between them without coupling animation code to combat rules. Passive and on-hit triggers similarly emit `passiveAnimations` targeted at the affected combatant. These local effects are not sequencer events, so their CSS animation never blocks combat input or extends a turn.
+Resolved status effects also produce short-lived `statusAnimations` presentation metadata. Poison uses it to pulse the receiving combatant green, while Electrified flashes its target yellow with a local lightning overlay. Contagion includes the source combatant ID on its queued status effect, allowing the UI to measure the live source and destination icons and animate a copied Poison icon between them without coupling animation code to combat rules. Damage effects may carry a `sourceLabel`; resolution exposes it through transient `damageSourceLabels` so Health bars can distinguish status damage from ordinary attacks without parsing combat text. Passive and on-hit triggers similarly emit `passiveAnimations` targeted at the affected combatant. These local effects are not sequencer events, so their CSS animation never blocks combat input or extends a turn.
 
 ### Direct-attack two-phase contract
 

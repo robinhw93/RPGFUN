@@ -356,7 +356,7 @@ export interface CombatPassiveAnimation {
 }
 
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number; sourceLabel?: string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
@@ -381,6 +381,7 @@ export interface CombatState {
   deathPreventionUsed: boolean;
   nextTurnEnergyRegenBonus: number;
   damagedTargets: string[];
+  damageSourceLabels: Record<string, string>;
   statusAnimations: CombatStatusAnimation[];
   passiveAnimations: CombatPassiveAnimation[];
   attackingActorId: "player" | string | null;

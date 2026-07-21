@@ -827,7 +827,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
-          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
+          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} />
           <div className="compact-status-row">
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
@@ -861,7 +861,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
               <div className="compact-resource-label"><span>Health</span><b>{enemy.hp}/{enemy.maxHp}</b></div>
-              <HealthBar value={enemy.hp} max={enemy.maxHp} />
+              <HealthBar value={enemy.hp} max={enemy.maxHp} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
                 {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
@@ -1299,15 +1299,15 @@ function PoisonTransferAnimation({ animation }: { animation: CombatStatusAnimati
   );
 }
 
-function HealthBar({ value, max }: { value: number; max: number }) {
+function HealthBar({ value, max, damageSource }: { value: number; max: number; damageSource?: string }) {
   const previousValue = useRef(value);
-  const [change, setChange] = useState<{ id: number; delta: number } | null>(null);
+  const [change, setChange] = useState<{ id: number; delta: number; source?: string } | null>(null);
 
   useEffect(() => {
     const delta = value - previousValue.current;
     previousValue.current = value;
-    if (delta !== 0) setChange({ id: Date.now(), delta });
-  }, [value]);
+    if (delta !== 0) setChange({ id: Date.now(), delta, source: delta < 0 ? damageSource : undefined });
+  }, [damageSource, value]);
 
   return (
     <div className="health-bar-wrap">
@@ -1315,6 +1315,7 @@ function HealthBar({ value, max }: { value: number; max: number }) {
       {change && (
         <strong key={change.id} className={`health-change ${change.delta > 0 ? "heal" : "damage"}`} aria-hidden="true">
           {change.delta > 0 ? "+" : "−"}{Math.abs(change.delta)}
+          {change.source && <span className="health-change-source"> ({change.source})</span>}
         </strong>
       )}
     </div>
