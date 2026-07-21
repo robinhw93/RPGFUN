@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, endPlayerTurn, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -796,6 +796,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
 
   const combat = adventure.combat!;
   const damagedTargets = combat.damagedTargets ?? [];
+  const passiveAnimations = combat.passiveAnimations ?? [];
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
   const poisonPulseTargets = new Set(poisonAnimations.map((animation) => animation.targetId));
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
@@ -820,6 +821,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         >
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
+          <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} />
@@ -851,6 +853,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
                 }
               }}
             >
+              <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
               <div className="compact-resource-label"><span>Health</span><b>{enemy.hp}/{enemy.maxHp}</b></div>
@@ -1310,6 +1313,18 @@ function HealthBar({ value, max }: { value: number; max: number }) {
           {change.delta > 0 ? "+" : "−"}{Math.abs(change.delta)}
         </strong>
       )}
+    </div>
+  );
+}
+
+function PassiveProcFloats({ animations }: { animations: CombatPassiveAnimation[] }) {
+  const visible = animations.slice(-3);
+  if (visible.length === 0) return null;
+  return (
+    <div className="passive-proc-floats" aria-hidden="true">
+      {visible.map((animation) => (
+        <strong key={animation.id} className="passive-proc-float" style={{ "--passive-proc-offset": `${animation.lane * 14}px` } as React.CSSProperties}>{animation.text}</strong>
+      ))}
     </div>
   );
 }

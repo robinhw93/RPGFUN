@@ -348,6 +348,13 @@ export interface CombatStatusAnimation {
   sourceTargetId?: "player" | string;
 }
 
+export interface CombatPassiveAnimation {
+  id: string;
+  targetId: "player" | string;
+  text: string;
+  lane: number;
+}
+
 export type CombatPendingEffect =
   | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
@@ -355,6 +362,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
+  | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatState {
@@ -374,6 +382,7 @@ export interface CombatState {
   nextTurnEnergyRegenBonus: number;
   damagedTargets: string[];
   statusAnimations: CombatStatusAnimation[];
+  passiveAnimations: CombatPassiveAnimation[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;
   attackAnimationHitCount: number;

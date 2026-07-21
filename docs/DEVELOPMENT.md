@@ -208,7 +208,7 @@ A `CombatTriggerDefinition` contains:
 - Optional chance, once-per-turn rule, or cooldown.
 - One or more data-driven effects: damage, status application, flat or Max-Health-based healing, Energy, or Guard.
 
-Triggered passives do not add presentation events. Their damage, healing, and status pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Separate combat-log entries preserve inspectable trigger and result details.
+Triggered passives do not add central presentation events. Their damage, healing, status, and `passive_text` pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Proc names are grouped per affected target and appended to `combat.passiveAnimations`; the combatant-local CSS animation runs independently of the sequencer. Separate combat-log entries preserve inspectable trigger and result details.
 
 Player `You use ...` action events are presentation-hidden and use `COMBAT_TIMING.silentEventMs`. Keep the event as the synchronization anchor for Energy expenditure and `before_ability` triggers; the ability-use combat-log entry remains player-inspectable.
 

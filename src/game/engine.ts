@@ -53,6 +53,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     nextTurnEnergyRegenBonus: 0,
     damagedTargets: [],
     statusAnimations: [],
+    passiveAnimations: [],
     attackingActorId: null,
     attackAnimationId: 0,
     attackAnimationHitCount: 1,
@@ -112,6 +113,11 @@ function queueHealAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: num
 function queueNextTurnEnergyRegeneration(pendingEffects: CombatPendingEffect[], eventIndex: number, amount: number): void {
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "energy_regen_bonus", amount });
+}
+
+function queuePassiveAnimation(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: "player" | string, text: string): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "passive_text", targetId, text, lane: combatEffectSequence % 3 });
 }
 
 function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false, attachedEventIndex?: number, sourceTargetId?: string): void {
@@ -284,6 +290,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
         ?? ((combat.floatingEvents?.length ?? 0) > 0 && (combat.pendingEffects?.length ?? 0) > 0 ? (combat.eventId ?? 1) - 1 : combat.eventId ?? 1),
       damagedTargets: combat.damagedTargets ?? [],
       statusAnimations: combat.statusAnimations ?? [],
+      passiveAnimations: combat.passiveAnimations ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
       attackAnimationHitCount: combat.attackAnimationHitCount ?? 1,
@@ -313,6 +320,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0,
     damagedTargets: [],
     statusAnimations: [],
+    passiveAnimations: [],
     attackingActorId: null,
     attackAnimationId: combat.attackAnimationId ?? 0,
     attackAnimationHitCount: 1,
@@ -673,6 +681,12 @@ function applyPlayerProcs(
   let { enemies, playerStatuses, playerHp, energy } = state;
   if (procs.length === 0) return state;
   const passiveEventIndex = events.length - 1;
+  const passiveLabels = new Map<string, Set<string>>();
+  const markPassive = (targetId: string, name: string) => {
+    const labels = passiveLabels.get(targetId) ?? new Set<string>();
+    labels.add(name);
+    passiveLabels.set(targetId, labels);
+  };
 
   procs.forEach((proc) => {
     const procInfo: InspectableInfo = { title: proc.name, description: proc.description, category: "ability" };
@@ -699,6 +713,7 @@ function applyPlayerProcs(
           playerHp = Math.max(0, playerHp - damage);
           playerStatuses = wakeFromDamage(absorption.statuses, damage);
           logs.push(makeLog(`${proc.name} deals ${damage} damage to you${absorptionSuffix(absorption.absorbed)}.`, procInfo));
+          markPassive("player", proc.name);
           queueDamageAtEvent(pendingEffects, passiveEventIndex, "player", damage);
           queueAbsorptionChanges(pendingEffects, passiveEventIndex, "player", absorption);
         } else {
@@ -708,6 +723,7 @@ function applyPlayerProcs(
             const damage = absorption.damage;
             enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(absorption.statuses, damage) } : enemy);
             logs.push(makeLog(`${proc.name} deals ${damage} damage to ${currentTarget.name}${absorptionSuffix(absorption.absorbed)}.`, procInfo));
+            markPassive(currentTarget.instanceId, proc.name);
             queueDamageAtEvent(pendingEffects, passiveEventIndex, currentTarget.instanceId, damage);
             queueAbsorptionChanges(pendingEffects, passiveEventIndex, currentTarget.instanceId, absorption);
             if (hasStatus(playerStatuses, "reckless") && damage > 0) {
@@ -716,6 +732,7 @@ function applyPlayerProcs(
               playerHp = Math.max(0, playerHp - recoilAbsorption.damage);
               playerStatuses = wakeFromDamage(recoilAbsorption.statuses, recoilAbsorption.damage);
               logs.push(makeLog(`Reckless deals ${recoilAbsorption.damage} damage to you${absorptionSuffix(recoilAbsorption.absorbed)}.`, statusInfo(playerStatuses.find((status) => status.id === "reckless") ?? createStatusEffect("reckless"))));
+              markPassive("player", "Reckless");
               queueDamageAtEvent(pendingEffects, passiveEventIndex, "player", recoilAbsorption.damage);
               queueAbsorptionChanges(pendingEffects, passiveEventIndex, "player", recoilAbsorption);
             }
@@ -735,6 +752,7 @@ function applyPlayerProcs(
           appliedStatuses.filter((applied) => !derived.statusImmunities.includes(applied.id)).forEach((applied) => {
             playerStatuses = addOrRefreshStatus(playerStatuses, applied);
             logs.push(makeLog(`You gain ${applied.name}.`, statusInfo(applied)));
+            markPassive("player", proc.name);
             queueStatus(events, pendingEffects, `You gain ${applied.name}.`, "player", applied, false, passiveEventIndex);
           });
         } else {
@@ -742,6 +760,7 @@ function applyPlayerProcs(
             appliedStatuses.forEach((applied) => {
               enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, applied) } : enemy);
               logs.push(makeLog(`${target.name} gains ${applied.name}.`, statusInfo(applied)));
+              markPassive(target.instanceId, proc.name);
               queueStatus(events, pendingEffects, `${target.name} gains ${applied.name}.`, target.instanceId, applied, applied.id === "stunned", passiveEventIndex);
             });
           });
@@ -752,6 +771,7 @@ function applyPlayerProcs(
         const amount = Math.max(0, Math.round(effect.amount * derived.healingReceivedMultiplier));
         playerHp = Math.min(combat.playerMaxHp, playerHp + amount);
         logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
+        markPassive("player", proc.name);
         queueHealAtEvent(pendingEffects, passiveEventIndex, "player", amount);
       }
 
@@ -759,12 +779,14 @@ function applyPlayerProcs(
         const amount = Math.min(combat.playerMaxHp - playerHp, Math.max(1, Math.round(combat.playerMaxHp * effect.ratio * derived.healingReceivedMultiplier)));
         playerHp += amount;
         logs.push(makeLog(`${proc.name} restores ${amount} Health.`, procInfo));
+        markPassive("player", proc.name);
         queueHealAtEvent(pendingEffects, passiveEventIndex, "player", amount);
       }
 
       if (effect.type === "gain_energy") {
         energy = Math.min(combat.maxEnergy, energy + effect.amount);
         logs.push(makeLog(`${proc.name} restores ${effect.amount} Energy.`, procInfo));
+        markPassive("player", proc.name);
       }
 
       if (effect.type === "gain_guard") {
@@ -772,9 +794,13 @@ function applyPlayerProcs(
         const guard = createStatusEffect("guard", { duration: effect.duration ?? 1, stacks: amount, description: `Absorbs ${amount} incoming damage.` });
         playerStatuses = addOrRefreshStatus(playerStatuses, guard);
         logs.push(makeLog(`You gain ${amount} Guard.`, statusInfo(guard)));
+        markPassive("player", proc.name);
         queueStatus(events, pendingEffects, `You gain ${amount} Guard.`, "player", guard, false, passiveEventIndex);
       }
     });
+  });
+  passiveLabels.forEach((labels, targetId) => {
+    queuePassiveAnimation(pendingEffects, passiveEventIndex, targetId, [...labels].join(" · "));
   });
   return { enemies, playerStatuses, playerHp, energy };
 }
@@ -1549,7 +1575,11 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const statusAnimations = matchingEffects.flatMap((effect) => effect.type === "status"
     ? [{ id: effect.id, statusId: effect.status.id, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId }]
     : []);
+  const passiveAnimations = matchingEffects.flatMap((effect) => effect.type === "passive_text"
+    ? [{ id: effect.id, targetId: effect.targetId, text: effect.text, lane: effect.lane }]
+    : []);
   matchingEffects.forEach((effect) => {
+    if (effect.type === "passive_text") return;
     if (effect.type === "energy_regen_bonus") {
       nextTurnEnergyRegenBonus += effect.amount;
       return;
@@ -1619,7 +1649,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, statusAnimations, selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, statusAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
