@@ -185,6 +185,7 @@ main { min-height: calc(100vh - 68px); }
 .health-change { position: absolute; z-index: 18; left: 50%; bottom: 2px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.4rem, 5vw, 2.15rem); font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap; pointer-events: none; animation: health-change-float 1.05s cubic-bezier(.16,.75,.25,1) forwards; }
 .health-change.damage { color: #ff7b68; text-shadow: 0 2px 0 #40120e, 0 0 16px rgba(255,72,52,.72); }
 .health-change.heal { color: #8ee3a6; text-shadow: 0 2px 0 #123c20, 0 0 16px rgba(91,220,126,.6); }
+.health-change.miss { color: #e5dcc7; font-size: clamp(1.15rem, 4.3vw, 1.75rem); font-style: italic; text-shadow: 0 2px 0 #25231e, 0 0 15px rgba(218,203,170,.45); }
 .health-change-source { font-size: .48em; font-weight: 700; letter-spacing: .02em; vertical-align: .14em; }
 @keyframes health-change-float { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.72); } 16% { opacity: 1; transform: translate(-50%, -8px) scale(1.14); } 70% { opacity: 1; transform: translate(-50%, -31px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -43px) scale(.96); } }
 .passive-proc-floats { width: 100%; position: absolute; z-index: 24; left: 50%; top: 42%; pointer-events: none; }

@@ -52,6 +52,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     deathPreventionUsed: false,
     nextTurnEnergyRegenBonus: 0,
     damagedTargets: [],
+    missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
     passiveAnimations: [],
@@ -90,6 +91,7 @@ interface QueueDamageOptions {
   attackerId?: "player" | string;
   animationHitCount?: number;
   animationDurationMultiplier?: number;
+  missed?: boolean;
   sourceLabel?: string;
 }
 
@@ -106,6 +108,7 @@ function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], te
     attackerId: options.attackerId,
     animationHitCount: Math.max(1, Math.round(options.animationHitCount ?? 1)),
     animationDurationMultiplier: Math.max(0.1, options.animationDurationMultiplier ?? 1),
+    missed: options.missed,
     sourceLabel: options.sourceLabel,
   });
   return eventIndex;
@@ -311,6 +314,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       completedSequenceEventId: combat.completedSequenceEventId
         ?? ((combat.floatingEvents?.length ?? 0) > 0 && (combat.pendingEffects?.length ?? 0) > 0 ? (combat.eventId ?? 1) - 1 : combat.eventId ?? 1),
       damagedTargets: combat.damagedTargets ?? [],
+      missedTargets: combat.missedTargets ?? [],
       damageSourceLabels: combat.damageSourceLabels ?? {},
       statusAnimations: combat.statusAnimations ?? [],
       passiveAnimations: combat.passiveAnimations ?? [],
@@ -343,6 +347,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     deathPreventionUsed: combat.deathPreventionUsed ?? false,
     nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0,
     damagedTargets: [],
+    missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
     passiveAnimations: [],
@@ -1089,7 +1094,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const targetDodgeChance = getEffectiveDodgeChance(target.dodgeChance, getDodgeChanceBonus(target.statuses));
       if (!rollHit(derived.hitChance, targetDodgeChance)) {
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
-        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier });
+        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, missed: true });
         continue;
       }
       const conditionalCritBonus = ability.critChanceBonusWithStatus && hasStatus(playerStatuses, ability.critChanceBonusWithStatus.status)
@@ -1453,7 +1458,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const playerDodgeChance = getEffectiveDodgeChance(derived.dodgeChance, getDodgeChanceBonus(playerStatuses));
     if (!rollHit(enemy.hitChance, playerDodgeChance)) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
-      queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId });
+      queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, missed: true });
     } else {
       const defense = getDefense(derived.armor, derived.magicResistance, playerStatuses, enemy.damageType);
       const critical = Math.random() < getCriticalChanceBonus(enemy.statuses);
@@ -1603,6 +1608,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let attackEffectId = combat.attackEffectId ?? null;
   const resolvesAttackImpact = matchingEffects.some((effect) => "damage" in effect && Boolean(effect.attackerId));
   const damagedTargets: string[] = [];
+  const missedTargets = matchingEffects.flatMap((effect) => "damage" in effect && effect.missed ? [effect.targetId] : []);
   const damageSourceLabels: Record<string, string> = {};
   matchingEffects.forEach((effect) => {
     if ("damage" in effect && effect.damage > 0 && effect.sourceLabel) {
@@ -1694,7 +1700,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
@@ -1714,6 +1720,7 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
     attackAnimationDurationMultiplier: Math.max(0.1, attackEffect.animationDurationMultiplier ?? 1),
     attackEffectId: attackEffect.id,
     damagedTargets: [],
+    missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
   };

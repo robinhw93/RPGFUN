@@ -783,6 +783,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
 
   const combat = adventure.combat!;
   const damagedTargets = combat.damagedTargets ?? [];
+  const missedTargets = combat.missedTargets ?? [];
   const passiveAnimations = combat.passiveAnimations ?? [];
   const poisonAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "poison");
   const poisonPulseTargets = new Set(poisonAnimations.map((animation) => animation.targetId));
@@ -816,7 +817,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
-          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} />
+          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
           <div className="compact-status-row">
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
@@ -850,7 +851,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
               <div className="compact-resource-label"><span>Health</span><b>{enemy.hp}/{enemy.maxHp}</b></div>
-              <HealthBar value={enemy.hp} max={enemy.maxHp} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} />
+              <HealthBar value={enemy.hp} max={enemy.maxHp} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} missed={missedTargets.includes(enemy.instanceId)} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
                 {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
@@ -1289,23 +1290,26 @@ function PoisonTransferAnimation({ animation }: { animation: CombatStatusAnimati
   );
 }
 
-function HealthBar({ value, max, damageSource }: { value: number; max: number; damageSource?: string }) {
+function HealthBar({ value, max, damageSource, missed = false }: { value: number; max: number; damageSource?: string; missed?: boolean }) {
   const previousValue = useRef(value);
-  const [change, setChange] = useState<{ id: number; delta: number; source?: string } | null>(null);
+  const [change, setChange] = useState<{ id: number; kind: "damage" | "heal" | "miss"; delta: number; source?: string } | null>(null);
 
   useEffect(() => {
     const delta = value - previousValue.current;
     previousValue.current = value;
-    if (delta !== 0) setChange({ id: Date.now(), delta, source: delta < 0 ? damageSource : undefined });
-  }, [damageSource, value]);
+    if (delta !== 0) {
+      setChange({ id: Date.now(), kind: delta > 0 ? "heal" : "damage", delta, source: delta < 0 ? damageSource : undefined });
+    } else if (missed) {
+      setChange({ id: Date.now(), kind: "miss", delta: 0 });
+    }
+  }, [damageSource, missed, value]);
 
   return (
     <div className="health-bar-wrap">
       <div className="health-bar"><i style={{ width: `${Math.max(0, value / max) * 100}%` }} /></div>
       {change && (
-        <strong key={change.id} className={`health-change ${change.delta > 0 ? "heal" : "damage"}`} aria-hidden="true">
-          {change.delta > 0 ? "+" : "−"}{Math.abs(change.delta)}
-          {change.source && <span className="health-change-source"> ({change.source})</span>}
+        <strong key={change.id} className={`health-change ${change.kind}`} aria-hidden="true">
+          {change.kind === "miss" ? "Missed!" : <>{change.delta > 0 ? "+" : "−"}{Math.abs(change.delta)}{change.source && <span className="health-change-source"> ({change.source})</span>}</>}
         </strong>
       )}
     </div>
