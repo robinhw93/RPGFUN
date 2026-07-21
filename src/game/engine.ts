@@ -174,11 +174,15 @@ function preserveBarrierUntilDamageEvent(
   ];
 }
 
+function queueTurnAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus });
+}
+
 function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number): void {
   const eventIndex = events.length;
   events.push(text);
-  combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus });
+  queueTurnAtEvent(pendingEffects, eventIndex, activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus);
 }
 
 function rollD100(): number {
@@ -612,8 +616,12 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
       const skipped = moveToNextActor({ ...next, activeTurnIndex: nextIndex, turn: nextTurn, playerStatuses: decrementStatusDurations(next.playerStatuses) }, character, logs, events, pendingEffects);
       return { ...skipped, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn };
     }
+  } else if (events.length > 0) {
+    // Enemy turns do not need their own floating message. Reveal the next actor
+    // when the preceding action's final event resolves instead.
+    queueTurnAtEvent(pendingEffects, events.length - 1, nextIndex, nextTurn, undefined, next.playerStatuses);
   } else {
-    queueTurn(events, pendingEffects, `${nextActor.name}'s turn.`, nextIndex, nextTurn, undefined, next.playerStatuses);
+    return next;
   }
   return { ...next, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn };
 }

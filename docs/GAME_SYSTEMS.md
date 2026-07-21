@@ -200,6 +200,7 @@ At the start of an enemy's turn:
 - If it lacks the Energy required by its attack, it gathers Energy instead of attacking.
 - If the player is Stealthed, the enemy cannot target the player.
 - Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
+- Enemy turns do not add a separate floating turn announcement; the turn-order highlight advances with the preceding action's final event.
 
 Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease. Status icons retain their pre-turn state while those events are queued; the duration ring updates or the icon disappears only when the final status event is shown and resolved.
 
