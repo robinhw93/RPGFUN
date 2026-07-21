@@ -220,6 +220,8 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 
 Combat calculations can prepare future results, but visible HP, status, and active-turn changes are delayed until their corresponding floating combat message is shown. Direct attacks start their lunge animation with the damage message and apply damage at the configured impact frame.
 
+Every hit of a multi-hit ability receives its own lunge and impact reaction. Animation speed is multiplied by the number of hits, so two hits animate at twice normal speed and the total motion time remains equal to one standard attack animation.
+
 This sequencing guarantees that:
 
 - Damage appears when the attack lands.

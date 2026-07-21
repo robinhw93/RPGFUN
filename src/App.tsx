@@ -514,7 +514,10 @@ function App() {
   if (!game.characterCreated) return <CharacterCreation onCreate={createCharacter} />;
 
   return (
-    <div className={`app-shell ${isCombatScreen ? "in-combat" : ""}`} style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs}ms` } as React.CSSProperties}>
+    <div
+      className={`app-shell ${isCombatScreen ? "in-combat" : ""}`}
+      style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1)}ms` } as React.CSSProperties}
+    >
       <header className="topbar">
         <button className="brand" onClick={() => navigate("adventure")} aria-label="Go to adventure">
           <span className="brand-mark"><Sparkles size={17} /></span>
@@ -777,7 +780,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
         <article
           key="player"
           data-combatant-id="player"
-          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? "attacking-right" : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""} ${playerStealthed ? "stealthed" : ""}`}
+          className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${poisonPulseTargets.has("player") ? "poison-applied" : ""} ${playerStealthed ? "stealthed" : ""}`}
         >
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
@@ -802,7 +805,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
               tabIndex={targetable ? 0 : -1}
               aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? "attacking-left" : ""} ${poisonPulseTargets.has(enemy.instanceId) ? "poison-applied" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${poisonPulseTargets.has(enemy.instanceId) ? "poison-applied" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {

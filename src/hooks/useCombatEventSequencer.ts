@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { primeCombatAttack, resolveCombatEvent } from "../game/engine";
 import { COMBAT_TIMING } from "../game/timing";
-import type { GameState } from "../game/types";
+import type { CombatPendingEffect, GameState } from "../game/types";
 
 export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetStateAction<GameState>>) {
   const gameRef = useRef(game);
@@ -17,7 +17,9 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
 
   const revealEvent = useCallback((eventId: number, eventIndex: number) => {
     const visibleCombat = gameRef.current.adventure.combat;
-    const attackEffect = visibleCombat?.pendingEffects.find((effect) => effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId));
+    const attackEffect = visibleCombat?.pendingEffects.find((effect): effect is Extract<CombatPendingEffect, { damage: number }> => (
+      effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId)
+    ));
 
     if (visibleCombat?.eventId === eventId && attackEffect) {
       const scheduleKey = `${eventId}:${attackEffect.id}`;
@@ -42,7 +44,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
         });
         scheduledEffects.current.delete(scheduleKey);
         impactTimers.current = impactTimers.current.filter((timer) => timer !== impactTimer);
-      }, COMBAT_TIMING.attackImpactMs);
+      }, COMBAT_TIMING.attackImpactMs / Math.max(1, attackEffect.animationHitCount ?? 1));
       impactTimers.current.push(impactTimer);
       return;
     }

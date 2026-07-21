@@ -349,7 +349,7 @@ export interface CombatStatusAnimation {
 }
 
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
@@ -376,6 +376,7 @@ export interface CombatState {
   statusAnimations: CombatStatusAnimation[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;
+  attackAnimationHitCount: number;
   attackEffectId: string | null;
   playerHp: number;
   playerMaxHp: number;

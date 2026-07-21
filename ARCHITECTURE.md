@@ -259,6 +259,8 @@ Direct attack damage has two presentation phases:
 
 Statuses attached to that same event index resolve at impact with damage. Non-attack effects resolve as soon as their floating message appears.
 
+Multi-hit abilities attach their total hit count to every direct-damage event. The sequencer divides both animation duration and impact delay by that count, keeping the combined motion budget equal to one normal attack. `attackAnimationId` alternates equivalent CSS keyframes so consecutive hits by the same combatant always restart the lunge animation.
+
 Never update visible target HP/status early to simplify an animation; doing so breaks the event rhythm and can show victory before the final blow.
 
 ### Current combat timing

@@ -139,7 +139,7 @@ Important fields:
 - `energyCost`, `cooldownTurns`, and `target` define usability.
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation.
-- `hits` and `randomTargetPerHit` define multi-hit behavior.
+- `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation/impact timing proportionally.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.

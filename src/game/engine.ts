@@ -55,6 +55,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     statusAnimations: [],
     attackingActorId: null,
     attackAnimationId: 0,
+    attackAnimationHitCount: 1,
     attackEffectId: null,
     playerHp: Math.min(carryHp ?? derived.maxHp, derived.maxHp),
     playerMaxHp: derived.maxHp,
@@ -82,11 +83,11 @@ function statusInfo(status: StatusEffect): InspectableInfo {
   return { title: status.name, description: status.description, category: "status" };
 }
 
-function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number, attackerId?: "player" | string): number {
+function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number, attackerId?: "player" | string, animationHitCount = 1): number {
   const eventIndex = events.length;
   events.push(text);
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage, attackerId });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage, attackerId, animationHitCount: Math.max(1, Math.round(animationHitCount)) });
   return eventIndex;
 }
 
@@ -275,6 +276,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       statusAnimations: combat.statusAnimations ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
+      attackAnimationHitCount: combat.attackAnimationHitCount ?? 1,
       attackEffectId: combat.attackEffectId ?? null,
       pendingEffects: combat.pendingEffects ?? [],
       procUsage: combat.procUsage ?? {},
@@ -303,6 +305,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     statusAnimations: [],
     attackingActorId: null,
     attackAnimationId: combat.attackAnimationId ?? 0,
+    attackAnimationHitCount: 1,
     attackEffectId: null,
   };
 }
@@ -996,7 +999,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       }
       if (!rollHit(derived.hitChance, target.dodgeChance)) {
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
-        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, "player");
+        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, "player", totalHits);
         continue;
       }
       const conditionalCritBonus = ability.critChanceBonusWithStatus && hasStatus(playerStatuses, ability.critChanceBonusWithStatus.status)
@@ -1023,7 +1026,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damagedTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
-      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, "player");
+      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, "player", totalHits);
       queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
       if (ability.effect === "bleed") {
         const bleed = createPlayerAppliedStatus("bleed", derived);
@@ -1589,6 +1592,7 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
     ...combat,
     attackingActorId: attackEffect.attackerId ?? null,
     attackAnimationId: (combat.attackAnimationId ?? 0) + 1,
+    attackAnimationHitCount: Math.max(1, attackEffect.animationHitCount ?? 1),
     attackEffectId: attackEffect.id,
     damagedTargets: [],
     statusAnimations: [],
