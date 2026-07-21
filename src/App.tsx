@@ -1599,7 +1599,7 @@ function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onTog
   const unlockLabel = locked
     ? "Locked during combat"
     : !available
-      ? talent.requireMode === "any"
+      ? (talent.requireMode ?? "any") === "any"
         ? `Requires one of: ${requiredNames.join(", ")}`
         : `Requires ${requiredNames.join(", ")}`
       : character.talentPoints < talent.cost

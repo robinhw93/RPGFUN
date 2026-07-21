@@ -6,7 +6,7 @@ export function areTalentRequirementsMet(
 ): boolean {
   if (talent.requires.length === 0) return true;
   const unlocked = new Set(unlockedTalents);
-  return talent.requireMode === "any"
-    ? talent.requires.some((requirement) => unlocked.has(requirement))
-    : talent.requires.every((requirement) => unlocked.has(requirement));
+  return talent.requireMode === "all"
+    ? talent.requires.every((requirement) => unlocked.has(requirement))
+    : talent.requires.some((requirement) => unlocked.has(requirement));
 }

@@ -292,8 +292,8 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 ### Unlock rules
 
 - A node costs its configured number of talent points.
-- All prerequisite connections are required by default.
-- A node with `requireMode: "any"` requires any one connected prerequisite.
+- Any one prerequisite connection is enough by default.
+- A node with `requireMode: "all"` requires every connected prerequisite instead.
 - Unlocking is permanent for the current character; there is no respec UI.
 - Unlocking an ability talent automatically equips the ability if fewer than six abilities are equipped.
 

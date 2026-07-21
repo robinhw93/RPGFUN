@@ -44,50 +44,50 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 The live tree has 41 nodes: the origin, three first-direction class nodes, and 37 later Shadow nodes. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
-**All** means every listed prerequisite must be unlocked. **Any** means one listed prerequisite is enough.
+**Any** is the default: one listed prerequisite is enough. **All** is available only for nodes explicitly configured to require every listed prerequisite.
 
 | ID | Talent | Type | Prerequisite | Rule | Effect |
 | --- | --- | --- | --- | --- | --- |
 | origin | Wayfarer's Spark | Class | None | — | Starting node; unlocks Strike and Guard. |
-| brute_1 | Brute | Class | Wayfarer's Spark | All | +2 Strength. |
-| shadow_1 | Shadow | Class | Wayfarer's Spark | All | +2 Agility and unlocks Quick Slash. |
-| arcanist_1 | Arcanist | Class | Wayfarer's Spark | All | +2 Intelligence. |
-| talent_1 | Immaculate Timing | Passive | Shadow | All | +2 Agility and +5 Initiative. |
-| talent_2 | Twin Strike | Ability | Immaculate Timing | All | Unlocks Twin Strike. |
-| talent_3 | Poison Stab | Ability | Immaculate Timing | All | Unlocks Poison Stab. |
-| talent_4 | Honed Skills | Passive | Twin Strike | All | +2% Critical Strike Chance. |
-| talent_5 | Precision | Passive | Poison Stab | All | +2% Hit Chance. |
-| talent_6 | Evasion | Passive | Honed Skills | All | +2% Dodge Chance. |
-| talent_7 | Stamina | Passive | Honed Skills | All | +1 Max Energy. |
-| talent_8 | Setup | Passive | Precision | All | +2 Initiative. |
-| talent_9 | Spell Dodger | Passive | Precision | All | +2 Magic Resistance. |
+| brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength. |
+| shadow_1 | Shadow | Class | Wayfarer's Spark | Any | +2 Agility and unlocks Quick Slash. |
+| arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence. |
+| talent_1 | Immaculate Timing | Passive | Shadow | Any | +2 Agility and +5 Initiative. |
+| talent_2 | Twin Strike | Ability | Immaculate Timing | Any | Unlocks Twin Strike. |
+| talent_3 | Poison Stab | Ability | Immaculate Timing | Any | Unlocks Poison Stab. |
+| talent_4 | Honed Skills | Passive | Twin Strike | Any | +2% Critical Strike Chance. |
+| talent_5 | Precision | Passive | Poison Stab | Any | +2% Hit Chance. |
+| talent_6 | Evasion | Passive | Honed Skills | Any | +2% Dodge Chance. |
+| talent_7 | Stamina | Passive | Honed Skills | Any | +1 Max Energy. |
+| talent_8 | Setup | Passive | Precision | Any | +2 Initiative. |
+| talent_9 | Spell Dodger | Passive | Precision | Any | +2 Magic Resistance. |
 | talent_10 | Poison Cloud | Ability | Spell Dodger or Fatality | Any | Unlocks Poison Cloud. |
-| talent_11 | Stealth | Ability | Stamina and Fatality | All | Unlocks Stealth. |
-| talent_12 | Poison Coating | Passive | Setup | All | Every hit has a 50% chance, plus Luck's chance-effect bonus, to apply 1 Poison. |
-| talent_13 | Adrenaline | Passive | Evasion (passive) | All | Every hit has a 10% chance, plus Luck's chance-effect bonus, to restore 1 Energy. |
-| talent_14 | Evasion | Ability | Adrenaline | All | Unlocks Evasion. |
-| talent_15 | Neurotoxin | Ability | Poison Coating | All | Unlocks Neurotoxin. |
-| talent_16 | Opportunist | Passive | Stealth | All | Deals 50% more damage while attacking from Stealth. |
-| talent_17 | Blisters | Passive | Poison Cloud | All | Deals 20% more Physical damage to Poisoned enemies. |
-| talent_18 | Agile | Passive | Evasion (ability) | All | +2 Agility. |
-| talent_19 | Smarts | Passive | Neurotoxin | All | +2 Intelligence. |
-| talent_20 | Venomous Strike | Ability | Smarts | All | Unlocks Venomous Strike. |
-| talent_21 | Potency | Passive | Smarts | All | Player-applied Poison deals 10% more damage. |
-| talent_22 | Potency | Passive | Blisters | All | Player-applied Poison deals 10% more damage. The two Potency nodes combine additively for +20%. |
-| talent_23 | Electrified | Passive | Agile | All | Every hit has a 20% chance, plus Luck's chance-effect bonus, to apply Electrified. |
-| talent_24 | Flurry | Ability | Agile | All | Unlocks Flurry. |
-| talent_25 | Energized | Passive | Opportunist | All | +1 Energy regenerated at the start of the player's turn. |
-| talent_26 | Ambush | Ability | Energized | All | Unlocks Ambush. |
-| talent_27 | Toxic Explosion | Ability | Potency (Blisters path) | All | Unlocks Toxic Explosion. |
-| talent_28 | Longevity | Passive | Toxic Explosion | All | Toxic Explosion retains half of the consumed Poison stacks, rounded up. |
-| talent_29 | Maneuvers | Passive | Ambush | All | Ambush can be used without Stealth at 100% Physical Power; it remains 150% while Stealthed. |
-| talent_30 | Reapply | Passive | Neurotoxin | All | After Neurotoxin consumes Poison, it applies 2 new Poison. |
-| talent_31 | Enduring Evasion | Passive | Evasion (ability) | All | Evasion grants +40% Dodge instead of +60%, but lasts one additional turn. |
-| talent_32 | Self Medicate | Passive | Venomous Strike | All | Start combat with 2 Poison. An enemy that directly damages the player gains 1 Poison. |
-| talent_33 | Shock Stabs | Passive | Flurry | All | Hits against Electrified enemies have a 5% chance, plus Luck's chance-effect bonus, to Stun. |
+| talent_11 | Stealth | Ability | Stamina or Fatality | Any | Unlocks Stealth. |
+| talent_12 | Poison Coating | Passive | Setup | Any | Every hit has a 50% chance, plus Luck's chance-effect bonus, to apply 1 Poison. |
+| talent_13 | Adrenaline | Passive | Evasion (passive) | Any | Every hit has a 10% chance, plus Luck's chance-effect bonus, to restore 1 Energy. |
+| talent_14 | Evasion | Ability | Adrenaline | Any | Unlocks Evasion. |
+| talent_15 | Neurotoxin | Ability | Poison Coating | Any | Unlocks Neurotoxin. |
+| talent_16 | Opportunist | Passive | Stealth | Any | Deals 50% more damage while attacking from Stealth. |
+| talent_17 | Blisters | Passive | Poison Cloud | Any | Deals 20% more Physical damage to Poisoned enemies. |
+| talent_18 | Agile | Passive | Evasion (ability) | Any | +2 Agility. |
+| talent_19 | Smarts | Passive | Neurotoxin | Any | +2 Intelligence. |
+| talent_20 | Venomous Strike | Ability | Smarts | Any | Unlocks Venomous Strike. |
+| talent_21 | Potency | Passive | Smarts | Any | Player-applied Poison deals 10% more damage. |
+| talent_22 | Potency | Passive | Blisters | Any | Player-applied Poison deals 10% more damage. The two Potency nodes combine additively for +20%. |
+| talent_23 | Electrified | Passive | Agile | Any | Every hit has a 20% chance, plus Luck's chance-effect bonus, to apply Electrified. |
+| talent_24 | Flurry | Ability | Agile | Any | Unlocks Flurry. |
+| talent_25 | Energized | Passive | Opportunist | Any | +1 Energy regenerated at the start of the player's turn. |
+| talent_26 | Ambush | Ability | Energized | Any | Unlocks Ambush. |
+| talent_27 | Toxic Explosion | Ability | Potency (Blisters path) | Any | Unlocks Toxic Explosion. |
+| talent_28 | Longevity | Passive | Toxic Explosion | Any | Toxic Explosion retains half of the consumed Poison stacks, rounded up. |
+| talent_29 | Maneuvers | Passive | Ambush | Any | Ambush can be used without Stealth at 100% Physical Power; it remains 150% while Stealthed. |
+| talent_30 | Reapply | Passive | Neurotoxin | Any | After Neurotoxin consumes Poison, it applies 2 new Poison. |
+| talent_31 | Enduring Evasion | Passive | Evasion (ability) | Any | Evasion grants +40% Dodge instead of +60%, but lasts one additional turn. |
+| talent_32 | Self Medicate | Passive | Venomous Strike | Any | Start combat with 2 Poison. An enemy that directly damages the player gains 1 Poison. |
+| talent_33 | Shock Stabs | Passive | Flurry | Any | Hits against Electrified enemies have a 5% chance, plus Luck's chance-effect bonus, to Stun. |
 | talent_34 | Fatality | Passive | Stealth or Poison Cloud | Any | Direct damage that crosses an enemy from at least 50% Health to below 50% grants Strengthened for three turns. |
-| talent_35 | Venomborn | Ability | Self Medicate | All | Unlocks Venomborn. |
-| talent_36 | Lightning Strike | Ability | Shock Stabs | All | Unlocks Lightning Strike. |
+| talent_35 | Venomborn | Ability | Self Medicate | Any | Unlocks Venomborn. |
+| talent_36 | Lightning Strike | Ability | Shock Stabs | Any | Unlocks Lightning Strike. |
 | talent_37 | Focus | Ability | Toxic Explosion or Ambush | Any | Unlocks Focus. |
 
 Two nodes are both named **Potency** and intentionally provide separate +10% Poison bonuses.

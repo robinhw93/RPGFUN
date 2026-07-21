@@ -156,7 +156,7 @@ Each talent defines:
 - Stable `id` used by saves and connections.
 - Player-facing name and description.
 - Branch, kind, tier, point cost, position, icon, and shape.
-- `requires` plus optional `requireMode` (`all` by default or `any`).
+- `requires` plus optional `requireMode` (`any` by default; use `all` only for an explicit multi-path requirement).
 - Optional `abilityId`.
 - Optional data-driven `combat` bundle.
 

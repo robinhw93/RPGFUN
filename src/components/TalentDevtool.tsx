@@ -8,6 +8,7 @@ import type { StatName, TalentBranch, TalentRequirementMode } from "../game/type
 
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
+const TALENT_REQUIREMENT_ANY_MIGRATION_KEY = "emberfall.talent-devtool.requirement-any-migrated";
 const DEVTOOL_CODE = "bajs321";
 const DEFAULT_CANVAS_WIDTH = 2200;
 const DEFAULT_CANVAS_HEIGHT = 1500;
@@ -133,7 +134,7 @@ function createInitialDraft(): TalentDraft {
       tier: talent.tier,
       cost: talent.cost,
       requires: [...talent.requires],
-      requireMode: talent.requireMode ?? "all",
+      requireMode: talent.requireMode ?? "any",
       position: { ...talent.position },
       icon: talent.icon,
       shape: talent.shape,
@@ -175,7 +176,7 @@ function normalizeDraft(draft: { version: 1; canvas?: { width: number; height: n
           y: Math.round((current.position.y / 100 * canvas.height) / SNAP_GRID_Y) * SNAP_GRID_Y / canvas.height * 100,
         } : current.position,
         shape: shape === "circle" ? "circle" : "square",
-        requireMode: requireMode === "any" ? "any" : "all",
+        requireMode: requireMode === "all" ? "all" : "any",
         passiveBonuses: Array.isArray(passiveBonuses) ? passiveBonuses : migratedBonus,
       };
     }),
@@ -214,9 +215,13 @@ function ensureCanvasRoom(draft: TalentDraft): TalentDraft {
 function loadDraft(): TalentDraft {
   try {
     const stored = window.localStorage.getItem(TALENT_DRAFT_STORAGE_KEY);
-    if (!stored) return createInitialDraft();
-    const parsed: unknown = JSON.parse(stored);
-    return isStoredTalentDraft(parsed) ? normalizeDraft(parsed) : createInitialDraft();
+    const parsed: unknown = stored ? JSON.parse(stored) : null;
+    const loaded = isStoredTalentDraft(parsed) ? normalizeDraft(parsed) : createInitialDraft();
+    if (window.localStorage.getItem(TALENT_REQUIREMENT_ANY_MIGRATION_KEY) === "true") return loaded;
+    const migrated = { ...loaded, nodes: loaded.nodes.map((node) => ({ ...node, requireMode: "any" as const })) };
+    window.localStorage.setItem(TALENT_DRAFT_STORAGE_KEY, JSON.stringify(migrated));
+    window.localStorage.setItem(TALENT_REQUIREMENT_ANY_MIGRATION_KEY, "true");
+    return migrated;
   } catch {
     return createInitialDraft();
   }
@@ -358,7 +363,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       tier: Math.max(1, (parent?.tier ?? 0) + 1),
       cost: 1,
       requires: parent ? [parent.id] : [],
-      requireMode: "all",
+      requireMode: "any",
       position: {
         x: Math.round(((parent?.position.x ?? 50) / 100 * draft.canvas.width + SNAP_GRID_X * 6) / SNAP_GRID_X) * SNAP_GRID_X / draft.canvas.width * 100,
         y: Math.round(((parent?.position.y ?? 50) / 100 * draft.canvas.height + SNAP_GRID_Y * 8) / SNAP_GRID_Y) * SNAP_GRID_Y / draft.canvas.height * 100,
@@ -657,7 +662,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
 
             <div className="talent-inspector-section">
               <h3><Link2 size={15} /> Connections</h3>
-              <label className="talent-form-field"><span>Unlock rule</span><select value={selected.requireMode} onChange={(event) => updateSelected({ requireMode: event.target.value as TalentRequirementMode })}><option value="all">All connected talents</option><option value="any">Any connected talent</option></select></label>
+              <label className="talent-form-field"><span>Unlock rule</span><select value={selected.requireMode} onChange={(event) => updateSelected({ requireMode: event.target.value as TalentRequirementMode })}><option value="any">Any connected talent</option><option value="all">All connected talents</option></select></label>
               <p>{selected.requireMode === "any" ? "The player only needs one selected connection to unlock this talent." : "The player must unlock every selected connection before this talent."}</p>
               <div className="talent-requirement-list">
                 {draft.nodes.filter((node) => node.id !== selected.id).map((node) => (

@@ -311,8 +311,8 @@ The UI may preview and compare, but only these helpers authorize the transaction
 `areTalentRequirementsMet` is shared by visual availability and the actual unlock action:
 
 - Empty `requires` is available.
-- `requireMode: "any"` uses `some`.
-- Missing or `"all"` uses `every` for backward compatibility.
+- Missing or `requireMode: "any"` uses `some` and is the default.
+- `requireMode: "all"` uses `every` only when explicitly configured.
 
 The runtime tree derives its minimum bounding box from node world positions inside `TALENT_TREE_CANVAS`, then adds padding. It pans by scroll offset and zooms a scaled world surface between 20% and 160%. Fit uses the available viewport. The editor has independent zoom/canvas rules.
 
@@ -323,9 +323,10 @@ The editor owns a `TalentDraft`, not live `Talent[]` data. Its storage keys are:
 ```text
 emberfall.talent-devtool.v1
 emberfall.talent-devtool.snap-to-grid
+emberfall.talent-devtool.requirement-any-migrated
 ```
 
-The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format.
+The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. The requirement migration key performs a one-time conversion of older default-ALL drafts to the new ANY default; later explicit ALL selections remain intact. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format.
 
 Canvas positions are percentages, but grid spacing is stored as fixed world units. When nodes approach an edge, `ensureCanvasRoom` expands that side and recalculates percentages so existing absolute alignment remains stable.
 

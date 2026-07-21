@@ -207,7 +207,7 @@ export interface Talent {
   tier: number;
   cost: number;
   requires: string[];
-  /** Defaults to all for backward compatibility with older talent exports. */
+  /** Defaults to any. Use all only when every connected talent must be unlocked. */
   requireMode?: TalentRequirementMode;
   kind: "class" | "passive" | "ability";
   position: { x: number; y: number };
