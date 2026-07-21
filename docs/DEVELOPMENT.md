@@ -208,6 +208,8 @@ A `CombatTriggerDefinition` contains:
 - Optional chance, once-per-turn rule, or cooldown.
 - One or more data-driven effects: damage, status application, flat or Max-Health-based healing, Energy, or Guard.
 
+Triggered passives resolved from the same hit are presented as one `Passives — ...` digest. Their individual effects share that event index, so damage, healing, and statuses resolve together when the digest appears; separate combat-log entries preserve inspection detail. Passive digests use the shorter `COMBAT_TIMING.passiveDigestMs` slot to prevent proc-heavy builds from stalling the combat sequence.
+
 Luck's chance-effect bonus is added only when `chance` is explicitly present. Final proc chance is clamped to 0–100%.
 
 Some trigger event names are part of the general contract but are not yet emitted from every theoretically possible engine location. Verify the desired event in `engine.ts` before depending on it for new content.

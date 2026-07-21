@@ -218,6 +218,7 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 - Area abilities target all living enemies that are not Stealthed.
 - Non-damaging area status abilities such as Poison Cloud apply to every target in one shared event, producing one floating status message and simultaneous status feedback on all affected enemies.
 - Flurry chooses a new valid random enemy independently for every hit.
+- Data-driven passives triggered by the same hit are condensed into one shorter **Passives** digest. The digest names each proc and its result, while the combat log keeps separate inspectable entries.
 
 ### Damage, status, and turn presentation
 
@@ -248,7 +249,7 @@ This sequencing guarantees that:
 - Default player Energy regeneration: 1 at the start of the player's own turn.
 - Default enemy Energy regeneration: 1 at the start of that enemy's own turn.
 - Energy cannot exceed Max Energy and cannot be spent below zero.
-- A cooldown is measured in player turns and decreases only when the next player turn begins.
+- A cooldown is measured in player turns and decreases only when the next player turn begins. The visible counter updates with **Your turn.**, never during the final enemy action.
 - Focus clears every other cooldown, then keeps its own six-turn cooldown.
 - Recuperate presents its cast and Energy restoration as one `You gain X Energy.` combat message.
 

@@ -1,5 +1,6 @@
 export const COMBAT_TIMING = {
   floatingMessageMs: 1800,
+  passiveDigestMs: 1100,
   attackDurationMs: 730,
   attackImpactMs: 320,
   turnOrderReorderMs: 480,

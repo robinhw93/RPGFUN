@@ -11,6 +11,7 @@ export function eventRevealsPlayerTurn(combat: CombatState, eventIndex: number):
 }
 
 export function getCombatEventDurationMs(combat: CombatState, eventIndex: number): number {
+  if (combat.floatingEvents[eventIndex]?.startsWith("Passives —")) return COMBAT_TIMING.passiveDigestMs;
   const directAttack = combat.pendingEffects.find((effect) => (
     effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId)
   ));
