@@ -1645,6 +1645,14 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     if (effect.damage > 0) damagedTargets.push(effect.targetId);
   });
 
+  enemies = enemies.map((enemy) => enemy.hp <= 0 && enemy.statuses.length > 0
+    ? { ...enemy, statuses: [] }
+    : enemy);
+  const visibleStatusAnimations = statusAnimations.filter((animation) => (
+    animation.targetId === "player"
+    || enemies.some((enemy) => enemy.instanceId === animation.targetId && enemy.hp > 0)
+  ));
+
   const consumedIds = new Set(matchingEffects.map((effect) => effect.id));
   if (attackEffectId && consumedIds.has(attackEffectId)) attackEffectId = null;
   const pendingEffects = (combat.pendingEffects ?? []).filter((effect) => !consumedIds.has(effect.id));
@@ -1653,7 +1661,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, statusAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, statusAnimations: visibleStatusAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {

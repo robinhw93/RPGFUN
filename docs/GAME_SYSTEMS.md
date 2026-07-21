@@ -212,6 +212,7 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 ### Targeting
 
 - Dead enemies remain visible but cannot be targeted.
+- Dead enemies immediately lose all displayed status effects.
 - Stealthed enemies cannot be targeted.
 - A living, visible enemy with Taunt forces all single-target attacks to that enemy.
 - The selected enemy is marked with a target icon and highlighted frame in the initiative row.
