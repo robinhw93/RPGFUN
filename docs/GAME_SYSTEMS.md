@@ -219,7 +219,7 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 - Area abilities target all living enemies that are not Stealthed.
 - Non-damaging area status abilities such as Poison Cloud apply to every target in one shared event, producing one floating status message and simultaneous status feedback on all affected enemies.
 - Flurry chooses a new valid random enemy independently for every hit.
-- Passives and on-hit effects create small local proc labels over the combatant they affect. Multiple passives affecting the same target at the same moment are combined into one label. These labels animate independently, never add sequence time, and never lock player input. The combat log records separate inspectable entries for the trigger and its results.
+- Passives and on-hit effects create small local proc labels over the combatant they affect. Multiple passives affecting the same target at the same moment are combined into one label. Concurrent and rapidly following local labels fan upward along left, center, and right paths so they remain readable. These labels animate independently, never add sequence time, and never lock player input. The combat log records separate inspectable entries for the trigger and its results.
 
 ### Damage, status, and turn presentation
 

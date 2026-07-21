@@ -1326,9 +1326,22 @@ function PassiveProcFloats({ animations }: { animations: CombatPassiveAnimation[
   if (visible.length === 0) return null;
   return (
     <div className="passive-proc-floats" aria-hidden="true">
-      {visible.map((animation) => (
-        <strong key={animation.id} className="passive-proc-float" style={{ "--passive-proc-offset": `${animation.lane * 14}px` } as React.CSSProperties}>{animation.text}</strong>
-      ))}
+      {visible.map((animation) => {
+        const direction = [-1, 0, 1][animation.lane % 3] ?? 0;
+        return (
+          <strong
+            key={animation.id}
+            className="passive-proc-float"
+            style={{
+              "--passive-proc-offset": `${animation.lane * 14}px`,
+              "--passive-proc-mid-x": `${direction * 24}px`,
+              "--passive-proc-end-x": `${direction * 54}px`,
+            } as React.CSSProperties}
+          >
+            {animation.text}
+          </strong>
+        );
+      })}
     </div>
   );
 }
