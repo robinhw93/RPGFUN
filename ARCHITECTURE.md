@@ -106,7 +106,7 @@ UI modules display these results but never reproduce their formulas.
 ### Stat contract
 
 - Raw Hit Chance and Critical Strike Chance are intentionally uncapped.
-- Dodge Chance is capped at 50%.
+- Permanent and temporary Dodge modifiers are combined through the shared combat-math helper, then capped at 50%.
 - Final Hit Chance is `raw Hit - capped Dodge`, clamped to 20–100%.
 - Strength and Agility feed Physical Power.
 - Intelligence feeds Magical Power.

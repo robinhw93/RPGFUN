@@ -1,5 +1,5 @@
 import { getCharacterCombatFeatures } from "./combatFeatures";
-import { capDodgeChance } from "./combatMath";
+import { getEffectiveDodgeChance } from "./combatMath";
 import { ITEMS } from "./data";
 import { DEFAULT_CHARACTER_AVATAR_ID } from "./avatars";
 import type { CharacterState, GameState, Stats, StatusEffectId } from "./types";
@@ -103,7 +103,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     energyRegen: Math.round(energyRegen),
     critChance,
     hitChance: 0.95 + stats.agility * 0.005 + features.passive.hitChance,
-    dodgeChance: capDodgeChance(0.02 + stats.agility * 0.004 + features.passive.dodgeChance),
+    dodgeChance: getEffectiveDodgeChance(0.02 + stats.agility * 0.004 + features.passive.dodgeChance),
     initiativeBonus: Math.round(stats.agility * 0.5 + stats.intelligence * 0.25 + features.passive.initiative),
     guardMultiplier: 1 + stats.strength * 0.01 + features.passive.guardGeneration,
     healingReceivedMultiplier: 1 + stats.vitality * 0.005 + features.passive.healingReceived,

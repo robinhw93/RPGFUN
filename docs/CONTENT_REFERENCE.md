@@ -154,7 +154,7 @@ The duration is the default duration created by the status library. Ability or t
 | Regenerate | 3 turns | No | Heals at turn start for `3 + 20% source Magical Power` per stack, then applies healing-received modifiers. |
 | Taunt | Permanent | No | Forces the player to target this living, visible enemy with single-target attacks. |
 | Stealth | Until the end of your next turn | No | Cannot be targeted by enemies. Reapplication refreshes duration but never adds stacks. |
-| Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default; Enduring Evasion changes magnitude and duration. |
+| Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default, subject to the 50% Dodge cap; Enduring Evasion changes magnitude and duration. |
 | Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
 | Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |
 
@@ -184,7 +184,7 @@ All current enemies start combat with 10 Max Energy and regenerate 1 Energy on t
 
 | Enemy | Health | Power | Armor | Magic Resistance | Hit | Dodge | Cost | Attack |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| DUMMY | 100 | 1 | 0 | 0 | Guaranteed | 0% | 1 | Training Strike; 1 base Physical damage. |
+| DUMMY | 100 | 1 | 0 | 0 | 95% | 0% | 1 | Training Strike; 1 base Physical damage. |
 | Ash Hound | 28 | 7 | 1 | 0 | 95% | 8% | 3 | Raking Claws; Physical and applies Bleed when it deals Health damage. |
 | Cinder Cultist | 34 | 9 | 2 | 2 | 96% | 3% | 4 | Searing Brand; Arcane. |
 | Ember Wisp | 22 | 6 | 0 | 3 | 98% | 12% | 3 | Scorch; Arcane. |

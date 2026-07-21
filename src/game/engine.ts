@@ -1,5 +1,5 @@
 import { getDerivedStats } from "./character";
-import { capDodgeChance, rollHit } from "./combatMath";
+import { getEffectiveDodgeChance, rollHit } from "./combatMath";
 import { ABILITIES, ENEMIES } from "./data";
 import {
   absorbIncomingDamage,
@@ -248,16 +248,19 @@ function normalizeStatuses(statuses: StatusEffect[] = []): StatusEffect[] {
 
 function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
   return enemies.map((enemy) => {
+    const template = ENEMIES[enemy.id];
     let statuses = normalizeStatuses(enemy.statuses ?? []);
     if (enemy.stunned && !hasStatus(statuses, "stunned")) statuses = addOrRefreshStatus(statuses, createStatusEffect("stunned"));
     return {
-      ...ENEMIES[enemy.id],
+      ...template,
       ...enemy,
+      // Migrate active training combats created while DUMMY incorrectly had 1000% Hit Chance.
+      hitChance: enemy.id === "dummy" && enemy.hitChance === 10 ? template.hitChance : enemy.hitChance ?? template.hitChance,
       energy: enemy.energy ?? 10,
       maxEnergy: enemy.maxEnergy ?? 10,
-      energyCost: enemy.energyCost ?? ENEMIES[enemy.id].energyCost,
-      attackDescription: enemy.attackDescription ?? ENEMIES[enemy.id].attackDescription,
-      onHitEffect: enemy.onHitEffect ?? ENEMIES[enemy.id].onHitEffect,
+      energyCost: enemy.energyCost ?? template.energyCost,
+      attackDescription: enemy.attackDescription ?? template.attackDescription,
+      onHitEffect: enemy.onHitEffect ?? template.onHitEffect,
       statuses,
       stunned: enemy.stunned ?? false,
     };
@@ -1060,7 +1063,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         }
         continue;
       }
-      if (!rollHit(derived.hitChance, target.dodgeChance)) {
+      const targetDodgeChance = getEffectiveDodgeChance(target.dodgeChance, getDodgeChanceBonus(target.statuses));
+      if (!rollHit(derived.hitChance, targetDodgeChance)) {
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
         queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, "player", totalHits);
         continue;
@@ -1423,7 +1427,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const attackName = enemy.intentText.split(" · ")[0];
     const enemyAttackInfo: InspectableInfo = { title: attackName, description: enemy.attackDescription, category: "ability" };
     events.push(`${enemy.name} uses ${attackName}.`);
-    const playerDodgeChance = capDodgeChance(derived.dodgeChance + getDodgeChanceBonus(playerStatuses));
+    const playerDodgeChance = getEffectiveDodgeChance(derived.dodgeChance, getDodgeChanceBonus(playerStatuses));
     if (!rollHit(enemy.hitChance, playerDodgeChance)) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, enemy.instanceId);

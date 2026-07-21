@@ -25,7 +25,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Magical Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
   stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 2, stackable: false, expiresAtTurnStart: false, description: "Cannot be targeted by enemies until the end of your next turn." },
-  evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn." },
+  evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn. Dodge Chance cannot exceed 50%." },
   distraction: { id: "distraction", name: "Distraction", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next ability costs 0 Energy." },
   pinpoint: { id: "pinpoint", name: "Pinpoint", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next damaging ability is guaranteed to critically strike." },
   poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Arcane Damage at the end of each turn. Each stack deals 2 damage plus 15% of the applier's Magical Power." },

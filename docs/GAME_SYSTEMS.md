@@ -19,7 +19,7 @@ Death is permanent. When combat reaches defeat, the browser save is deleted. The
 The adventure screen also offers a separate endless testing route for developing and validating Shadow builds:
 
 - Every fight contains a newly randomized group of two or three DUMMIES.
-- Each DUMMY has 100 Health, no defense or Dodge, and a guaranteed-hit training attack with 1 base Physical damage.
+- Each DUMMY has 100 Health, no defense or Dodge, and a 95% Hit Chance training attack with 1 base Physical damage.
 - Every victory awards exactly two complete levels, including six attribute points and two talent points.
 - Training victories award no gold or loot.
 - Health is restored to the character's current maximum before the next training fight.
@@ -94,6 +94,7 @@ The final opposed result is clamped between 20% and 100%. This means:
 - An attack always has at least a 20% chance to hit.
 - The final chance can never exceed 100%.
 - Raw Hit Chance can exceed 100% and can cancel high Dodge. For example, 155% Hit against 40% Dodge resolves to 115%, then becomes 100%.
+- Temporary Dodge effects are added before the 50% Dodge cap. Evasion therefore reduces a 95% Hit Chance enemy to 45% final Hit Chance while active.
 
 ### Critical strikes
 
