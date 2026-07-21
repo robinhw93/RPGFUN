@@ -170,7 +170,7 @@ The duration is the default duration created by the status library. Ability or t
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |
 | Stunned | 1 turn | No | Skips the next turn. |
 | Exhausted | 1 turn | No | Energy regeneration is limited to 1 on the next turn. |
-| Slowed | 3 turns | No | Acts after combatants that are not Slowed. |
+| Slowed | 1 turn | No | Sets Initiative to 0 until the end of the affected combatant's next turn. It cannot grant another action in the current round. |
 | Reckless | 3 turns | No | Takes damage equal to 50% of direct damage it deals, rounded with a minimum of 1. |
 | Wet | 3 turns | No | Takes 50% more Lightning damage and 50% less Fire damage. |
 | Electrified | 3 turns | No | Has a 10% chance at turn start to become Stunned and skip that turn. |

@@ -361,6 +361,7 @@ export interface CombatState {
   turn: number;
   turnOrder: TurnOrderEntry[];
   activeTurnIndex: number;
+  actedActorIds: string[];
   initiativeRevealed: boolean;
   playerActed: boolean;
   abilityCooldowns: Record<string, number>;

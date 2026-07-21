@@ -35,7 +35,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   vulnerable: { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 25% more damage from all sources." },
   stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, description: "Skips the next turn." },
   exhausted: { id: "exhausted", name: "Exhausted", kind: "debuff", duration: 1, description: "Regains only 1 Energy at the start of the next turn." },
-  slowed: { id: "slowed", name: "Slowed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Acts after combatants that are not Slowed." },
+  slowed: { id: "slowed", name: "Slowed", kind: "debuff", duration: 1, description: "Initiative is reduced to 0 until the end of the next turn." },
   reckless: { id: "reckless", name: "Reckless", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes damage equal to 50% of the damage it deals." },
   wet: { id: "wet", name: "Wet", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 50% more Lightning Damage and 50% less Fire Damage." },
   electrified: { id: "electrified", name: "Electrified", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Has a 10% chance to become Stunned at the start of each turn." },

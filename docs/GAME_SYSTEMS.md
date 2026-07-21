@@ -154,7 +154,8 @@ The result has a minimum of 1 before critical and status modifiers. Guard then a
 - Highest total acts first.
 - On an exact player/enemy tie, the player is ordered first.
 - Remaining enemy ties are resolved by stable actor ID.
-- Slowed combatants are reordered behind combatants that are not Slowed.
+- Slowed sets the affected combatant's Initiative to 0 until the end of its next turn. The displayed value and position update in the turn-order row.
+- Combat tracks who has already acted during the round, so changing Initiative never grants a second turn in that round.
 
 The initiative UI rapidly cycles random values, locks the raw rolls, applies bonuses, then animates the final cards into the turn-order row. The current timing values are documented in [Architecture](../ARCHITECTURE.md#initiative-presentation).
 

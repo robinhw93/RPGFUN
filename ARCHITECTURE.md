@@ -76,7 +76,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 
 `CombatState` contains both authoritative logical results and presentation synchronization state:
 
-- Turn number, sorted initiative entries, active index, and initiative-reveal state.
+- Turn number, sorted initiative entries, active index, per-round acted-actor IDs, and initiative-reveal state.
 - Player/enemy Health, Energy, statuses, targeting, and cooldowns.
 - `floatingEvents`: ordered player-facing messages for the current sequence.
 - `pendingEffects`: state changes indexed to those messages.
@@ -191,7 +191,9 @@ This is the preferred extension point for talents that transform an existing abi
 
 ### Turn order
 
-Base order is descending initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. `reorderCombat` puts Slowed actors after actors without Slowed while preserving initiative rules inside those groups.
+Base order is descending effective initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. Slowed sets effective initiative to 0, so `reorderCombat` moves the affected combatant to the appropriate place and the turn-order row displays 0.
+
+`actedActorIds` records every combatant that has finished a turn in the current round. `moveToNextActor` always chooses the highest-initiative living combatant not in that set and clears the set only when a new round begins. Dynamic reordering therefore cannot give a Slowed combatant a second action after it has already acted.
 
 `moveToNextActor`:
 

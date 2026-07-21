@@ -40,6 +40,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     turn: 1,
     turnOrder,
     activeTurnIndex: 0,
+    actedActorIds: [],
     initiativeRevealed: false,
     playerActed: false,
     abilityCooldowns: {},
@@ -263,6 +264,8 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       }),
       selectedEnemyId,
       activeTurnIndex: Math.min(combat.activeTurnIndex ?? 0, combat.turnOrder.length - 1),
+      actedActorIds: combat.actedActorIds
+        ?? combat.turnOrder.slice(0, combat.activeTurnIndex ?? 0).map((entry) => entry.actorId),
       initiativeRevealed: combat.initiativeRevealed ?? true,
       playerActed: combat.playerActed ?? false,
       abilityCooldowns: combat.abilityCooldowns ?? {},
@@ -285,6 +288,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     enemies,
     turnOrder,
     activeTurnIndex: 0,
+    actedActorIds: [],
     initiativeRevealed: false,
     playerActed: false,
     abilityCooldowns: {},
@@ -351,11 +355,13 @@ function getActorStatuses(combat: CombatState, actor: TurnOrderEntry): StatusEff
     : combat.enemies.find((enemy) => enemy.instanceId === actor.actorId)?.statuses ?? [];
 }
 
+export function getCombatInitiative(combat: CombatState, actor: TurnOrderEntry): number {
+  return hasStatus(getActorStatuses(combat, actor), "slowed") ? 0 : actor.initiative;
+}
+
 function orderTurnEntries(combat: CombatState): TurnOrderEntry[] {
   return [...combat.turnOrder].sort((left, right) => {
-    const slowDifference = Number(hasStatus(getActorStatuses(combat, left), "slowed")) - Number(hasStatus(getActorStatuses(combat, right), "slowed"));
-    if (slowDifference !== 0) return slowDifference;
-    const initiativeDifference = right.initiative - left.initiative;
+    const initiativeDifference = getCombatInitiative(combat, right) - getCombatInitiative(combat, left);
     if (initiativeDifference !== 0) return initiativeDifference;
     if (left.kind !== right.kind) return left.kind === "player" ? -1 : 1;
     return left.actorId.localeCompare(right.actorId);
@@ -552,6 +558,10 @@ function applyPlayerDeathPrevention(
 }
 
 function moveToNextActor(combat: CombatState, character: CharacterState, logs: CombatLogEntry[], events: string[], pendingEffects: CombatPendingEffect[]): CombatState {
+  const completedActorId = combat.turnOrder[combat.activeTurnIndex]?.actorId;
+  const actedActorIds = new Set(combat.actedActorIds ?? []);
+  if (completedActorId) actedActorIds.add(completedActorId);
+  combat = { ...combat, actedActorIds: [...actedActorIds] };
   combat = reorderCombat(combat);
   const derived = getDerivedStats(character);
   const saved = applyPlayerDeathPrevention(combat.playerHp, combat.playerStatuses, combat.deathPreventionUsed, combat.playerMaxHp, derived, logs, events, pendingEffects);
@@ -567,20 +577,21 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
     return { ...combat, outcome: "victory" };
   }
 
-  let nextIndex = combat.activeTurnIndex;
-  for (let offset = 1; offset <= combat.turnOrder.length; offset += 1) {
-    const candidateIndex = (combat.activeTurnIndex + offset) % combat.turnOrder.length;
-    if (isActorAlive(combat, combat.turnOrder[candidateIndex])) {
-      nextIndex = candidateIndex;
-      break;
-    }
+  let nextActor = combat.turnOrder.find((actor) => isActorAlive(combat, actor) && !actedActorIds.has(actor.actorId));
+  let nextTurn = combat.turn;
+  let nextActedActorIds = [...actedActorIds];
+  if (!nextActor) {
+    nextTurn += 1;
+    nextActedActorIds = [];
+    nextActor = combat.turnOrder.find((actor) => isActorAlive(combat, actor));
   }
-  const nextActor = combat.turnOrder[nextIndex];
-  const nextTurn = nextIndex <= combat.activeTurnIndex ? combat.turn + 1 : combat.turn;
+  if (!nextActor) return combat;
+  const nextIndex = combat.turnOrder.findIndex((actor) => actor.actorId === nextActor.actorId);
   let next: CombatState = {
     ...combat,
     activeTurnIndex: nextIndex,
     turn: nextTurn,
+    actedActorIds: nextActedActorIds,
   };
 
   if (nextActor.kind === "player") {

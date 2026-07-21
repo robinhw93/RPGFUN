@@ -21,7 +21,7 @@ import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
-import { createCombat, endPlayerTurn, ensureCombatState, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, endPlayerTurn, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
@@ -1143,16 +1143,17 @@ function TurnOrderBar({ combat }: { combat: CombatState }) {
           const enemy = actor.kind === "enemy" ? combat.enemies.find((candidate) => candidate.instanceId === actor.actorId) : null;
           const defeated = actor.kind === "player" ? combat.playerHp <= 0 : (enemy?.hp ?? 0) <= 0;
           const currentTarget = Boolean(enemy && enemy.instanceId === combat.selectedEnemyId && enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth"));
+          const initiative = getCombatInitiative(combat, actor);
           return (
             <span
               key={actor.actorId}
               className={`${index === combat.activeTurnIndex ? "active" : ""} ${defeated ? "defeated" : ""} ${currentTarget ? "current-target" : ""} ${actor.kind}`}
-              data-game-tooltip={`${actor.name}: ${actor.initiative} Initiative${currentTarget ? " · Current target" : ""}`}
+              data-game-tooltip={`${actor.name}: ${initiative} Initiative${currentTarget ? " · Current target" : ""}`}
               data-tooltip-placement="bottom"
-              aria-label={`${actor.kind === "player" ? "You" : actor.name}, ${actor.initiative} Initiative${currentTarget ? ", current target" : ""}`}
+              aria-label={`${actor.kind === "player" ? "You" : actor.name}, ${initiative} Initiative${currentTarget ? ", current target" : ""}`}
             >
               <span className="turn-order-name">{currentTarget && <Target className="turn-order-target-icon" size={10} aria-hidden="true" />}<b>{actor.kind === "player" ? "You" : actor.name}</b></span>
-              <small>{actor.initiative}</small>
+              <small>{initiative}</small>
             </span>
           );
         })}
