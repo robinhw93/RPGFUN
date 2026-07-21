@@ -184,6 +184,8 @@ The player may use any number of abilities during the turn as long as:
 
 Using an ability never ends the turn automatically. The player presses **End Turn** when finished.
 
+Ability input remains available while an earlier ability is animating. Further ability presses are added to a first-in, first-out queue and execute as soon as each preceding combat sequence and return animation finishes. The queue reserves Energy and cooldown availability before accepting each press, shows the queued count on affected ability buttons, and remembers the selected target for each cast. **End Turn** can also be queued; it executes after every ability already ahead of it and prevents later actions from being added.
+
 Distraction makes the next ability cost 0 Energy and is consumed when that ability is used. Pinpoint guarantees critical strikes for every hit of the next damaging ability and is consumed when that ability begins. Both persist until consumed or combat ends.
 
 Light Speed performs a complete player turn transition without allowing enemies to act between the two turns. End-of-turn Poison and duration changes resolve, then start-of-turn Burn, Regenerate, Energy regeneration, and cooldown reduction resolve before control returns to the player.

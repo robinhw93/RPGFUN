@@ -21,11 +21,12 @@ import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
-import { createCombat, endPlayerTurn, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn, useAbility } from "./game/engine";
+import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
+import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
 
 type View = "adventure" | "character" | "talents" | "talentDevtool";
 
@@ -228,9 +229,11 @@ function App() {
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [devtoolUnlocked, setDevtoolUnlocked] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
+  const [playerTurnReadyEventId, setPlayerTurnReadyEventId] = useState<number | null>(null);
   const travelTimers = useRef<number[]>([]);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatSequencer = useCombatEventSequencer(game, setGame);
+  const combatActionQueue = useCombatActionQueue(game, setGame, playerTurnReadyEventId);
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = getAdventureNode(game.adventure.mode, game.adventure.nodeIndex);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
@@ -253,6 +256,7 @@ function App() {
     return () => document.body.classList.remove("character-creation-open");
   }, [game.characterCreated]);
   useEffect(() => () => travelTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
+  useEffect(() => setPlayerTurnReadyEventId(null), [game.adventure.active, game.adventure.mode, game.adventure.nodeIndex]);
   useEffect(() => {
     let cancelled = false;
     setCharacterAssetsReady(false);
@@ -294,26 +298,6 @@ function App() {
       ...current,
       adventure: { ...current.adventure, combat: selectEnemyTarget(current.adventure.combat, enemyId) },
     }) : current);
-  };
-
-  const castAbility = (abilityId: string) => {
-    setGame((current) => {
-      if (!current.adventure.combat) return current;
-      return {
-        ...current,
-        adventure: { ...current.adventure, combat: useAbility(current.adventure.combat, current.character, abilityId) },
-      };
-    });
-  };
-
-  const finishPlayerTurn = () => {
-    setGame((current) => {
-      if (!current.adventure.combat) return current;
-      return {
-        ...current,
-        adventure: { ...current.adventure, combat: endPlayerTurn(current.adventure.combat, current.character) },
-      };
-    });
   };
 
   const runEnemyTurn = (actorId: string) => {
@@ -578,11 +562,13 @@ function App() {
             derived={derived}
             onBegin={beginAdventure}
             onSelectEnemy={selectEnemy}
-            onAbility={castAbility}
-            onEndTurn={finishPlayerTurn}
+            queuedActions={combatActionQueue.actions}
+            onAbility={combatActionQueue.queueAbility}
+            onEndTurn={combatActionQueue.queueEndTurn}
             onEnemyTurn={runEnemyTurn}
             onCombatEvent={combatSequencer.revealEvent}
             onCombatSequenceComplete={combatSequencer.completeSequence}
+            onPlayerTurnReady={setPlayerTurnReadyEventId}
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
             onLeaveTraining={leaveTraining}
@@ -689,9 +675,10 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: Ch
   );
 }
 
-function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter }: {
+function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
+  queuedActions: QueuedCombatAction[];
   onBegin: (mode: AdventureMode) => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
@@ -699,6 +686,7 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   onEnemyTurn: (actorId: string) => void;
   onCombatEvent: (eventId: number, eventIndex: number) => void;
   onCombatSequenceComplete: (eventId: number) => void;
+  onPlayerTurnReady: (eventId: number) => void;
   onInitiativeComplete: () => void;
   onContinue: () => void;
   onLeaveTraining: () => void;
@@ -710,7 +698,6 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const adventure = game.adventure;
   const [logOpen, setLogOpen] = useState(false);
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
-  const [playerReadyEventId, setPlayerReadyEventId] = useState<number | null>(null);
   const combatEventId = adventure.combat?.eventId ?? 0;
   const initiativePlaying = Boolean(adventure.combat && adventure.combat.outcome === "active" && !adventure.combat.initiativeRevealed);
   const sequencePending = Boolean(adventure.combat && isCombatSequencePending(adventure.combat));
@@ -805,11 +792,13 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
   const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep");
-  const playerInputLocked = initiativePlaying || playerIncapacitated || (sequencePending && playerReadyEventId !== combatEventId);
+  const playerInputUnavailable = initiativePlaying || playerIncapacitated;
   const handleCombatEventShown = (eventId: number, eventIndex: number) => {
-    if (eventRevealsPlayerTurn(combat, eventIndex)) setPlayerReadyEventId(eventId);
+    if (eventRevealsPlayerTurn(combat, eventIndex)) onPlayerTurnReady(eventId);
     onCombatEvent(eventId, eventIndex);
   };
+  const queueProjection = projectCombatActionQueue(combat, queuedActions);
+  const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
     <section className={`combat-page compact-combat ${inspectedInfo ? "inspect-info-open" : ""}`}>
       <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} />
@@ -891,16 +880,17 @@ function AdventureView({ game, derived, onBegin, onSelectEnemy, onAbility, onEnd
           const selfRequirementMet = !ability.requiredSelfStatus
             || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
-          const effectiveEnergyCost = combat.playerStatuses.some((status) => status.id === "distraction") ? 0 : ability.energyCost;
-          return <HoldAbilityButton key={id} ability={ability} energyCost={effectiveEnergyCost} cooldown={cooldown} disabled={playerInputLocked || !isPlayerTurn || cooldown > 0 || combat.outcome !== "active" || effectiveEnergyCost > combat.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : ability.energyCost;
+          const queuedCount = queuedActions.filter((action) => action.type === "ability" && action.abilityId === id).length;
+          return <HoldAbilityButton key={id} ability={ability} energyCost={effectiveEnergyCost} cooldown={cooldown} queuedCount={queuedCount} disabled={playerInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
 
       <div className="combat-footer-controls">
         <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
-        <button className="end-turn-button" disabled={playerInputLocked || !isPlayerTurn || combat.outcome !== "active"} onClick={onEndTurn}>
-          {isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
+        <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={playerInputUnavailable || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
+          {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
       </div>
 
@@ -1488,7 +1478,7 @@ function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: (
   );
 }
 
-function HoldAbilityButton({ ability, energyCost, cooldown, disabled, onUse }: { ability: Ability; energyCost: number; cooldown: number; disabled: boolean; onUse: () => void }) {
+function HoldAbilityButton({ ability, energyCost, cooldown, queuedCount, disabled, onUse }: { ability: Ability; energyCost: number; cooldown: number; queuedCount: number; disabled: boolean; onUse: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -1522,7 +1512,7 @@ function HoldAbilityButton({ ability, energyCost, cooldown, disabled, onUse }: {
 
   return (
     <button
-      className={`compact-ability ${ability.branch}`}
+      className={`compact-ability ${ability.branch} ${queuedCount > 0 ? "queued" : ""}`}
       disabled={disabled}
       onClick={activate}
       onPointerDown={beginHold}
@@ -1536,6 +1526,7 @@ function HoldAbilityButton({ ability, energyCost, cooldown, disabled, onUse }: {
       <strong>{ability.name}</strong>
       <span className="compact-ability-cost">{energyCost}<Sparkles size={10} /></span>
       <span className="compact-ability-cooldown-value"><Hourglass size={9} />{ability.cooldownTurns ?? 0}</span>
+      {queuedCount > 0 && <span className="compact-ability-queued" aria-hidden="true">Queued{queuedCount > 1 ? ` ×${queuedCount}` : ""}</span>}
       {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true"><Hourglass size={15} /><b>{cooldown}</b></span>}
       <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{ability.description}</small><em>{energyCost} Energy · {ability.cooldownTurns ? `${ability.cooldownTurns} turn cooldown` : "No cooldown"}</em></span>
     </button>

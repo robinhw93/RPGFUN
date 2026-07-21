@@ -112,6 +112,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/combatFeatures.ts` | Resolves gear, set, and talent passives, triggers, damage modifiers, and ability modifiers. |
 | `src/game/combatSequence.ts` | Small pure helpers for queued combat presentation. |
 | `src/hooks/useCombatEventSequencer.ts` | Synchronizes floating text, attack wind-up, impact, and state resolution. |
+| `src/hooks/useCombatActionQueue.ts` | Queues player abilities and End Turn, projects reserved Energy/cooldowns, and dispatches actions between combat sequences. |
 | `src/game/timing.ts` | Combat and initiative presentation timings. |
 | `src/game/gear.ts` | Equipping, unequipping, compatibility, hand rules, material/category normalization, and loot selection. |
 | `src/game/progression.ts` | Experience thresholds and level rewards. |

@@ -37,6 +37,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 ### Application and UI
 
 - `src/App.tsx` owns top-level React state, navigation, character creation, adventure progression, event choices, reward presentation, runtime talent interaction, character/inventory interaction, and the high-level commands sent to game modules.
+- `src/hooks/useCombatActionQueue.ts` owns the transient player-input queue, reserves Energy and cooldowns for queued abilities, captures targets, and dispatches one action whenever the presentation sequencer is ready.
 - `src/hooks/useCombatEventSequencer.ts` schedules visible combat events and applies their pending state effects at the correct message/impact time.
 - `src/components/FloatingCombatText.tsx` presents the event queue and reports when each entry appears and when the sequence completes.
 - `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
@@ -224,6 +225,8 @@ The visible active index remains unchanged until the queued turn event resolves.
 Non-damaging `all_enemies` status abilities use one shared event index for every target. This keeps their status applications, presentation metadata, and floating text synchronized as a single area effect rather than a target-by-target sequence.
 
 Using an ability sets `playerActed` but does not move turn order. The player may continue using affordable ready abilities until calling `endPlayerTurn`.
+
+React keeps player inputs in a transient FIFO queue that is deliberately excluded from saved `GameState`. Ability buttons remain interactive while an earlier action animates. Queue projection reserves Energy, the free Distraction cast, and cooldowns (including Focus resets), so the UI cannot enqueue a sequence that is already known to be unaffordable or unavailable. Each ability stores the selected target at click time; if that target is no longer valid when the action reaches the front, normal targeting rules retain the current valid target. **End Turn** can be appended once and closes the queue to later abilities. The dispatcher waits for the current combat sequence and attack return animation, executes one action, then waits again before taking the next FIFO entry.
 
 ### Enemy turns
 
