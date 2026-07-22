@@ -286,6 +286,48 @@ export const ABILITIES: Record<string, Ability> = {
     cooldownTurns: 3, target: "all_enemies", damageType: "fire", powerScaling: 0.25, effect: "burn", statusStacks: 2,
     selfStatusApplications: [{ status: "burn", stacks: 2 }], selfStatusVfx: "firestorm", icon: "🔥", branch: "arcanist", vfx: "firestorm",
   },
+  ManaFracture: {
+    range: "ranged",
+    id: "ManaFracture", name: "Mana Fracture", description: "Consume all Arcane Wounds on the target. Restore 1 Energy per 2 stacks consumed.", energyCost: 1,
+    cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "arcaneWound", consumeTargetStatus: "arcaneWound",
+    energyPerConsumedTargetStatusStacks: { stacksPerEnergy: 2 }, icon: "✦", branch: "arcanist", vfx: "mana_fracture",
+  },
+  RapidFire: {
+    range: "ranged",
+    id: "RapidFire", name: "Rapid Fire", description: "Attack random enemies three times for 30% Magical Power as Arcane Damage per hit, with +20% Critical Strike Chance. While Burning, attack six times instead.", energyCost: 2,
+    cooldownTurns: 4, target: "enemy", damageType: "arcane", powerScaling: 0.3, hits: 3, hitsWhenSelfHasStatus: { status: "burn", hits: 6 }, randomTargetPerHit: true,
+    critChanceBonus: 0.2, attackSequenceDurationMultiplier: 1.4, icon: "✦", branch: "arcanist", vfx: "rapid_fire",
+  },
+  FocusedBlast: {
+    range: "ranged",
+    id: "FocusedBlast", name: "Focused Blast", description: "Requires at least 6 Arcane Wounds. Deal Arcane Damage equal to your Barrier and consume 3 Arcane Wounds.", energyCost: 4,
+    cooldownTurns: 2, target: "enemy", damageType: "arcane", requiredTargetStatusStacks: { status: "arcaneWound", minimum: 6 }, consumeTargetStatus: "arcaneWound", consumeTargetStatusStacks: 3,
+    damageFromSelfStatusStacks: { status: "barrier", multiplier: 1, damageType: "arcane" }, icon: "✦", branch: "arcanist", vfx: "focused_blast",
+  },
+  AbsoluteZero: {
+    range: "ranged",
+    id: "AbsoluteZero", name: "Absolute Zero", description: "Deal Frost Damage equal to 50% of your Magical Power. If the target is Slowed, apply Frozen; otherwise apply Slowed and Exhausted.", energyCost: 3,
+    cooldownTurns: 4, target: "enemy", damageType: "frost", powerScaling: 0.5, statusApplications: [{ status: "slowed" }, { status: "exhausted" }],
+    conditionalStatusApplications: { whenTargetHas: "slowed", applications: [{ status: "frozen" }] }, icon: "❄", branch: "arcanist", vfx: "absolute_zero",
+  },
+  Blizzard: {
+    range: "ranged",
+    id: "Blizzard", name: "Blizzard", description: "Deal Frost Damage equal to 50% of your Magical Power to all enemies. Each target has a 50% chance to become Slowed, a 50% chance to become Exhausted, and a 10% chance to become Frozen.", energyCost: 5,
+    cooldownTurns: 3, target: "all_enemies", damageType: "frost", powerScaling: 0.5,
+    statusApplications: [{ status: "slowed", chance: 0.5 }, { status: "exhausted", chance: 0.5 }, { status: "frozen", chance: 0.1 }], icon: "❄", branch: "arcanist", vfx: "blizzard",
+  },
+  RideTheLightning: {
+    range: "ranged",
+    id: "RideTheLightning", name: "Ride the Lightning", description: "Consume Electrified from all enemies, immediately begin a new turn, and restore 1 Energy per enemy affected.", energyCost: 1,
+    cooldownTurns: 6, target: "enemy", dealsDamage: false, consumeStatusFromAllEnemies: "electrified", energyPerConsumedEnemyStatus: 1,
+    grantsImmediateTurn: true, immediateTurnVfx: "ride_the_lightning", icon: "ϟ", branch: "arcanist", vfx: "ride_the_lightning",
+  },
+  Charge: {
+    range: "ranged",
+    id: "Charge", name: "Charge", description: "Consume Electrified from all enemies. For each enemy affected, reduce all ability cooldowns by 1 and restore 1 Energy, then deal Lightning Damage equal to 100% of your Magical Power to all enemies.", energyCost: 4,
+    cooldownTurns: 6, target: "all_enemies", damageType: "lightning", powerScaling: 1, consumeStatusFromAllEnemies: "electrified",
+    energyPerConsumedEnemyStatus: 1, cooldownReductionPerConsumedEnemyStatus: 1, icon: "ϟ", branch: "arcanist", vfx: "charge",
+  },
   siphon: {
     range: "ranged",
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
@@ -293,7 +335,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
 };
 
-export const TALENT_TREE_CANVAS = { width: 4015, height: 2850 } as const;
+export const TALENT_TREE_CANVAS = { width: 4015, height: 3300 } as const;
 
 const TALENT_NODES: Talent[] = [
   { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 32.258, y: 50 }, icon: "✦", shape: "square" },
@@ -394,7 +436,7 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_87", name: "Lightning Fast", description: "+2 Initiative.", branch: "arcanist", kind: "passive", tier: 4, cost: 1, requires: ["talent_83"], position: { x: 36.3013698630137, y: 27.34375 }, icon: "✦", shape: "circle", combat: { passive: { initiative: 2 } } },
   { id: "talent_88", name: "Kindled Precision", description: "+2% Critical Strike Chance.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_84"], position: { x: 15.753424657534246, y: 27.34375 }, icon: "✦", shape: "circle", combat: { passive: { critChance: 0.02 } } },
   { id: "talent_89", name: "Fire Within", description: "+1 Max Energy.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_84"], position: { x: 18.493150684931507, y: 22.65625 }, icon: "✦", shape: "circle", combat: { passive: { maxEnergy: 1 } } },
-  { id: "talent_90", name: "Charged Reflexes", description: "+2 Initiative.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_87"], position: { x: 39.04109589041096, y: 27.34375 }, icon: "✦", shape: "circle", combat: { passive: { initiative: 2 } } },
+  { id: "talent_90", name: "Charged Reflexes", description: "+2 Initiative. Deal 15% more damage while you are first in initiative order.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_87"], position: { x: 39.04109589041096, y: 27.34375 }, icon: "✦", shape: "circle", combat: { passive: { initiative: 2 }, damageModifiers: [{ id: "charged-reflexes", name: "Charged Reflexes", description: "Deal 15% more damage while first in initiative order.", multiplier: 1.15, requiresFirstInInitiative: true }] } },
   { id: "talent_91", name: "Increased Voltage", description: "+1 Max Energy.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_87"], position: { x: 36.3013698630137, y: 22.65625 }, icon: "✦", shape: "circle", combat: { passive: { maxEnergy: 1 } } },
   { id: "talent_92", name: "Arcane Accuracy", description: "+2% Hit Chance.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_85"], position: { x: 22.602739726027394, y: 25.78125 }, icon: "✦", shape: "circle", combat: { passive: { hitChance: 0.02 } } },
   { id: "talent_93", name: "Glacial Plating", description: "+2 Armor.", branch: "arcanist", kind: "passive", tier: 5, cost: 1, requires: ["talent_86"], position: { x: 32.19178082191781, y: 25.78125 }, icon: "✦", shape: "circle", combat: { passive: { armor: 2 } } },
@@ -411,7 +453,7 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_104", name: "Arcane Combustion", description: "Consume all Arcane Wounds on the target. Deal 50% Magical Power as Fire Damage per stack consumed and apply an equal number of Burn stacks.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_89", "talent_96"], position: { x: 21.232876712328768, y: 15.625 }, icon: "✦", shape: "square", abilityId: "ArcaneCombustion" },
   { id: "talent_105", name: "Thundersnow", description: "Hit all enemies for 60% Magical Power as Frost and Lightning Damage. Apply Slowed to every target and Electrified to one random target.", branch: "arcanist", kind: "ability", tier: 7, cost: 1, requires: ["talent_91", "talent_97"], position: { x: 33.56164383561644, y: 15.625 }, icon: "✦", shape: "square", abilityId: "Thundersnow" },
   { id: "talent_106", name: "Arcane Knowledge", description: "+2 Intelligence. Each Arcane Wound increases Arcane Blast damage by 15% instead of 10%.", branch: "arcanist", kind: "passive", tier: 8, cost: 1, requires: ["talent_102"], position: { x: 25.34246575342466, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { passive: { stats: { intelligence: 2 } }, abilityModifiers: [{ id: "arcane-knowledge", name: "Arcane Knowledge", description: "Arcane Wounds grant Arcane Blast 5% additional damage per stack.", abilityIds: ["ArcaneBlast"], damagePerTargetStatusStackMultiplierDelta: 0.05, descriptionOverride: "Deal Arcane Damage equal to 20% of your Magical Power and apply 1 Arcane Wound. Each Arcane Wound increases Arcane Blast damage by 15%." }] } },
-  { id: "talent_107", name: "Lower Temperature", description: "Frostbolt has a 50% chance to apply Frozen. Frozen prevents actions and breaks when damage is taken.", branch: "arcanist", kind: "passive", tier: 8, cost: 1, requires: ["talent_101"], position: { x: 29.45205479452055, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "lower-temperature", name: "Lower Temperature", description: "Frostbolt has a 50% chance to apply Frozen.", event: "on_hit", chance: 0.5, conditions: { abilityIds: ["Frostbolt"] }, effects: [{ type: "apply_status", status: createStatusEffect("frozen", { duration: 1 }), target: "target" }] }] } },
+  { id: "talent_107", name: "Lower Temperature", description: "Frostbolt has a 50% chance to apply Exhausted.", branch: "arcanist", kind: "passive", tier: 8, cost: 1, requires: ["talent_101"], position: { x: 29.45205479452055, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "lower-temperature", name: "Lower Temperature", description: "Frostbolt has a 50% chance to apply Exhausted.", event: "on_hit", chance: 0.5, conditions: { abilityIds: ["Frostbolt"] }, effects: [{ type: "apply_status", status: createStatusEffect("exhausted"), target: "target" }] }] } },
   { id: "talent_108", name: "Rain", description: "Thundersnow applies Wet to all enemies instead of Slowed.", branch: "arcanist", kind: "passive", tier: 8, cost: 1, requires: ["talent_105"], position: { x: 33.56164383561644, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "rain", name: "Rain", description: "Thundersnow applies Wet instead of Slowed.", abilityIds: ["Thundersnow"], replaceStatusApplication: { from: "slowed", to: "wet" }, descriptionOverride: "Hit all enemies for 60% Magical Power as Frost and Lightning Damage. Apply Wet to every target and Electrified to one random target." }] } },
   { id: "talent_109", name: "Intense Beam", description: "All four Lightning Beam hits strike the selected target.", branch: "arcanist", kind: "passive", tier: 8, cost: 1, requires: ["talent_100"], position: { x: 37.67123287671233, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "intense-beam", name: "Intense Beam", description: "All Lightning Beam hits strike the selected target.", abilityIds: ["LightningBeam"], randomTargetPerHit: false, descriptionOverride: "Strike the selected enemy four times for 20% Magical Power as Lightning Damage per hit. Each hit has a 20% chance to apply Electrified." }] } },
   { id: "talent_110", name: "Feedback", description: "+1 Energy gained at the start of your turn.", branch: "arcanist", kind: "passive", tier: 8, cost: 1, requires: ["talent_104"], position: { x: 21.232876712328768, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { passive: { energyRegen: 1 } } },
@@ -429,15 +471,41 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_122", name: "Electrified Hug", description: "Conductor also applies Electrified to all enemies.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_115"], position: { x: 41.0958904109589, y: 19.736842105263158 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "electrified-hug", name: "Electrified Hug", description: "Conductor also Electrifies all enemies.", abilityIds: ["Conductor"], additionalStatusApplications: [{ status: "electrified" }], descriptionOverride: "Stun all enemies and yourself for 1 turn, and apply Electrified to all enemies." }] } },
   { id: "talent_123", name: "Shell Shocked", description: "While Stunned, you take only 20% damage from all sources.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_122"], position: { x: 41.0958904109589, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { passive: { incomingDamageMultiplierWhileStunned: 0.2 } } },
   { id: "talent_124", name: "Blinding Light", description: "Whenever you apply Electrified to an enemy, it has a 20% chance, plus Luck's bonus to chance-based effects, to also become Blind.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_115"], position: { x: 37.67123287671233, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "blinding-light", name: "Blinding Light", description: "Applying Electrified has a 20% chance, plus Luck's bonus to chance-based effects, to also apply Blind.", event: "status_applied", chance: 0.2, conditions: { appliedAnyStatus: ["electrified"] }, effects: [{ type: "apply_status", status: createStatusEffect("blind"), target: "target" }] }] } },
+  { id: "talent_125", name: "Brittle", description: "Enemies that are both Slowed and Exhausted take 15% more direct damage.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_114"], position: { x: 33.56164383561644, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "brittle", name: "Brittle", description: "Slowed and Exhausted enemies take 15% more direct damage.", multiplier: 1.15, targetHasAllStatuses: ["slowed", "exhausted"] }] } },
+  { id: "talent_126", name: "Arcane Reservoir", description: "Arcane Wounds you apply last 1 additional turn.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_113"], position: { x: 21.232876712328768, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { passive: { statusDurationBonuses: { arcaneWound: 1 } } } },
   { id: "talent_127", name: "Pyromania", description: "While you are Burning, deal 10% more Arcane, Fire, Frost, and Lightning damage.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_112"], position: { x: 17.123287671232877, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "pyromania", name: "Pyromania", description: "Deal 10% more magical damage while Burning.", multiplier: 1.1, damageTypes: ["arcane", "fire", "frost", "lightning"], attackerHasAnyStatus: ["burn"] }] } },
   { id: "talent_128", name: "Living Furnace", description: "Your Burn deals 5% more damage to enemies while you are Burning.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_127"], position: { x: 13.698630136986301, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { statusDamageModifiers: [{ id: "living-furnace", name: "Living Furnace", description: "Burn deals 5% more damage to enemies while you are Burning.", statuses: ["burn"], sourceHasAnyStatus: ["burn"], bonus: 0.05 }] } },
   { id: "talent_129", name: "Greater Pyromania", description: "While you are Burning, deal an additional 10% more Arcane, Fire, Frost, and Lightning damage.", branch: "arcanist", kind: "passive", tier: 12, cost: 1, requires: ["talent_128"], position: { x: 10.273972602739725, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "greater-pyromania", name: "Greater Pyromania", description: "Deal an additional 10% more magical damage while Burning.", multiplier: 1.1, damageTypes: ["arcane", "fire", "frost", "lightning"], attackerHasAnyStatus: ["burn"] }] } },
   { id: "talent_130", name: "Greater Living Furnace", description: "Your Burn deals an additional 10% more damage to enemies while you are Burning.", branch: "arcanist", kind: "passive", tier: 13, cost: 1, requires: ["talent_129"], position: { x: 10.273972602739725, y: 19.736842105263158 }, icon: "✦", shape: "circle", combat: { statusDamageModifiers: [{ id: "greater-living-furnace", name: "Greater Living Furnace", description: "Burn deals an additional 10% more damage to enemies while you are Burning.", statuses: ["burn"], sourceHasAnyStatus: ["burn"], bonus: 0.1 }] } },
   { id: "talent_131", name: "Firestorm", description: "Deal 25% Magical Power as Fire Damage to all enemies, then apply 2 Burn to all enemies and yourself.", branch: "arcanist", kind: "ability", tier: 14, cost: 1, requires: ["talent_130"], position: { x: 10.273972602739725, y: 24.342105263157894 }, icon: "✦", shape: "square", abilityId: "Firestorm" },
   { id: "talent_132", name: "Heat Transfer", description: "Whenever Burn deals damage to you, restore 1 Energy.", branch: "arcanist", kind: "passive", tier: 15, cost: 1, requires: ["talent_131"], position: { x: 13.698630136986301, y: 28.289473684210524 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "heat-transfer", name: "Heat Transfer", description: "Burn damage restores 1 Energy.", event: "damage_taken", conditions: { minimumDamage: 1, sourceAnyStatus: ["burn"] }, effects: [{ type: "gain_energy", amount: 1, target: "self" }] }] } },
+  { id: "talent_133", name: "Resonance", description: "Whenever you apply an Arcane Wound to a target that already has one, restore 1% of your maximum Health.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_126"], position: { x: 24.65753424657534, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "resonance", name: "Resonance", description: "Applying Arcane Wound to an already wounded target restores 1% maximum Health.", event: "status_applied", conditions: { appliedAnyStatus: ["arcaneWound"], targetHadAnyStatus: ["arcaneWound"] }, effects: [{ type: "heal_percent_max_hp", ratio: 0.01, target: "self" }] }] } },
+  { id: "talent_134", name: "Mana Fracture", description: "Consume all Arcane Wounds on the target. Restore 1 Energy per 2 stacks consumed.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_126"], position: { x: 21.232876712328768, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "ManaFracture" },
+  { id: "talent_135", name: "Rapid Fire", description: "Attack random enemies three times for 30% Magical Power per hit with +20% Critical Strike Chance. While Burning, attack six times instead.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_127"], position: { x: 17.123287671232877, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "RapidFire" },
+  { id: "talent_136", name: "Arcane Shell", description: "Whenever an Arcane Wound expires or is consumed, gain Barrier equal to 2% of your Magical Power.", branch: "arcanist", kind: "passive", tier: 12, cost: 1, requires: ["talent_133"], position: { x: 24.65753424657534, y: 22.727272727272727 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "arcane-shell", name: "Arcane Shell", description: "An expired or consumed Arcane Wound grants Barrier equal to 2% Magical Power.", event: "status_removed", conditions: { removedAnyStatus: ["arcaneWound"], removalReasons: ["expired", "consumed"] }, effects: [{ type: "gain_absorption", status: "barrier", scalingPower: "magical", scaling: 0.02, duration: 3 }] }] } },
+  { id: "talent_137", name: "Arcane Retaliation", description: "When your Barrier is destroyed, apply 2 Arcane Wounds to the enemy that destroyed it.", branch: "arcanist", kind: "passive", tier: 13, cost: 1, requires: ["talent_136"], position: { x: 24.65753424657534, y: 18.75 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "arcane-retaliation", name: "Arcane Retaliation", description: "A destroyed Barrier applies 2 Arcane Wounds to its attacker.", event: "damage_taken", conditions: { depletedAnyStatus: ["barrier"] }, effects: [{ type: "apply_status", status: createStatusEffect("arcaneWound", { stacks: 2 }), target: "target" }] }] } },
+  { id: "talent_138", name: "Focused Blast", description: "Requires at least 6 Arcane Wounds. Deal damage equal to your Barrier and consume 3 Arcane Wounds.", branch: "arcanist", kind: "ability", tier: 14, cost: 1, requires: ["talent_137"], position: { x: 21.232876712328768, y: 18.75 }, icon: "✦", shape: "square", abilityId: "FocusedBlast" },
+  { id: "talent_139", name: "Treacherous Ground", description: "While Frozen Path is active, enemies that miss you become Slowed.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_125"], position: { x: 30.136986301369863, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "treacherous-ground", name: "Treacherous Ground", description: "While Frozen Path is active, enemies that miss become Slowed.", event: "enemy_missed", conditions: { selfHasAnyStatus: ["frozenPath"] }, effects: [{ type: "apply_status", status: createStatusEffect("slowed"), target: "target" }] }] } },
+  { id: "talent_140", name: "Cold Snap", description: "Whenever you apply Slowed, reduce one random ability cooldown by 1 turn.", branch: "arcanist", kind: "passive", tier: 12, cost: 1, requires: ["talent_139"], position: { x: 30.136986301369863, y: 22.727272727272727 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "cold-snap", name: "Cold Snap", description: "Applying Slowed reduces one random ability cooldown by 1 turn.", event: "status_applied", conditions: { appliedAnyStatus: ["slowed"] }, effects: [{ type: "reduce_random_cooldown", amount: 1 }] }] } },
+  { id: "talent_141", name: "Greater Brittle", description: "Enemies that are both Slowed and Exhausted take an additional 15% more direct damage.", branch: "arcanist", kind: "passive", tier: 13, cost: 1, requires: ["talent_140"], position: { x: 30.136986301369863, y: 18.75 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "greater-brittle", name: "Greater Brittle", description: "Slowed and Exhausted enemies take an additional 15% more direct damage.", multiplier: 1.15, targetHasAllStatuses: ["slowed", "exhausted"] }] } },
+  { id: "talent_142", name: "Absolute Zero", description: "Deal 50% Magical Power as Frost Damage. If the target is Slowed, apply Frozen; otherwise apply Slowed and Exhausted.", branch: "arcanist", kind: "ability", tier: 14, cost: 1, requires: ["talent_141"], position: { x: 33.56164383561644, y: 18.75 }, icon: "✦", shape: "square", abilityId: "AbsoluteZero" },
+  { id: "talent_143", name: "Blizzard", description: "Deal 50% Magical Power as Frost Damage to all enemies. Each target has a 50% chance to become Slowed, 50% to become Exhausted, and 10% to become Frozen.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_125"], position: { x: 33.56164383561644, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "Blizzard" },
+  { id: "talent_144", name: "Focus Harder", description: "Focused Blast requires only 5 Arcane Wounds and consumes 2.", branch: "arcanist", kind: "passive", tier: 15, cost: 1, requires: ["talent_138"], position: { x: 21.232876712328768, y: 14.772727272727273 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "focus-harder", name: "Focus Harder", description: "Focused Blast requires 5 Arcane Wounds and consumes 2.", abilityIds: ["FocusedBlast"], requiredTargetStatusStacksMinimum: 5, consumeTargetStatusStacksAmount: 2, descriptionOverride: "Requires at least 5 Arcane Wounds. Deal Arcane Damage equal to your Barrier and consume 2 Arcane Wounds." }] } },
+  { id: "talent_145", name: "Chill Recovery", description: "Applying Slowed or Exhausted restores 1 Energy. Applying Stunned or Frozen restores 2 Energy.", branch: "arcanist", kind: "passive", tier: 15, cost: 1, requires: ["talent_142"], position: { x: 33.56164383561644, y: 14.772727272727273 }, icon: "✦", shape: "circle", combat: { triggers: [
+    { id: "chill-recovery-slowed", name: "Chill Recovery", description: "Applying Slowed restores 1 Energy.", event: "status_applied", conditions: { appliedAnyStatus: ["slowed"] }, effects: [{ type: "gain_energy", amount: 1 }] },
+    { id: "chill-recovery-exhausted", name: "Chill Recovery", description: "Applying Exhausted restores 1 Energy.", event: "status_applied", conditions: { appliedAnyStatus: ["exhausted"] }, effects: [{ type: "gain_energy", amount: 1 }] },
+    { id: "chill-recovery-stunned", name: "Chill Recovery", description: "Applying Stunned restores 2 Energy.", event: "status_applied", conditions: { appliedAnyStatus: ["stunned"] }, effects: [{ type: "gain_energy", amount: 2 }] },
+    { id: "chill-recovery-frozen", name: "Chill Recovery", description: "Applying Frozen restores 2 Energy.", event: "status_applied", conditions: { appliedAnyStatus: ["frozen"] }, effects: [{ type: "gain_energy", amount: 2 }] },
+  ] } },
+  { id: "talent_146", name: "Static Charge", description: "Whenever you hit an Electrified enemy, gain 1 Static Charge. At 5 charges, remove them and restore 2 Energy.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_124"], position: { x: 41.0958904109589, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "static-charge", name: "Static Charge", description: "Hits against Electrified enemies build toward restoring 2 Energy.", event: "on_hit", conditions: { targetHadAnyStatus: ["electrified"] }, effects: [{ type: "build_status_charge", status: "staticCharge", amount: 1, threshold: 5, thresholdEnergy: 2 }] }] } },
+  { id: "talent_147", name: "Chain Reaction", description: "Whenever you apply Electrified to an already Electrified enemy, deal 20% Magical Power as Lightning Damage to another random enemy.", branch: "arcanist", kind: "passive", tier: 12, cost: 1, requires: ["talent_146"], position: { x: 44.52054794520548, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "chain-reaction", name: "Chain Reaction", description: "Reapplying Electrified deals 20% Magical Power as Lightning Damage to another random enemy.", event: "status_applied", conditions: { appliedAnyStatus: ["electrified"], targetHadAnyStatus: ["electrified"] }, effects: [{ type: "damage", amount: 0, damageType: "lightning", scalingPower: "magical", scaling: 0.2, target: "random_enemy" }] }] } },
+  { id: "talent_148", name: "Rapid Discharge", description: "After hitting an enemy 4 times in the same turn, reduce one random ability cooldown by 1 turn.", branch: "arcanist", kind: "passive", tier: 13, cost: 1, requires: ["talent_147"], position: { x: 44.52054794520548, y: 30.681818181818183 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "rapid-discharge", name: "Rapid Discharge", description: "Every fourth hit in a turn reduces one random ability cooldown by 1 turn.", event: "on_hit", everyNthPerTurn: 4, effects: [{ type: "reduce_random_cooldown", amount: 1 }] }] } },
+  { id: "talent_149", name: "Ride the Lightning", description: "Consume Electrified from all enemies, immediately begin a new turn, and restore 1 Energy per enemy affected.", branch: "arcanist", kind: "ability", tier: 14, cost: 1, requires: ["talent_148"], position: { x: 44.52054794520548, y: 34.659090909090914 }, icon: "✦", shape: "square", abilityId: "RideTheLightning" },
+  { id: "talent_150", name: "Smoke", description: "Ride the Lightning grants Stealth until the end of your next turn.", branch: "arcanist", kind: "passive", tier: 15, cost: 1, requires: ["talent_149"], position: { x: 41.0958904109589, y: 38.63636363636363 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "smoke", name: "Smoke", description: "Ride the Lightning grants Stealth.", abilityIds: ["RideTheLightning"], additionalSelfStatusApplications: [{ status: "stealth", duration: 2, expiresAtTurnStart: false }], descriptionOverride: "Consume Electrified from all enemies, gain Stealth until the end of your next turn, immediately begin a new turn, and restore 1 Energy per enemy affected." }] } },
+  { id: "talent_151", name: "Charge", description: "Consume Electrified from all enemies. For each enemy affected, reduce all ability cooldowns by 1 and restore 1 Energy, then deal 100% Magical Power as Lightning Damage to all enemies.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_124"], position: { x: 37.67123287671233, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "Charge" },
 ];
 
-const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
+const TALENT_TREE_LAYOUT_BASE: Record<string, Talent["position"]> = {
   origin: { x: 27.397, y: 57.895 },
   brute_1: { x: 23.287, y: 57.895 },
   shadow_1: { x: 31.507, y: 57.895 },
@@ -566,14 +634,53 @@ const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
   talent_122: { x: 41.0958904109589, y: 19.7368421052632 },
   talent_123: { x: 41.0958904109589, y: 24.3421052631579 },
   talent_124: { x: 37.67123287671233, y: 15.131578947368421 },
+  talent_125: { x: 33.56164383561644, y: 15.131578947368421 },
+  talent_126: { x: 21.232876712328768, y: 15.131578947368421 },
   talent_127: { x: 17.123287671232877, y: 15.131578947368421 },
   talent_128: { x: 13.698630136986301, y: 15.131578947368421 },
   talent_129: { x: 10.273972602739725, y: 15.131578947368421 },
   talent_130: { x: 10.273972602739725, y: 19.736842105263158 },
   talent_131: { x: 10.273972602739725, y: 24.342105263157894 },
   talent_132: { x: 13.698630136986301, y: 28.289473684210524 },
+  talent_133: { x: 24.658, y: 26.705 },
+  talent_134: { x: 21.233, y: 22.727 },
+  talent_135: { x: 17.123, y: 22.727 },
+  talent_136: { x: 24.658, y: 22.727 },
+  talent_137: { x: 24.65753424657534, y: 18.75 },
+  talent_138: { x: 21.232876712328768, y: 18.75 },
+  talent_139: { x: 30.136986301369863, y: 26.704545454545453 },
+  talent_140: { x: 30.136986301369863, y: 22.727272727272727 },
+  talent_141: { x: 30.136986301369863, y: 18.75 },
+  talent_142: { x: 33.56164383561644, y: 18.75 },
+  talent_143: { x: 33.56164383561644, y: 22.727272727272727 },
+  talent_144: { x: 21.232876712328768, y: 14.772727272727273 },
+  talent_145: { x: 33.56164383561644, y: 14.772727272727273 },
+  talent_146: { x: 41.0958904109589, y: 26.704545454545453 },
+  talent_147: { x: 44.52054794520548, y: 26.704545454545453 },
+  talent_148: { x: 44.52054794520548, y: 30.681818181818183 },
+  talent_149: { x: 44.52054794520548, y: 34.659090909090914 },
+  talent_150: { x: 41.0958904109589, y: 38.63636363636363 },
+  talent_151: { x: 37.67123287671233, y: 22.727272727272727 },
   cultist_1: { x: 27.397, y: 63.158 },
 };
+
+const PRECISE_IMPORTED_LAYOUT_IDS = new Set(["talent_118"]);
+const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = Object.fromEntries(
+  Object.entries(TALENT_TREE_LAYOUT_BASE).map(([id, position]) => {
+    const numericId = Number(id.replace("talent_", ""));
+    if (Number.isFinite(numericId) && numericId >= 133) return [id, position];
+    if (id === "talent_132") return [id, { x: 13.698630136986301, y: 38.63636363636363 }];
+    const imported = {
+      x: position.x,
+      y: (position.y * 28.5 + 450) / 33,
+    };
+    if (PRECISE_IMPORTED_LAYOUT_IDS.has(id)) return [id, imported];
+    return [id, {
+      x: Math.round(imported.x * 1000) / 1000,
+      y: Math.round(imported.y * 1000) / 1000,
+    }];
+  }),
+);
 
 export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {
   const positionedTalent = { ...talent, position: TALENT_TREE_LAYOUT[talent.id] ?? talent.position };

@@ -44,6 +44,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   charred: { id: "charred", name: "Charred", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 50% more Fire Damage and 50% less Frost Damage." },
   arcaneWound: { id: "arcaneWound", name: "Arcane Wound", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Each stack increases Arcane Blast damage against this target by 10%." },
   arcaneCharge: { id: "arcaneCharge", name: "Arcane Charge", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "For 3 turns, your next Arcane Blast against this target costs 0 Energy and consumes Arcane Charge." },
+  staticCharge: { id: "staticCharge", name: "Static Charge", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, description: "At 5 charges, remove them and restore 2 Energy." },
   frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },

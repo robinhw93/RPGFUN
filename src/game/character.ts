@@ -56,6 +56,7 @@ export interface DerivedStats extends Stats {
   preserveStatusOnDetonation: StatusEffectId[];
   statusImmunities: StatusEffectId[];
   statusApplicationStacks: Partial<Record<StatusEffectId, number>>;
+  statusDurationBonuses: Partial<Record<StatusEffectId, number>>;
   statusDamageLeech: Partial<Record<StatusEffectId, number>>;
   statusApplicationCompanions: Partial<Record<StatusEffectId, StatusEffectId[]>>;
   incomingDamageReductionPerEnergy: number;
@@ -117,6 +118,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     preserveStatusOnDetonation: [...features.passive.preserveStatusOnDetonation],
     statusImmunities: [...features.passive.statusImmunities],
     statusApplicationStacks: { ...features.passive.statusApplicationStacks },
+    statusDurationBonuses: { ...features.passive.statusDurationBonuses },
     statusDamageLeech: { ...features.passive.statusDamageLeech },
     statusApplicationCompanions: Object.fromEntries(Object.entries(features.passive.statusApplicationCompanions).map(([id, companions]) => [id, [...(companions ?? [])]])),
     incomingDamageReductionPerEnergy: features.passive.incomingDamageReductionPerEnergy,

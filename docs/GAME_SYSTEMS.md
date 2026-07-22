@@ -205,6 +205,8 @@ New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread 
 
 Firestorm deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
 
+The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, and Electrified charge chains. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, and Rapid Fire are all Ranged. Their mechanics resolve at projectile or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, Energy restoration, and cooldown changes.
+
 Blinding Light gives every player-applied Electrified effect a 20% base chance, plus Luck's bonus to chance-based effects, to also apply Blind.
 
 At the end of the player's turn, Poison resolves and normal status durations decrease.
@@ -372,7 +374,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 135 nodes: Shadow has 79 including its class node, Arcanist has 53 including its class node, and Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers and a self-Burn Firestorm route.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 156 nodes: Shadow has 79 including its class node, Arcanist has 74 including its class node, and Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers, Arcane Wound and Barrier synergies, frost-control combinations, Electrified chains, and a self-Burn Firestorm route.
 
 ### Unlock rules
 

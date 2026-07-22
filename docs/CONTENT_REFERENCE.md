@@ -6,7 +6,7 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
-Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Firestorm. All other currently obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Direct Ranged damage launches a projectile instead of moving the player card into the normal attack lunge.
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Charge. All other currently obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Direct Ranged damage launches a projectile instead of moving the player card into the normal attack lunge; targeted utility spells use the same ranged visual language without a melee lunge.
 
 ### Core and currently obtainable abilities
 
@@ -60,6 +60,13 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
 | Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player for 1 turn. Electrified Hug also applies Electrified to every enemy. |
 | Firestorm | 5 | 3 | All enemies and self | Deals 25% Magical Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
+| Mana Fracture | 1 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds and restores 1 Energy per 2 stacks consumed. |
+| Rapid Fire | 2 | 4 | Random enemies | Hits three times for 30% Magical Power as Arcane damage with +20% Critical Strike Chance; hits six times while Burning. |
+| Focused Blast | 4 | 2 | Enemy with 6 Arcane Wounds | Deals Arcane damage equal to current Barrier and consumes 3 Arcane Wounds. Focus Harder changes the requirement to 5 and consumption to 2. |
+| Absolute Zero | 3 | 4 | Enemy | Deals 50% Magical Power as Frost damage. A Slowed target becomes Frozen; otherwise applies Slowed and Exhausted. |
+| Blizzard | 5 | 3 | All enemies | Deals 50% Magical Power as Frost damage. Each target independently rolls 50% Slowed, 50% Exhausted, and 10% Frozen. |
+| Ride the Lightning | 1 | 6 | All enemies | Consumes Electrified from every enemy, restores 1 Energy per affected enemy, and immediately begins a new turn. |
+| Charge | 4 | 6 | All enemies | Consumes Electrified from every enemy; each affected enemy restores 1 Energy and reduces every cooldown by 1, then all enemies take 100% Magical Power as Lightning damage. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -75,7 +82,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 135 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 52 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 53, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked. The imported editor placeholders `talent_125` and `talent_126` are intentionally excluded until they have player-facing names and mechanics.
+The live tree has 156 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 73 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 74, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -175,7 +182,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_87 | Lightning Fast | Passive | Lightning Beam | Any | +2 Initiative. |
 | talent_88 | Kindled Precision | Passive | Critical Burn | Any | +2% Critical Strike Chance. |
 | talent_89 | Fire Within | Passive | Critical Burn | Any | +1 Max Energy. |
-| talent_90 | Charged Reflexes | Passive | Lightning Fast | Any | +2 Initiative. |
+| talent_90 | Charged Reflexes | Passive | Lightning Fast | Any | +2 Initiative and 15% more damage while first in initiative order. |
 | talent_91 | Increased Voltage | Passive | Lightning Fast | Any | +1 Max Energy. |
 | talent_92 | Arcane Accuracy | Passive | Aimed Spells | Any | +2% Hit Chance. |
 | talent_93 | Glacial Plating | Passive | Frozen Armor | Any | +2 Armor. |
@@ -193,7 +200,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_104 | Arcane Combustion | Ability | Fire Within or Invigorate | Any | Unlocks Arcane Combustion. |
 | talent_105 | Thundersnow | Ability | Increased Voltage or Comparative Momentum | Any | Unlocks Thundersnow. |
 | talent_106 | Arcane Knowledge | Passive | Arcane Overload | Any | +2 Intelligence; Arcane Wounds grant Arcane Blast 15% damage per stack. |
-| talent_107 | Lower Temperature | Passive | Deep Freeze | Any | Frostbolt has a 50% base chance to apply Frozen. |
+| talent_107 | Lower Temperature | Passive | Deep Freeze | Any | Frostbolt has a 50% base chance to apply Exhausted. |
 | talent_108 | Rain | Passive | Thundersnow | Any | Thundersnow applies Wet to every enemy instead of Slowed. |
 | talent_109 | Intense Beam | Passive | Thunderstorm | Any | All four Lightning Beam hits strike the selected target. |
 | talent_110 | Feedback | Passive | Arcane Combustion | Any | +1 Energy regeneration. |
@@ -211,12 +218,33 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_122 | Electrified Hug | Passive | Conductor | Any | Conductor also Electrifies all enemies. |
 | talent_123 | Shell Shocked | Passive | Electrified Hug | Any | While Stunned, the player takes only 20% damage from all sources. |
 | talent_124 | Blinding Light | Passive | Conductor | Any | Applying Electrified has a 20% base chance, plus Luck's bonus to chance-based effects, to also apply Blind. |
+| talent_125 | Brittle | Passive | Frozen Path | Any | Enemies that are both Slowed and Exhausted take 15% more direct damage. |
+| talent_126 | Arcane Reservoir | Passive | Arcane Barrier | Any | Player-applied Arcane Wounds last 1 additional turn. |
 | talent_127 | Pyromania | Passive | Self Immolation | Any | While Burning, deals 10% more direct Arcane, Fire, Frost, and Lightning damage. |
 | talent_128 | Living Furnace | Passive | Pyromania | Any | Player-applied Burn deals 5% more damage to enemies while the player is Burning. |
 | talent_129 | Greater Pyromania | Passive | Living Furnace | Any | While Burning, deals an additional 10% more direct Arcane, Fire, Frost, and Lightning damage. |
 | talent_130 | Greater Living Furnace | Passive | Greater Pyromania | Any | Player-applied Burn deals an additional 10% more damage to enemies while the player is Burning. |
 | talent_131 | Firestorm | Ability | Greater Living Furnace | Any | Unlocks Firestorm. |
 | talent_132 | Heat Transfer | Passive | Firestorm | Any | Restores 1 Energy whenever Burn deals Health damage to the player. |
+| talent_133 | Resonance | Passive | Arcane Reservoir | Any | Reapplying Arcane Wound restores 1% Max Health. |
+| talent_134 | Mana Fracture | Ability | Arcane Reservoir | Any | Unlocks Mana Fracture. |
+| talent_135 | Rapid Fire | Ability | Pyromania | Any | Unlocks Rapid Fire. |
+| talent_136 | Arcane Shell | Passive | Resonance | Any | Consumed or expired Arcane Wounds grant Barrier equal to 2% Magical Power. |
+| talent_137 | Arcane Retaliation | Passive | Arcane Shell | Any | A destroyed Barrier applies 2 Arcane Wounds to its attacker. |
+| talent_138 | Focused Blast | Ability | Arcane Retaliation | Any | Unlocks Focused Blast. |
+| talent_139 | Treacherous Ground | Passive | Brittle | Any | While Frozen Path is active, enemies that miss become Slowed. |
+| talent_140 | Cold Snap | Passive | Treacherous Ground | Any | Applying Slowed reduces one random cooldown by 1. |
+| talent_141 | Greater Brittle | Passive | Cold Snap | Any | Adds another multiplicative 15% direct-damage bonus against Slowed and Exhausted enemies. |
+| talent_142 | Absolute Zero | Ability | Greater Brittle | Any | Unlocks Absolute Zero. |
+| talent_143 | Blizzard | Ability | Brittle | Any | Unlocks Blizzard. |
+| talent_144 | Focus Harder | Passive | Focused Blast | Any | Focused Blast requires 5 Arcane Wounds and consumes 2. |
+| talent_145 | Chill Recovery | Passive | Absolute Zero | Any | Applying Slowed or Exhausted restores 1 Energy; Stunned or Frozen restores 2. |
+| talent_146 | Static Charge | Passive | Blinding Light | Any | Hits against Electrified enemies build charges; 5 charges restore 2 Energy. |
+| talent_147 | Chain Reaction | Passive | Static Charge | Any | Reapplying Electrified deals 20% Magical Power as Lightning damage to another random enemy. |
+| talent_148 | Rapid Discharge | Passive | Chain Reaction | Any | Every fourth hit in one turn reduces a random cooldown by 1. |
+| talent_149 | Ride the Lightning | Ability | Rapid Discharge | Any | Unlocks Ride the Lightning. |
+| talent_150 | Smoke | Passive | Ride the Lightning | Any | Ride the Lightning grants Stealth until the end of the next turn. |
+| talent_151 | Charge | Ability | Blinding Light | Any | Unlocks Charge. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 
@@ -241,6 +269,7 @@ The duration is the default duration created by the status library. Ability or t
 | Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
 | Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |
 | Frozen Path | 3 turns | No | Grants +30% Dodge Chance by default, subject to the 50% Dodge cap. |
+| Static Charge | Until 5 charges | Yes | At 5 charges, all charges are removed and 2 Energy is restored. |
 
 ### Debuffs
 

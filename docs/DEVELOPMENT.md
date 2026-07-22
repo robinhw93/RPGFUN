@@ -142,7 +142,9 @@ Important fields:
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation.
 - `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget.
+- `hitsWhenSelfHasStatus` changes the hit count from a live self-status without branching on an ability ID.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
+- `requiredTargetStatusStacks`, fixed stack consumption, and their modifier overrides support stack-gated abilities. The action-queue projection must reserve the same stack counts as the engine.
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
 - `statusApplications` supports one or more on-hit statuses, including critical-only applications and independent base proc chances augmented by the character's chance-effect bonus.
@@ -151,6 +153,7 @@ Important fields:
 - `randomSingleStatusApplication` applies one status to exactly one randomly chosen target of an area ability.
 - `ignoresAbsorption`, `consumeTargetStatusRatio`, Energy restoration, and `grantsNextCritical` support the current advanced Shadow abilities. Ability modifiers can override status-consumption ratios, including Neurotoxin's partial Poison consumption.
 - `spreadAllTargetDebuffs`, `damagePerTargetDebuff`, `damagePerTargetStatusStack`, conditional Critical Chance, immediate turns, and on-kill refund/reset fields support talent mechanics without hard-coding talent IDs. Arcane Blast uses the status-stack multiplier for Arcane Wound.
+- `consumeStatusFromAllEnemies` combines with per-affected-enemy Energy and cooldown fields for area status consumers. Queue projection mirrors those rewards and removals before accepting later queued actions.
 - `freeAgainstTargetStatus` makes a cast free only against the marked target and consumes that marker. Both the engine and queued-action projection must use the target-aware Energy helper.
 - `consumeTargetStatusForDamage` scales a damage component and optional follow-up status from the consumed stack count. `spreadDetonatedStatusOnKillRatio` and `spreadOnKillVfx` support lethal detonation spread without checking an ability ID in the engine.
 - `damageModifiers` applies conditional multipliers owned by the ability.

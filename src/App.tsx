@@ -182,6 +182,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   blind: EyeOff,
   arcaneWound: CircleDot,
   arcaneCharge: Sparkles,
+  staticCharge: Zap,
   sleep: Moon,
 };
 
@@ -813,6 +814,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const voltageSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "voltage_siphon");
   const combustionSpreadAnimations = abilityAnimations.filter((animation) => animation.kind === "combustion_spread");
   const conductorAnimations = abilityAnimations.filter((animation) => animation.kind === "conductor" && !animation.targetId);
+  const manaFractureAnimations = abilityAnimations.filter((animation) => animation.kind === "mana_fracture" && animation.targetId && animation.sourceTargetId);
+  const rideTheLightningAnimations = abilityAnimations.filter((animation) => animation.kind === "ride_the_lightning" && !animation.targetId);
   const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
@@ -861,6 +864,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {poisonCloudAnimations.map((animation) => <PoisonCloudEffect key={animation.id} />)}
           {epidemicAnimations.map((animation) => <EpidemicEffect key={animation.id} />)}
           {conductorAnimations.map((animation) => <ConductorFieldEffect key={animation.id} />)}
+          {rideTheLightningAnimations.map((animation) => <span key={animation.id} className="ride-lightning-field" aria-hidden="true"><Zap /><i /><i /><i /><i /><i /></span>)}
           {combat.enemies.map((enemy) => {
             const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
             const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
@@ -912,6 +916,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       {lightSpeedAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="light-speed-path"><Zap /><i /><i /></CombatantPathEffect>)}
       {voltageSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="voltage-siphon-path"><Zap /><HeartPulse /><i /></CombatantPathEffect>)}
       {combustionSpreadAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="combustion-spread-path"><Flame /><i /><i /></CombatantPathEffect>)}
+      {manaFractureAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="ability-projectile-path mana-fracture-path"><CircleDot /><i /><i /></CombatantPathEffect>)}
       {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
@@ -923,6 +928,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           const selectedTarget = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId);
           const projectedTargetStatuses = queueProjection.targetStatusIds.get(combat.selectedEnemyId) ?? new Set<StatusEffectId>();
           const targetRequirementMet = !ability.requiredTargetStatus || projectedTargetStatuses.has(ability.requiredTargetStatus);
+          const requiredStackMinimum = getCharacterAbilityModifiers(game.character, ability.id).find((modifier) => modifier.requiredTargetStatusStacksMinimum !== undefined)?.requiredTargetStatusStacksMinimum ?? ability.requiredTargetStatusStacks?.minimum;
+          const targetStackRequirementMet = !ability.requiredTargetStatusStacks || (queueProjection.targetStatusStacks.get(combat.selectedEnemyId)?.get(ability.requiredTargetStatusStacks.status) ?? 0) >= (requiredStackMinimum ?? 0);
           const spreadTargetAvailable = !ability.spreadTargetStatus || combat.enemies.some((enemy) => (
             enemy.hp > 0
             && enemy.instanceId !== selectedTarget?.instanceId
@@ -935,7 +942,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : modifiedEnergyCost;
           const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(game.character, ability);
           const queuedCount = queuedActions.filter((action) => action.type === "ability" && action.abilityId === id).length;
-          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={playerInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={playerInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !targetStackRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
@@ -1462,6 +1469,15 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "conductor") {
     return <span className="ability-impact-effect conductor-impact" aria-hidden="true"><Zap /><i /><i /><i /><i /></span>;
   }
+  if (kind === "mana_fracture" || kind === "rapid_fire" || kind === "focused_blast") {
+    return <span className={`ability-impact-effect new-arcane-impact ${kind}`} aria-hidden="true"><CircleDot /><Sparkles /><i /><i /><i /></span>;
+  }
+  if (kind === "absolute_zero" || kind === "blizzard") {
+    return <span className={`ability-impact-effect new-frost-impact ${kind}`} aria-hidden="true"><Snowflake /><i /><i /><i /><i /></span>;
+  }
+  if (kind === "ride_the_lightning" || kind === "charge") {
+    return <span className={`ability-impact-effect new-lightning-impact ${kind}`} aria-hidden="true"><Zap /><i /><i /><i /><i /></span>;
+  }
   return null;
 }
 
@@ -1515,11 +1531,17 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   if (kind === "frostbolt" || kind === "deep_freeze" || (!kind && animation.damageType === "frost")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
   }
+  if (kind === "absolute_zero" || kind === "blizzard") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className={`ability-projectile-path ${kind.replace("_", "-")}-path`}><Snowflake /><i /><i /></CombatantPathEffect>;
+  }
   if (kind === "fireball" || kind === "combustion" || kind === "firestorm" || (!kind && animation.damageType === "fire")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path fireball-path"><Flame /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "lightning_beam" || kind === "thunderstorm" || (!kind && animation.damageType === "lightning")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path lightning-beam-path"><Zap /><i /><i /></CombatantPathEffect>;
+  }
+  if (kind === "charge" || kind === "ride_the_lightning") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path charge-path"><Zap /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "thundersnow") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path thundersnow-path"><Snowflake /><Zap /><i /><i /></CombatantPathEffect>;
@@ -1535,6 +1557,9 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   }
   if (kind === "arcane_blast") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-blast-path"><CircleDot /><i /><i /></CombatantPathEffect>;
+  }
+  if (kind === "rapid_fire" || kind === "focused_blast" || kind === "mana_fracture") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className={`ability-projectile-path ${kind.replace("_", "-")}-path`}><CircleDot /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "arcane_overload") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-overload-path"><Sparkles /><i /><i /></CombatantPathEffect>;

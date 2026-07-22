@@ -65,12 +65,13 @@ export type StatusEffectId =
   | "charred"
   | "arcaneWound"
   | "arcaneCharge"
+  | "staticCharge"
   | "frozen"
   | "frozenPath"
   | "blind"
   | "sleep";
 
-export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
+export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "status_removed" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
 export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
 
 export interface PassiveBonuses {
@@ -108,6 +109,8 @@ export interface PassiveBonuses {
   statusDamageLeech?: Partial<Record<StatusEffectId, number>>;
   /** Extra statuses applied alongside a matching player-applied status. */
   statusApplicationCompanions?: Partial<Record<StatusEffectId, StatusEffectId[]>>;
+  /** Additional duration applied whenever the character creates a matching status. */
+  statusDurationBonuses?: Partial<Record<StatusEffectId, number>>;
   /** Incoming damage reduction per point of currently unspent Energy. */
   incomingDamageReductionPerEnergy?: number;
   /** Final incoming-damage multiplier while the character is Stunned. */
@@ -125,10 +128,15 @@ export interface CombatTriggerCondition {
   critical?: boolean;
   minimumDamage?: number;
   targetHasAnyStatus?: string[];
+  targetHadAnyStatus?: StatusEffectId[];
+  selfHasAnyStatus?: StatusEffectId[];
   appliedAnyStatus?: StatusEffectId[];
+  removedAnyStatus?: StatusEffectId[];
+  removalReasons?: Array<"consumed" | "expired">;
   /** Matches damage originating from one of these status effects. */
   sourceAnyStatus?: StatusEffectId[];
   absorbedByAnyStatus?: Array<"guard" | "barrier">;
+  depletedAnyStatus?: Array<"guard" | "barrier">;
   /** Matches only when direct damage crosses from at-or-above to below this Health ratio. */
   targetHealthCrossedBelow?: number;
 }
@@ -140,7 +148,10 @@ export type CombatEffectDefinition =
   | { type: "heal"; amount: number; target?: "self" }
   | { type: "heal_percent_max_hp"; ratio: number; target?: "self" }
   | { type: "gain_energy"; amount: number; target?: "self" }
-  | { type: "gain_guard"; amount: number; duration?: number; target?: "self" };
+  | { type: "reduce_random_cooldown"; amount: number; target?: "self" }
+  | { type: "build_status_charge"; status: StatusEffectId; amount: number; threshold: number; thresholdEnergy: number; target?: "self" }
+  | { type: "gain_guard"; amount: number; duration?: number; target?: "self" }
+  | { type: "gain_absorption"; status: "guard" | "barrier"; amount?: number; scalingPower?: "physical" | "magical"; scaling?: number; duration?: number; target?: "self" };
 
 export interface CombatTriggerDefinition {
   id: string;
@@ -151,6 +162,8 @@ export interface CombatTriggerDefinition {
   conditions?: CombatTriggerCondition;
   effects: CombatEffectDefinition[];
   oncePerTurn?: boolean;
+  /** Fires on every matching Nth event during one player turn. */
+  everyNthPerTurn?: number;
   cooldownTurns?: number;
 }
 
@@ -162,12 +175,15 @@ export interface CombatDamageModifierDefinition {
   damageTypes?: DamageType[];
   attackerHasAnyStatus?: StatusEffectId[];
   targetHasAnyStatus?: StatusEffectId[];
+  targetHasAllStatuses?: StatusEffectId[];
   /** Additional multiplicative damage per unique debuff on the target. */
   multiplierPerTargetDebuff?: number;
   /** Active only before the player has taken damage in the current combat. */
   requiresPlayerUndamaged?: boolean;
   /** Active only before the player's first miss in the current combat. */
   requiresNoPlayerMiss?: boolean;
+  /** Active only while the player leads the current initiative order. */
+  requiresFirstInInitiative?: boolean;
 }
 
 export interface CombatStatusDamageModifierDefinition {
@@ -208,6 +224,9 @@ export interface AbilityModifierDefinition {
   energyCostDelta?: number;
   /** Added to the live cooldown, then rounded and clamped to zero. */
   cooldownTurnsDelta?: number;
+  requiredTargetStatusStacksMinimum?: number;
+  consumeTargetStatusStacksAmount?: number;
+  additionalSelfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; expiresAtTurnStart?: boolean }>;
 }
 
 export interface CombatFeatureBundle {
@@ -267,7 +286,14 @@ export type CombatAbilityVfxKind =
   | "arcane_barrier"
   | "frozen_path"
   | "conductor"
-  | "firestorm";
+  | "firestorm"
+  | "mana_fracture"
+  | "rapid_fire"
+  | "focused_blast"
+  | "absolute_zero"
+  | "blizzard"
+  | "ride_the_lightning"
+  | "charge";
 
 export type AbilityRange = "melee" | "ranged";
 
@@ -288,6 +314,8 @@ export interface Ability {
   powerScaling?: number;
   /** Number of separate attacks performed by one use. Each attack can trigger on-hit effects. */
   hits?: number;
+  /** Overrides hits while the player carries the configured status. */
+  hitsWhenSelfHasStatus?: { status: StatusEffectId; hits: number };
   /** Chooses a new living enemy independently for every hit. */
   randomTargetPerHit?: boolean;
   /** False applies the ability's effect without dealing direct damage. */
@@ -298,6 +326,7 @@ export interface Ability {
   statusMagnitude?: number;
   statusExpiresAtTurnStart?: boolean;
   requiredTargetStatus?: StatusEffectId;
+  requiredTargetStatusStacks?: { status: StatusEffectId; minimum: number };
   requiredSelfStatus?: StatusEffectId;
   critChanceBonus?: number;
   critChanceBonusWithStatus?: { status: StatusEffectId; bonus: number };
@@ -308,6 +337,10 @@ export interface Ability {
   /** Presentation emitted for every destination of a lethal detonation spread. */
   spreadOnKillVfx?: CombatAbilityVfxKind;
   consumeTargetStatus?: StatusEffectId;
+  /** Fixed number of stacks consumed instead of the ratio-based default. */
+  consumeTargetStatusStacks?: number;
+  /** Restores Energy from the number of target-status stacks consumed. */
+  energyPerConsumedTargetStatusStacks?: { stacksPerEnergy: number };
   /** Fraction of the target status stacks consumed. Defaults to all stacks. */
   consumeTargetStatusRatio?: number;
   consumeStatusForHealing?: StatusEffectId;
@@ -319,6 +352,8 @@ export interface Ability {
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
   /** Replaces one application when the target already has a configured status. */
   conditionalStatusReplacement?: { status: StatusEffectId; whenTargetHas: StatusEffectId; replacement: StatusEffectId };
+  /** Replaces the full configured status-application list when its condition matches. */
+  conditionalStatusApplications?: { whenTargetHas: StatusEffectId; applications: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }> };
   /** One living target receives this application when an area ability hits. */
   randomSingleStatusApplication?: { status: StatusEffectId; stacks?: number; duration?: number };
   /** Scale direct damage and a follow-up status from stacks consumed on a successful hit. */
@@ -349,6 +384,12 @@ export interface Ability {
   damagePerTargetDebuff?: number;
   /** Direct damage gains this additive multiplier for every stack of one target status. */
   damagePerTargetStatusStack?: { status: StatusEffectId; multiplier: number };
+  /** Adds direct damage equal to a multiple of a self-status stack count. */
+  damageFromSelfStatusStacks?: { status: StatusEffectId; multiplier: number; damageType: DamageType };
+  /** Removes a status from every living enemy before resolving the ability's rewards. */
+  consumeStatusFromAllEnemies?: StatusEffectId;
+  energyPerConsumedEnemyStatus?: number;
+  cooldownReductionPerConsumedEnemyStatus?: number;
   /** Resolves a complete player turn ending and immediately starts a new player turn. */
   grantsImmediateTurn?: boolean;
   /** Refund the Energy actually spent when this ability kills its target. */
@@ -518,7 +559,7 @@ export interface CombatState {
   completedSequenceEventId: number;
   floatingEvents: string[];
   pendingEffects: CombatPendingEffect[];
-  procUsage: Record<string, { lastTriggeredTurn: number }>;
+  procUsage: Record<string, { lastTriggeredTurn: number; eventCount?: number; eventCountTurn?: number }>;
   deathPreventionUsed: boolean;
   playerHasTakenDamage: boolean;
   playerHasMissed: boolean;

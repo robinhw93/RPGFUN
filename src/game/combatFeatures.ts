@@ -52,16 +52,21 @@ export interface CombatTriggerContext {
   damage?: number;
   absorbedDamage?: number;
   absorbedByStatusIds?: Array<"guard" | "barrier">;
+  depletedStatusIds?: Array<"guard" | "barrier">;
   absorbedDamageByStatus?: Partial<Record<"guard" | "barrier", number>>;
   targetStatusIds?: string[];
+  targetStatusIdsBefore?: StatusEffect["id"][];
+  selfStatusIds?: StatusEffect["id"][];
   appliedStatusIds?: StatusEffect["id"][];
+  removedStatusIds?: StatusEffect["id"][];
+  removalReason?: "consumed" | "expired";
   sourceStatusId?: StatusEffect["id"];
   targetHpBeforePercent?: number;
   targetHpAfterPercent?: number;
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusDurationBonuses">> & {
     stats: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
@@ -70,6 +75,7 @@ export interface CharacterCombatFeatures {
     statusApplicationStacks: Partial<Record<StatusEffect["id"], number>>;
     statusDamageLeech: Partial<Record<StatusEffect["id"], number>>;
     statusApplicationCompanions: Partial<Record<StatusEffect["id"], StatusEffect["id"][]>>;
+    statusDurationBonuses: Partial<Record<StatusEffect["id"], number>>;
   };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
@@ -108,6 +114,7 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   statusApplicationStacks: {},
   statusDamageLeech: {},
   statusApplicationCompanions: {},
+  statusDurationBonuses: {},
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -161,6 +168,10 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
     const existing = target.statusApplicationCompanions[id] ?? [];
     target.statusApplicationCompanions[id] = [...new Set([...existing, ...(companions ?? [])])];
   });
+  Object.entries(passive.statusDurationBonuses ?? {}).forEach(([statusId, amount]) => {
+    const id = statusId as StatusEffect["id"];
+    target.statusDurationBonuses[id] = (target.statusDurationBonuses[id] ?? 0) + (amount ?? 0);
+  });
 }
 
 function addBundle(
@@ -212,6 +223,7 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
       statusApplicationStacks: { ...EMPTY_PASSIVE.statusApplicationStacks },
       statusDamageLeech: { ...EMPTY_PASSIVE.statusDamageLeech },
       statusApplicationCompanions: Object.fromEntries(Object.entries(EMPTY_PASSIVE.statusApplicationCompanions).map(([id, companions]) => [id, [...(companions ?? [])]])),
+      statusDurationBonuses: { ...EMPTY_PASSIVE.statusDurationBonuses },
     },
     triggers: [],
     damageModifiers: [],
@@ -256,7 +268,7 @@ export function getCharacterDamageMultiplier(
   attackerStatuses: StatusEffect[],
   targetStatuses: StatusEffect[],
   damageType?: DamageType,
-  combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> = { playerHasTakenDamage: false, playerHasMissed: false },
+  combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> & { playerIsFirstInInitiative?: boolean } = { playerHasTakenDamage: false, playerHasMissed: false },
 ): number {
   return getDamageModifierMultiplier(getCharacterCombatFeatures(character).damageModifiers, attackerStatuses, targetStatuses, damageType, combatContext);
 }
@@ -279,14 +291,16 @@ export function getDamageModifierMultiplier(
   attackerStatuses: StatusEffect[],
   targetStatuses: StatusEffect[],
   damageType?: DamageType,
-  combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> = { playerHasTakenDamage: false, playerHasMissed: false },
+  combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> & { playerIsFirstInInitiative?: boolean } = { playerHasTakenDamage: false, playerHasMissed: false },
 ): number {
   return modifiers.reduce((multiplier, modifier) => {
     if (modifier.damageTypes?.length && (!damageType || !modifier.damageTypes.includes(damageType))) return multiplier;
     if (modifier.attackerHasAnyStatus?.length && !modifier.attackerHasAnyStatus.some((id) => attackerStatuses.some((status) => status.id === id))) return multiplier;
     if (modifier.targetHasAnyStatus?.length && !modifier.targetHasAnyStatus.some((id) => targetStatuses.some((status) => status.id === id))) return multiplier;
+    if (modifier.targetHasAllStatuses?.length && !modifier.targetHasAllStatuses.every((id) => targetStatuses.some((status) => status.id === id))) return multiplier;
     if (modifier.requiresPlayerUndamaged && combatContext.playerHasTakenDamage) return multiplier;
     if (modifier.requiresNoPlayerMiss && combatContext.playerHasMissed) return multiplier;
+    if (modifier.requiresFirstInInitiative && !combatContext.playerIsFirstInInitiative) return multiplier;
     const uniqueDebuffs = new Set(targetStatuses.filter((status) => status.kind === "debuff").map((status) => status.id)).size;
     const dynamicMultiplier = 1 + uniqueDebuffs * (modifier.multiplierPerTargetDebuff ?? 0);
     return multiplier * modifier.multiplier * dynamicMultiplier;
@@ -340,9 +354,14 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   if (conditions.critical !== undefined && Boolean(context.critical) !== conditions.critical) return false;
   if (conditions.minimumDamage !== undefined && (context.damage ?? 0) < conditions.minimumDamage) return false;
   if (conditions.targetHasAnyStatus?.length && !conditions.targetHasAnyStatus.some((id) => context.targetStatusIds?.includes(id))) return false;
+  if (conditions.targetHadAnyStatus?.length && !conditions.targetHadAnyStatus.some((id) => context.targetStatusIdsBefore?.includes(id))) return false;
+  if (conditions.selfHasAnyStatus?.length && !conditions.selfHasAnyStatus.some((id) => context.selfStatusIds?.includes(id))) return false;
   if (conditions.appliedAnyStatus?.length && !conditions.appliedAnyStatus.some((id) => context.appliedStatusIds?.includes(id))) return false;
+  if (conditions.removedAnyStatus?.length && !conditions.removedAnyStatus.some((id) => context.removedStatusIds?.includes(id))) return false;
+  if (conditions.removalReasons?.length && (!context.removalReason || !conditions.removalReasons.includes(context.removalReason))) return false;
   if (conditions.sourceAnyStatus?.length && (!context.sourceStatusId || !conditions.sourceAnyStatus.includes(context.sourceStatusId))) return false;
   if (conditions.absorbedByAnyStatus?.length && !conditions.absorbedByAnyStatus.some((id) => context.absorbedByStatusIds?.includes(id))) return false;
+  if (conditions.depletedAnyStatus?.length && !conditions.depletedAnyStatus.some((id) => context.depletedStatusIds?.includes(id))) return false;
   if (conditions.targetHealthCrossedBelow !== undefined) {
     const threshold = conditions.targetHealthCrossedBelow;
     if (context.targetHpBeforePercent === undefined || context.targetHpAfterPercent === undefined) return false;
@@ -363,12 +382,18 @@ export function resolveCharacterTriggers(
   const triggered = getCharacterCombatFeatures(character).triggers.filter((trigger) => {
     if (trigger.event !== event || !conditionsMatch(trigger, context)) return false;
     const previousTurn = procUsage[trigger.runtimeId]?.lastTriggeredTurn;
+    if (trigger.everyNthPerTurn) {
+      const priorUsage = procUsage[trigger.runtimeId];
+      const eventCount = priorUsage?.eventCountTurn === combat.turn ? (priorUsage.eventCount ?? 0) + 1 : 1;
+      procUsage[trigger.runtimeId] = { ...priorUsage, lastTriggeredTurn: priorUsage?.lastTriggeredTurn ?? -1, eventCount, eventCountTurn: combat.turn };
+      if (eventCount % trigger.everyNthPerTurn !== 0) return false;
+    }
     if (trigger.oncePerTurn && previousTurn === combat.turn) return false;
     if (trigger.cooldownTurns && previousTurn !== undefined && combat.turn - previousTurn < trigger.cooldownTurns) return false;
     const bonus = trigger.chance === undefined ? 0 : chanceEffectBonus;
     const chance = Math.max(0, Math.min(1, (trigger.chance ?? 1) + bonus));
     if (Math.random() >= chance) return false;
-    procUsage[trigger.runtimeId] = { lastTriggeredTurn: combat.turn };
+    procUsage[trigger.runtimeId] = { ...procUsage[trigger.runtimeId], lastTriggeredTurn: combat.turn };
     return true;
   });
   return { triggered, procUsage };
