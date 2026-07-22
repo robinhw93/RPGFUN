@@ -138,6 +138,7 @@ Add or edit `Ability` entries in `src/game/data.ts`.
 Important fields:
 
 - `energyCost`, `cooldownTurns`, and `target` define usability.
+- `range` is required and is either `melee` or `ranged`. Direct Melee attacks use the normal combatant lunge. Direct Ranged attacks keep the caster in place and launch `vfx` as a projectile, with a damage-type projectile fallback when no bespoke VFX kind is present.
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation.
 - `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget.
@@ -153,7 +154,7 @@ Important fields:
 - `freeAgainstTargetStatus` makes a cast free only against the marked target and consumes that marker. Both the engine and queued-action projection must use the target-aware Energy helper.
 - `consumeTargetStatusForDamage` scales a damage component and optional follow-up status from the consumed stack count. `spreadDetonatedStatusOnKillRatio` and `spreadOnKillVfx` support lethal detonation spread without checking an ability ID in the engine.
 - `damageModifiers` applies conditional multipliers owned by the ability.
-- `vfx` emits presentation metadata at the exact event where the ability resolves. Add the matching `CombatAbilityVfxKind` and UI renderer without putting animation timing into combat rules.
+- `vfx` emits presentation metadata at the exact event where the ability resolves and supplies the preferred projectile appearance for direct Ranged attacks. Add the matching `CombatAbilityVfxKind` and UI renderer without putting animation timing into combat rules.
 - Trigger damage can scale from Physical/Magical Power or from damage absorbed by a named defensive status. Reflective Barrier therefore reflects only the amount consumed from Barrier, even when Guard also absorbs the hit.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
@@ -170,7 +171,7 @@ Each talent defines:
 - `requires` stores one side of each bidirectional connection. Runtime also discovers talents that point back to the node, so never store the same edge in both directions.
 - Every connection uses the same rule: any one unlocked adjacent node is enough.
 - Optional `abilityId`.
-- Ability talents receive editor-facing Energy cost and cooldown metadata from that live ability definition, keeping existing nodes synchronized without duplicating combat rules.
+- Ability talents receive editor-facing Energy cost, cooldown, and Melee/Ranged metadata from that live ability definition, keeping existing nodes synchronized without duplicating combat rules.
 - Optional data-driven `combat` bundle.
 
 Changing or removing IDs is a save-migration decision. Existing saves store unlocked talent IDs and equipped ability IDs.
@@ -270,7 +271,7 @@ The editor supports:
 - Live Shadow, Arcanist, Brute, and Cultist node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
 - Multiple direct passive bonuses.
-- Ability-ID references, Energy cost, cooldown turns, and free-form effect/proc notes.
+- Ability-ID references, Energy cost, cooldown turns, Melee/Ranged selection, and free-form effect/proc notes.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
 - Separate content and layout signatures. Canonical content updates preserve local placement, while an intentional canonical layout update migrates the canvas, positions, connections, icons, and shapes in an existing saved draft once.

@@ -6,6 +6,8 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Firestorm. All other currently obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Direct Ranged damage launches a projectile instead of moving the player card into the normal attack lunge.
+
 ### Core and currently obtainable abilities
 
 | Ability | Energy | Cooldown | Target | Effect |

@@ -269,6 +269,8 @@ export type CombatAbilityVfxKind =
   | "conductor"
   | "firestorm";
 
+export type AbilityRange = "melee" | "ranged";
+
 export interface Ability {
   id: string;
   name: string;
@@ -277,6 +279,8 @@ export interface Ability {
   /** Player turns before this ability can be used again. */
   cooldownTurns?: number;
   target: TargetType;
+  /** Controls direct-attack presentation. Ranged attacks fire a projectile instead of lunging. */
+  range: AbilityRange;
   damageType?: DamageType;
   damageComponents?: Array<{ damageType: DamageType; power?: number; powerScaling?: number }>;
   power?: number;
@@ -385,6 +389,8 @@ export interface Talent {
   abilityEnergyCost?: number;
   /** Editor metadata mirrored from the referenced live ability definition. */
   abilityCooldownTurns?: number;
+  /** Editor metadata mirrored from the referenced live ability definition. */
+  abilityRange?: AbilityRange;
   /** Design notes shown when this node becomes the starting point for a fresh devtool draft. */
   effectNotes?: string;
   combat?: CombatFeatureBundle;
@@ -479,8 +485,18 @@ export interface CombatAbilityAnimation {
   sourceTargetId?: "player" | string;
 }
 
+export interface CombatProjectileAnimation {
+  id: string;
+  targetId: "player" | string;
+  sourceTargetId: "player" | string;
+  vfx?: CombatAbilityVfxKind;
+  damageType?: DamageType;
+  hitCount: number;
+  durationMultiplier: number;
+}
+
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; attackRange?: AbilityRange; projectileVfx?: CombatAbilityVfxKind; projectileDamageType?: DamageType; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
@@ -512,6 +528,7 @@ export interface CombatState {
   damageSourceLabels: Record<string, string>;
   statusAnimations: CombatStatusAnimation[];
   abilityAnimations: CombatAbilityAnimation[];
+  projectileAnimations: CombatProjectileAnimation[];
   passiveAnimations: CombatPassiveAnimation[];
   attackingActorId: "player" | string | null;
   attackAnimationId: number;

@@ -189,6 +189,8 @@ Using an ability never ends the turn automatically. The player presses **End Tur
 
 Ability input remains available while an earlier ability is animating. Further ability presses are added to a first-in, first-out queue and execute as soon as each preceding combat sequence and return animation finishes. The queue reserves Energy and cooldown availability before accepting each press, shows the queued count on affected ability buttons, and remembers the selected target for each cast. **End Turn** can also be queued; it executes after every ability already ahead of it and prevents later actions from being added.
 
+Abilities are classified as **Melee** or **Ranged**. Direct Melee attacks use the player's normal movement toward the target. Direct Ranged attacks leave the player in place and send an ability-specific or damage-type projectile to the target; damage, misses, and impact VFX appear when that projectile reaches the target. Range is shown in ability details and can be set on ability nodes in the Talent Editor.
+
 Queue projection also tracks target statuses. This allows a queued Arcane Overload to enable a queued free Arcane Blast against the same target, and lets status-consuming abilities become available after an earlier queued cast applies their requirement. Arcane Charge belongs to its target, so changing targets does not transfer the free cast.
 
 Distraction makes the next ability cost 0 Energy and is consumed when that ability is used. Pinpoint guarantees critical strikes for every hit of the next damaging ability and is consumed when that ability begins. Both persist until consumed or combat ends.

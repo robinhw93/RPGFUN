@@ -108,8 +108,11 @@ Status icons use circular badges and fixed three-segment duration rings by defau
 
 Active abilities should have distinct, readable feedback when their effect warrants it.
 
+- Every ability declares `range: "melee" | "ranged"`. Direct Melee attacks use the combatant lunge; direct Ranged attacks keep the attacker stationary and launch a damage-type or ability-specific projectile that reaches the target at attack impact.
+- Preserve the range value in Talent Editor drafts and exports. A Ranged direct-damage ability must have readable projectile presentation even when it has no bespoke `vfx`; the shared damage-type fallback is the minimum treatment.
+
 1. Add or reuse a `CombatAbilityVfxKind`.
-2. Put the ability's `vfx` on its data definition.
+2. Put the ability's `vfx` and `range` on its data definition.
 3. Queue `ability_vfx` at the same event/impact as the mechanic.
 4. Render it from transient `abilityAnimations` metadata in `App.tsx` and CSS.
 5. Keep mechanics independent of animation completion and keep VFX non-blocking.
@@ -132,7 +135,7 @@ The current live tree has 135 nodes: origin, four class nodes, 78 later Shadow n
 When the owner supplies Talent Editor JSON:
 
 1. Read the complete attachment/export.
-2. Preserve its positions, shapes, icons, connections, IDs, names, descriptions, Energy values, cooldowns, and effect notes unless the owner explicitly requests a design change.
+2. Preserve its positions, shapes, icons, connections, IDs, names, descriptions, Energy values, cooldowns, Melee/Ranged values, and effect notes unless the owner explicitly requests a design change.
 3. Apply the complete intended canvas/layout update, not only newly added nodes.
 4. Treat `effectNotes` as design instructions, not executable data. Implement the mechanic in typed source contracts.
 5. Correct obvious spelling and naming inconsistencies without silently changing balance or intent.

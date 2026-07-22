@@ -3,238 +3,291 @@ import { createStatusEffect } from "./statusEffects";
 
 export const ABILITIES: Record<string, Ability> = {
   strike: {
+    range: "melee",
     id: "strike", name: "Strike", description: "A reliable weapon attack.", energyCost: 0,
     cooldownTurns: 1, target: "enemy", damageType: "physical", power: 5, scalingStat: "strength", icon: "⚔", branch: "core",
   },
   guard: {
+    range: "melee",
     id: "guard", name: "Guard", description: "Gain 6 Guard until the next turn.", energyCost: 2,
     target: "self", icon: "◆", branch: "core", effect: "guard", vfx: "guard",
   },
   quickSlash: {
+    range: "melee",
     id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 50% of your Physical Power.", energyCost: 1,
     target: "enemy", damageType: "physical", powerScaling: 0.5, icon: "◢", branch: "shadow",
   },
   TwinStrike: {
+    range: "melee",
     id: "TwinStrike", name: "Twin Strike", description: "Strike twice. Each hit deals Physical Damage equal to 50% of your Physical Power and triggers on-hit effects separately.", energyCost: 2,
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.5, hits: 2, icon: "⫸", branch: "shadow",
   },
   PoisonStab: {
+    range: "melee",
     id: "PoisonStab", name: "Poison Stab", description: "Deal Physical Damage equal to 50% of your Physical Power and apply 1 Poison.", energyCost: 3,
     target: "enemy", damageType: "physical", powerScaling: 0.5, icon: "†", branch: "shadow", effect: "poison",
   },
   PoisonCloud: {
+    range: "ranged",
     id: "PoisonCloud", name: "Poison Cloud", description: "Apply 2 Poison to all enemies without dealing direct damage.", energyCost: 3,
     cooldownTurns: 2, target: "all_enemies", dealsDamage: false, icon: "☁", branch: "shadow", effect: "poison", statusStacks: 2, vfx: "poison_cloud",
   },
   Contagion: {
+    range: "ranged",
     id: "Contagion", name: "Contagion", description: "Copy all Poison stacks from the selected enemy to another random living enemy.", energyCost: 2,
     cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", spreadTargetStatus: "poison", icon: "☣", branch: "shadow",
   },
   Stealth: {
+    range: "melee",
     id: "Stealth", name: "Stealth", description: "Enemies cannot target you until the end of your next turn.", energyCost: 2,
     cooldownTurns: 3, target: "self", icon: "◌", branch: "shadow", effect: "stealth", statusDuration: 2, statusExpiresAtTurnStart: false,
   },
   Evasion: {
+    range: "melee",
     id: "Evasion", name: "Evasion", description: "Gain 60% Dodge Chance until your next turn. Dodge Chance cannot exceed 50%.", energyCost: 2,
     cooldownTurns: 3, target: "self", icon: "↝", branch: "shadow", effect: "evasion", statusDuration: 1, statusExpiresAtTurnStart: true, vfx: "evasion",
   },
   Neurotoxin: {
+    range: "ranged",
     id: "Neurotoxin", name: "Neurotoxin", description: "Consume all Poison on an enemy to Stun it.", energyCost: 3,
     cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeTargetStatus: "poison", icon: "⌁", branch: "shadow", effect: "stun", vfx: "neurotoxin",
   },
   VenomousStrike: {
+    range: "melee",
     id: "VenomousStrike", name: "Venomous Strike", description: "Deal Physical Damage equal to 100% of your Physical Power and apply 2 Poison. Deals double damage if the target is already Poisoned.", energyCost: 4,
     cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 1, icon: "†", branch: "shadow", effect: "poison", statusStacks: 2,
     damageModifiers: [{ id: "venomous-strike-poisoned", name: "Venomous Strike", description: "Deals double damage to Poisoned targets.", multiplier: 2, targetHasAnyStatus: ["poison"] }], vfx: "venomous_strike",
   },
   Flurry: {
+    range: "melee",
     id: "Flurry", name: "Flurry", description: "Attack five times, dealing Physical Damage equal to 40% of your Physical Power per hit. Each hit chooses a random enemy and can trigger on-hit effects.", energyCost: 4,
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, hits: 5, randomTargetPerHit: true, attackSequenceDurationMultiplier: 1.4, icon: "≋", branch: "shadow", vfx: "flurry",
   },
   Ambush: {
+    range: "melee",
     id: "Ambush", name: "Ambush", description: "Can only be used while Stealthed. Deal Physical Damage equal to 150% of your Physical Power with +50% Critical Strike Chance.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 1.5, requiredSelfStatus: "stealth", critChanceBonusWithStatus: { status: "stealth", bonus: 0.5 }, icon: "◈", branch: "shadow", vfx: "ambush",
   },
   ToxicExplosion: {
+    range: "ranged",
     id: "ToxicExplosion", name: "Toxic Explosion", description: "Detonate all Poison on the target, dealing its remaining duration damage immediately and removing Poison.", energyCost: 5,
     cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", detonateStatus: "poison", icon: "☣", branch: "shadow", vfx: "toxic_explosion",
   },
   Venomborn: {
+    range: "ranged",
     id: "Venomborn", name: "Venomborn", description: "Consume all Poison on the target to heal for the damage it would deal over its full duration.", energyCost: 2,
     cooldownTurns: 6, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeStatusForHealing: "poison", icon: "♨", branch: "shadow", vfx: "venomborn",
   },
   LightningStrike: {
+    range: "melee",
     id: "LightningStrike", name: "Lightning Strike", description: "Deal 50% Physical Power as Physical Damage and 50% Magical Power as Lightning Damage, then apply Electrified for 3 turns.", energyCost: 4,
     cooldownTurns: 4, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 0.5 }], effect: "electrified", statusDuration: 3, icon: "ϟ", branch: "shadow", vfx: "lightning_strike",
   },
   Focus: {
+    range: "melee",
     id: "Focus", name: "Focus", description: "Reset all your other ability cooldowns.", energyCost: 1,
     cooldownTurns: 6, target: "self", effect: "reset_cooldowns", icon: "◎", branch: "shadow", vfx: "focus",
   },
   Recouperate: {
+    range: "melee",
     id: "Recouperate", name: "Recuperate", description: "Restore 50% of your maximum Energy.", energyCost: 1,
     cooldownTurns: 4, target: "self", energyRestorePercentOfMax: 0.5, icon: "◉", branch: "shadow", vfx: "recuperate",
   },
   SharpenedBlade: {
+    range: "melee",
     id: "SharpenedBlade", name: "Sharpened Blade", description: "Deal 100% Physical Power as damage. This attack ignores Guard and Barrier.", energyCost: 2,
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 1, ignoresAbsorption: true, icon: "†", branch: "shadow", vfx: "sharpened_blade",
   },
   SlowingVenom: {
+    range: "melee",
     id: "SlowingVenom", name: "Slowing Venom", description: "Consume 50% of the target's Poison, apply Slowed, and deal 75% Physical Power as damage.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 0.75, requiredTargetStatus: "poison", consumeTargetStatus: "poison", consumeTargetStatusRatio: 0.5,
     statusApplications: [{ status: "slowed" }], icon: "⌁", branch: "shadow", vfx: "slowing_venom",
   },
   WeakeningVenom: {
+    range: "melee",
     id: "WeakeningVenom", name: "Weakening Venom", description: "Consume 50% of the target's Poison, apply Vulnerable and Weaken, and deal 60% Physical Power as damage.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 0.6, requiredTargetStatus: "poison", consumeTargetStatus: "poison", consumeTargetStatusRatio: 0.5,
     statusApplications: [{ status: "vulnerable" }, { status: "weaken" }], icon: "⌁", branch: "shadow", vfx: "weakening_venom",
   },
   RabidVenom: {
+    range: "melee",
     id: "RabidVenom", name: "Rabid Venom", description: "Consume 50% of the target's Poison, apply Reckless, and deal 75% Physical Power as damage.", energyCost: 3,
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.75, requiredTargetStatus: "poison", consumeTargetStatus: "poison", consumeTargetStatusRatio: 0.5,
     statusApplications: [{ status: "reckless" }], icon: "⌁", branch: "shadow", vfx: "rabid_venom",
   },
   PinpointSlice: {
+    range: "melee",
     id: "PinpointSlice", name: "Pinpoint Slice", description: "Deal 75% Physical Power as damage. Your next damaging ability is guaranteed to critically strike.", energyCost: 3,
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.75, grantsNextCritical: true, icon: "⊙", branch: "shadow", vfx: "pinpoint_slice",
   },
   TraumaticPuncture: {
+    range: "melee",
     id: "TraumaticPuncture", name: "Traumatic Puncture", description: "Deal 75% Physical Power as damage. A critical strike also applies Weaken and 2 Bleed.", energyCost: 3,
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.75,
     statusApplications: [{ status: "weaken", onlyOnCritical: true }, { status: "bleed", stacks: 2, onlyOnCritical: true }], icon: "‡", branch: "shadow",
   },
   SliceAndDice: {
+    range: "melee",
     id: "SliceAndDice", name: "Slice and Dice", description: "Attack six times for 15% Physical Power per hit. Critical hits apply Exhausted. Each hit triggers on-hit effects.", energyCost: 5,
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.15, hits: 6, attackSequenceDurationMultiplier: 1.4,
     statusApplications: [{ status: "exhausted", onlyOnCritical: true }], icon: "≋", branch: "shadow", vfx: "slice_and_dice",
   },
   CheapShot: {
+    range: "melee",
     id: "CheapShot", name: "Cheap Shot", description: "Stun the target and apply 5 Bleed. Can only be used while Stealthed.", energyCost: 4,
     cooldownTurns: 1, target: "enemy", dealsDamage: false, requiredSelfStatus: "stealth", effect: "stun",
     statusApplications: [{ status: "bleed", stacks: 5 }], icon: "‡", branch: "shadow",
   },
   Pandemic: {
+    range: "ranged",
     id: "Pandemic", name: "Pandemic", description: "Copy every debuff on the target to all other living enemies.", energyCost: 4,
     cooldownTurns: 3, target: "enemy", dealsDamage: false, spreadAllTargetDebuffs: true, icon: "☣", branch: "shadow", vfx: "pandemic",
   },
   LightSpeed: {
+    range: "melee",
     id: "LightSpeed", name: "Light Speed", description: "Deal 50% Physical Power as Physical Damage and 100% Magical Power as Lightning Damage, apply Electrified, then immediately begin a new turn.", energyCost: 6,
     cooldownTurns: 5,
     target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.5 }, { damageType: "lightning", powerScaling: 1 }],
     statusApplications: [{ status: "electrified" }], grantsImmediateTurn: true, icon: "ϟ", branch: "shadow", vfx: "light_speed", immediateTurnVfx: "light_speed_turn",
   },
   ChainAssassination: {
+    range: "melee",
     id: "ChainAssassination", name: "Chain Assassination", description: "Deal 125% Physical Power as damage. While Stealthed, gain +25% Critical Strike Chance. A kill refunds the Energy spent and resets the cooldown.", energyCost: 5,
     cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 1.25,
     critChanceBonusWithStatus: { status: "stealth", bonus: 0.25 }, refundEnergyOnKill: true, resetCooldownOnKill: true, killVfx: "chain_assassination", icon: "◈", branch: "shadow",
   },
   CullTheWeak: {
+    range: "ranged",
     id: "CullTheWeak", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Magical Power as Arcane Damage. Both gain 20% damage per unique debuff on the target.", energyCost: 5,
     cooldownTurns: 3, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.25 }, { damageType: "arcane", powerScaling: 0.25 }],
     damagePerTargetDebuff: 0.2, icon: "◎", branch: "shadow", vfx: "cull_the_weak",
   },
   Epidemic: {
+    range: "ranged",
     id: "Epidemic", name: "Epidemic", description: "Apply 10 Poison to all enemies and gain Stealth until the end of your next turn.", energyCost: 3,
     cooldownTurns: 10, target: "all_enemies", dealsDamage: false, effect: "poison", statusStacks: 10,
     selfStatusApplications: [{ status: "stealth", duration: 2, expiresAtTurnStart: false }], icon: "☣", branch: "shadow", vfx: "epidemic",
   },
   VoltageStab: {
+    range: "melee",
     id: "VoltageStab", name: "Voltage Stab", description: "Deal Lightning Damage equal to 35% of your Magical Power. If the target is Electrified, restore 2% of your maximum Health and gain +2 Energy regeneration next turn.", energyCost: 0,
     cooldownTurns: 2, target: "enemy", damageType: "lightning", powerScaling: 0.35,
     conditionalSelfEffects: [{ targetHasStatus: "electrified", healPercentMaxHp: 0.02, nextTurnEnergyRegen: 2, vfx: "voltage_siphon" }], icon: "ϟ", branch: "shadow",
   },
   crushingBlow: {
+    range: "melee",
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
     target: "enemy", damageType: "physical", power: 12, scalingStat: "strength", icon: "✦", branch: "brute", effect: "vulnerable",
   },
   groundSlam: {
+    range: "melee",
     id: "groundSlam", name: "Ground Slam", description: "Damage all enemies with a chance to stun.", energyCost: 6,
     target: "all_enemies", damageType: "physical", power: 7, scalingStat: "strength", icon: "✹", branch: "brute", effect: "stun",
   },
   sever: {
+    range: "melee",
     id: "sever", name: "Sever", description: "A swift cut that applies Bleed for 3 turns.", energyCost: 3,
     target: "enemy", damageType: "shadow", power: 7, scalingStat: "agility", icon: "◢", branch: "shadow", effect: "bleed",
   },
   venom: {
+    range: "melee",
     id: "venom", name: "Venom Edge", description: "Poison an enemy and deal light damage.", energyCost: 4,
     target: "enemy", damageType: "shadow", power: 5, scalingStat: "agility", icon: "⌁", branch: "shadow", effect: "poison",
   },
   arcaneBolt: {
+    range: "ranged",
     id: "arcaneBolt", name: "Arcane Bolt", description: "Deal Arcane Damage equal to 75% of your Magical Power.", energyCost: 1,
     cooldownTurns: 1, target: "enemy", damageType: "arcane", powerScaling: 0.75, icon: "✧", branch: "arcanist", vfx: "arcane_bolt",
   },
   Frostbolt: {
+    range: "ranged",
     id: "Frostbolt", name: "Frostbolt", description: "Deal Frost Damage equal to 50% of your Magical Power and have a 50% chance to apply Slowed.", energyCost: 3,
     cooldownTurns: 1, target: "enemy", damageType: "frost", powerScaling: 0.5, statusApplications: [{ status: "slowed", chance: 0.5 }], icon: "❄", branch: "arcanist", vfx: "frostbolt",
   },
   ArcaneBlast: {
+    range: "ranged",
     id: "ArcaneBlast", name: "Arcane Blast", description: "Deal Arcane Damage equal to 20% of your Magical Power and apply 1 Arcane Wound. Each Arcane Wound increases Arcane Blast damage by 10%.", energyCost: 1,
     target: "enemy", damageType: "arcane", powerScaling: 0.2, statusApplications: [{ status: "arcaneWound" }], damagePerTargetStatusStack: { status: "arcaneWound", multiplier: 0.1 }, freeAgainstTargetStatus: "arcaneCharge", icon: "✦", branch: "arcanist", vfx: "arcane_blast",
   },
   Fireball: {
+    range: "ranged",
     id: "Fireball", name: "Fireball", description: "Deal Fire Damage equal to 100% of your Magical Power and apply 2 Burn.", energyCost: 4,
     cooldownTurns: 2, target: "enemy", damageType: "fire", powerScaling: 1, statusApplications: [{ status: "burn", stacks: 2 }], icon: "●", branch: "arcanist", vfx: "fireball",
   },
   LightningBeam: {
+    range: "ranged",
     id: "LightningBeam", name: "Lightning Beam", description: "Strike random enemies four times for 20% Magical Power as Lightning Damage per hit. Each hit has a 20% chance to apply Electrified.", energyCost: 3,
     cooldownTurns: 2, target: "enemy", damageType: "lightning", powerScaling: 0.2, hits: 4, randomTargetPerHit: true, statusApplications: [{ status: "electrified", chance: 0.2 }], icon: "ϟ", branch: "arcanist", vfx: "lightning_beam",
   },
   Thunderstorm: {
+    range: "ranged",
     id: "Thunderstorm", name: "Thunderstorm", description: "Strike random enemies six times for 30% Magical Power as Lightning Damage per hit. Hits against Electrified enemies deal 50% more damage.", energyCost: 5,
     cooldownTurns: 3, target: "enemy", damageType: "lightning", powerScaling: 0.3, hits: 6, randomTargetPerHit: true,
     damageModifiers: [{ id: "thunderstorm-electrified", name: "Conductive Storm", description: "Thunderstorm deals 50% more damage to Electrified enemies.", targetHasAnyStatus: ["electrified"], multiplier: 1.5 }], icon: "ϟ", branch: "arcanist", vfx: "thunderstorm",
   },
   DeepFreeze: {
+    range: "ranged",
     id: "DeepFreeze", name: "Deep Freeze", description: "Deal 75% Magical Power as Frost Damage and apply Slowed. If the target is already Slowed, apply Stunned instead.", energyCost: 4,
     cooldownTurns: 4, target: "enemy", damageType: "frost", powerScaling: 0.75, statusApplications: [{ status: "slowed" }],
     conditionalStatusReplacement: { status: "slowed", whenTargetHas: "slowed", replacement: "stunned" }, icon: "❄", branch: "arcanist", vfx: "deep_freeze",
   },
   ArcaneOverload: {
+    range: "ranged",
     id: "ArcaneOverload", name: "Arcane Overload", description: "Deal 50% Magical Power as Arcane Damage, apply 3 Arcane Wounds, and mark the target with Arcane Charge. Your next Arcane Blast against that target costs 0 Energy.", energyCost: 3,
     cooldownTurns: 3, target: "enemy", damageType: "arcane", powerScaling: 0.5,
     statusApplications: [{ status: "arcaneWound", stacks: 3 }, { status: "arcaneCharge" }], icon: "✹", branch: "arcanist", vfx: "arcane_overload",
   },
   Combustion: {
+    range: "ranged",
     id: "Combustion", name: "Combustion", description: "Consume all Burn on the target and deal its remaining damage immediately. If this kills the target, spread half its Burn stacks to all other enemies.", energyCost: 4,
     cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "burn", detonateStatus: "burn",
     spreadDetonatedStatusOnKillRatio: 0.5, spreadOnKillVfx: "combustion_spread", icon: "🔥", branch: "arcanist", vfx: "combustion",
   },
   ArcaneCombustion: {
+    range: "ranged",
     id: "ArcaneCombustion", name: "Arcane Combustion", description: "Consume all Arcane Wounds on the target. Deal 50% Magical Power as Fire Damage per stack consumed and apply an equal number of Burn stacks.", energyCost: 4,
     cooldownTurns: 3, target: "enemy", requiredTargetStatus: "arcaneWound", consumeTargetStatus: "arcaneWound",
     consumeTargetStatusForDamage: { status: "arcaneWound", damageType: "fire", powerScalingPerStack: 0.5, applyStatus: "burn", appliedStacksPerConsumedStack: 1 }, icon: "✹", branch: "arcanist", vfx: "arcane_combustion",
   },
   Thundersnow: {
+    range: "ranged",
     id: "Thundersnow", name: "Thundersnow", description: "Hit all enemies for a combined 60% Magical Power as Frost and Lightning Damage. Apply Slowed to every target and Electrified to one random target.", energyCost: 5,
     cooldownTurns: 3, target: "all_enemies", damageComponents: [{ damageType: "frost", powerScaling: 0.3 }, { damageType: "lightning", powerScaling: 0.3 }],
     statusApplications: [{ status: "slowed" }], randomSingleStatusApplication: { status: "electrified" }, icon: "❄", branch: "arcanist", vfx: "thundersnow",
   },
   SelfImmolation: {
+    range: "ranged",
     id: "SelfImmolation", name: "Self Immolation", description: "Apply 5 Burn to yourself and the selected enemy.", energyCost: 1,
     cooldownTurns: 5, target: "enemy", dealsDamage: false, effect: "burn", statusStacks: 5,
     selfStatusApplications: [{ status: "burn", stacks: 5 }], selfStatusVfx: "self_immolation", icon: "🔥", branch: "arcanist", vfx: "self_immolation",
   },
   ArcaneBarrier: {
+    range: "ranged",
     id: "ArcaneBarrier", name: "Arcane Barrier", description: "Gain Barrier equal to 50% of your Magical Power for 3 turns.", energyCost: 1,
     cooldownTurns: 5, target: "self", dealsDamage: false, effect: "barrier", statusDuration: 3,
     statusStackPowerScaling: { power: "magical", scaling: 0.5 }, icon: "◇", branch: "arcanist", vfx: "arcane_barrier",
   },
   FrozenPath: {
+    range: "ranged",
     id: "FrozenPath", name: "Frozen Path", description: "Gain 30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%.", energyCost: 1,
     cooldownTurns: 5, target: "self", dealsDamage: false, effect: "frozenPath", statusDuration: 3, statusMagnitude: 0.3,
     icon: "❄", branch: "arcanist", vfx: "frozen_path",
   },
   Conductor: {
+    range: "ranged",
     id: "Conductor", name: "Conductor", description: "Stun all enemies and yourself for 1 turn.", energyCost: 1,
     cooldownTurns: 5, target: "all_enemies", dealsDamage: false, effect: "stunned", statusDuration: 1,
     selfStatusApplications: [{ status: "stunned", duration: 1 }], selfStatusVfx: "conductor", icon: "ϟ", branch: "arcanist", vfx: "conductor",
   },
   Firestorm: {
+    range: "ranged",
     id: "Firestorm", name: "Firestorm", description: "Deal Fire Damage equal to 25% of your Magical Power to all enemies, then apply 2 Burn to all enemies and yourself.", energyCost: 5,
     cooldownTurns: 3, target: "all_enemies", damageType: "fire", powerScaling: 0.25, effect: "burn", statusStacks: 2,
     selfStatusApplications: [{ status: "burn", stacks: 2 }], selfStatusVfx: "firestorm", icon: "🔥", branch: "arcanist", vfx: "firestorm",
   },
   siphon: {
+    range: "ranged",
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
     target: "enemy", damageType: "arcane", power: 7, scalingStat: "intelligence", icon: "◎", branch: "arcanist", effect: "energy",
   },
@@ -529,6 +582,7 @@ export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {
     ...positionedTalent,
     abilityEnergyCost: ability.energyCost,
     abilityCooldownTurns: ability.cooldownTurns ?? 0,
+    abilityRange: ability.range,
   } : positionedTalent;
 });
 

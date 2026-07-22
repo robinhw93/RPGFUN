@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
@@ -813,16 +813,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const voltageSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "voltage_siphon");
   const combustionSpreadAnimations = abilityAnimations.filter((animation) => animation.kind === "combustion_spread");
   const conductorAnimations = abilityAnimations.filter((animation) => animation.kind === "conductor" && !animation.targetId);
-  const arcanistProjectileAnimations = abilityAnimations.filter((animation) => (
-    animation.kind === "arcane_bolt"
-    || animation.kind === "frostbolt"
-    || animation.kind === "arcane_blast"
-    || animation.kind === "fireball"
-    || animation.kind === "lightning_beam"
-    || animation.kind === "deep_freeze"
-    || animation.kind === "arcane_overload"
-    || animation.kind === "arcane_combustion"
-  ));
+  const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
@@ -921,7 +912,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       {lightSpeedAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="light-speed-path"><Zap /><i /><i /></CombatantPathEffect>)}
       {voltageSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="voltage-siphon-path"><Zap /><HeartPulse /><i /></CombatantPathEffect>)}
       {combustionSpreadAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="combustion-spread-path"><Flame /><i /><i /></CombatantPathEffect>)}
-      {arcanistProjectileAnimations.map((animation) => <ArcanistProjectileEffect key={animation.id} animation={animation} />)}
+      {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
 
@@ -1485,7 +1476,7 @@ function EpidemicEffect() {
   );
 }
 
-function CombatantPathEffect({ animation, className, children }: { animation: CombatAbilityAnimation; className: string; children: ReactNode }) {
+function CombatantPathEffect({ animation, className, children, durationMs }: { animation: Pick<CombatAbilityAnimation, "id" | "sourceTargetId" | "targetId">; className: string; children: ReactNode; durationMs?: number }) {
   const [path, setPath] = useState<{ left: number; top: number; x: number; y: number } | null>(null);
 
   useLayoutEffect(() => {
@@ -1510,7 +1501,7 @@ function CombatantPathEffect({ animation, className, children }: { animation: Co
   return (
     <span
       className={`combatant-path-effect ${className}`}
-      style={{ left: path.left, top: path.top, "--path-x": `${path.x}px`, "--path-y": `${path.y}px` } as React.CSSProperties}
+      style={{ left: path.left, top: path.top, "--path-x": `${path.x}px`, "--path-y": `${path.y}px`, ...(durationMs ? { "--projectile-flight": `${durationMs}ms` } : {}) } as React.CSSProperties}
       aria-hidden="true"
     >
       {children}
@@ -1518,29 +1509,40 @@ function CombatantPathEffect({ animation, className, children }: { animation: Co
   );
 }
 
-function ArcanistProjectileEffect({ animation }: { animation: CombatAbilityAnimation }) {
-  if (animation.kind === "frostbolt") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
+function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAnimation }) {
+  const durationMs = COMBAT_TIMING.attackImpactMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
+  const kind = animation.vfx;
+  if (kind === "frostbolt" || kind === "deep_freeze" || (!kind && animation.damageType === "frost")) {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
   }
-  if (animation.kind === "fireball") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path fireball-path"><Flame /><i /><i /></CombatantPathEffect>;
+  if (kind === "fireball" || kind === "combustion" || kind === "firestorm" || (!kind && animation.damageType === "fire")) {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path fireball-path"><Flame /><i /><i /></CombatantPathEffect>;
   }
-  if (animation.kind === "lightning_beam") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path lightning-beam-path"><Zap /><i /><i /></CombatantPathEffect>;
+  if (kind === "lightning_beam" || kind === "thunderstorm" || (!kind && animation.damageType === "lightning")) {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path lightning-beam-path"><Zap /><i /><i /></CombatantPathEffect>;
   }
-  if (animation.kind === "arcane_blast") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-blast-path"><CircleDot /><i /><i /></CombatantPathEffect>;
+  if (kind === "thundersnow") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path thundersnow-path"><Snowflake /><Zap /><i /><i /></CombatantPathEffect>;
   }
-  if (animation.kind === "deep_freeze") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path deep-freeze-path"><Snowflake /><i /><i /></CombatantPathEffect>;
+  if (kind === "toxic_explosion") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path poison-projectile-path"><FlaskConical /><i /><i /></CombatantPathEffect>;
   }
-  if (animation.kind === "arcane_overload") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-overload-path"><Sparkles /><i /><i /></CombatantPathEffect>;
+  if (kind === "cull_the_weak" || animation.damageType === "shadow") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path shadow-projectile-path"><Moon /><i /><i /></CombatantPathEffect>;
   }
-  if (animation.kind === "arcane_combustion") {
-    return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-combustion-path"><CircleDot /><Flame /><i /><i /></CombatantPathEffect>;
+  if (!kind && animation.damageType === "physical") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path physical-projectile-path"><Target /><i /><i /></CombatantPathEffect>;
   }
-  return <CombatantPathEffect animation={animation} className="arcanist-projectile-path arcane-bolt-path"><Sparkles /><i /><i /></CombatantPathEffect>;
+  if (kind === "arcane_blast") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-blast-path"><CircleDot /><i /><i /></CombatantPathEffect>;
+  }
+  if (kind === "arcane_overload") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-overload-path"><Sparkles /><i /><i /></CombatantPathEffect>;
+  }
+  if (kind === "arcane_combustion") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-combustion-path"><CircleDot /><Flame /><i /><i /></CombatantPathEffect>;
+  }
+  return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-bolt-path"><Sparkles /><i /><i /></CombatantPathEffect>;
 }
 
 function PandemicSpreadEffect({ animation, statusIds }: { animation: CombatAbilityAnimation; statusIds: StatusEffectId[] }) {
@@ -1902,7 +1904,7 @@ function HoldAbilityButton({ ability, description, energyCost, baseCooldown, coo
       onPointerCancel={endHold}
       onPointerLeave={endHold}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`${ability.name}, ${energyCost} Energy, ${baseCooldown} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
+      aria-label={`${ability.name}, ${ability.range === "ranged" ? "Ranged" : "Melee"}, ${energyCost} Energy, ${baseCooldown} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
     >
       <span className="compact-ability-icon">{ability.icon}</span>
       <strong>{ability.name}</strong>
@@ -1910,7 +1912,7 @@ function HoldAbilityButton({ ability, description, energyCost, baseCooldown, coo
       <span className="compact-ability-cooldown-value"><Hourglass size={9} />{baseCooldown}</span>
       {queuedCount > 0 && <span className="compact-ability-queued" aria-hidden="true">Queued{queuedCount > 1 ? ` ×${queuedCount}` : ""}</span>}
       {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true"><Hourglass size={15} /><b>{cooldown}</b></span>}
-      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{description}</small><em>{energyCost} Energy · {baseCooldown ? `${baseCooldown} turn cooldown` : "No cooldown"}</em></span>
+      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{description}</small><em>{energyCost} Energy · {baseCooldown ? `${baseCooldown} turn cooldown` : "No cooldown"} · {ability.range === "ranged" ? "Ranged" : "Melee"}</em></span>
     </button>
   );
 }
@@ -2391,6 +2393,7 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
                   <div className="talent-ability-metrics">
                     <span><small>Energy</small><strong>{energyCost}</strong></span>
                     <span><small>Cooldown</small><strong>{cooldownTurns ? `${cooldownTurns} ${cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
+                    <span><small>Range</small><strong>{coreAbility.range === "ranged" ? "Ranged" : "Melee"}</strong></span>
                   </div>
                   <p>{getCharacterAbilityDescription(character, coreAbility)}</p>
                   <button type="button" disabled={locked || cannotEquip} onClick={() => onToggleAbility(coreAbility.id)}>{equipped ? "Unequip Ability" : cannotEquip ? "Loadout Full" : "Equip Ability"}</button>
@@ -2410,6 +2413,7 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
             <div className="talent-ability-metrics">
               <span><small>Energy</small><strong>{abilityEnergyCost}</strong></span>
               <span><small>Cooldown</small><strong>{abilityCooldownTurns ? `${abilityCooldownTurns} ${abilityCooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
+              <span><small>Range</small><strong>{ability.range === "ranged" ? "Ranged" : "Melee"}</strong></span>
             </div>
             <div className="talent-detail-effect"><small>Ability Effect</small><p>{abilityDescription}</p></div>
             {talent.kind === "class" && <div className="talent-detail-effect"><small>Passive Bonus</small><p>{classBonus}</p></div>}
@@ -2490,7 +2494,7 @@ function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
               >
                 <span className="ability-slot-picker-icon" aria-hidden="true">{ability.icon}</span>
                 <span className="ability-slot-picker-info"><strong>{ability.name}</strong><small>{abilityDescription}</small></span>
-                <span className="ability-slot-picker-metrics"><small>{energyCost} Energy</small><small>{cooldownTurns} CD</small><em>{slotLabel}</em></span>
+                <span className="ability-slot-picker-metrics"><small>{energyCost} Energy</small><small>{cooldownTurns} CD · {ability.range === "ranged" ? "Ranged" : "Melee"}</small><em>{slotLabel}</em></span>
               </button>
             );
           })}

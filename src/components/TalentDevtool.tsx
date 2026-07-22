@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 import { ABILITIES, TALENTS, TALENT_TREE_CANVAS } from "../game/data";
 import { STATUS_EFFECTS } from "../game/statusEffects";
-import type { StatName, TalentBranch } from "../game/types";
+import type { AbilityRange, StatName, TalentBranch } from "../game/types";
 
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
@@ -49,15 +49,17 @@ interface TalentDraftNode {
   abilityId: string;
   abilityEnergyCost: number;
   abilityCooldownTurns: number;
+  abilityRange: AbilityRange;
   effectNotes: string;
 }
 
-interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns"> {
+interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns" | "abilityRange"> {
   tier?: number;
   shape?: TalentNodeShape;
   passiveBonuses?: TalentPassiveBonus[];
   abilityEnergyCost?: number;
   abilityCooldownTurns?: number;
+  abilityRange?: AbilityRange;
   passiveBonus?: PassiveBonus | "";
   passiveAmount?: number;
 }
@@ -152,6 +154,7 @@ function createGameDataNodes(): TalentDraftNode[] {
       abilityId: talent.abilityId ?? "",
       abilityEnergyCost: talent.abilityEnergyCost ?? ability?.energyCost ?? 0,
       abilityCooldownTurns: talent.abilityCooldownTurns ?? ability?.cooldownTurns ?? 0,
+      abilityRange: talent.abilityRange ?? ability?.range ?? "melee",
       effectNotes: talent.effectNotes ?? "",
     };
   });
@@ -169,6 +172,7 @@ function getGameDataSignature(nodes: TalentDraftNode[]): string {
     abilityId: node.abilityId,
     abilityEnergyCost: node.abilityEnergyCost,
     abilityCooldownTurns: node.abilityCooldownTurns,
+    abilityRange: node.abilityRange,
     effectNotes: node.effectNotes,
   })));
   let hash = 2166136261;
@@ -254,6 +258,7 @@ function normalizeDraft(draft: { version: 1; sourceSignature?: string; layoutSig
         abilityId: node.abilityId ?? "",
         abilityEnergyCost: numbers.energyCost,
         abilityCooldownTurns: numbers.cooldownTurns,
+        abilityRange: node.abilityRange === "ranged" || node.abilityRange === "melee" ? node.abilityRange : ABILITIES[node.abilityId ?? ""]?.range ?? "melee",
         effectNotes: node.effectNotes ?? "",
       };
     }),
@@ -285,6 +290,7 @@ function syncDraftWithGameData(draft: TalentDraft): TalentDraft {
         abilityId: gameNode.abilityId,
         abilityEnergyCost: gameNode.abilityEnergyCost,
         abilityCooldownTurns: gameNode.abilityCooldownTurns,
+        abilityRange: gameNode.abilityRange,
         effectNotes: gameNode.effectNotes,
       } : {}),
       ...(layoutChanged ? {
@@ -518,6 +524,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       abilityId: "",
       abilityEnergyCost: 0,
       abilityCooldownTurns: 0,
+      abilityRange: "melee",
       effectNotes: "",
     };
     setDraft((current) => ensureCanvasRoom({ ...current, nodes: [...current.nodes, node] }));
@@ -813,6 +820,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                     <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => updateSelected({ abilityEnergyCost: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
                     <label><span>Cooldown (turns)</span><input type="number" min={0} step={1} value={selected.abilityCooldownTurns} onChange={(event) => updateSelected({ abilityCooldownTurns: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
                   </div>
+                  <label className="talent-form-field"><span>Attack range</span><select value={selected.abilityRange} onChange={(event) => updateSelected({ abilityRange: event.target.value as AbilityRange })}><option value="melee">Melee</option><option value="ranged">Ranged</option></select></label>
                 </>
               ) : null}
               <div className="talent-passive-heading"><span>Passive bonuses</span><button type="button" onClick={addPassiveBonus}><Plus size={13} /> Add bonus</button></div>

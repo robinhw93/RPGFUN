@@ -22,7 +22,7 @@ import {
 } from "./statusEffects";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getCharacterStatusDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
-import type { CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
+import type { Ability, AbilityRange, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
   const derived = getDerivedStats(character);
@@ -59,6 +59,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     damageSourceLabels: {},
     statusAnimations: [],
     abilityAnimations: [],
+    projectileAnimations: [],
     passiveAnimations: [],
     attackingActorId: null,
     attackAnimationId: 0,
@@ -93,6 +94,9 @@ function statusInfo(status: StatusEffect): InspectableInfo {
 
 interface QueueDamageOptions {
   attackerId?: "player" | string;
+  attackRange?: AbilityRange;
+  projectileVfx?: CombatAbilityVfxKind;
+  projectileDamageType?: DamageType;
   animationHitCount?: number;
   animationDurationMultiplier?: number;
   missed?: boolean;
@@ -110,12 +114,23 @@ function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], te
     targetId,
     damage,
     attackerId: options.attackerId,
+    attackRange: options.attackRange,
+    projectileVfx: options.projectileVfx,
+    projectileDamageType: options.projectileDamageType,
     animationHitCount: Math.max(1, Math.round(options.animationHitCount ?? 1)),
     animationDurationMultiplier: Math.max(0.1, options.animationDurationMultiplier ?? 1),
     missed: options.missed,
     sourceLabel: options.sourceLabel,
   });
   return eventIndex;
+}
+
+function getAbilityAttackPresentation(ability: Ability): Pick<QueueDamageOptions, "attackRange" | "projectileVfx" | "projectileDamageType"> {
+  return {
+    attackRange: ability.range,
+    projectileVfx: ability.vfx,
+    projectileDamageType: ability.damageType ?? ability.damageComponents?.[0]?.damageType ?? ability.consumeTargetStatusForDamage?.damageType,
+  };
 }
 
 function queueDamageAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: string, damage: number): void {
@@ -327,6 +342,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       damageSourceLabels: combat.damageSourceLabels ?? {},
       statusAnimations: combat.statusAnimations ?? [],
       abilityAnimations: combat.abilityAnimations ?? [],
+      projectileAnimations: combat.projectileAnimations ?? [],
       passiveAnimations: combat.passiveAnimations ?? [],
       attackingActorId: combat.attackingActorId ?? null,
       attackAnimationId: combat.attackAnimationId ?? 0,
@@ -365,6 +381,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     damageSourceLabels: {},
     statusAnimations: [],
     abilityAnimations: [],
+    projectileAnimations: [],
     passiveAnimations: [],
     attackingActorId: null,
     attackAnimationId: combat.attackAnimationId ?? 0,
@@ -1200,7 +1217,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           statuses: wakeFromDamage(absorption.statuses.flatMap((status) => status.id !== detonatedStatus.id ? [status] : retainedStatus ? [retainedStatus] : []), damage),
         } : enemy);
         logs.push(makeLog(`${ability.name} detonates ${detonatedStatus.name} on ${target.name} for ${damage} damage.`, abilityInfo));
-        const damageEventIndex = queueDamage(events, pendingEffects, `${detonatedStatus.name} detonates for ${damage} damage${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", sourceLabel: detonatedStatus.name });
+        const damageEventIndex = queueDamage(events, pendingEffects, `${detonatedStatus.name} detonates for ${damage} damage${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", sourceLabel: detonatedStatus.name, ...getAbilityAttackPresentation(ability) });
         queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
         if (retainedStatus) queueStatusSet(pendingEffects, damageEventIndex, target.instanceId, retainedStatus);
         else queueStatusRemoval(pendingEffects, damageEventIndex, target.instanceId, detonatedStatus.id);
@@ -1348,7 +1365,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (!rollHit(derived.hitChance * getHitChanceMultiplier(playerStatuses), targetDodgeChance)) {
         playerHasMissed = true;
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
-        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, missed: true });
+        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, missed: true, ...getAbilityAttackPresentation(ability) });
         continue;
       }
       const conditionalCritBonus = ability.critChanceBonusWithStatus && hasStatus(playerStatuses, ability.critChanceBonusWithStatus.status)
@@ -1391,7 +1408,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damagedTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
-      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier });
+      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, ...getAbilityAttackPresentation(ability) });
       queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
       if (ability.vfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, target.instanceId, "player");
       const appliedStatusIds: StatusEffectId[] = [];
@@ -2097,25 +2114,37 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
-  if (combat.eventId !== eventId || combat.attackAnimationId !== animationId || !combat.attackingActorId) return combat;
-  return { ...combat, attackingActorId: null, attackEffectId: null };
+  if (combat.eventId !== eventId || combat.attackAnimationId !== animationId || (!combat.attackingActorId && (combat.projectileAnimations?.length ?? 0) === 0)) return combat;
+  return { ...combat, attackingActorId: null, attackEffectId: null, projectileAnimations: [] };
 }
 
 export function primeCombatAttack(combat: CombatState, eventId: number, eventIndex: number): CombatState {
   if (combat.eventId !== eventId) return combat;
   const attackEffect = (combat.pendingEffects ?? []).find((effect): effect is Extract<CombatPendingEffect, { damage: number }> => effect.eventIndex === eventIndex && "damage" in effect && Boolean(effect.attackerId));
   if (!attackEffect || combat.attackEffectId === attackEffect.id) return combat;
+  const animationHitCount = Math.max(1, attackEffect.animationHitCount ?? 1);
+  const animationDurationMultiplier = Math.max(0.1, attackEffect.animationDurationMultiplier ?? 1);
+  const usesProjectile = attackEffect.attackRange === "ranged" && attackEffect.attackerId === "player" && attackEffect.targetId !== "player";
   return {
     ...combat,
-    attackingActorId: attackEffect.attackerId ?? null,
+    attackingActorId: usesProjectile ? null : attackEffect.attackerId ?? null,
     attackAnimationId: (combat.attackAnimationId ?? 0) + 1,
-    attackAnimationHitCount: Math.max(1, attackEffect.animationHitCount ?? 1),
-    attackAnimationDurationMultiplier: Math.max(0.1, attackEffect.animationDurationMultiplier ?? 1),
+    attackAnimationHitCount: animationHitCount,
+    attackAnimationDurationMultiplier: animationDurationMultiplier,
     attackEffectId: attackEffect.id,
     damagedTargets: [],
     missedTargets: [],
     damageSourceLabels: {},
     statusAnimations: [],
     abilityAnimations: [],
+    projectileAnimations: usesProjectile ? [{
+      id: `projectile-${attackEffect.id}`,
+      targetId: attackEffect.targetId,
+      sourceTargetId: attackEffect.attackerId ?? "player",
+      vfx: attackEffect.projectileVfx,
+      damageType: attackEffect.projectileDamageType,
+      hitCount: animationHitCount,
+      durationMultiplier: animationDurationMultiplier,
+    }] : [],
   };
 }
