@@ -291,6 +291,7 @@ export type CombatAbilityVfxKind =
   | "thundersnow"
   | "self_immolation"
   | "arcane_barrier"
+  | "barrier_absorb"
   | "frozen_path"
   | "conductor"
   | "firestorm"
@@ -376,6 +377,8 @@ export interface Ability {
   freeAgainstTargetStatus?: StatusEffectId;
   /** Statuses applied to the player after the ability resolves. */
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; expiresAtTurnStart?: boolean }>;
+  /** Applies matching self and single-target statuses at one shared presentation event. */
+  combineSelfAndTargetStatusEvent?: boolean;
   /** Presentation emitted when the ability applies one of its configured self statuses. */
   selfStatusVfx?: CombatAbilityVfxKind;
   /** Scales the primary status stack amount from one of the character's powers. */

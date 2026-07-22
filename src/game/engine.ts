@@ -217,6 +217,7 @@ function queueAbsorptionChanges(
     if (remainingStatus) queueStatusSet(pendingEffects, eventIndex, targetId, remainingStatus);
     else queueStatusRemoval(pendingEffects, eventIndex, targetId, statusId);
   });
+  if ((result.absorbedBy.barrier ?? 0) > 0) queueAbilityVfx(pendingEffects, eventIndex, "barrier_absorb", targetId, targetId);
 }
 
 function absorptionSuffix(absorbed: number): string {
@@ -1200,6 +1201,12 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     }
   }
 
+  const effectiveSelfStatusApplications = [
+    ...(ability.selfStatusApplications ?? []),
+    ...abilityModifiers.flatMap((modifier) => modifier.additionalSelfStatusApplications ?? []),
+  ];
+  const sharedSelfStatusEvent: { current: { eventIndex: number; text: string; statusId: StatusEffectId } | null } = { current: null };
+
   if (ability.target === "self") {
     if (ability.effect === "reset_cooldowns") {
       abilityCooldowns = effectiveCooldownTurns ? { [ability.id]: effectiveCooldownTurns } : {};
@@ -1407,10 +1414,20 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
             }) : enemy.statuses),
           } : enemy);
           const statusNames = appliedStatuses.map((applied) => `${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`).join(" and ");
-          const statusText = groupedAreaApplication ? `All enemies gain ${statusNames}.` : `${target.name} gains ${statusNames}.`;
+          const combinesSelfAndTarget = Boolean(
+            ability.combineSelfAndTargetStatusEvent
+            && !groupedAreaApplication
+            && effectiveSelfStatusApplications.some((application) => application.status === status.id),
+          );
+          const statusText = combinesSelfAndTarget
+            ? `You and ${target.name} gain ${statusNames.toLocaleLowerCase()}.`
+            : groupedAreaApplication
+              ? `All enemies gain ${statusNames}.`
+              : `${target.name} gains ${statusNames}.`;
           const statusEventIndex = events.length;
           events.push(statusText);
           logs.push(makeLog(statusText, statusInfo(status)));
+          if (combinesSelfAndTarget) sharedSelfStatusEvent.current = { eventIndex: statusEventIndex, text: statusText, statusId: status.id };
           // Consumption must resolve before a same-status follow-up such as Reapply's new Poison.
           affectedTargets.forEach((affectedTarget) => {
             if (!consumedStatusId) return;
@@ -1785,17 +1802,14 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     }
   }
 
-  const effectiveSelfStatusApplications = [
-    ...(ability.selfStatusApplications ?? []),
-    ...abilityModifiers.flatMap((modifier) => modifier.additionalSelfStatusApplications ?? []),
-  ];
   effectiveSelfStatusApplications.forEach((application) => {
     if (derived.statusImmunities.includes(application.status)) return;
     const status = createPlayerAppliedStatus(application.status, derived, application);
     playerStatuses = addOrRefreshStatus(playerStatuses, status);
-    logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
-    const statusEventIndex = events.length;
-    queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status);
+    const sharedEvent = sharedSelfStatusEvent.current?.statusId === status.id ? sharedSelfStatusEvent.current : null;
+    if (!sharedEvent) logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
+    const statusEventIndex = sharedEvent?.eventIndex ?? events.length;
+    queueStatus(events, pendingEffects, sharedEvent?.text ?? `You gain ${status.name}.`, "player", status, false, sharedEvent?.eventIndex);
     if (ability.selfStatusVfx) queueAbilityVfx(pendingEffects, statusEventIndex, ability.selfStatusVfx, "player", "player");
   });
 

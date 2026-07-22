@@ -266,7 +266,7 @@ export const ABILITIES: Record<string, Ability> = {
     range: "ranged",
     id: "SelfImmolation", name: "Self Immolation", description: "Apply 5 Burn to yourself and the selected enemy.", energyCost: 1,
     cooldownTurns: 5, target: "enemy", dealsDamage: false, effect: "burn", statusStacks: 5,
-    selfStatusApplications: [{ status: "burn", stacks: 5 }], selfStatusVfx: "self_immolation", icon: "🔥", branch: "arcanist", vfx: "self_immolation",
+    selfStatusApplications: [{ status: "burn", stacks: 5 }], combineSelfAndTargetStatusEvent: true, selfStatusVfx: "self_immolation", icon: "🔥", branch: "arcanist", vfx: "self_immolation",
   },
   ArcaneBarrier: {
     range: "ranged",

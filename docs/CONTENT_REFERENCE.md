@@ -55,8 +55,8 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Combustion | 4 | 3 | Burning enemy | Consumes Burn and deals its remaining-duration damage immediately. If the detonation kills, half the consumed stacks, rounded up, spread to every other living enemy. |
 | Arcane Combustion | 4 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds, deals 50% Magical Power as Fire damage per consumed stack, and applies the same number of Burn stacks. |
 | Thundersnow | 5 | 3 | All enemies | Deals a combined 60% Magical Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
-| Self Immolation | 1 | 5 | Enemy | Applies 5 Burn to the player and selected enemy. Feel the Burn heals for the self-Burn's full remaining damage before application; Refreshing Fires grants +2 Energy regeneration next turn. |
-| Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Magical Power for 3 turns; Improved Barrier raises this to 75%. |
+| Self Immolation | 1 | 5 | Enemy | Simultaneously applies 5 Burn to the player and selected enemy. Feel the Burn heals for the self-Burn's full remaining damage before application; Refreshing Fires grants +2 Energy regeneration next turn. |
+| Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Magical Power for 3 turns; Improved Barrier raises this to 75%. A persistent shimmer pulses when Barrier absorbs damage. |
 | Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
 | Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player for 1 turn. Electrified Hug also applies Electrified to every enemy. |
 | Firestorm | 5 | 3 | All enemies and self | Deals 25% Magical Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |

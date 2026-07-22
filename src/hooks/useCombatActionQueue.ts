@@ -156,7 +156,8 @@ export function useCombatActionQueue(
     const combat = game.adventure.combat;
     if (!action || !combat || combat.outcome !== "active" || !combat.initiativeRevealed) return;
     const activeActor = combat.turnOrder[combat.activeTurnIndex];
-    if (activeActor?.kind !== "player" || combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
+    if (activeActor?.kind !== "player") return;
+    if (action.type === "ability" && combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
     const sequencePending = isCombatSequencePending(combat);
     const canInterruptTurnAnnouncement = sequencePending && playerTurnReadyEventId === combat.eventId;
     if ((sequencePending && !canInterruptTurnAnnouncement) || combat.attackingActorId) return;

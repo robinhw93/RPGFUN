@@ -802,6 +802,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const frozenAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "frozen");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
+  const barrierPulseTargets = new Set(abilityAnimations.filter((animation) => animation.kind === "barrier_absorb").flatMap((animation) => animation.targetId ? [animation.targetId] : []));
   const poisonCloudAnimations = abilityAnimations.filter((animation) => animation.kind === "poison_cloud");
   const neurotoxinAnimations = abilityAnimations.filter((animation) => animation.kind === "neurotoxin");
   const toxicExplosionAnimations = abilityAnimations.filter((animation) => animation.kind === "toxic_explosion");
@@ -822,7 +823,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
   const isPlayerTurn = activeActor?.kind === "player";
   const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen");
-  const playerInputUnavailable = initiativePlaying || playerIncapacitated;
+  const abilityInputUnavailable = initiativePlaying || playerIncapacitated;
   const handleCombatEventShown = (eventId: number, eventIndex: number) => {
     if (eventRevealsPlayerTurn(combat, eventIndex)) onPlayerTurnReady(eventId);
     onCombatEvent(eventId, eventIndex);
@@ -840,6 +841,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           data-combatant-id="player"
           className={`compact-combatant player-combatant ${activeActor?.kind === "player" ? "active-turn" : ""} ${damagedTargets.includes("player") ? "damaged" : ""} ${combat.attackingActorId === "player" ? `attacking-right attack-cycle-${combat.attackAnimationId % 2}` : ""} ${playerStealthed ? "stealthed" : ""} ${combat.playerStatuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${evasionAnimations.length > 0 ? "evasion-cast" : ""} ${focusAnimations.length > 0 ? "focus-cast" : ""} ${recuperateAnimations.length > 0 ? "recuperate-cast" : ""}`}
         >
+          {(combat.playerStatuses.some((status) => status.id === "barrier") || barrierPulseTargets.has("player")) && <BarrierShimmer pulsing={barrierPulseTargets.has("player")} />}
           {poisonAnimations.filter((animation) => animation.targetId === "player").map((animation) => <PoisonApplicationEffect key={animation.id} />)}
           {bleedAnimations.filter((animation) => animation.targetId === "player").map((animation) => <BleedApplicationEffect key={animation.id} />)}
           {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
@@ -888,6 +890,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
                 }
               }}
             >
+              {(enemy.statuses.some((status) => status.id === "barrier") || barrierPulseTargets.has(enemy.instanceId)) && <BarrierShimmer pulsing={barrierPulseTargets.has(enemy.instanceId)} />}
               {poisonAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <PoisonApplicationEffect key={animation.id} />)}
               {bleedAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <BleedApplicationEffect key={animation.id} />)}
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
@@ -943,14 +946,14 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : modifiedEnergyCost;
           const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(game.character, ability);
           const queuedCount = queuedActions.filter((action) => action.type === "ability" && action.abilityId === id).length;
-          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={playerInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !targetStackRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={abilityInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !targetStackRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
 
       <div className="combat-footer-controls">
         <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
-        <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={playerInputUnavailable || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
+        <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
       </div>
@@ -1386,6 +1389,10 @@ function FrozenApplicationEffect() {
 
 function ConductorFieldEffect() {
   return <span className="conductor-field-effect" aria-hidden="true"><Zap />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--conductor-x": `${5 + index * 15}%`, "--conductor-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
+}
+
+function BarrierShimmer({ pulsing }: { pulsing: boolean }) {
+  return <span className={`barrier-shimmer ${pulsing ? "barrier-shimmer-pulse" : ""}`} aria-hidden="true"><i /><i /><b /></span>;
 }
 
 function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {

@@ -456,6 +456,16 @@ main { min-height: calc(100vh - 68px); }
 .stealth-smoke-two { right: -15%; top: -31%; animation: stealth-smoke-drift-two 4.4s ease-in-out .6s infinite; }
 @keyframes stealth-smoke-drift-one { 0%, 100% { opacity: .22; transform: translate3d(-5%, 12%, 0) scale(.82) rotate(-8deg); } 48% { opacity: .72; transform: translate3d(46%, -22%, 0) scale(1.16) rotate(12deg); } 72% { opacity: .4; transform: translate3d(73%, -38%, 0) scale(.92) rotate(20deg); } }
 @keyframes stealth-smoke-drift-two { 0%, 100% { opacity: .18; transform: translate3d(8%, -8%, 0) scale(.78) rotate(10deg); } 45% { opacity: .66; transform: translate3d(-42%, 28%, 0) scale(1.12) rotate(-12deg); } 76% { opacity: .36; transform: translate3d(-67%, 43%, 0) scale(.9) rotate(-20deg); } }
+.barrier-shimmer { position: absolute; z-index: 8; inset: -2px; overflow: hidden; border: 1px solid rgba(203,164,255,.72); background: radial-gradient(ellipse at 50% 45%, rgba(203,164,255,.13), rgba(111,66,184,.08) 52%, transparent 76%); box-shadow: inset 0 0 24px rgba(194,139,255,.2), inset 0 0 0 1px rgba(229,207,255,.12), 0 0 14px rgba(151,94,224,.16); pointer-events: none; }
+.barrier-shimmer::before { content: ""; width: 42%; height: 180%; position: absolute; left: -58%; top: -42%; background: linear-gradient(90deg, transparent, rgba(242,224,255,.08), rgba(233,204,255,.46), rgba(242,224,255,.08), transparent); filter: blur(3px); transform: rotate(16deg); animation: barrier-shimmer-sweep 2.15s ease-in-out infinite; }
+.barrier-shimmer > i { position: absolute; inset: var(--barrier-shimmer-inset); border: 1px solid rgba(220,190,255,.2); border-radius: 50%; transform: rotate(var(--barrier-shimmer-rotation)); animation: barrier-shimmer-ring 2.4s ease-in-out infinite; }.barrier-shimmer > i:nth-of-type(1) { --barrier-shimmer-inset: 9% -8%; --barrier-shimmer-rotation: 7deg; }.barrier-shimmer > i:nth-of-type(2) { --barrier-shimmer-inset: 24% 7%; --barrier-shimmer-rotation: -8deg; animation-delay: .42s; }
+.barrier-shimmer > b { width: 7px; height: 7px; position: absolute; right: 12%; top: 19%; border-radius: 50%; background: #f3e7ff; box-shadow: 0 0 8px #d9aaff, 0 0 18px rgba(177,104,239,.8); animation: barrier-shimmer-glint 1.7s ease-in-out infinite; }
+.barrier-shimmer.barrier-shimmer-pulse { animation: barrier-shimmer-impact .62s cubic-bezier(.16,.82,.2,1) both; }.barrier-shimmer.barrier-shimmer-pulse::before { animation: barrier-shimmer-impact-sweep .62s ease-out both; }
+@keyframes barrier-shimmer-sweep { 0%, 15% { opacity: 0; transform: translateX(0) rotate(16deg); } 42% { opacity: .82; } 76%, 100% { opacity: 0; transform: translateX(390%) rotate(16deg); } }
+@keyframes barrier-shimmer-ring { 0%, 100% { opacity: .18; transform: rotate(var(--barrier-shimmer-rotation)) scale(.96); } 50% { opacity: .52; transform: rotate(var(--barrier-shimmer-rotation)) scale(1.04); } }
+@keyframes barrier-shimmer-glint { 0%, 100% { opacity: .18; transform: scale(.55); } 48% { opacity: .88; transform: scale(1.25); } }
+@keyframes barrier-shimmer-impact { 0% { border-color: rgba(203,164,255,.72); filter: brightness(1); } 28% { border-color: #f3deff; background-color: rgba(204,143,255,.28); box-shadow: inset 0 0 56px rgba(224,182,255,.66), 0 0 34px rgba(188,116,244,.62); filter: brightness(1.55); } 58% { filter: brightness(.92); } 76% { filter: brightness(1.38); } 100% { border-color: rgba(203,164,255,.72); filter: brightness(1); } }
+@keyframes barrier-shimmer-impact-sweep { 0% { opacity: 0; transform: translateX(0) rotate(16deg) scaleX(.35); } 24% { opacity: 1; } 100% { opacity: 0; transform: translateX(390%) rotate(16deg) scaleX(1.4); } }
 .compact-combatant.active-turn { box-shadow: inset 0 0 0 1px rgba(201,168,103,.24), 0 0 22px rgba(201,168,103,.08); }
 .compact-enemy-stack { min-height: 0; position: relative; display: grid; grid-auto-rows: max-content; align-content: center; gap: .55rem; }
 .compact-enemy-stack.count-1, .compact-enemy-stack.count-2, .compact-enemy-stack.count-3 { align-content: center; }
@@ -1217,6 +1227,7 @@ main { min-height: calc(100vh - 68px); }
   .focus-cast-effect, .focus-cast-effect * { animation: none !important; opacity: .5; }
   .player-combatant.recuperate-cast { animation: none !important; }
   .recuperate-cast-effect, .recuperate-cast-effect * { animation: none !important; opacity: .45; }
+  .barrier-shimmer, .barrier-shimmer * { animation: none !important; }
   .ability-impact-effect, .ability-impact-effect *, .epidemic-effect, .epidemic-effect *, .combatant-path-effect, .combatant-path-effect *, .combatant-beam-effect, .combatant-beam-effect *, .pandemic-flight, .pandemic-flight * { animation: none !important; opacity: .45; }
   .turn-order-bar.light-speed-turn, .turn-order-bar.light-speed-turn > div > span.player { animation: none !important; }
 }

@@ -187,6 +187,8 @@ The player may use any number of abilities during the turn as long as:
 
 Using an ability never ends the turn automatically. The player presses **End Turn** when finished.
 
+If the player becomes Stunned, Frozen, or Sleeping during their own active turn, further abilities are blocked but **End Turn** remains available. This lets self-control effects such as Conductor finish the current turn normally; the status still skips the next turn according to its usual rules.
+
 Ability input remains available while an earlier ability is animating. Further ability presses are added to a first-in, first-out queue and execute as soon as each preceding combat sequence and return animation finishes. The queue reserves Energy and cooldown availability before accepting each press, shows the queued count on affected ability buttons, and remembers the selected target for each cast. **End Turn** can also be queued; it executes after every ability already ahead of it and prevents later actions from being added.
 
 Abilities are classified as **Melee** or **Ranged**. Direct Melee attacks use the player's normal movement toward the target. Direct Ranged attacks leave the player in place and normally send an ability-specific or damage-type projectile to the target. Some Ranged spells instead resolve directly on the target as strikes, explosions, or other local effects. Damage, misses, and impact VFX still appear at the shared impact timing. Range is shown in ability details and can be set on ability nodes in the Talent Editor.
@@ -269,7 +271,7 @@ This sequencing guarantees that:
 - Combustion erupts on its target. A lethal detonation sends visible fire trails to every surviving enemy before the copied Burn appears.
 - Arcane Combustion collapses Arcane Wounds into a mixed arcane-fire impact, scaling both Fire damage and new Burn stacks from the consumed stack count.
 - Thundersnow combines frost and lightning feedback on every enemy and selects one random target for Electrified.
-- Self Immolation erupts on both caster and target; Arcane Barrier forms a violet shield seal; Frozen Path creates a fast icy trail; Conductor fills the enemy side with a synchronized lightning field while shocking the caster.
+- Self Immolation erupts simultaneously on caster and target under one shared Burn event; Arcane Barrier forms a violet shield seal; Frozen Path creates a fast icy trail; Conductor fills the enemy side with a synchronized lightning field while shocking the caster.
 - Firestorm raises a field of flame across every enemy and repeats its distinct eruption on the caster when self-Burn is applied.
 - Frozen applications flash with an ice seal, and Frozen combatants retain a clear blue treatment until the control ends or damage breaks it.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
@@ -300,7 +302,7 @@ The segmented Energy bar previews Energy that will be available after the next r
 
 Guard is a temporary, stackable absorption status. The Guard ability grants a base of 6 Guard multiplied by the character's Guard multiplier. Incoming damage removes Guard first; only the remainder reduces Health. Normal Guard expires when its owner's next turn begins.
 
-Barrier is a visible, stackable absorption buff that lasts three turns. Its stack counter is the remaining Barrier amount. Incoming damage consumes Guard first, then Barrier, then Health. Barrier protects against both direct and status damage, and its amount changes at the same floating-text event as the damage.
+Barrier is a visible, stackable absorption buff that lasts three turns. Its stack counter is the remaining Barrier amount, and a persistent shimmer covers the protected combatant. Incoming damage consumes Guard first, then Barrier, then Health; the shimmer pulses whenever Barrier absorbs damage. Barrier protects against both direct and status damage, and its amount changes at the same floating-text event as the damage.
 
 An ability marked to ignore absorption, currently Sharpened Blade, bypasses both Guard and Barrier without consuming either status.
 
