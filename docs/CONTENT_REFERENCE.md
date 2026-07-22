@@ -54,17 +54,17 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Arcane Overload | 3 | 3 | Enemy | Deals 50% Magical Power as Arcane damage, applies 3 Arcane Wounds, and applies Arcane Charge for the next Arcane Blast against that target. |
 | Combustion | 4 | 3 | Burning enemy | Consumes Burn and deals its remaining-duration damage immediately. If the detonation kills, half the consumed stacks, rounded up, spread to every other living enemy. |
 | Arcane Combustion | 4 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds, deals 50% Magical Power as Fire damage per consumed stack, and applies the same number of Burn stacks. |
-| Thundersnow | 5 | 3 | All enemies | Deals a combined 60% Magical Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
+| Thundersnow | 5 | 3 | All enemies | Simultaneously deals a combined 60% Magical Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
 | Self Immolation | 1 | 5 | Enemy | Simultaneously applies 5 Burn to the player and selected enemy. Feel the Burn heals for the self-Burn's full remaining damage before application; Refreshing Fires grants +2 Energy regeneration next turn. |
 | Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Magical Power for 3 turns; Improved Barrier raises this to 75%. A persistent shimmer pulses when Barrier absorbs damage. |
 | Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
-| Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player for 1 turn. Electrified Hug also applies Electrified to every enemy. |
-| Firestorm | 5 | 3 | All enemies and self | Deals 25% Magical Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
+| Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player, ending the current player turn and skipping every affected combatant's next turn. Electrified Hug also applies Electrified to every enemy. |
+| Firestorm | 5 | 3 | All enemies and self | Simultaneously deals 25% Magical Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
 | Mana Fracture | 1 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds and restores 1 Energy per 2 stacks consumed. |
-| Rapid Fire | 2 | 4 | Random enemies | Hits three times for 30% Magical Power as Arcane damage with +20% Critical Strike Chance; hits six times while Burning. |
+| Rapid Fire | 2 | 4 | Random enemies | Hits three times for 30% Magical Power as Fire damage with +20% Critical Strike Chance; hits six times while Burning. |
 | Focused Blast | 4 | 2 | Enemy with 6 Arcane Wounds | Deals Arcane damage equal to current Barrier and consumes 3 Arcane Wounds. Focus Harder changes the requirement to 5 and consumption to 2. |
 | Absolute Zero | 3 | 4 | Enemy | Deals 50% Magical Power as Frost damage. A Slowed target becomes Frozen; otherwise applies Slowed and Exhausted. |
-| Blizzard | 5 | 3 | All enemies | Deals 50% Magical Power as Frost damage. Each target independently rolls 50% Slowed, 50% Exhausted, and 10% Frozen. |
+| Blizzard | 5 | 3 | All enemies | Simultaneously deals 50% Magical Power as Frost damage. Each target independently rolls 50% Slowed, 50% Exhausted, and 10% Frozen. |
 | Ride the Lightning | 1 | 6 | All enemies | Consumes Electrified from every enemy, restores 1 Energy per affected enemy, and immediately begins a new turn. |
 | Charge | 4 | 6 | All enemies | Consumes Electrified from every enemy; each affected enemy restores 1 Energy and reduces every cooldown by 1, then all enemies take 100% Magical Power as Lightning damage. Electricity first arcs from affected enemies to the player, then returns from the player as each damage hit resolves. |
 | Elemental Fury | 3 | 6 | Enemy | Deals 50% Magical Power as Arcane damage. Against a target with no debuffs, applies 2 Burn, Electrified, Slowed, Exhausted, and 2 Arcane Wounds. Otherwise, deals 50% more damage per unique debuff already on the target. |

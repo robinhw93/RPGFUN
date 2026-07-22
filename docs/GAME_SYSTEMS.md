@@ -65,7 +65,7 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 | --- | --- |
 | Max Health | `20 + Vitality × 10 + flat bonuses` |
 | Max Energy | `10 + flat bonuses` |
-| Energy Regeneration | `1 + flat bonuses` at the start of the owner's turn. |
+| Energy Regeneration | `2 + flat bonuses` at the start of the player's turn. |
 | Physical Power | `Strength + Agility × 0.3 + gear/talent Physical Power` |
 | Magical Power | `Intelligence + gear/talent Magical Power` |
 | Armor | Sum of equipped item, set, and talent Armor. Shatter can halve the effective value. |
@@ -205,9 +205,9 @@ Epidemic applies 10 Poison to every living, targetable enemy and then grants Ste
 
 New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread reduces Epidemic's Energy cost from 3 to 2. Ability cost and cooldown modifiers are additive, use whole numbers, and cannot reduce either value below zero.
 
-Firestorm deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning, and Greater Living Furnace also makes Fireball apply Charred. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
+Firestorm simultaneously deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning, and Greater Living Furnace also makes Fireball apply Charred. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
 
-The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, Electrified charge chains, and Elemental Fury. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, Rapid Fire, and Elemental Fury are all Ranged. Their mechanics resolve at projectile or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, conditional applications, Energy restoration, and cooldown changes.
+The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, Electrified charge chains, and Elemental Fury. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, Rapid Fire, and Elemental Fury are all Ranged. Rapid Fire deals Fire damage. Their mechanics resolve at beam or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, conditional applications, Energy restoration, and cooldown changes.
 
 Phoenix Heart prevents the first lethal hit in a combat only while the player is Burning, removes that Burn, and restores Health equal to the Burn's remaining damage. Charged Up grants a permanent combat stack worth +2 effective Initiative whenever the player applies Electrified, and turn order is recalculated when the stack becomes visible. Perfect Calculation bypasses the hit roll against enemies with at least 3 Arcane Wounds. Deep Chill rolls once per enemy attack, including misses and attacks fully absorbed by Guard or Barrier, for a 3% chance to Freeze the attacker; self-inflicted damage is not an attack. Elemental Fury deals 50% Magical Power as Arcane damage, then either seeds a clean target with its five configured debuffs or gains 50% damage per unique debuff already present.
 
@@ -271,9 +271,12 @@ This sequencing guarantees that:
 - Arcane Overload uses an expanding violet charge burst and marks its target for a free Arcane Blast.
 - Combustion erupts on its target. A lethal detonation sends visible fire trails to every surviving enemy before the copied Burn appears.
 - Arcane Combustion collapses Arcane Wounds into a mixed arcane-fire impact, scaling both Fire damage and new Burn stacks from the consumed stack count.
-- Thundersnow combines frost and lightning feedback on every enemy and selects one random target for Electrified.
-- Self Immolation erupts simultaneously on caster and target under one shared Burn event; Arcane Barrier forms a violet shield seal; Frozen Path creates a fast icy trail; Conductor fills the enemy side with a synchronized lightning field while shocking the caster.
-- Firestorm raises a field of flame across every enemy and repeats its distinct eruption on the caster when self-Burn is applied.
+- Lightning Beam reuses Charge's crooked white-hot lightning core and yellow corona, while Rapid Fire launches red, orange, and yellow beams of fire.
+- Thundersnow combines frost and lightning feedback on every enemy simultaneously and selects one random target for Electrified.
+- Self Immolation erupts simultaneously on caster and target under one shared Burn event; Arcane Barrier forms a violet shield seal; Frozen Path creates a fast icy trail; Conductor fills the enemy side with a synchronized lightning field while shocking the caster. Conductor's self-Stun closes the current turn and also skips the next player turn.
+- Firestorm raises its field of flame across every enemy simultaneously and repeats its distinct eruption on the caster when self-Burn is applied.
+- Blizzard drives fast snow and wind diagonally across the full enemy side, while Ride the Lightning's yellow field appears with its Stealth application.
+- Elemental Fury connects to its target with layered frost, fire, lightning, and arcane beams. Focused Blast uses a deliberately broader, brighter arcane beam and impact flare.
 - Frozen applications flash with an ice seal, and Frozen combatants retain a clear blue treatment until the control ends or damage breaks it.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
@@ -290,7 +293,7 @@ This sequencing guarantees that:
 ## Energy and cooldowns
 
 - Default Max Energy: 10.
-- Default player Energy regeneration: 1 at the start of the player's own turn.
+- Default player Energy regeneration: 2 at the start of the player's own turn.
 - Default enemy Energy regeneration: 1 at the start of that enemy's own turn.
 - Energy cannot exceed Max Energy and cannot be spent below zero.
 - A cooldown is measured in player turns and decreases only when the next player turn begins. The visible counter updates with **Your turn.**, never during the final enemy action.

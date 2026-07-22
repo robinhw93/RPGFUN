@@ -819,7 +819,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const conductorAnimations = abilityAnimations.filter((animation) => animation.kind === "conductor" && !animation.targetId);
   const manaFractureAnimations = abilityAnimations.filter((animation) => animation.kind === "mana_fracture" && animation.targetId && animation.sourceTargetId);
   const essenceSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "essence_siphon" && animation.targetId && animation.sourceTargetId);
-  const rideTheLightningAnimations = abilityAnimations.filter((animation) => animation.kind === "ride_the_lightning" && !animation.targetId);
+  const rideTheLightningAnimations = abilityAnimations.filter((animation) => animation.kind === "ride_the_lightning");
+  const blizzardAnimation = abilityAnimations.find((animation) => animation.kind === "blizzard");
   const chargeReturnAnimations = abilityAnimations.filter((animation) => animation.kind === "charge" && animation.targetId && animation.sourceTargetId);
   const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
@@ -871,6 +872,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {epidemicAnimations.map((animation) => <EpidemicEffect key={animation.id} />)}
           {conductorAnimations.map((animation) => <ConductorFieldEffect key={animation.id} />)}
           {rideTheLightningAnimations.map((animation) => <span key={animation.id} className="ride-lightning-field" aria-hidden="true"><Zap /><i /><i /><i /><i /><i /></span>)}
+          {blizzardAnimation && <BlizzardFieldEffect key={blizzardAnimation.id} />}
           {combat.enemies.map((enemy) => {
             const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
             const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
@@ -1399,6 +1401,23 @@ function ConductorFieldEffect() {
   return <span className="conductor-field-effect" aria-hidden="true"><Zap />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--conductor-x": `${5 + index * 15}%`, "--conductor-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
 }
 
+function BlizzardFieldEffect() {
+  return (
+    <span className="blizzard-field-effect" aria-hidden="true">
+      {Array.from({ length: 20 }).map((_, index) => (
+        <Snowflake key={index} style={{
+          "--blizzard-top": `${-8 + (index % 10) * 11}%`,
+          "--blizzard-delay": `${(index % 7) * 48}ms`,
+          "--blizzard-duration": `${520 + (index % 5) * 85}ms`,
+          "--blizzard-size": `${10 + (index % 4) * 4}px`,
+          "--blizzard-drop": `${45 + (index % 6) * 13}px`,
+        } as React.CSSProperties} />
+      ))}
+      {Array.from({ length: 7 }).map((_, index) => <b key={index} style={{ "--gust-top": `${8 + index * 13}%`, "--gust-delay": `${index * 42}ms` } as React.CSSProperties} />)}
+    </span>
+  );
+}
+
 function BarrierShimmer({ pulsing }: { pulsing: boolean }) {
   return <span className={`barrier-shimmer ${pulsing ? "barrier-shimmer-pulse" : ""}`} aria-hidden="true"><i /><i /><b /></span>;
 }
@@ -1485,15 +1504,19 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "conductor") {
     return <span className="ability-impact-effect conductor-impact" aria-hidden="true"><Zap /><i /><i /><i /><i /></span>;
   }
-  if (kind === "mana_fracture" || kind === "rapid_fire" || kind === "focused_blast") {
+  if (kind === "mana_fracture" || kind === "focused_blast") {
     return <span className={`ability-impact-effect new-arcane-impact ${kind}`} aria-hidden="true"><CircleDot /><Sparkles /><i /><i /><i /></span>;
+  }
+  if (kind === "rapid_fire") {
+    return <span className="ability-impact-effect rapid-fire-impact" aria-hidden="true"><Flame /><i /><i /><i /><i /></span>;
   }
   if (kind === "essence_siphon") {
     return <span className="ability-impact-effect essence-siphon-impact" aria-hidden="true"><CircleDot /><Sparkles /><i /><i /><i /></span>;
   }
-  if (kind === "absolute_zero" || kind === "blizzard") {
+  if (kind === "absolute_zero") {
     return <span className={`ability-impact-effect new-frost-impact ${kind}`} aria-hidden="true"><Snowflake /><i /><i /><i /><i /></span>;
   }
+  if (kind === "blizzard") return null;
   if (kind === "ride_the_lightning" || kind === "charge") {
     return <span className={`ability-impact-effect new-lightning-impact ${kind}`} aria-hidden="true"><Zap /><i /><i /><i /><i /></span>;
   }
@@ -1667,7 +1690,7 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path ember-projectile-path"><Flame /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "lightning_beam") {
-    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="lightning-multi-beam-path"><i /><i /><i /><i /><b /></CombatantBeamEffect>;
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="charge-lightning-path lightning-beam-charge-path"><i /><i /><i /><b /></CombatantBeamEffect>;
   }
   if (kind === "thunderstorm" || (!kind && animation.damageType === "lightning")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path lightning-beam-path"><Zap /><i /><i /></CombatantPathEffect>;
@@ -1693,7 +1716,10 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   if (kind === "focused_blast") {
     return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="focused-blast-beam-path"><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
   }
-  if (kind === "rapid_fire" || kind === "mana_fracture") {
+  if (kind === "rapid_fire") {
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="rapid-fire-beam-path"><i /><i /><i /><b /><Flame /></CombatantBeamEffect>;
+  }
+  if (kind === "mana_fracture") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className={`ability-projectile-path ${kind.replace("_", "-")}-path`}><CircleDot /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "arcane_overload") {
@@ -1703,7 +1729,7 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-combustion-path"><CircleDot /><Flame /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "elemental_fury") {
-    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path elemental-fury-path"><Sparkles /><Flame /><Snowflake /><Zap /><i /><i /></CombatantPathEffect>;
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="elemental-fury-beam-path"><i /><i /><i /><i /><b /><Flame /><Snowflake /><Zap /><Sparkles /></CombatantBeamEffect>;
   }
   return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-bolt-path"><Sparkles /><i /><i /></CombatantPathEffect>;
 }

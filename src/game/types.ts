@@ -336,6 +336,8 @@ export interface Ability {
   hitsWhenSelfHasStatus?: { status: StatusEffectId; hits: number };
   /** Chooses a new living enemy independently for every hit. */
   randomTargetPerHit?: boolean;
+  /** All targets of an area attack resolve damage, statuses, and VFX on one shared impact event. */
+  simultaneousAreaImpact?: boolean;
   /** False applies the ability's effect without dealing direct damage. */
   dealsDamage?: boolean;
   /** Number of stacks applied when effect is a status. Defaults to 1. */
@@ -569,7 +571,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string }
-  | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
+  | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatState {
   turn: number;

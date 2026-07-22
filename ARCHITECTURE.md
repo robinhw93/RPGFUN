@@ -211,7 +211,7 @@ This is the preferred extension point for talents that transform an existing abi
 
 ### Turn order
 
-Base order is descending effective initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. Slowed sets effective initiative to 0. Permanent combat Initiative stacks such as Charged Up are added by the same effective-initiative helper, so `reorderCombat` moves the affected combatant when the pending status application resolves and the turn-order row displays the updated whole number.
+Base order is descending effective initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. Slowed sets effective initiative to 0. Permanent combat Initiative stacks such as Charged Up are added by the same effective-initiative helper, so `reorderCombat` moves the affected combatant when the pending status application resolves and the turn-order row displays the updated whole number. Pending turn effects identify the acting combatant by stable actor ID and translate that ID back to the current order when the event resolves. Initiative changes can therefore reorder the list without making an actor repeat or lose its turn.
 
 `actedActorIds` records every combatant that has finished a turn in the current round. `moveToNextActor` always chooses the highest-initiative living combatant not in that set and clears the set only when a new round begins. Dynamic reordering therefore cannot give a Slowed combatant a second action after it has already acted.
 
@@ -240,7 +240,7 @@ The visible active index remains unchanged until the queued turn event resolves.
 9. Resolves player Bleed and reusable lethal-damage prevention after the ability.
 10. Returns logical resource/cooldown changes immediately but preserves visible Health/status snapshots until pending events resolve.
 
-Non-damaging `all_enemies` status abilities use one shared event index for every target. This keeps their status applications, presentation metadata, and floating text synchronized as a single area effect rather than a target-by-target sequence.
+Non-damaging `all_enemies` status abilities use one shared event index for every target. Damaging area abilities can opt into the same behavior with `simultaneousAreaImpact`. This keeps their damage, status applications, presentation metadata, and floating text synchronized as a single area effect rather than a target-by-target sequence.
 
 Every ability also owns a `range` classification. A direct `melee` hit primes the existing attacker lunge. A direct `ranged` hit leaves the player card stationary and normally primes transient projectile metadata; `rangedPresentation: "target"` instead resolves the ability's VFX directly on the target without a projectile. Projectile duration is derived from the same impact timing as the pending damage. The impact still resolves through the normal pending-effect event, so misses, multi-hits, queued abilities, and death ordering do not depend on CSS completion. Ability-specific `vfx` selects the preferred treatment, while damage type supplies a reusable projectile fallback. Directional VFX metadata preserves the real source and destination for drains and transfers; status-consumption VFX can therefore resolve before a later set of damage impacts without coupling mechanics to animation completion. Conditional no-debuff status applications are evaluated against the target snapshot before the hit adds statuses.
 

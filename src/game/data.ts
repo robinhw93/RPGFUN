@@ -260,7 +260,7 @@ export const ABILITIES: Record<string, Ability> = {
     range: "ranged",
     rangedPresentation: "target",
     id: "Thundersnow", name: "Thundersnow", description: "Hit all enemies for a combined 60% Magical Power as Frost and Lightning Damage. Apply Slowed to every target and Electrified to one random target.", energyCost: 5,
-    cooldownTurns: 3, target: "all_enemies", damageComponents: [{ damageType: "frost", powerScaling: 0.3 }, { damageType: "lightning", powerScaling: 0.3 }],
+    cooldownTurns: 3, target: "all_enemies", simultaneousAreaImpact: true, damageComponents: [{ damageType: "frost", powerScaling: 0.3 }, { damageType: "lightning", powerScaling: 0.3 }],
     statusApplications: [{ status: "slowed" }], randomSingleStatusApplication: { status: "electrified" }, icon: "❄", branch: "arcanist", vfx: "thundersnow",
   },
   SelfImmolation: {
@@ -285,13 +285,13 @@ export const ABILITIES: Record<string, Ability> = {
     range: "ranged",
     id: "Conductor", name: "Conductor", description: "Stun all enemies and yourself for 1 turn.", energyCost: 1,
     cooldownTurns: 5, target: "all_enemies", dealsDamage: false, effect: "stunned", statusDuration: 1,
-    selfStatusApplications: [{ status: "stunned", duration: 1 }], selfStatusVfx: "conductor", icon: "ϟ", branch: "arcanist", vfx: "conductor",
+    selfStatusApplications: [{ status: "stunned", duration: 2 }], selfStatusVfx: "conductor", icon: "ϟ", branch: "arcanist", vfx: "conductor",
   },
   Firestorm: {
     range: "ranged",
     rangedPresentation: "target",
     id: "Firestorm", name: "Firestorm", description: "Deal Fire Damage equal to 25% of your Magical Power to all enemies, then apply 2 Burn to all enemies and yourself.", energyCost: 5,
-    cooldownTurns: 3, target: "all_enemies", damageType: "fire", powerScaling: 0.25, effect: "burn", statusStacks: 2,
+    cooldownTurns: 3, target: "all_enemies", simultaneousAreaImpact: true, damageType: "fire", powerScaling: 0.25, effect: "burn", statusStacks: 2,
     selfStatusApplications: [{ status: "burn", stacks: 2 }], selfStatusVfx: "firestorm", icon: "🔥", branch: "arcanist", vfx: "firestorm",
   },
   ManaFracture: {
@@ -302,8 +302,8 @@ export const ABILITIES: Record<string, Ability> = {
   },
   RapidFire: {
     range: "ranged",
-    id: "RapidFire", name: "Rapid Fire", description: "Attack random enemies three times for 30% Magical Power as Arcane Damage per hit, with +20% Critical Strike Chance. While Burning, attack six times instead.", energyCost: 2,
-    cooldownTurns: 4, target: "enemy", damageType: "arcane", powerScaling: 0.3, hits: 3, hitsWhenSelfHasStatus: { status: "burn", hits: 6 }, randomTargetPerHit: true,
+    id: "RapidFire", name: "Rapid Fire", description: "Attack random enemies three times for 30% Magical Power as Fire Damage per hit, with +20% Critical Strike Chance. While Burning, attack six times instead.", energyCost: 2,
+    cooldownTurns: 4, target: "enemy", damageType: "fire", powerScaling: 0.3, hits: 3, hitsWhenSelfHasStatus: { status: "burn", hits: 6 }, randomTargetPerHit: true,
     critChanceBonus: 0.2, attackSequenceDurationMultiplier: 1.4, icon: "✦", branch: "arcanist", vfx: "rapid_fire",
   },
   FocusedBlast: {
@@ -323,14 +323,14 @@ export const ABILITIES: Record<string, Ability> = {
     range: "ranged",
     rangedPresentation: "target",
     id: "Blizzard", name: "Blizzard", description: "Deal Frost Damage equal to 50% of your Magical Power to all enemies. Each target has a 50% chance to become Slowed, a 50% chance to become Exhausted, and a 10% chance to become Frozen.", energyCost: 5,
-    cooldownTurns: 3, target: "all_enemies", damageType: "frost", powerScaling: 0.5,
+    cooldownTurns: 3, target: "all_enemies", simultaneousAreaImpact: true, damageType: "frost", powerScaling: 0.5,
     statusApplications: [{ status: "slowed", chance: 0.5 }, { status: "exhausted", chance: 0.5 }, { status: "frozen", chance: 0.1 }], icon: "❄", branch: "arcanist", vfx: "blizzard",
   },
   RideTheLightning: {
     range: "ranged",
     id: "RideTheLightning", name: "Ride the Lightning", description: "Consume Electrified from all enemies, immediately begin a new turn, and restore 1 Energy per enemy affected.", energyCost: 1,
     cooldownTurns: 6, target: "enemy", dealsDamage: false, consumeStatusFromAllEnemies: "electrified", energyPerConsumedEnemyStatus: 1,
-    grantsImmediateTurn: true, immediateTurnVfx: "ride_the_lightning", icon: "ϟ", branch: "arcanist", vfx: "ride_the_lightning",
+    grantsImmediateTurn: true, immediateTurnVfx: "ride_the_lightning", selfStatusVfx: "ride_the_lightning", icon: "ϟ", branch: "arcanist", vfx: "ride_the_lightning",
   },
   Charge: {
     range: "ranged",
@@ -500,7 +500,7 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_132", name: "Heat Transfer", description: "Whenever Burn deals damage to you, restore 1 Energy.", branch: "arcanist", kind: "passive", tier: 15, cost: 1, requires: ["talent_131"], position: { x: 13.698630136986301, y: 28.289473684210524 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "heat-transfer", name: "Heat Transfer", description: "Burn damage restores 1 Energy.", event: "damage_taken", conditions: { minimumDamage: 1, sourceAnyStatus: ["burn"] }, effects: [{ type: "gain_energy", amount: 1, target: "self" }] }] } },
   { id: "talent_133", name: "Resonance", description: "Whenever you apply an Arcane Wound to a target that already has one, restore 1% of your maximum Health.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_126"], position: { x: 24.65753424657534, y: 26.704545454545453 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "resonance", name: "Resonance", description: "Applying Arcane Wound to an already wounded target restores 1% maximum Health.", event: "status_applied", conditions: { appliedAnyStatus: ["arcaneWound"], targetHadAnyStatus: ["arcaneWound"] }, effects: [{ type: "heal_percent_max_hp", ratio: 0.01, target: "self" }] }] } },
   { id: "talent_134", name: "Mana Fracture", description: "Consume all Arcane Wounds on the target. Restore 1 Energy per 2 stacks consumed.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_126"], position: { x: 21.232876712328768, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "ManaFracture" },
-  { id: "talent_135", name: "Rapid Fire", description: "Attack random enemies three times for 30% Magical Power per hit with +20% Critical Strike Chance. While Burning, attack six times instead.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_127"], position: { x: 17.123287671232877, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "RapidFire" },
+  { id: "talent_135", name: "Rapid Fire", description: "Attack random enemies three times for 30% Magical Power as Fire Damage per hit with +20% Critical Strike Chance. While Burning, attack six times instead.", branch: "arcanist", kind: "ability", tier: 11, cost: 1, requires: ["talent_127"], position: { x: 17.123287671232877, y: 22.727272727272727 }, icon: "✦", shape: "square", abilityId: "RapidFire" },
   { id: "talent_136", name: "Arcane Shell", description: "Whenever an Arcane Wound expires or is consumed, gain Barrier equal to 2% of your Magical Power.", branch: "arcanist", kind: "passive", tier: 12, cost: 1, requires: ["talent_133"], position: { x: 24.65753424657534, y: 22.727272727272727 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "arcane-shell", name: "Arcane Shell", description: "An expired or consumed Arcane Wound grants Barrier equal to 2% Magical Power.", event: "status_removed", conditions: { removedAnyStatus: ["arcaneWound"], removalReasons: ["expired", "consumed"] }, effects: [{ type: "gain_absorption", status: "barrier", scalingPower: "magical", scaling: 0.02, duration: 3 }] }] } },
   { id: "talent_137", name: "Arcane Retaliation", description: "When your Barrier is destroyed, apply 2 Arcane Wounds to the enemy that destroyed it.", branch: "arcanist", kind: "passive", tier: 13, cost: 1, requires: ["talent_136"], position: { x: 24.65753424657534, y: 18.75 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "arcane-retaliation", name: "Arcane Retaliation", description: "A destroyed Barrier applies 2 Arcane Wounds to its attacker.", event: "damage_taken", conditions: { depletedAnyStatus: ["barrier"] }, effects: [{ type: "apply_status", status: createStatusEffect("arcaneWound", { stacks: 2 }), target: "target" }] }] } },
   { id: "talent_138", name: "Focused Blast", description: "Requires at least 6 Arcane Wounds. Deal damage equal to your Barrier and consume 3 Arcane Wounds.", branch: "arcanist", kind: "ability", tier: 14, cost: 1, requires: ["talent_137"], position: { x: 21.232876712328768, y: 18.75 }, icon: "✦", shape: "square", abilityId: "FocusedBlast" },

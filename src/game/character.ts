@@ -95,7 +95,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
   gearPhysicalPower += features.passive.physicalPower + features.passive.power;
   gearMagicalPower += features.passive.magicalPower + features.passive.power;
   const maxEnergy = 10 + features.passive.maxEnergy;
-  const energyRegen = 1 + features.passive.energyRegen;
+  const energyRegen = 2 + features.passive.energyRegen;
   const critChance = 0.05 + stats.luck * 0.0075 + features.passive.critChance;
   return {
     ...stats,

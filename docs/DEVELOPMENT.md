@@ -141,7 +141,7 @@ Important fields:
 - `range` is required and is either `melee` or `ranged`. Direct Melee attacks use the normal combatant lunge. Direct Ranged attacks keep the caster in place. They launch `vfx` as a projectile by default, while `rangedPresentation: "target"` is required for detonations, weather, fields, freezes, and other effects that should resolve in place. Beams may retain projectile timing while rendering as a source-to-target connection.
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation.
-- `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget.
+- `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget. `simultaneousAreaImpact` attaches every target of an `all_enemies` damage ability to one shared event so its damage, statuses, and VFX appear together.
 - `hitsWhenSelfHasStatus` changes the hit count from a live self-status without branching on an ability ID.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `requiredTargetStatusStacks`, fixed stack consumption, and their modifier overrides support stack-gated abilities. The action-queue projection must reserve the same stack counts as the engine.
@@ -375,6 +375,7 @@ Then test the changed system in a browser. For combat changes, verify at minimum
 - Initiative timing and ordering.
 - Player Energy regeneration only at player-turn start.
 - Enemy Energy regeneration only at that enemy's turn start.
+- Initiative-changing statuses during an active turn; pending turn transitions must follow the stable actor ID after reordering and never repeat or skip an enemy.
 - Multiple abilities in one turn and cooldown blocking.
 - Hit, miss, critical, Guard, and one damage-over-time effect.
 - Damage/status application at the matching floating message.

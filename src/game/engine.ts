@@ -102,11 +102,12 @@ interface QueueDamageOptions {
   animationDurationMultiplier?: number;
   missed?: boolean;
   sourceLabel?: string;
+  attachedEventIndex?: number;
 }
 
 function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, damage: number, options: QueueDamageOptions = {}): number {
-  const eventIndex = events.length;
-  events.push(text);
+  const eventIndex = options.attachedEventIndex ?? events.length;
+  if (options.attachedEventIndex === undefined) events.push(text);
   combatEffectSequence += 1;
   pendingEffects.push({
     id: `combat-effect-${Date.now()}-${combatEffectSequence}`,
@@ -242,15 +243,15 @@ function preserveBarrierUntilDamageEvent(
   ];
 }
 
-function queueTurnAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>): void {
+function queueTurnAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>, activeActorId?: string): void {
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, activeActorId, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns });
 }
 
-function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>): void {
+function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>, activeActorId?: string): void {
   const eventIndex = events.length;
   events.push(text);
-  queueTurnAtEvent(pendingEffects, eventIndex, activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns);
+  queueTurnAtEvent(pendingEffects, eventIndex, activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns, activeActorId);
 }
 
 function rollD100(): number {
@@ -750,7 +751,7 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
         .filter(([, turns]) => turns > 0),
     );
     const playerTurnEventIndex = events.length;
-    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy, 0, refreshedCooldowns);
+    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy, 0, refreshedCooldowns, nextActor.actorId);
     const playerStart = processTurnStart(next.playerHp, next.playerMaxHp, next.playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier, getEnergyDefenseMultiplier(derived, next.energy, next.playerStatuses), derived.armor, derived.magicResistance, derived.statusDamageMultipliers.burn ?? 1);
     const burnTriggers = playerStart.burnDamage > 0 && playerStart.burnEventIndex !== null
       ? runPlayerTriggerEvent(
@@ -800,7 +801,7 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
   } else if (events.length > 0) {
     // Enemy turns do not need their own floating message. Reveal the next actor
     // when the preceding action's final event resolves instead.
-    queueTurnAtEvent(pendingEffects, events.length - 1, nextIndex, nextTurn, undefined, next.playerStatuses);
+    queueTurnAtEvent(pendingEffects, events.length - 1, nextIndex, nextTurn, undefined, next.playerStatuses, undefined, undefined, undefined, nextActor.actorId);
   } else {
     return next;
   }
@@ -1211,6 +1212,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     ...abilityModifiers.flatMap((modifier) => modifier.additionalSelfStatusApplications ?? []),
   ];
   const sharedSelfStatusEvent: { current: { eventIndex: number; text: string; statusId: StatusEffectId } | null } = { current: null };
+  let simultaneousAreaEventIndex: number | undefined;
 
   if (ability.target === "self") {
     if (ability.effect === "reset_cooldowns") {
@@ -1523,7 +1525,15 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (!guaranteedHit && !rollHit(derived.hitChance * getHitChanceMultiplier(playerStatuses), targetDodgeChance)) {
         playerHasMissed = true;
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
-        queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, missed: true, ...getAbilityAttackPresentation(ability) });
+        const missEventIndex = queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, {
+          attackerId: "player",
+          animationHitCount: totalHits,
+          animationDurationMultiplier: ability.attackSequenceDurationMultiplier,
+          missed: true,
+          attachedEventIndex: ability.simultaneousAreaImpact ? simultaneousAreaEventIndex : undefined,
+          ...getAbilityAttackPresentation(ability),
+        });
+        if (ability.simultaneousAreaImpact) simultaneousAreaEventIndex ??= missEventIndex;
         continue;
       }
       const conditionalCritBonus = ability.critChanceBonusWithStatus && hasStatus(playerStatuses, ability.critChanceBonusWithStatus.status)
@@ -1573,7 +1583,14 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damagedTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
-      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, ...getAbilityAttackPresentation(ability) });
+      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, {
+        attackerId: "player",
+        animationHitCount: totalHits,
+        animationDurationMultiplier: ability.attackSequenceDurationMultiplier,
+        attachedEventIndex: ability.simultaneousAreaImpact ? simultaneousAreaEventIndex : undefined,
+        ...getAbilityAttackPresentation(ability),
+      });
+      if (ability.simultaneousAreaImpact) simultaneousAreaEventIndex ??= damageEventIndex;
       queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
       if (ability.vfx) {
         if (ability.vfxDirection === "to_player") queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, "player", target.instanceId);
@@ -1855,7 +1872,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         .filter(([, turns]) => turns > 0),
     );
     const turnEventIndex = events.length;
-    queueTurn(events, pendingEffects, "Your turn.", combat.activeTurnIndex, combat.turn + 1, false, playerStatuses, energy, 0, refreshedCooldowns);
+    queueTurn(events, pendingEffects, "Your turn.", combat.activeTurnIndex, combat.turn + 1, false, playerStatuses, energy, 0, refreshedCooldowns, "player");
     if (ability.immediateTurnVfx) queueAbilityVfx(pendingEffects, turnEventIndex, ability.immediateTurnVfx, "player", "player");
     const statusesBeforeStart = playerStatuses;
     const playerStart = processTurnStart(playerHp, combat.playerMaxHp, playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier, getEnergyDefenseMultiplier(derived, energy, playerStatuses), derived.armor, derived.magicResistance, derived.statusDamageMultipliers.burn ?? 1);
@@ -2223,6 +2240,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let nextTurnEnergyRegenBonus = combat.nextTurnEnergyRegenBonus ?? 0;
   let playerHasTakenDamage = combat.playerHasTakenDamage ?? false;
   let attackingActorId = combat.attackingActorId;
+  let activeActorId = combat.turnOrder[combat.activeTurnIndex]?.actorId;
   let attackAnimationId = combat.attackAnimationId ?? 0;
   let attackEffectId = combat.attackEffectId ?? null;
   const resolvesAttackImpact = matchingEffects.some((effect) => "damage" in effect && Boolean(effect.attackerId));
@@ -2279,6 +2297,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     }
     if (effect.type === "turn") {
       activeTurnIndex = effect.activeTurnIndex;
+      activeActorId = effect.activeActorId ?? combat.turnOrder[effect.activeTurnIndex]?.actorId ?? activeActorId;
       turn = effect.turn;
       playerActed = effect.playerActed ?? playerActed;
       playerStatuses = effect.playerStatuses ?? playerStatuses;
@@ -2325,7 +2344,10 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  const stableActiveTurnIndex = activeActorId
+    ? Math.max(0, combat.turnOrder.findIndex((actor) => actor.actorId === activeActorId))
+    : activeTurnIndex;
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
