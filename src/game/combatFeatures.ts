@@ -5,6 +5,7 @@ import type {
   AbilityModifierDefinition,
   CombatDamageModifierDefinition,
   CombatFeatureBundle,
+  CombatStatusDamageModifierDefinition,
   CombatState,
   CombatTriggerDefinition,
   CombatTriggerEvent,
@@ -29,6 +30,13 @@ export interface ResolvedCombatDamageModifier extends CombatDamageModifierDefini
   sourceKind: "gear" | "set" | "talent";
 }
 
+export interface ResolvedCombatStatusDamageModifier extends CombatStatusDamageModifierDefinition {
+  runtimeId: string;
+  sourceId: string;
+  sourceName: string;
+  sourceKind: "gear" | "set" | "talent";
+}
+
 export interface ResolvedAbilityModifier extends AbilityModifierDefinition {
   runtimeId: string;
   sourceId: string;
@@ -47,6 +55,7 @@ export interface CombatTriggerContext {
   absorbedDamageByStatus?: Partial<Record<"guard" | "barrier", number>>;
   targetStatusIds?: string[];
   appliedStatusIds?: StatusEffect["id"][];
+  sourceStatusId?: StatusEffect["id"];
   targetHpBeforePercent?: number;
   targetHpAfterPercent?: number;
 }
@@ -64,6 +73,7 @@ export interface CharacterCombatFeatures {
   };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
+  statusDamageModifiers: ResolvedCombatStatusDamageModifier[];
   abilityModifiers: ResolvedAbilityModifier[];
 }
 
@@ -174,6 +184,13 @@ function addBundle(
       runtimeId: `${source.sourceKind}:${source.sourceId}:${modifier.id}`,
     });
   });
+  (bundle.statusDamageModifiers ?? []).forEach((modifier) => {
+    features.statusDamageModifiers.push({
+      ...modifier,
+      ...source,
+      runtimeId: `${source.sourceKind}:${source.sourceId}:${modifier.id}`,
+    });
+  });
   (bundle.abilityModifiers ?? []).forEach((modifier) => {
     features.abilityModifiers.push({
       ...modifier,
@@ -198,6 +215,7 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
     },
     triggers: [],
     damageModifiers: [],
+    statusDamageModifiers: [],
     abilityModifiers: [],
   };
   const setCounts: Record<string, number> = {};
@@ -241,6 +259,19 @@ export function getCharacterDamageMultiplier(
   combatContext: Pick<CombatState, "playerHasTakenDamage" | "playerHasMissed"> = { playerHasTakenDamage: false, playerHasMissed: false },
 ): number {
   return getDamageModifierMultiplier(getCharacterCombatFeatures(character).damageModifiers, attackerStatuses, targetStatuses, damageType, combatContext);
+}
+
+export function getCharacterStatusDamageMultiplier(
+  character: CharacterState,
+  statusId: StatusEffect["id"],
+  sourceStatuses: StatusEffect[],
+): number {
+  const bonus = getCharacterCombatFeatures(character).statusDamageModifiers.reduce((total, modifier) => {
+    if (!modifier.statuses.includes(statusId)) return total;
+    if (modifier.sourceHasAnyStatus?.length && !modifier.sourceHasAnyStatus.some((id) => sourceStatuses.some((status) => status.id === id))) return total;
+    return total + modifier.bonus;
+  }, 0);
+  return Math.max(0, 1 + bonus);
 }
 
 export function getDamageModifierMultiplier(
@@ -310,6 +341,7 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   if (conditions.minimumDamage !== undefined && (context.damage ?? 0) < conditions.minimumDamage) return false;
   if (conditions.targetHasAnyStatus?.length && !conditions.targetHasAnyStatus.some((id) => context.targetStatusIds?.includes(id))) return false;
   if (conditions.appliedAnyStatus?.length && !conditions.appliedAnyStatus.some((id) => context.appliedStatusIds?.includes(id))) return false;
+  if (conditions.sourceAnyStatus?.length && (!context.sourceStatusId || !conditions.sourceAnyStatus.includes(context.sourceStatusId))) return false;
   if (conditions.absorbedByAnyStatus?.length && !conditions.absorbedByAnyStatus.some((id) => context.absorbedByStatusIds?.includes(id))) return false;
   if (conditions.targetHealthCrossedBelow !== undefined) {
     const threshold = conditions.targetHealthCrossedBelow;

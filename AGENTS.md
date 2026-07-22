@@ -118,7 +118,7 @@ Status refreshes must restart their application effect, so key transient overlay
 
 ## Talent-tree workflow
 
-The current live tree has 128 nodes: origin, four class nodes, 78 later Shadow nodes, and 45 later Arcanist nodes. Shadow has 79 nodes including its class node; Arcanist has 46; Brute and Cultist currently have one class node each. Verify these counts against `TALENTS` after every import.
+The current live tree has 135 nodes: origin, four class nodes, 78 later Shadow nodes, and 52 later Arcanist nodes. Shadow has 79 nodes including its class node; Arcanist has 53; Brute and Cultist currently have one class node each. Verify these counts against `TALENTS` after every import.
 
 - Talent IDs are save contracts. Preserve them unless a migration is intentionally implemented.
 - All requirements use ANY. There is no ALL mode.
@@ -189,7 +189,7 @@ At the time of this handoff:
 - The Ashen Road is the four-step story adventure.
 - Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
 - Shadow is the first complete talent branch.
-- Arcanist is implemented through `talent_123`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, and Conductor mechanics with active-ability VFX.
+- Arcanist is implemented through `talent_132` (with unfinished editor placeholders `talent_125` and `talent_126` intentionally excluded), including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Blind, Firestorm, and Burning-condition mechanics with active-ability VFX.
 - Brute and Cultist currently have only their class nodes.
 - The newest status in the catalog is Blind: three turns and 75% lower raw Hit Chance.
 

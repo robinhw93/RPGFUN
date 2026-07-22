@@ -1459,6 +1459,9 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "self_immolation") {
     return <span className="ability-impact-effect self-immolation-impact" aria-hidden="true"><Flame />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--immolation-angle": `${index * 51}deg` } as React.CSSProperties} />)}<b /></span>;
   }
+  if (kind === "firestorm") {
+    return <span className="ability-impact-effect firestorm-impact" aria-hidden="true"><Flame />{Array.from({ length: 9 }).map((_, index) => <i key={index} style={{ "--firestorm-x": `${5 + index * 11.25}%`, "--firestorm-delay": `${index * 34}ms` } as React.CSSProperties} />)}<b /><b /></span>;
+  }
   if (kind === "arcane_barrier") {
     return <span className="ability-impact-effect arcane-barrier-impact" aria-hidden="true"><ShieldPlus /><i /><i /><i /></span>;
   }

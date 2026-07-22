@@ -229,6 +229,11 @@ export const ABILITIES: Record<string, Ability> = {
     cooldownTurns: 5, target: "all_enemies", dealsDamage: false, effect: "stunned", statusDuration: 1,
     selfStatusApplications: [{ status: "stunned", duration: 1 }], selfStatusVfx: "conductor", icon: "ϟ", branch: "arcanist", vfx: "conductor",
   },
+  Firestorm: {
+    id: "Firestorm", name: "Firestorm", description: "Deal Fire Damage equal to 25% of your Magical Power to all enemies, then apply 2 Burn to all enemies and yourself.", energyCost: 5,
+    cooldownTurns: 3, target: "all_enemies", damageType: "fire", powerScaling: 0.25, effect: "burn", statusStacks: 2,
+    selfStatusApplications: [{ status: "burn", stacks: 2 }], selfStatusVfx: "firestorm", icon: "🔥", branch: "arcanist", vfx: "firestorm",
+  },
   siphon: {
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
     target: "enemy", damageType: "arcane", power: 7, scalingStat: "intelligence", icon: "◎", branch: "arcanist", effect: "energy",
@@ -370,6 +375,13 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_121", name: "Refreshing Fires", description: "Self Immolation grants +2 Energy regeneration next turn.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_120"], position: { x: 13.698630136986301, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "refreshing-fires", name: "Refreshing Fires", description: "Self Immolation grants +2 Energy regeneration next turn.", abilityIds: ["SelfImmolation"], nextTurnEnergyRegenBonus: 2, descriptionOverride: "Restore Health equal to the full remaining damage of 5 Burn, apply 5 Burn to yourself and the selected enemy, and gain +2 Energy regeneration next turn." }] } },
   { id: "talent_122", name: "Electrified Hug", description: "Conductor also applies Electrified to all enemies.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_115"], position: { x: 41.0958904109589, y: 19.736842105263158 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "electrified-hug", name: "Electrified Hug", description: "Conductor also Electrifies all enemies.", abilityIds: ["Conductor"], additionalStatusApplications: [{ status: "electrified" }], descriptionOverride: "Stun all enemies and yourself for 1 turn, and apply Electrified to all enemies." }] } },
   { id: "talent_123", name: "Shell Shocked", description: "While Stunned, you take only 20% damage from all sources.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_122"], position: { x: 41.0958904109589, y: 24.342105263157894 }, icon: "✦", shape: "circle", combat: { passive: { incomingDamageMultiplierWhileStunned: 0.2 } } },
+  { id: "talent_124", name: "Blinding Light", description: "Whenever you apply Electrified to an enemy, it has a 20% chance, plus Luck's bonus to chance-based effects, to also become Blind.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_115"], position: { x: 37.67123287671233, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "blinding-light", name: "Blinding Light", description: "Applying Electrified has a 20% chance, plus Luck's bonus to chance-based effects, to also apply Blind.", event: "status_applied", chance: 0.2, conditions: { appliedAnyStatus: ["electrified"] }, effects: [{ type: "apply_status", status: createStatusEffect("blind"), target: "target" }] }] } },
+  { id: "talent_127", name: "Pyromania", description: "While you are Burning, deal 10% more Arcane, Fire, Frost, and Lightning damage.", branch: "arcanist", kind: "passive", tier: 10, cost: 1, requires: ["talent_112"], position: { x: 17.123287671232877, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "pyromania", name: "Pyromania", description: "Deal 10% more magical damage while Burning.", multiplier: 1.1, damageTypes: ["arcane", "fire", "frost", "lightning"], attackerHasAnyStatus: ["burn"] }] } },
+  { id: "talent_128", name: "Living Furnace", description: "Your Burn deals 5% more damage to enemies while you are Burning.", branch: "arcanist", kind: "passive", tier: 11, cost: 1, requires: ["talent_127"], position: { x: 13.698630136986301, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { statusDamageModifiers: [{ id: "living-furnace", name: "Living Furnace", description: "Burn deals 5% more damage to enemies while you are Burning.", statuses: ["burn"], sourceHasAnyStatus: ["burn"], bonus: 0.05 }] } },
+  { id: "talent_129", name: "Greater Pyromania", description: "While you are Burning, deal an additional 10% more Arcane, Fire, Frost, and Lightning damage.", branch: "arcanist", kind: "passive", tier: 12, cost: 1, requires: ["talent_128"], position: { x: 10.273972602739725, y: 15.131578947368421 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "greater-pyromania", name: "Greater Pyromania", description: "Deal an additional 10% more magical damage while Burning.", multiplier: 1.1, damageTypes: ["arcane", "fire", "frost", "lightning"], attackerHasAnyStatus: ["burn"] }] } },
+  { id: "talent_130", name: "Greater Living Furnace", description: "Your Burn deals an additional 10% more damage to enemies while you are Burning.", branch: "arcanist", kind: "passive", tier: 13, cost: 1, requires: ["talent_129"], position: { x: 10.273972602739725, y: 19.736842105263158 }, icon: "✦", shape: "circle", combat: { statusDamageModifiers: [{ id: "greater-living-furnace", name: "Greater Living Furnace", description: "Burn deals an additional 10% more damage to enemies while you are Burning.", statuses: ["burn"], sourceHasAnyStatus: ["burn"], bonus: 0.1 }] } },
+  { id: "talent_131", name: "Firestorm", description: "Deal 25% Magical Power as Fire Damage to all enemies, then apply 2 Burn to all enemies and yourself.", branch: "arcanist", kind: "ability", tier: 14, cost: 1, requires: ["talent_130"], position: { x: 10.273972602739725, y: 24.342105263157894 }, icon: "✦", shape: "square", abilityId: "Firestorm" },
+  { id: "talent_132", name: "Heat Transfer", description: "Whenever Burn deals damage to you, restore 1 Energy.", branch: "arcanist", kind: "passive", tier: 15, cost: 1, requires: ["talent_131"], position: { x: 13.698630136986301, y: 28.289473684210524 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "heat-transfer", name: "Heat Transfer", description: "Burn damage restores 1 Energy.", event: "damage_taken", conditions: { minimumDamage: 1, sourceAnyStatus: ["burn"] }, effects: [{ type: "gain_energy", amount: 1, target: "self" }] }] } },
 ];
 
 const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
@@ -500,6 +512,13 @@ const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = {
   talent_121: { x: 13.6986301369863, y: 24.3421052631579 },
   talent_122: { x: 41.0958904109589, y: 19.7368421052632 },
   talent_123: { x: 41.0958904109589, y: 24.3421052631579 },
+  talent_124: { x: 37.67123287671233, y: 15.131578947368421 },
+  talent_127: { x: 17.123287671232877, y: 15.131578947368421 },
+  talent_128: { x: 13.698630136986301, y: 15.131578947368421 },
+  talent_129: { x: 10.273972602739725, y: 15.131578947368421 },
+  talent_130: { x: 10.273972602739725, y: 19.736842105263158 },
+  talent_131: { x: 10.273972602739725, y: 24.342105263157894 },
+  talent_132: { x: 13.698630136986301, y: 28.289473684210524 },
   cultist_1: { x: 27.397, y: 63.158 },
 };
 

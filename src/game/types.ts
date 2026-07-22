@@ -126,6 +126,8 @@ export interface CombatTriggerCondition {
   minimumDamage?: number;
   targetHasAnyStatus?: string[];
   appliedAnyStatus?: StatusEffectId[];
+  /** Matches damage originating from one of these status effects. */
+  sourceAnyStatus?: StatusEffectId[];
   absorbedByAnyStatus?: Array<"guard" | "barrier">;
   /** Matches only when direct damage crosses from at-or-above to below this Health ratio. */
   targetHealthCrossedBelow?: number;
@@ -168,6 +170,18 @@ export interface CombatDamageModifierDefinition {
   requiresNoPlayerMiss?: boolean;
 }
 
+export interface CombatStatusDamageModifierDefinition {
+  id: string;
+  name: string;
+  description: string;
+  /** Status effects whose outgoing damage receives this additive bonus. */
+  statuses: StatusEffectId[];
+  /** The bonus is active only while the status source has one of these effects. */
+  sourceHasAnyStatus?: StatusEffectId[];
+  /** Additive bonus where 0.1 means 10% more damage. */
+  bonus: number;
+}
+
 export interface AbilityModifierDefinition {
   id: string;
   name: string;
@@ -200,6 +214,7 @@ export interface CombatFeatureBundle {
   passive?: PassiveBonuses;
   triggers?: CombatTriggerDefinition[];
   damageModifiers?: CombatDamageModifierDefinition[];
+  statusDamageModifiers?: CombatStatusDamageModifierDefinition[];
   abilityModifiers?: AbilityModifierDefinition[];
 }
 
@@ -251,7 +266,8 @@ export type CombatAbilityVfxKind =
   | "self_immolation"
   | "arcane_barrier"
   | "frozen_path"
-  | "conductor";
+  | "conductor"
+  | "firestorm";
 
 export interface Ability {
   id: string;

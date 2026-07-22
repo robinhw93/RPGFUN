@@ -135,6 +135,7 @@ Passives aggregate additively into:
 - Guard generation and healing received.
 - Bleed reduction, loot rarity, and probabilistic-effect chance.
 - Per-status damage bonuses.
+- Conditional per-status damage bonuses based on the source's current statuses.
 - Status-preservation behavior.
 - Status immunities, companion applications, and additional applied stacks.
 - Starting combat statuses.
@@ -176,6 +177,10 @@ Damage modifiers are conditional multipliers filtered by:
 - Any matching target status.
 
 Every matching modifier multiplies the running result. Status-system outgoing/incoming multipliers are a separate later step.
+
+### Status-damage modifiers
+
+Conditional status-damage modifiers add bonuses for named damage-over-time effects while their source has a configured status. They are resolved separately from direct-damage modifiers so talents such as Living Furnace can strengthen Burn on enemies only while the player is Burning, without also changing the player's self-inflicted Burn.
 
 ### Ability modifiers
 

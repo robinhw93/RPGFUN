@@ -57,6 +57,7 @@ Cooldowns are measured in player turns. **None** means the ability can be repeat
 | Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Magical Power for 3 turns; Improved Barrier raises this to 75%. |
 | Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
 | Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player for 1 turn. Electrified Hug also applies Electrified to every enemy. |
+| Firestorm | 5 | 3 | All enemies and self | Deals 25% Magical Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -72,7 +73,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 128 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 45 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 46, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 135 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 52 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 53, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked. The imported editor placeholders `talent_125` and `talent_126` are intentionally excluded until they have player-facing names and mechanics.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -207,6 +208,13 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_121 | Refreshing Fires | Passive | Feel the Burn | Any | Self Immolation grants +2 Energy regeneration next turn. |
 | talent_122 | Electrified Hug | Passive | Conductor | Any | Conductor also Electrifies all enemies. |
 | talent_123 | Shell Shocked | Passive | Electrified Hug | Any | While Stunned, the player takes only 20% damage from all sources. |
+| talent_124 | Blinding Light | Passive | Conductor | Any | Applying Electrified has a 20% base chance, plus Luck's bonus to chance-based effects, to also apply Blind. |
+| talent_127 | Pyromania | Passive | Self Immolation | Any | While Burning, deals 10% more direct Arcane, Fire, Frost, and Lightning damage. |
+| talent_128 | Living Furnace | Passive | Pyromania | Any | Player-applied Burn deals 5% more damage to enemies while the player is Burning. |
+| talent_129 | Greater Pyromania | Passive | Living Furnace | Any | While Burning, deals an additional 10% more direct Arcane, Fire, Frost, and Lightning damage. |
+| talent_130 | Greater Living Furnace | Passive | Greater Pyromania | Any | Player-applied Burn deals an additional 10% more damage to enemies while the player is Burning. |
+| talent_131 | Firestorm | Ability | Greater Living Furnace | Any | Unlocks Firestorm. |
+| talent_132 | Heat Transfer | Passive | Firestorm | Any | Restores 1 Energy whenever Burn deals Health damage to the player. |
 
 Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
 

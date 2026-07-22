@@ -201,6 +201,10 @@ Epidemic applies 10 Poison to every living, targetable enemy and then grants Ste
 
 New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread reduces Epidemic's Energy cost from 3 to 2. Ability cost and cooldown modifiers are additive, use whole numbers, and cannot reduce either value below zero.
 
+Firestorm deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
+
+Blinding Light gives every player-applied Electrified effect a 20% base chance, plus Luck's bonus to chance-based effects, to also apply Blind.
+
 At the end of the player's turn, Poison resolves and normal status durations decrease.
 
 Stunned always has one stack. Applying Stunned again can never increase its stack count.
@@ -260,6 +264,7 @@ This sequencing guarantees that:
 - Arcane Combustion collapses Arcane Wounds into a mixed arcane-fire impact, scaling both Fire damage and new Burn stacks from the consumed stack count.
 - Thundersnow combines frost and lightning feedback on every enemy and selects one random target for Electrified.
 - Self Immolation erupts on both caster and target; Arcane Barrier forms a violet shield seal; Frozen Path creates a fast icy trail; Conductor fills the enemy side with a synchronized lightning field while shocking the caster.
+- Firestorm raises a field of flame across every enemy and repeats its distinct eruption on the caster when self-Burn is applied.
 - Frozen applications flash with an ice seal, and Frozen combatants retain a clear blue treatment until the control ends or damage breaks it.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
@@ -365,7 +370,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 128 nodes: Shadow has 79 including its class node, Arcanist has 46 including its class node, and Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 135 nodes: Shadow has 79 including its class node, Arcanist has 53 including its class node, and Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers and a self-Burn Firestorm route.
 
 ### Unlock rules
 

@@ -205,7 +205,9 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, and reusable death prevention. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, and reusable death prevention. Derived stats aggregate every active source.
+
+Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the source's current statuses. Matching bonuses add together before they multiply the normal status-damage result; this keeps conditional enemy Burn bonuses separate from self-inflicted Burn.
 
 ### Triggers
 
