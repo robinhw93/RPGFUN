@@ -94,7 +94,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | shadow_1 | Shadow | Class | Wayfarer's Spark | Any | +2 Agility and unlocks Quick Slash. |
 | arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence and unlocks Arcane Bolt. |
 | cultist_1 | Cultist | Class | Wayfarer's Spark | Any | Unlocks the Cultist path. |
-| talent_1 | Immaculate Timing | Passive | Shadow | Any | +2 Agility and +5 Initiative. |
+| talent_1 | Immaculate Timing | Passive | Shadow | Any | +2 Agility, +5 Initiative, and +1 Energy regeneration. |
 | talent_2 | Twin Strike | Ability | Immaculate Timing | Any | Unlocks Twin Strike. |
 | talent_3 | Poison Stab | Ability | Immaculate Timing | Any | Unlocks Poison Stab. |
 | talent_4 | Honed Skills | Passive | Twin Strike | Any | +3% Critical Strike Chance. |
@@ -114,9 +114,9 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_18 | Agile | Passive | Evasion (ability) | Any | +2 Agility. |
 | talent_19 | Smarts | Passive | Neurotoxin | Any | +2 Intelligence. |
 | talent_20 | Venomous Strike | Ability | Smarts | Any | Unlocks Venomous Strike. |
-| talent_21 | Toxicology | Passive | Smarts | Any | Player-applied Poison deals 10% more damage. |
+| talent_21 | Toxicology | Passive | Smarts | Any | Player-applied Poison deals 10% more damage and grants +1 Energy regeneration. |
 | talent_22 | Virulence | Passive | Blisters | Any | Player-applied Poison deals 10% more damage. Toxicology and Virulence combine additively for +20%. |
-| talent_23 | Electrified | Passive | Agile | Any | Every hit has a 20% chance, plus Luck's chance-effect bonus, to apply Electrified. |
+| talent_23 | Electrified | Passive | Agile | Any | Every hit has a 20% chance, plus Luck's chance-effect bonus, to apply Electrified; also grants +1 Energy regeneration. |
 | talent_24 | Flurry | Ability | Agile | Any | Unlocks Flurry. |
 | talent_25 | Energized | Passive | Opportunist | Any | +1 Energy regenerated at the start of the player's turn. |
 | talent_26 | Ambush | Ability | Energized | Any | Unlocks Ambush. |
@@ -172,7 +172,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_76 | Regenerating Toxin | Passive | Mischief | Any | Neurotoxin consumes only 50% of the target's Poison. |
 | talent_77 | New Current | Passive | Voltage Stab | Any | Reduces Voltage Stab's cooldown by 1 turn. |
 | talent_78 | Efficient Spread | Passive | Epidemic | Any | Reduces Epidemic's Energy cost by 1. |
-| talent_79 | Arcane Mind | Passive | Arcanist | Any | +2 Intelligence and +3 Magic Resistance. |
+| talent_79 | Arcane Mind | Passive | Arcanist | Any | +2 Intelligence, +3 Magic Resistance, and +1 Energy regeneration. |
 | talent_80 | Frostbolt | Ability | Arcane Mind | Any | Unlocks Frostbolt. |
 | talent_81 | Arcane Blast | Ability | Arcane Mind | Any | Unlocks Arcane Blast. |
 | talent_82 | Fireball | Ability | Arcane Mind | Any | Unlocks Fireball. |
@@ -211,9 +211,9 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_114 | Frozen Path | Ability | Lower Temperature or Intense Beam | Any | Unlocks Frozen Path. |
 | talent_115 | Conductor | Ability | Intense Beam | Any | Unlocks Conductor. |
 | talent_116 | Improved Barrier | Passive | Arcane Barrier | Any | Arcane Barrier scales at 75% Magical Power. |
-| talent_117 | Reflective Barrier | Passive | Improved Barrier | Any | Reflects 20% of damage absorbed specifically by Barrier. |
+| talent_117 | Reflective Barrier | Passive | Improved Barrier | Any | Reflects 20% of damage absorbed specifically by Barrier and grants +1 Energy regeneration. |
 | talent_118 | Barbed Boots | Passive | Frozen Path | Any | Frozen Path grants +40% Dodge Chance. |
-| talent_119 | Ice Spikes | Passive | Barbed Boots | Any | An enemy that misses takes 20% Magical Power as Frost damage. |
+| talent_119 | Ice Spikes | Passive | Barbed Boots | Any | An enemy that misses takes 20% Magical Power as Frost damage; also grants +1 Energy regeneration. |
 | talent_120 | Feel the Burn | Passive | Self Immolation | Any | Self Immolation heals for the self-Burn's full remaining damage before applying it. |
 | talent_121 | Refreshing Fires | Passive | Feel the Burn | Any | Self Immolation grants +2 Energy regeneration next turn. |
 | talent_122 | Electrified Hug | Passive | Conductor | Any | Conductor also Electrifies all enemies. |
@@ -244,7 +244,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_147 | Chain Reaction | Passive | Static Charge | Any | Reapplying Electrified deals 20% Magical Power as Lightning damage to another random enemy. |
 | talent_148 | Rapid Discharge | Passive | Chain Reaction | Any | Every fourth hit in one turn reduces a random cooldown by 1. |
 | talent_149 | Ride the Lightning | Ability | Rapid Discharge | Any | Unlocks Ride the Lightning. |
-| talent_150 | Smoke | Passive | Ride the Lightning | Any | Ride the Lightning grants Stealth until the end of the next turn. |
+| talent_150 | Smoke | Passive | Ride the Lightning | Any | Ride the Lightning grants Stealth until the end of the next turn and grants +1 Energy regeneration. |
 | talent_151 | Charge | Ability | Blinding Light | Any | Unlocks Charge. |
 | talent_152 | Phoenix Heart | Passive | Rapid Fire | Any | The first lethal hit each combat while Burning consumes the player's Burn and restores Health equal to its remaining damage. |
 | talent_153 | Charged Up | Passive | Charge | Any | Applying Electrified grants +2 Initiative until combat ends. |

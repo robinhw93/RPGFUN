@@ -81,6 +81,8 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 
 Raw Hit Chance and Critical Strike Chance have no maximum cap. Dodge Chance is capped at 50%.
 
+Permanent Energy Regeneration bonuses from talents add together through the shared derived-stat pipeline. The current tree contains nine +1 sources: Immaculate Timing, Toxicology, Electrified, Energized, Arcane Mind, Feedback, Reflective Barrier, Ice Spikes, and Smoke.
+
 ### Hit versus Dodge
 
 The final chance to hit is:
