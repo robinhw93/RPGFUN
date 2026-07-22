@@ -6,7 +6,7 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
-Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other currently obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Elemental Fury. The current Brute abilities and all other obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
 
 ### Core and currently obtainable abilities
 
@@ -44,6 +44,13 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
 | Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
+| Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. |
+| Wounding Strike | 2 | 2 | Enemy | Deals 40% Physical Power as Physical damage and applies 1 Bleed. |
+| Swift Blade | 0 | 2 | Enemy | Deals 40% Physical Power as Physical damage and grants +1 Energy regeneration next turn; Light Metal increases this to +2. |
+| Flame Cleave | 4 | 3 | All enemies | Simultaneously deals 60% Physical Power as Physical damage and applies 1 Burn. Scorching Sweep applies 2 Burn to targets already Burning; Wildfire Cleave adds 20% damage per living Burning enemy. |
+| Shield Bash | 2 (1 with Quick Guard) | 2 | Enemy | Deals 60% Physical Power as Physical damage and grants Guard equal to 10% of Armor. Concussive Bash adds a 5% Stun chance plus 0.1 percentage points per Armor. |
+| Bloodletting | 3 | 2 | Enemy | Deals 75% Physical Power as Physical damage and applies 1 Bleed per 3 existing Bleed, or per 2 with Bloodier-Letting. Hemorrhage immediately triggers Bleed damage when at least 3 stacks are applied. |
+| Holy Strike | 2 | 2 | Enemy | Deals 75% Physical Power as Physical damage and restores 2% Max Health, increased to 3% by Improved Holy Strike. |
 | Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
 | Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
 | Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
@@ -83,7 +90,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 161 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, and 78 later Arcanist nodes. Branch counts are Shadow 79, Arcanist 79, Brute 1, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 188 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 27 later Brute nodes. Branch counts are Shadow 79, Arcanist 79, Brute 28, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -251,8 +258,35 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_154 | Perfect Calculation | Passive | Focused Blast | Any | Cannot miss enemies with at least 3 Arcane Wounds. |
 | talent_155 | Deep Chill | Passive | Absolute Zero | Any | Every enemy attack, hit or miss, has a 3% chance to apply Frozen to its attacker. |
 | talent_156 | Elemental Fury | Ability | Perfect Calculation or Deep Chill | Any | Unlocks Elemental Fury. |
+| talent_157 | Brute Force | Passive | Brute | Any | +2 Strength, +2 Vitality, and +1 Energy regeneration. |
+| talent_158 | Searing Strike | Ability | Brute Force | Any | Unlocks Searing Strike. |
+| talent_159 | Wounding Strike | Ability | Brute Force | Any | Unlocks Wounding Strike. |
+| talent_160 | Swift Blade | Ability | Brute Force | Any | Unlocks Swift Blade. |
+| talent_161 | Armored | Passive | Swift Blade | Any | +2 Armor. |
+| talent_162 | Armored | Passive | Wounding Strike | Any | +2 Armor. |
+| talent_163 | Armored | Passive | Searing Strike | Any | +2 Armor. |
+| talent_164 | Open Wounds | Passive | Armored (Wounding) or Armored (Swift) | Any | Damaging attacks against Bleeding enemies have a 20% chance to apply 1 Bleed. |
+| talent_165 | Heavy Plating | Passive | Armored (Wounding) or Armored (Searing) | Any | Adds Armor equal to 10% Strength, rounded up. |
+| talent_166 | Burning Momentum | Passive | Armored (Searing) | Any | Player Burn damage against enemies grants +1 Initiative until combat ends. |
+| talent_167 | Divine Vigor | Passive | Armored (Swift) | Any | +2 Vitality; restoring Health has a 50% chance to restore 1 Energy. |
+| talent_168 | Flame Cleave | Ability | Burning Momentum | Any | Unlocks Flame Cleave. |
+| talent_169 | Shield Bash | Ability | Heavy Plating | Any | Unlocks Shield Bash. |
+| talent_170 | Bloodletting | Ability | Open Wounds | Any | Unlocks Bloodletting. |
+| talent_171 | Holy Strike | Ability | Divine Vigor | Any | Unlocks Holy Strike. |
+| talent_172 | Sacred Vigor | Passive | Holy Strike | Any | Restoring Health grants Strengthened for 1 turn. |
+| talent_173 | Scorching Sweep | Passive | Flame Cleave | Any | Flame Cleave applies 2 Burn to already Burning targets. |
+| talent_174 | Wildfire Cleave | Passive | Scorching Sweep | Any | Flame Cleave deals 20% more damage per living Burning enemy. |
+| talent_175 | Improved Holy Strike | Passive | Sacred Vigor | Any | Holy Strike restores 3% Max Health. |
+| talent_176 | Concussive Bash | Passive | Shield Bash | Any | Shield Bash gains a 5% Stun chance plus 0.1 percentage points per Armor. |
+| talent_177 | Hemorrhage | Passive | Bloodletting | Any | Applying at least 3 Bleed with Bloodletting immediately triggers Bleed damage once. |
+| talent_178 | Quick Guard | Passive | Concussive Bash | Any | Shield Bash costs 1 less Energy. |
+| talent_179 | Bloodier-Letting | Passive | Hemorrhage | Any | Bloodletting applies 1 Bleed per 2 existing stacks instead of per 3. |
+| talent_180 | Light Metal | Passive | Holy Strike | Any | Swift Blade grants +2 Energy regeneration next turn instead of +1. |
+| talent_181 | Bloodlust | Passive | Bloodletting | Any | Deals 15% more damage against Bleeding targets. |
+| talent_182 | Readiness | Passive | Shield Bash | Any | Once per turn, gaining Guard grants +1 Energy regeneration next turn. |
+| talent_183 | Fiery Weapon | Passive | Flame Cleave | Any | Searing Strike applies 2 Burn instead of 1. |
 
-Every live talent node now has a unique player-facing name. Internal IDs remain stable for save compatibility.
+The three Brute Armor nodes intentionally share the player-facing name Armored. Internal IDs remain stable for save compatibility.
 
 ## Status effects
 
@@ -277,6 +311,7 @@ The duration is the default duration created by the status library. Ability or t
 | Frozen Path | 3 turns | No | Grants +30% Dodge Chance by default, subject to the 50% Dodge cap. |
 | Static Charge | Until 5 charges | Yes | At 5 charges, all charges are removed and 2 Energy is restored. |
 | Charged Up | Until combat ends | Yes | Each stack grants +2 Initiative. |
+| Burning Momentum | Until combat ends | Yes | Each stack grants +1 Initiative. |
 
 ### Debuffs
 

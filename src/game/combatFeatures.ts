@@ -89,6 +89,7 @@ export interface CharacterCombatFeatures {
 const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   stats: { strength: 0, agility: 0, intelligence: 0, vitality: 0, luck: 0 },
   armor: 0,
+  armorFromStrengthRatio: 0,
   magicResistance: 0,
   physicalPower: 0,
   magicalPower: 0,
@@ -128,6 +129,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
     target.stats[stat as keyof Stats] += amount ?? 0;
   });
   target.armor += passive.armor ?? 0;
+  target.armorFromStrengthRatio += passive.armorFromStrengthRatio ?? 0;
   target.magicResistance += passive.magicResistance ?? 0;
   target.physicalPower += passive.physicalPower ?? 0;
   target.magicalPower += passive.magicalPower ?? 0;

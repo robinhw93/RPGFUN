@@ -217,10 +217,10 @@ Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the 
 
 A `CombatTriggerDefinition` contains:
 
-- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `status_applied`, `status_removed`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
+- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `status_applied`, `status_removed`, `status_damage`, `health_restored`, `guard_gained`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
 - Optional ability-ID, ability-branch, damage-type, critical, minimum-damage, source-kind, target-status, applied/removed-status, removal-reason, absorbed-status, or Health-threshold conditions.
 - Optional chance, once-per-turn rule, or cooldown.
-- One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, or Guard.
+- One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, next-turn Energy regeneration, or Guard.
 
 Triggered passives do not add central presentation events. Their damage, healing, status, and `passive_text` pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Proc names are grouped per affected target and appended to `combat.passiveAnimations`; the combatant-local CSS animation runs independently of the sequencer. Separate combat-log entries preserve inspectable trigger and result details.
 
@@ -246,10 +246,13 @@ Ability modifiers can currently:
 - Change scaling when that requirement is missing.
 - Override status duration, magnitude, start-expiration behavior, or stack scaling from Physical/Magical Power.
 - Replace a status application or add further applications.
+- Add applications only when the target already has a configured status, or derive applied stacks from target-status stacks.
 - Redirect random multi-hits to the selected target.
 - Change damage gained per target-status stack.
+- Scale damage by the number of living enemies carrying a configured status.
 - Heal from the remaining damage of a self-affliction before replacing it.
 - Grant temporary Energy regeneration for the next turn.
+- Override successful-hit self healing, next-turn Energy regeneration, or an immediate target status-damage trigger.
 - Apply a status after consuming another status.
 - Retain a ratio of status stacks after detonation.
 - Override the fraction of target-status stacks consumed by supported abilities.

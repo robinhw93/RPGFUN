@@ -184,6 +184,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   arcaneCharge: Sparkles,
   staticCharge: Zap,
   chargedUp: Zap,
+  burningMomentum: Flame,
   sleep: Moon,
 };
 
@@ -1525,6 +1526,16 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   }
   if (kind === "phoenix_heart") {
     return <span className="ability-impact-effect phoenix-heart-impact" aria-hidden="true"><Flame /><Heart />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--phoenix-angle": `${index * 51.4}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "searing_strike" || kind === "wounding_strike" || kind === "swift_blade" || kind === "flame_cleave" || kind === "bloodletting") {
+    const icon = kind === "searing_strike" || kind === "flame_cleave" ? <Flame /> : <Swords />;
+    return <span className={`ability-impact-effect brute-slash-impact ${kind}`} aria-hidden="true">{icon}<i /><i /><i /><b /></span>;
+  }
+  if (kind === "shield_bash") {
+    return <span className="ability-impact-effect shield-bash-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "holy_strike") {
+    return <span className="ability-impact-effect holy-strike-impact" aria-hidden="true"><Sparkles /><Heart /><i /><i /><i /><b /></span>;
   }
   return null;
 }

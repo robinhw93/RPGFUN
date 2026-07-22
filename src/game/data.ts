@@ -346,6 +346,41 @@ export const ABILITIES: Record<string, Ability> = {
     statusApplicationsWhenTargetHasNoDebuffs: [{ status: "burn", stacks: 2 }, { status: "electrified" }, { status: "slowed" }, { status: "exhausted" }, { status: "arcaneWound", stacks: 2 }],
     icon: "✹", branch: "arcanist", vfx: "elemental_fury",
   },
+  SearingStrike: {
+    range: "melee",
+    id: "SearingStrike", name: "Searing Strike", description: "Deal Physical Damage equal to 90% of your Physical Power and apply 1 Burn.", energyCost: 3,
+    cooldownTurns: 3, target: "enemy", damageType: "physical", powerScaling: 0.9, statusApplications: [{ status: "burn" }], icon: "✦", branch: "brute", vfx: "searing_strike",
+  },
+  WoundingStrike: {
+    range: "melee",
+    id: "WoundingStrike", name: "Wounding Strike", description: "Deal Physical Damage equal to 40% of your Physical Power and apply 1 Bleed.", energyCost: 2,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, statusApplications: [{ status: "bleed" }], icon: "✦", branch: "brute", vfx: "wounding_strike",
+  },
+  SwiftBlade: {
+    range: "melee",
+    id: "SwiftBlade", name: "Swift Blade", description: "Deal Physical Damage equal to 40% of your Physical Power and gain +1 Energy regeneration next turn.", energyCost: 0,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, nextTurnEnergyRegenOnHit: 1, icon: "✦", branch: "brute", vfx: "swift_blade",
+  },
+  FlameCleave: {
+    range: "melee",
+    id: "FlameCleave", name: "Flame Cleave", description: "Deal Physical Damage equal to 60% of your Physical Power to all enemies and apply 1 Burn.", energyCost: 4,
+    cooldownTurns: 3, target: "all_enemies", simultaneousAreaImpact: true, damageType: "physical", powerScaling: 0.6, statusApplications: [{ status: "burn" }], icon: "✦", branch: "brute", vfx: "flame_cleave",
+  },
+  ShieldBash: {
+    range: "melee",
+    id: "ShieldBash", name: "Shield Bash", description: "Deal Physical Damage equal to 60% of your Physical Power and gain Guard equal to 10% of your Armor.", energyCost: 2,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.6, selfGuardFromArmorRatio: 0.1, icon: "✦", branch: "brute", vfx: "shield_bash",
+  },
+  Bloodletting: {
+    range: "melee",
+    id: "Bloodletting", name: "Bloodletting", description: "Deal Physical Damage equal to 75% of your Physical Power. Apply 1 Bleed for every 3 Bleed already on the target.", energyCost: 3,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.75, statusApplicationPerTargetStatusStacks: { status: "bleed", targetStatus: "bleed", divisor: 3 }, icon: "✦", branch: "brute", vfx: "bloodletting",
+  },
+  HolyStrike: {
+    range: "melee",
+    id: "HolyStrike", name: "Holy Strike", description: "Deal Physical Damage equal to 75% of your Physical Power and restore 2% of your maximum Health.", energyCost: 2,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.75, selfHealPercentMaxHp: 0.02, icon: "✦", branch: "brute", vfx: "holy_strike",
+  },
   siphon: {
     range: "ranged",
     rangedPresentation: "target",
@@ -354,7 +389,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
 };
 
-export const TALENT_TREE_CANVAS = { width: 4015, height: 3300 } as const;
+export const TALENT_TREE_CANVAS = { width: 4620, height: 3300 } as const;
 
 const TALENT_NODES: Talent[] = [
   { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 32.258, y: 50 }, icon: "✦", shape: "square" },
@@ -530,6 +565,33 @@ const TALENT_NODES: Talent[] = [
     { id: "deep-chill-miss", name: "Deep Chill", description: "When attacked, you have a 3% chance to Freeze the attacker.", event: "enemy_missed", chance: 0.03, conditions: { sourceKinds: ["enemy"] }, effects: [{ type: "apply_status", status: createStatusEffect("frozen"), target: "target" }] },
   ] } },
   { id: "talent_156", name: "Elemental Fury", description: "Deal 50% Magical Power as Arcane Damage. If the target has no debuffs, apply 2 Burn, Electrified, Slowed, Exhausted, and 2 Arcane Wounds. Otherwise, deal 50% more damage per unique debuff.", branch: "arcanist", kind: "ability", tier: 17, cost: 1, requires: ["talent_154", "talent_155"], position: { x: 27.397260273972602, y: 11.363636363636363 }, icon: "✦", shape: "square", abilityId: "ElementalFury" },
+  { id: "talent_157", name: "Brute Force", description: "+2 Strength\n+2 Vitality\n+1 Energy Regeneration", branch: "brute", kind: "passive", tier: 2, cost: 1, requires: ["brute_1"], position: { x: 29.762, y: 63.636 }, icon: "✦", shape: "circle", combat: { passive: { stats: { strength: 2, vitality: 2 }, energyRegen: 1 } } },
+  { id: "talent_158", name: "Searing Strike", description: "Deal 90% Physical Power as damage and apply 1 Burn.", branch: "brute", kind: "ability", tier: 3, cost: 1, requires: ["talent_157"], position: { x: 26.786, y: 56.25 }, icon: "✦", shape: "square", abilityId: "SearingStrike" },
+  { id: "talent_159", name: "Wounding Strike", description: "Deal 40% Physical Power as damage and apply 1 Bleed.", branch: "brute", kind: "ability", tier: 3, cost: 1, requires: ["talent_157"], position: { x: 26.786, y: 63.636 }, icon: "✦", shape: "square", abilityId: "WoundingStrike" },
+  { id: "talent_160", name: "Swift Blade", description: "Deal 40% Physical Power as damage and gain +1 Energy regeneration next turn.", branch: "brute", kind: "ability", tier: 3, cost: 1, requires: ["talent_157"], position: { x: 26.786, y: 71.023 }, icon: "✦", shape: "square", abilityId: "SwiftBlade" },
+  { id: "talent_161", name: "Armored", description: "+2 Armor", branch: "brute", kind: "passive", tier: 4, cost: 1, requires: ["talent_160"], position: { x: 23.81, y: 71.023 }, icon: "✦", shape: "circle", combat: { passive: { armor: 2 } } },
+  { id: "talent_162", name: "Armored", description: "+2 Armor", branch: "brute", kind: "passive", tier: 4, cost: 1, requires: ["talent_159"], position: { x: 23.81, y: 63.636 }, icon: "✦", shape: "circle", combat: { passive: { armor: 2 } } },
+  { id: "talent_163", name: "Armored", description: "+2 Armor", branch: "brute", kind: "passive", tier: 4, cost: 1, requires: ["talent_158"], position: { x: 23.81, y: 56.25 }, icon: "✦", shape: "circle", combat: { passive: { armor: 2 } } },
+  { id: "talent_164", name: "Open Wounds", description: "Damaging attacks against Bleeding enemies have a 20% chance to apply 1 Bleed.", branch: "brute", kind: "passive", tier: 5, cost: 1, requires: ["talent_162", "talent_161"], position: { x: 22.024, y: 67.045 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "open-wounds", name: "Open Wounds", description: "Damaging attacks against Bleeding enemies have a 20% chance to apply 1 Bleed.", event: "on_hit", chance: 0.2, conditions: { minimumDamage: 1, targetHadAnyStatus: ["bleed"] }, effects: [{ type: "apply_status", status: createStatusEffect("bleed"), target: "target" }] }] } },
+  { id: "talent_165", name: "Heavy Plating", description: "Gain additional Armor equal to 10% of your Strength, rounded up.", branch: "brute", kind: "passive", tier: 5, cost: 1, requires: ["talent_162", "talent_163"], position: { x: 22.024, y: 60.227 }, icon: "✦", shape: "circle", combat: { passive: { armorFromStrengthRatio: 0.1 } } },
+  { id: "talent_166", name: "Burning Momentum", description: "Whenever Burn deals damage to an enemy, gain 1 Initiative until combat ends.", branch: "brute", kind: "passive", tier: 5, cost: 1, requires: ["talent_163"], position: { x: 22.024, y: 53.409 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "burning-momentum", name: "Burning Momentum", description: "Burn damage against enemies grants +1 Initiative until combat ends.", event: "status_damage", conditions: { minimumDamage: 1, sourceAnyStatus: ["burn"], sourceKinds: ["player"] }, effects: [{ type: "apply_status", status: createStatusEffect("burningMomentum"), target: "self" }] }] } },
+  { id: "talent_167", name: "Divine Vigor", description: "+2 Vitality. Whenever you restore Health, there is a 50% chance to gain 1 Energy.", branch: "brute", kind: "passive", tier: 5, cost: 1, requires: ["talent_161"], position: { x: 22.024, y: 73.864 }, icon: "✦", shape: "circle", combat: { passive: { stats: { vitality: 2 } }, triggers: [{ id: "divine-vigor", name: "Divine Vigor", description: "Restoring Health has a 50% chance to restore 1 Energy.", event: "health_restored", chance: 0.5, effects: [{ type: "gain_energy", amount: 1, target: "self" }] }] } },
+  { id: "talent_168", name: "Flame Cleave", description: "Deal 60% Physical Power as damage to all enemies and apply 1 Burn.", branch: "brute", kind: "ability", tier: 6, cost: 1, requires: ["talent_166"], position: { x: 19.048, y: 53.409 }, icon: "✦", shape: "square", abilityId: "FlameCleave" },
+  { id: "talent_169", name: "Shield Bash", description: "Deal 60% Physical Power as damage. Gain Guard equal to 10% of your Armor.", branch: "brute", kind: "ability", tier: 6, cost: 1, requires: ["talent_165"], position: { x: 19.047619047619047, y: 61.36363636363637 }, icon: "✦", shape: "square", abilityId: "ShieldBash" },
+  { id: "talent_170", name: "Bloodletting", description: "Deal 75% Physical Power as damage and apply 1 Bleed for every 3 Bleed already on the target.", branch: "brute", kind: "ability", tier: 6, cost: 1, requires: ["talent_164"], position: { x: 19.047619047619047, y: 65.3409090909091 }, icon: "✦", shape: "square", abilityId: "Bloodletting" },
+  { id: "talent_171", name: "Holy Strike", description: "Deal 75% Physical Power as damage and restore 2% of your maximum Health.", branch: "brute", kind: "ability", tier: 6, cost: 1, requires: ["talent_167"], position: { x: 19.047619047619047, y: 73.86363636363636 }, icon: "✦", shape: "square", abilityId: "HolyStrike" },
+  { id: "talent_172", name: "Sacred Vigor", description: "Whenever you restore Health, gain Strengthened for 1 turn.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_171"], position: { x: 19.047619047619047, y: 77.8409090909091 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "sacred-vigor", name: "Sacred Vigor", description: "Restoring Health grants Strengthened for 1 turn.", event: "health_restored", effects: [{ type: "apply_status", status: createStatusEffect("strengthened", { duration: 1 }), target: "self" }] }] } },
+  { id: "talent_173", name: "Scorching Sweep", description: "Enemies already Burning receive 2 Burn from Flame Cleave instead of 1.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_168"], position: { x: 19.047619047619047, y: 49.43181818181818 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "scorching-sweep", name: "Scorching Sweep", description: "Flame Cleave applies 1 additional Burn to Burning enemies.", abilityIds: ["FlameCleave"], additionalStatusApplicationsWhenTargetHas: { targetStatus: "burn", applications: [{ status: "burn" }] }, descriptionOverride: "Deal 60% Physical Power as damage to all enemies and apply 1 Burn. Enemies already Burning receive 2 Burn instead." }] } },
+  { id: "talent_174", name: "Wildfire Cleave", description: "Flame Cleave deals 20% more damage for each Burning enemy.", branch: "brute", kind: "passive", tier: 8, cost: 1, requires: ["talent_173"], position: { x: 22.023809523809522, y: 49.43181818181818 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "wildfire-cleave", name: "Wildfire Cleave", description: "Flame Cleave deals 20% more damage per Burning enemy.", abilityIds: ["FlameCleave"], damageMultiplierPerLivingEnemyWithStatus: { status: "burn", multiplier: 0.2 }, descriptionOverride: "Deal 60% Physical Power as damage to all enemies, increased by 20% for each Burning enemy, and apply 1 Burn. Enemies already Burning receive 2 Burn instead." }] } },
+  { id: "talent_175", name: "Improved Holy Strike", description: "Holy Strike now restores 3% of your maximum Health.", branch: "brute", kind: "passive", tier: 8, cost: 1, requires: ["talent_172"], position: { x: 22.023809523809522, y: 77.8409090909091 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "improved-holy-strike", name: "Improved Holy Strike", description: "Holy Strike restores 3% maximum Health.", abilityIds: ["HolyStrike"], selfHealPercentMaxHp: 0.03, descriptionOverride: "Deal 75% Physical Power as damage and restore 3% of your maximum Health." }] } },
+  { id: "talent_176", name: "Concussive Bash", description: "Shield Bash has a 5% chance to Stun. The chance increases by 0.1 percentage points per Armor.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_169"], position: { x: 19.047619047619047, y: 57.38636363636363 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "concussive-bash", name: "Concussive Bash", description: "Shield Bash has a 5% chance to Stun, plus 0.1 percentage points per Armor.", abilityIds: ["ShieldBash"], additionalStatusApplications: [{ status: "stunned", chance: 0.05, chancePerArmor: 0.001 }], descriptionOverride: "Deal 60% Physical Power as damage and gain Guard equal to 10% of your Armor. Has a 5% chance to Stun, plus 0.1 percentage points per Armor." }] } },
+  { id: "talent_177", name: "Hemorrhage", description: "If Bloodletting applies at least 3 Bleed, immediately trigger the target's Bleed damage once.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_170"], position: { x: 19.047619047619047, y: 69.31818181818183 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "hemorrhage", name: "Hemorrhage", description: "Applying at least 3 Bleed with Bloodletting immediately triggers Bleed damage once.", abilityIds: ["Bloodletting"], triggerTargetStatusDamageWhenAppliedStacksAtLeast: { status: "bleed", minimumAppliedStacks: 3 }, descriptionOverride: "Deal 75% Physical Power as damage and apply 1 Bleed for every 3 Bleed already on the target. Applying at least 3 Bleed immediately triggers its Bleed damage once." }] } },
+  { id: "talent_178", name: "Quick Guard", description: "Shield Bash costs 1 less Energy.", branch: "brute", kind: "passive", tier: 8, cost: 1, requires: ["talent_176"], position: { x: 16.071428571428573, y: 57.38636363636363 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "quick-guard", name: "Quick Guard", description: "Shield Bash costs 1 less Energy.", abilityIds: ["ShieldBash"], energyCostDelta: -1 }] } },
+  { id: "talent_179", name: "Bloodier-Letting", description: "Bloodletting now applies 1 Bleed for every 2 Bleed on the target, down from 3.", branch: "brute", kind: "passive", tier: 8, cost: 1, requires: ["talent_177"], position: { x: 16.071428571428573, y: 69.31818181818183 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "bloodier-letting", name: "Bloodier-Letting", description: "Bloodletting applies 1 Bleed per 2 existing Bleed.", abilityIds: ["Bloodletting"], statusStacksPerTargetStatusDivisor: 2, descriptionOverride: "Deal 75% Physical Power as damage and apply 1 Bleed for every 2 Bleed already on the target. Applying at least 3 Bleed immediately triggers its Bleed damage once." }] } },
+  { id: "talent_180", name: "Light Metal", description: "Swift Blade now grants +2 Energy regeneration next turn, up from +1.", branch: "brute", kind: "passive", tier: 8, cost: 1, requires: ["talent_171"], position: { x: 16.071428571428573, y: 73.86363636363636 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "light-metal", name: "Light Metal", description: "Swift Blade grants +2 Energy regeneration next turn.", abilityIds: ["SwiftBlade"], nextTurnEnergyRegenOnHitBonus: 1, descriptionOverride: "Deal 40% Physical Power as damage and gain +2 Energy regeneration next turn." }] } },
+  { id: "talent_181", name: "Bloodlust", description: "Deal 15% more damage against targets with Bleed.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_170"], position: { x: 16.071428571428573, y: 65.3409090909091 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "bloodlust", name: "Bloodlust", description: "Deal 15% more damage against Bleeding targets.", multiplier: 1.15, targetHasAnyStatus: ["bleed"] }] } },
+  { id: "talent_182", name: "Readiness", description: "Once per turn, whenever you gain Guard, gain +1 Energy regeneration next turn.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_169"], position: { x: 16.071428571428573, y: 61.36363636363637 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "readiness", name: "Readiness", description: "Once per turn, gaining Guard grants +1 Energy regeneration next turn.", event: "guard_gained", oncePerTurn: true, effects: [{ type: "gain_next_turn_energy_regen", amount: 1, target: "self" }] }] } },
+  { id: "talent_183", name: "Fiery Weapon", description: "Searing Strike now applies 2 Burn.", branch: "brute", kind: "passive", tier: 7, cost: 1, requires: ["talent_168"], position: { x: 16.071428571428573, y: 53.40909090909091 }, icon: "✦", shape: "circle", combat: { abilityModifiers: [{ id: "fiery-weapon", name: "Fiery Weapon", description: "Searing Strike applies 1 additional Burn.", abilityIds: ["SearingStrike"], additionalStatusApplications: [{ status: "burn" }], descriptionOverride: "Deal Physical Damage equal to 90% of your Physical Power and apply 2 Burn." }] } },
 ];
 
 const TALENT_TREE_LAYOUT_BASE: Record<string, Talent["position"]> = {
@@ -696,20 +758,18 @@ const TALENT_TREE_LAYOUT_BASE: Record<string, Talent["position"]> = {
   cultist_1: { x: 27.397, y: 63.158 },
 };
 
-const PRECISE_IMPORTED_LAYOUT_IDS = new Set(["talent_118"]);
 const TALENT_TREE_LAYOUT: Record<string, Talent["position"]> = Object.fromEntries(
   Object.entries(TALENT_TREE_LAYOUT_BASE).map(([id, position]) => {
     const numericId = Number(id.replace("talent_", ""));
-    if (Number.isFinite(numericId) && numericId >= 133) return [id, position];
-    if (id === "talent_132") return [id, { x: 13.698630136986301, y: 38.63636363636363 }];
-    const imported = {
-      x: position.x,
-      y: (position.y * 28.5 + 450) / 33,
-    };
-    if (PRECISE_IMPORTED_LAYOUT_IDS.has(id)) return [id, imported];
+    const imported = Number.isFinite(numericId) && numericId >= 133
+      ? position
+      : id === "talent_132"
+        ? { x: 13.698630136986301, y: 38.63636363636363 }
+        : { x: position.x, y: (position.y * 28.5 + 450) / 33 };
+    const expanded = { x: (imported.x * 4015 + 60500) / 4620, y: imported.y };
     return [id, {
-      x: Math.round(imported.x * 1000) / 1000,
-      y: Math.round(imported.y * 1000) / 1000,
+      x: Math.round(expanded.x * 1000) / 1000,
+      y: Math.round(expanded.y * 1000) / 1000,
     }];
   }),
 );

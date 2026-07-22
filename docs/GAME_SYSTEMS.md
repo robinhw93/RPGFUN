@@ -81,7 +81,7 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 
 Raw Hit Chance and Critical Strike Chance have no maximum cap. Dodge Chance is capped at 50%.
 
-Permanent Energy Regeneration bonuses from talents add together through the shared derived-stat pipeline. The current tree contains nine +1 sources: Immaculate Timing, Toxicology, Electrified, Energized, Arcane Mind, Feedback, Reflective Barrier, Ice Spikes, and Smoke.
+Permanent Energy Regeneration bonuses from talents add together through the shared derived-stat pipeline. The current tree contains ten +1 sources: Immaculate Timing, Toxicology, Electrified, Energized, Arcane Mind, Feedback, Reflective Barrier, Ice Spikes, Smoke, and Brute Force.
 
 ### Hit versus Dodge
 
@@ -210,6 +210,8 @@ New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread 
 Firestorm simultaneously deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning, and Greater Living Furnace also makes Fireball apply Charred. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
 
 The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, Electrified charge chains, and Elemental Fury. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, Rapid Fire, and Elemental Fury are all Ranged. Rapid Fire deals Fire damage. Their mechanics resolve at beam or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, conditional applications, Energy restoration, and cooldown changes.
+
+The first extended Brute section adds Searing Strike, Wounding Strike, Swift Blade, Flame Cleave, Shield Bash, Bloodletting, and Holy Strike. All seven are Melee and use distinct impact VFX. Its reusable mechanics include Armor from Strength, Burn-driven permanent Initiative, Health-restoration and Guard triggers, next-turn Energy regeneration, Armor-scaled Stun chance, Bleed-stack scaling and immediate Bleed damage, and area damage that scales with living Burning enemies.
 
 Phoenix Heart prevents the first lethal hit in a combat only while the player is Burning, removes that Burn, and restores Health equal to the Burn's remaining damage. Charged Up grants a permanent combat stack worth +2 effective Initiative whenever the player applies Electrified, and turn order is recalculated when the stack becomes visible. Perfect Calculation bypasses the hit roll against enemies with at least 3 Arcane Wounds. Deep Chill rolls once per enemy attack, including misses and attacks fully absorbed by Guard or Barrier, for a 3% chance to Freeze the attacker; self-inflicted damage is not an attack. Elemental Fury deals 50% Magical Power as Arcane damage, then either seeds a clean target with its five configured debuffs or gains 50% damage per unique debuff already present.
 
@@ -384,7 +386,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 161 nodes: Shadow and Arcanist each have 79 including their class node, while Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers, Arcane Wound and Barrier synergies, frost-control combinations, Electrified chains, self-Burn survival, and Elemental Fury.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 188 nodes: Shadow and Arcanist each have 79 including their class node, Brute has 28, and Cultist has 1. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths. Brute currently extends through its opening Fire, Bleed, Armor/Guard, and holy-vigor paths.
 
 ### Unlock rules
 

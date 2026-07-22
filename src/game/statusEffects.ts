@@ -12,6 +12,7 @@ export interface StatusEffectDefinition {
   permanent?: boolean;
   stackable?: boolean;
   expiresAtTurnStart?: boolean;
+  initiativePerStack?: number;
   description: string;
 }
 
@@ -45,7 +46,8 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   arcaneWound: { id: "arcaneWound", name: "Arcane Wound", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Each stack increases Arcane Blast damage against this target by 10%." },
   arcaneCharge: { id: "arcaneCharge", name: "Arcane Charge", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "For 3 turns, your next Arcane Blast against this target costs 0 Energy and consumes Arcane Charge." },
   staticCharge: { id: "staticCharge", name: "Static Charge", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, description: "At 5 charges, remove them and restore 2 Energy." },
-  chargedUp: { id: "chargedUp", name: "Charged Up", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, description: "Each stack grants +2 Initiative until combat ends." },
+  chargedUp: { id: "chargedUp", name: "Charged Up", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 2, description: "Each stack grants +2 Initiative until combat ends." },
+  burningMomentum: { id: "burningMomentum", name: "Burning Momentum", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 1, description: "Each stack grants +1 Initiative until combat ends." },
   frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },
@@ -184,6 +186,10 @@ export function getHitChanceMultiplier(statuses: StatusEffect[]): number {
 
 export function getEnergyRegeneration(regeneration: number, statuses: StatusEffect[]): number {
   return hasStatus(statuses, "exhausted") ? Math.min(1, regeneration) : regeneration;
+}
+
+export function getStatusInitiativeBonus(statuses: StatusEffect[]): number {
+  return statuses.reduce((bonus, status) => bonus + (STATUS_EFFECTS[status.id].initiativePerStack ?? 0) * status.stacks, 0);
 }
 
 export function getStatusDamage(status: StatusEffect): number {

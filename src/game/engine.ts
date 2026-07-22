@@ -16,6 +16,7 @@ import {
   getOutgoingDamageMultiplier,
   getStatusDamage,
   getStatusHealing,
+  getStatusInitiativeBonus,
   hasStatus,
   isMagicalDamage,
   isStatusEffectId,
@@ -137,9 +138,9 @@ function getAbilityAttackPresentation(ability: Ability): Pick<QueueDamageOptions
   };
 }
 
-function queueDamageAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: string, damage: number): void {
+function queueDamageAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: string, damage: number, sourceLabel?: string): void {
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "damage", targetId, damage, sourceLabel });
 }
 
 function queueHeal(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, amount: number): number {
@@ -463,10 +464,7 @@ function getActorStatuses(combat: CombatState, actor: TurnOrderEntry): StatusEff
 export function getCombatInitiative(combat: CombatState, actor: TurnOrderEntry): number {
   const statuses = getActorStatuses(combat, actor);
   if (hasStatus(statuses, "slowed")) return 0;
-  const chargedInitiative = actor.kind === "player"
-    ? (statuses.find((status) => status.id === "chargedUp")?.stacks ?? 0) * 2
-    : 0;
-  return actor.initiative + chargedInitiative;
+  return actor.initiative + (actor.kind === "player" ? getStatusInitiativeBonus(statuses) : 0);
 }
 
 function orderTurnEntries(combat: CombatState): TurnOrderEntry[] {
@@ -514,6 +512,8 @@ interface StatusTurnResult {
   skipTurn: boolean;
   burnDamage: number;
   burnEventIndex: number | null;
+  healing: number;
+  healingEventIndex: number | null;
 }
 
 function processTurnStart(
@@ -535,6 +535,8 @@ function processTurnStart(
   let nextStatuses = [...statuses];
   let burnDamage = 0;
   let burnEventIndex: number | null = null;
+  let healing = 0;
+  let healingEventIndex: number | null = null;
   // One-round defensive effects protect the owner until their next turn begins.
   nextStatuses = nextStatuses.filter((status) => status.expiresAtTurnStart !== true && (status.id !== "stealth" || status.expiresAtTurnStart === false) && status.id !== "guard");
   const burn = nextStatuses.find((status) => status.id === "burn");
@@ -554,11 +556,11 @@ function processTurnStart(
 
   const regenerate = nextStatuses.find((status) => status.id === "regenerate");
   if (regenerate && nextHp > 0 && nextHp < maxHp) {
-    const healing = Math.min(maxHp - nextHp, Math.max(1, Math.round(getStatusHealing(regenerate) * healingReceivedMultiplier)));
+    healing = Math.min(maxHp - nextHp, Math.max(1, Math.round(getStatusHealing(regenerate) * healingReceivedMultiplier)));
     nextHp += healing;
     const text = targetId === "player" ? `You recover ${healing} Health from Regenerate.` : `${targetName} recovers ${healing} Health from Regenerate.`;
     logs.push(makeLog(text, statusInfo(regenerate)));
-    queueHeal(events, pendingEffects, text, targetId, healing);
+    healingEventIndex = queueHeal(events, pendingEffects, text, targetId, healing);
   }
 
   const sleeping = nextStatuses.find((status) => status.id === "sleep");
@@ -573,7 +575,7 @@ function processTurnStart(
       const eventText = targetId === "player" ? "You are asleep and skip the turn." : `${targetName} is asleep and skips the turn.`;
       logs.push(makeLog(logText, statusInfo(sleeping)));
       events.push(eventText);
-      return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex };
+      return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
     }
   }
 
@@ -583,7 +585,7 @@ function processTurnStart(
     const eventText = targetId === "player" ? "You are Stunned and skip the turn." : `${targetName} is Stunned and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(stunned)));
     events.push(eventText);
-    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex };
+    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
   }
 
   const frozen = nextStatuses.find((status) => status.id === "frozen");
@@ -592,7 +594,7 @@ function processTurnStart(
     const eventText = targetId === "player" ? "You are Frozen and skip the turn." : `${targetName} is Frozen and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(frozen)));
     events.push(eventText);
-    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex };
+    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
   }
 
   const electrified = nextStatuses.find((status) => status.id === "electrified");
@@ -602,9 +604,9 @@ function processTurnStart(
     const eventText = targetId === "player" ? "You are Stunned by Electrified and skip the turn." : `${targetName} is Stunned by Electrified and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(electrified)));
     events.push(eventText);
-    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex };
+    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
   }
-  return { hp: nextHp, statuses: nextStatuses, skipTurn: false, burnDamage, burnEventIndex };
+  return { hp: nextHp, statuses: nextStatuses, skipTurn: false, burnDamage, burnEventIndex, healing, healingEventIndex };
 }
 
 function processTurnEnd(
@@ -769,19 +771,35 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
         playerStart.burnEventIndex,
       )
       : { state: { enemies: next.enemies, playerStatuses: playerStart.statuses, playerHp: playerStart.hp, energy: next.energy }, procUsage: next.procUsage };
-    const regeneratedEnergy = Math.min(next.maxEnergy, burnTriggers.state.energy + getEnergyRegeneration(derived.energyRegen + next.nextTurnEnergyRegenBonus, burnTriggers.state.playerStatuses));
-    const startSaved = applyPlayerDeathPrevention(burnTriggers.state.playerHp, burnTriggers.state.playerStatuses, next.deathPreventionUsed, next.playerMaxHp, derived, logs, events, pendingEffects);
+    const healingTriggers = playerStart.healing > 0 && playerStart.healingEventIndex !== null
+      ? runPlayerTriggerEvent(
+        "health_restored",
+        { damage: playerStart.healing, selfStatusIds: burnTriggers.state.playerStatuses.map((status) => status.id) },
+        "player",
+        character,
+        next,
+        derived,
+        burnTriggers.state,
+        burnTriggers.procUsage,
+        logs,
+        events,
+        pendingEffects,
+        playerStart.healingEventIndex,
+      )
+      : burnTriggers;
+    const regeneratedEnergy = Math.min(next.maxEnergy, healingTriggers.state.energy + getEnergyRegeneration(derived.energyRegen + next.nextTurnEnergyRegenBonus, healingTriggers.state.playerStatuses));
+    const startSaved = applyPlayerDeathPrevention(healingTriggers.state.playerHp, healingTriggers.state.playerStatuses, next.deathPreventionUsed, next.playerMaxHp, derived, logs, events, pendingEffects);
     next = {
       ...next,
-      enemies: burnTriggers.state.enemies,
+      enemies: healingTriggers.state.enemies,
       playerHp: startSaved.hp,
       playerStatuses: startSaved.statuses,
-      procUsage: burnTriggers.procUsage,
+      procUsage: healingTriggers.procUsage,
       playerHasTakenDamage: next.playerHasTakenDamage || playerStart.burnDamage > 0,
       deathPreventionUsed: startSaved.used,
       nextTurnEnergyRegenBonus: 0,
       playerActed: false,
-      abilityCooldowns: next.abilityCooldowns,
+      abilityCooldowns: healingTriggers.state.abilityCooldowns ?? next.abilityCooldowns,
     };
     if (next.playerHp <= 0) {
       events.push("You have fallen.");
@@ -843,7 +861,7 @@ function applyPlayerProcs(
     logs.push(makeLog(`${proc.name} triggers.`, procInfo));
 
     proc.effects.forEach((effect) => {
-      const targetMode = effect.target ?? (effect.type === "heal" || effect.type === "heal_percent_max_hp" || effect.type === "gain_energy" || effect.type === "gain_guard" || effect.type === "gain_absorption" || effect.type === "reduce_random_cooldown" || effect.type === "build_status_charge" ? "self" : "target");
+      const targetMode = effect.target ?? (effect.type === "heal" || effect.type === "heal_percent_max_hp" || effect.type === "gain_energy" || effect.type === "gain_next_turn_energy_regen" || effect.type === "gain_guard" || effect.type === "gain_absorption" || effect.type === "reduce_random_cooldown" || effect.type === "build_status_charge" ? "self" : "target");
       const livingEnemies = enemies.filter((enemy) => enemy.hp > 0);
       const enemyTargets = targetMode === "all_enemies"
         ? livingEnemies
@@ -966,6 +984,15 @@ function applyPlayerProcs(
         markPassive("player", proc.name);
       }
 
+      if (effect.type === "gain_next_turn_energy_regen") {
+        const amount = Math.max(0, Math.round(effect.amount));
+        if (amount > 0) {
+          logs.push(makeLog(`${proc.name} grants +${amount} Energy regeneration next turn.`, procInfo));
+          markPassive("player", proc.name);
+          queueNextTurnEnergyRegeneration(pendingEffects, passiveEventIndex, amount);
+        }
+      }
+
       if (effect.type === "reduce_random_cooldown" && abilityCooldowns) {
         const cooling = Object.keys(abilityCooldowns).filter((abilityId) => (abilityCooldowns?.[abilityId] ?? 0) > 0);
         const chosen = cooling[Math.floor(Math.random() * cooling.length)];
@@ -1055,10 +1082,26 @@ function runPlayerTriggerEvents(
     triggered.push(...resolved.triggered);
     nextUsage = resolved.procUsage;
   });
-  return {
-    state: applyPlayerProcs(triggered, context, primaryTargetId, derived, combat, state, logs, events, pendingEffects, eventIndexOverride),
-    procUsage: nextUsage,
-  };
+  let nextState = applyPlayerProcs(triggered, context, primaryTargetId, derived, combat, state, logs, events, pendingEffects, eventIndexOverride);
+  const followUpEvents: CombatTriggerEvent[] = [];
+  if (!triggerEvents.includes("health_restored") && nextState.playerHp > state.playerHp) followUpEvents.push("health_restored");
+  const guardBefore = state.playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
+  const guardAfter = nextState.playerStatuses.find((status) => status.id === "guard")?.stacks ?? 0;
+  if (!triggerEvents.includes("guard_gained") && guardAfter > guardBefore) followUpEvents.push("guard_gained");
+  if (followUpEvents.length > 0) {
+    const followUpTriggers: ResolvedCombatTrigger[] = [];
+    followUpEvents.forEach((event) => {
+      const resolved = resolveCharacterTriggers(character, combat, event, {
+        ...context,
+        damage: event === "health_restored" ? nextState.playerHp - state.playerHp : guardAfter - guardBefore,
+        selfStatusIds: nextState.playerStatuses.map((status) => status.id),
+      }, nextUsage, derived.chanceEffectBonus);
+      followUpTriggers.push(...resolved.triggered);
+      nextUsage = resolved.procUsage;
+    });
+    nextState = applyPlayerProcs(followUpTriggers, context, primaryTargetId, derived, combat, nextState, logs, events, pendingEffects, eventIndexOverride);
+  }
+  return { state: nextState, procUsage: nextUsage };
 }
 
 export function useAbility(combat: CombatState, character: CharacterState, abilityId: string): CombatState {
@@ -1105,6 +1148,11 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const targetStatusStackMultiplierBonus = abilityModifiers.reduce((total, modifier) => total + (modifier.damagePerTargetStatusStackMultiplierDelta ?? 0), 0);
   const preHealSelfStatusId = abilityModifiers.find((modifier) => modifier.preHealSelfStatusRemainingDamage)?.preHealSelfStatusRemainingDamage;
   const abilityNextTurnEnergyRegenBonus = abilityModifiers.reduce((total, modifier) => total + (modifier.nextTurnEnergyRegenBonus ?? 0), 0);
+  const nextTurnEnergyRegenOnHit = Math.max(0, (ability.nextTurnEnergyRegenOnHit ?? 0) + abilityModifiers.reduce((total, modifier) => total + (modifier.nextTurnEnergyRegenOnHitBonus ?? 0), 0));
+  const effectiveSelfHealPercentMaxHp = [...abilityModifiers].reverse().find((modifier) => modifier.selfHealPercentMaxHp !== undefined)?.selfHealPercentMaxHp ?? ability.selfHealPercentMaxHp ?? 0;
+  const statusStacksPerTargetStatusDivisor = [...abilityModifiers].reverse().find((modifier) => modifier.statusStacksPerTargetStatusDivisor !== undefined)?.statusStacksPerTargetStatusDivisor
+    ?? ability.statusApplicationPerTargetStatusStacks?.divisor;
+  const targetStatusDamageTrigger = [...abilityModifiers].reverse().find((modifier) => modifier.triggerTargetStatusDamageWhenAppliedStacksAtLeast)?.triggerTargetStatusDamageWhenAppliedStacksAtLeast;
   const effectiveRequiredTargetStacks = [...abilityModifiers].reverse().find((modifier) => modifier.requiredTargetStatusStacksMinimum !== undefined)?.requiredTargetStatusStacksMinimum
     ?? ability.requiredTargetStatusStacks?.minimum;
   const effectiveConsumeTargetStacks = [...abilityModifiers].reverse().find((modifier) => modifier.consumeTargetStatusStacksAmount !== undefined)?.consumeTargetStatusStacksAmount
@@ -1164,6 +1212,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const randomSingleStatusTargetId = ability.randomSingleStatusApplication
     ? targets[Math.floor(Math.random() * targets.length)]?.instanceId
     : undefined;
+  const damageScalingEnemyStatusCounts = new Map<StatusEffectId, number>();
+  abilityModifiers.forEach((modifier) => {
+    const status = modifier.damageMultiplierPerLivingEnemyWithStatus?.status;
+    if (status && !damageScalingEnemyStatusCounts.has(status)) {
+      damageScalingEnemyStatusCounts.set(status, enemies.filter((enemy) => enemy.hp > 0 && hasStatus(enemy.statuses, status)).length);
+    }
+  });
   if (targetMakesAbilityFree && ability.freeAgainstTargetStatus) {
     enemies = enemies.map((enemy) => enemy.instanceId === combat.selectedEnemyId
       ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== ability.freeAgainstTargetStatus) }
@@ -1202,7 +1257,24 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (healing > 0) {
         playerHp += healing;
         logs.push(makeLog(`${ability.name} restores ${healing} Health before the flames take hold.`, abilityInfo));
-        queueHeal(events, pendingEffects, `You recover ${healing} Health.`, "player", healing);
+        const healingEventIndex = queueHeal(events, pendingEffects, `You recover ${healing} Health.`, "player", healing);
+        const healingTriggers = runPlayerTriggerEvent(
+          "health_restored",
+          { abilityId: ability.id, abilityBranch: ability.branch, damage: healing, selfStatusIds: playerStatuses.map((status) => status.id) },
+          "player",
+          character,
+          combat,
+          derived,
+          { enemies, playerStatuses, playerHp, energy, abilityCooldowns },
+          procUsage,
+          logs,
+          events,
+          pendingEffects,
+          healingEventIndex,
+        );
+        procUsage = healingTriggers.procUsage;
+        ({ enemies, playerStatuses, playerHp, energy } = healingTriggers.state);
+        abilityCooldowns = healingTriggers.state.abilityCooldowns ?? abilityCooldowns;
       }
     }
   }
@@ -1229,6 +1301,23 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const guardEventIndex = events.length;
       queueStatus(events, pendingEffects, `You gain ${guardAmount} Guard.`, "player", guardStatus);
       if (ability.vfx) queueAbilityVfx(pendingEffects, guardEventIndex, ability.vfx, "player", "player");
+      const guardTriggers = runPlayerTriggerEvent(
+        "guard_gained",
+        { damage: guardAmount, selfStatusIds: playerStatuses.map((status) => status.id) },
+        "player",
+        character,
+        combat,
+        derived,
+        { enemies, playerStatuses, playerHp, energy, abilityCooldowns },
+        procUsage,
+        logs,
+        events,
+        pendingEffects,
+        guardEventIndex,
+      );
+      procUsage = guardTriggers.procUsage;
+      ({ enemies, playerStatuses, playerHp, energy } = guardTriggers.state);
+      abilityCooldowns = guardTriggers.state.abilityCooldowns ?? abilityCooldowns;
     } else if (ability.energyRestorePercentOfMax) {
       const restored = Math.min(combat.maxEnergy - energy, Math.max(1, Math.round(combat.maxEnergy * ability.energyRestorePercentOfMax)));
       energy += restored;
@@ -1567,7 +1656,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           playerHasMissed,
           playerIsFirstInInitiative: orderTurnEntries(combat)[0]?.kind === "player",
         });
-        const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, component.damageType);
+        const abilityDamageMultiplier = getDamageModifierMultiplier(ability.damageModifiers ?? [], playerStatuses, target.statuses, component.damageType)
+          * abilityModifiers.reduce((multiplier, modifier) => {
+            const scaling = modifier.damageMultiplierPerLivingEnemyWithStatus;
+            if (!scaling) return multiplier;
+            const matchingEnemies = damageScalingEnemyStatusCounts.get(scaling.status) ?? 0;
+            return multiplier * (1 + matchingEnemies * scaling.multiplier);
+          }, 1);
         const uniqueDebuffs = new Set(target.statuses.filter((status) => status.kind === "debuff").map((status) => status.id)).size;
         const debuffMultiplier = 1 + uniqueDebuffs * (ability.damagePerTargetDebuff ?? 0);
         return total + getModifiedDamage(Math.max(1, Math.round((raw - defense) * (critical ? 1.6 : 1) * talentDamageMultiplier * abilityDamageMultiplier * debuffMultiplier * targetStatusStackMultiplier)), playerStatuses, target.statuses, component.damageType);
@@ -1580,7 +1675,6 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const damage = absorption.damage;
       const targetHpBeforePercent = target.hp / target.maxHp;
       enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(absorption.statuses, damage) } : enemy);
-      const damagedTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, {
@@ -1644,7 +1738,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage${absorptionSuffix(absorption.absorbed)} and applies ${appliedStatuses.map((applied) => applied.name).join(" and ")}.`;
       }
 
-      const configuredExtraStatuses = ability.conditionalStatusApplications && hasStatus(target.statuses, ability.conditionalStatusApplications.whenTargetHas)
+      const configuredExtraStatuses: Array<NonNullable<Ability["statusApplications"]>[number]> = ability.conditionalStatusApplications && hasStatus(target.statuses, ability.conditionalStatusApplications.whenTargetHas)
         ? [...ability.conditionalStatusApplications.applications]
         : [...effectiveStatusApplications];
       if (ability.statusApplicationsWhenTargetHasNoDebuffs && !target.statuses.some((status) => status.kind === "debuff")) {
@@ -1659,9 +1753,21 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           stacks: Math.max(1, Math.round(consumedStatusForDamage.stacks * (ability.consumeTargetStatusForDamage.appliedStacksPerConsumedStack ?? 1))),
         });
       }
+      abilityModifiers.forEach((modifier) => {
+        const conditional = modifier.additionalStatusApplicationsWhenTargetHas;
+        if (conditional && hasStatus(target.statuses, conditional.targetStatus)) {
+          configuredExtraStatuses.push(...conditional.applications);
+        }
+      });
+      if (ability.statusApplicationPerTargetStatusStacks && statusStacksPerTargetStatusDivisor && statusStacksPerTargetStatusDivisor > 0) {
+        const targetStacks = target.statuses.find((status) => status.id === ability.statusApplicationPerTargetStatusStacks?.targetStatus)?.stacks ?? 0;
+        const stacks = Math.floor(targetStacks / statusStacksPerTargetStatusDivisor);
+        if (stacks > 0) configuredExtraStatuses.push({ status: ability.statusApplicationPerTargetStatusStacks.status, stacks });
+      }
       const extraStatuses = configuredExtraStatuses.filter((application) => (
         (!application.onlyOnCritical || critical)
-        && (application.chance === undefined || Math.random() < Math.min(1, application.chance + derived.chanceEffectBonus))
+        && (application.chance === undefined && application.chancePerArmor === undefined
+          || Math.random() < Math.min(1, (application.chance ?? 0) + derived.armor * (application.chancePerArmor ?? 0) + derived.chanceEffectBonus))
       ));
       const appliedExtraStatuses: StatusEffect[] = [];
       extraStatuses.forEach((application) => {
@@ -1689,6 +1795,50 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         events[damageEventIndex] = `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage${absorptionSuffix(absorption.absorbed)} and applies ${labels.join(" and ")}.`;
       }
 
+      if (targetStatusDamageTrigger) {
+        const appliedStacks = appliedExtraStatuses
+          .filter((status) => status.id === targetStatusDamageTrigger.status)
+          .reduce((total, status) => total + status.stacks, 0);
+        const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
+        const tickingStatus = currentTarget?.statuses.find((status) => status.id === targetStatusDamageTrigger.status);
+        if (currentTarget && tickingStatus && appliedStacks >= targetStatusDamageTrigger.minimumAppliedStacks) {
+          const statusMultiplier = derived.statusDamageMultipliers[tickingStatus.id] ?? 1;
+          const tickAbsorption = absorbIncomingDamage(currentTarget.statuses, getAfflictionDamage(tickingStatus, currentTarget.statuses, statusMultiplier, currentTarget.armor, currentTarget.magicResistance));
+          const tickDamage = tickAbsorption.damage;
+          enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? {
+            ...enemy,
+            hp: Math.max(0, enemy.hp - tickDamage),
+            statuses: wakeFromDamage(tickAbsorption.statuses, tickDamage),
+          } : enemy);
+          logs.push(makeLog(`${tickingStatus.name} immediately deals ${tickDamage} damage to ${currentTarget.name}${absorptionSuffix(tickAbsorption.absorbed)}.`, statusInfo(tickingStatus)));
+          queueDamageAtEvent(pendingEffects, damageEventIndex, currentTarget.instanceId, tickDamage, tickingStatus.name);
+          queueAbsorptionChanges(pendingEffects, damageEventIndex, currentTarget.instanceId, tickAbsorption);
+        }
+      }
+
+      let restoredHealth = 0;
+      let gainedGuard = 0;
+      if (effectiveSelfHealPercentMaxHp > 0) {
+        restoredHealth = Math.min(combat.playerMaxHp - playerHp, Math.max(1, Math.round(combat.playerMaxHp * effectiveSelfHealPercentMaxHp * derived.healingReceivedMultiplier)));
+        if (restoredHealth > 0) {
+          playerHp += restoredHealth;
+          logs.push(makeLog(`${ability.name} restores ${restoredHealth} Health.`, abilityInfo));
+          queueHealAtEvent(pendingEffects, damageEventIndex, "player", restoredHealth);
+        }
+      }
+      if (ability.selfGuardFromArmorRatio && ability.selfGuardFromArmorRatio > 0) {
+        gainedGuard = Math.max(1, Math.round(derived.armor * ability.selfGuardFromArmorRatio * derived.guardMultiplier));
+        const guard = createStatusEffect("guard", { duration: 1, stacks: gainedGuard, description: `Absorbs ${gainedGuard} incoming damage.` });
+        playerStatuses = addOrRefreshStatus(playerStatuses, guard);
+        logs.push(makeLog(`${ability.name} grants ${gainedGuard} Guard.`, statusInfo(guard)));
+        queueStatus(events, pendingEffects, `You gain ${gainedGuard} Guard.`, "player", guard, false, damageEventIndex);
+      }
+      if (nextTurnEnergyRegenOnHit > 0) {
+        nextTurnEnergyRegenBonus += nextTurnEnergyRegenOnHit;
+        queueNextTurnEnergyRegeneration(pendingEffects, damageEventIndex, nextTurnEnergyRegenOnHit);
+        logs.push(makeLog(`${ability.name} grants +${nextTurnEnergyRegenOnHit} Energy regeneration next turn.`, abilityInfo));
+      }
+
       (ability.conditionalSelfEffects ?? []).filter((effect) => hasStatus(target.statuses, effect.targetHasStatus)).forEach((effect) => {
         const healing = effect.healPercentMaxHp
           ? Math.min(combat.playerMaxHp - playerHp, Math.max(1, Math.round(combat.playerMaxHp * effect.healPercentMaxHp * derived.healingReceivedMultiplier)))
@@ -1712,6 +1862,25 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         }
         if (regeneration > 0) queueNextTurnEnergyRegeneration(pendingEffects, eventIndex, regeneration);
         if (effect.vfx) queueAbilityVfx(pendingEffects, eventIndex, effect.vfx, "player", target.instanceId);
+        if (healing > 0) {
+          const healingTriggers = runPlayerTriggerEvent(
+            "health_restored",
+            { abilityId: ability.id, abilityBranch: ability.branch, damage: healing, selfStatusIds: playerStatuses.map((status) => status.id) },
+            "player",
+            character,
+            combat,
+            derived,
+            { enemies, playerStatuses, playerHp, energy, abilityCooldowns },
+            procUsage,
+            logs,
+            events,
+            pendingEffects,
+            eventIndex,
+          );
+          procUsage = healingTriggers.procUsage;
+          ({ enemies, playerStatuses, playerHp, energy } = healingTriggers.state);
+          abilityCooldowns = healingTriggers.state.abilityCooldowns ?? abilityCooldowns;
+        }
       });
 
       if (ability.consumeTargetStatus) {
@@ -1770,10 +1939,19 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         selfStatusIds: playerStatuses.map((status) => status.id),
         appliedStatusIds,
         targetHpBeforePercent,
-        targetHpAfterPercent: damagedTarget ? damagedTarget.hp / damagedTarget.maxHp : undefined,
+        targetHpAfterPercent: (() => {
+          const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId);
+          return currentTarget ? currentTarget.hp / currentTarget.maxHp : undefined;
+        })(),
       };
-      const triggerEvents: CombatTriggerEvent[] = ["on_hit", ...(critical ? ["on_crit" as const] : []), ...(appliedStatusIds.length > 0 ? ["status_applied" as const] : [])];
-      const hitTriggers = runPlayerTriggerEvents(triggerEvents, triggerContext, target.instanceId, character, combat, derived, { enemies, playerStatuses, playerHp, energy, abilityCooldowns }, procUsage, logs, events, pendingEffects);
+      const triggerEvents: CombatTriggerEvent[] = [
+        "on_hit",
+        ...(critical ? ["on_crit" as const] : []),
+        ...(appliedStatusIds.length > 0 ? ["status_applied" as const] : []),
+        ...(restoredHealth > 0 ? ["health_restored" as const] : []),
+        ...(gainedGuard > 0 ? ["guard_gained" as const] : []),
+      ];
+      const hitTriggers = runPlayerTriggerEvents(triggerEvents, triggerContext, target.instanceId, character, combat, derived, { enemies, playerStatuses, playerHp, energy, abilityCooldowns }, procUsage, logs, events, pendingEffects, damageEventIndex);
       procUsage = hitTriggers.procUsage;
       ({ enemies, playerStatuses, playerHp, energy } = hitTriggers.state);
       abilityCooldowns = hitTriggers.state.abilityCooldowns ?? abilityCooldowns;
@@ -1896,6 +2074,25 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     } else {
       playerHp = playerStart.hp;
       playerStatuses = playerStart.statuses;
+    }
+    if (playerStart.healing > 0 && playerStart.healingEventIndex !== null) {
+      const healingTriggers = runPlayerTriggerEvent(
+        "health_restored",
+        { damage: playerStart.healing, selfStatusIds: playerStatuses.map((status) => status.id) },
+        "player",
+        character,
+        combat,
+        derived,
+        { enemies, playerStatuses, playerHp, energy, abilityCooldowns },
+        procUsage,
+        logs,
+        events,
+        pendingEffects,
+        playerStart.healingEventIndex,
+      );
+      procUsage = healingTriggers.procUsage;
+      ({ enemies, playerStatuses, playerHp, energy } = healingTriggers.state);
+      abilityCooldowns = healingTriggers.state.abilityCooldowns ?? abilityCooldowns;
     }
     energy = Math.min(combat.maxEnergy, energy + getEnergyRegeneration(derived.energyRegen + nextTurnEnergyRegenBonus, playerStatuses));
     nextTurnEnergyRegenBonus = 0;
@@ -2035,6 +2232,36 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(1, enemyStart.statuses));
   let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false };
   enemies[enemyIndex] = enemy;
+  const sourceBurn = originalEnemy.statuses.find((status) => status.id === "burn");
+  if (enemyStart.burnDamage > 0 && enemyStart.burnEventIndex !== null && sourceBurn?.sourceId === "player") {
+    const burnTriggers = runPlayerTriggerEvent(
+      "status_damage",
+      {
+        damage: enemyStart.burnDamage,
+        damageType: "fire",
+        sourceStatusId: "burn",
+        sourceKind: "player",
+        targetStatusIds: enemy.statuses.map((status) => status.id),
+        selfStatusIds: playerStatuses.map((status) => status.id),
+      },
+      enemy.instanceId,
+      character,
+      combat,
+      derived,
+      { enemies, playerStatuses, playerHp, energy: playerEnergy },
+      procUsage,
+      logs,
+      events,
+      pendingEffects,
+      enemyStart.burnEventIndex,
+    );
+    procUsage = burnTriggers.procUsage;
+    enemies = burnTriggers.state.enemies;
+    playerStatuses = burnTriggers.state.playerStatuses;
+    playerHp = burnTriggers.state.playerHp;
+    playerEnergy = burnTriggers.state.energy;
+    enemy = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId) ?? enemy;
+  }
   let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy };
 
   if (enemy.hp <= 0) {
@@ -2165,7 +2392,26 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       if (healing > 0) {
         playerHp += healing;
         logs.push(makeLog(`Leech restores ${healing} Health.`, { title: "Leech", description: "Restores Health equal to 5% of your Poison damage.", category: "ability" }));
-        queueHeal(events, pendingEffects, `Leech restores ${healing} Health.`, "player", healing);
+        const healingEventIndex = queueHeal(events, pendingEffects, `Leech restores ${healing} Health.`, "player", healing);
+        const healingTriggers = runPlayerTriggerEvent(
+          "health_restored",
+          { damage: healing, sourceStatusId: "poison", selfStatusIds: playerStatuses.map((status) => status.id) },
+          "player",
+          character,
+          combat,
+          derived,
+          { enemies, playerStatuses, playerHp, energy: playerEnergy },
+          procUsage,
+          logs,
+          events,
+          pendingEffects,
+          healingEventIndex,
+        );
+        procUsage = healingTriggers.procUsage;
+        enemies = healingTriggers.state.enemies;
+        playerStatuses = healingTriggers.state.playerStatuses;
+        playerHp = healingTriggers.state.playerHp;
+        playerEnergy = healingTriggers.state.energy;
       }
     }
     if (hpBeforePoison > 0 && enemyEnd.hp <= 0 && poison?.sourceId === "player") {

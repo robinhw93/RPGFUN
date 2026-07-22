@@ -67,17 +67,20 @@ export type StatusEffectId =
   | "arcaneCharge"
   | "staticCharge"
   | "chargedUp"
+  | "burningMomentum"
   | "frozen"
   | "frozenPath"
   | "blind"
   | "sleep";
 
-export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "status_removed" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
+export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "status_removed" | "status_damage" | "health_restored" | "guard_gained" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
 export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
 
 export interface PassiveBonuses {
   stats?: Partial<Stats>;
   armor?: number;
+  /** Additional Armor equal to this fraction of final Strength, rounded up. */
+  armorFromStrengthRatio?: number;
   magicResistance?: number;
   physicalPower?: number;
   magicalPower?: number;
@@ -155,6 +158,7 @@ export type CombatEffectDefinition =
   | { type: "heal"; amount: number; target?: "self" }
   | { type: "heal_percent_max_hp"; ratio: number; target?: "self" }
   | { type: "gain_energy"; amount: number; target?: "self" }
+  | { type: "gain_next_turn_energy_regen"; amount: number; target?: "self" }
   | { type: "reduce_random_cooldown"; amount: number; target?: "self" }
   | { type: "build_status_charge"; status: StatusEffectId; amount: number; threshold: number; thresholdEnergy: number; target?: "self" }
   | { type: "gain_guard"; amount: number; duration?: number; target?: "self" }
@@ -219,11 +223,18 @@ export interface AbilityModifierDefinition {
   statusExpiresAtTurnStart?: boolean;
   statusStackPowerScaling?: { power: "physical" | "magical"; scaling: number };
   replaceStatusApplication?: { from: StatusEffectId; to: StatusEffectId };
-  additionalStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
+  additionalStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; chancePerArmor?: number; onlyOnCritical?: boolean }>;
+  additionalStatusApplicationsWhenTargetHas?: { targetStatus: StatusEffectId; applications: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; chancePerArmor?: number; onlyOnCritical?: boolean }> };
   randomTargetPerHit?: boolean;
   damagePerTargetStatusStackMultiplierDelta?: number;
+  /** Extra direct-damage multiplier per living enemy carrying the configured status. */
+  damageMultiplierPerLivingEnemyWithStatus?: { status: StatusEffectId; multiplier: number };
   preHealSelfStatusRemainingDamage?: StatusEffectId;
   nextTurnEnergyRegenBonus?: number;
+  nextTurnEnergyRegenOnHitBonus?: number;
+  selfHealPercentMaxHp?: number;
+  statusStacksPerTargetStatusDivisor?: number;
+  triggerTargetStatusDamageWhenAppliedStacksAtLeast?: { status: StatusEffectId; minimumAppliedStacks: number };
   applyStatusAfterConsume?: { status: StatusEffectId; stacks?: number; duration?: number };
   detonationRetainedStackRatio?: number;
   statusConsumptionRatio?: number;
@@ -306,7 +317,14 @@ export type CombatAbilityVfxKind =
   | "charge_siphon"
   | "charge"
   | "elemental_fury"
-  | "phoenix_heart";
+  | "phoenix_heart"
+  | "searing_strike"
+  | "wounding_strike"
+  | "swift_blade"
+  | "flame_cleave"
+  | "shield_bash"
+  | "bloodletting"
+  | "holy_strike";
 
 export type AbilityRange = "melee" | "ranged";
 export type AbilityAttackPresentation = "melee" | "projectile" | "target";
@@ -369,7 +387,7 @@ export interface Ability {
   /** Copies every debuff from the selected target to all other living enemies. */
   spreadAllTargetDebuffs?: boolean;
   /** Statuses applied by a damaging ability after a successful hit. */
-  statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
+  statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; chancePerArmor?: number; onlyOnCritical?: boolean }>;
   /** Statuses applied only when the struck target had no debuffs before the hit. */
   statusApplicationsWhenTargetHasNoDebuffs?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
   /** Replaces one application when the target already has a configured status. */
@@ -378,6 +396,8 @@ export interface Ability {
   conditionalStatusApplications?: { whenTargetHas: StatusEffectId; applications: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }> };
   /** One living target receives this application when an area ability hits. */
   randomSingleStatusApplication?: { status: StatusEffectId; stacks?: number; duration?: number };
+  /** Applies floor(target stacks / divisor) stacks of a status on a successful hit. */
+  statusApplicationPerTargetStatusStacks?: { status: StatusEffectId; targetStatus: StatusEffectId; divisor: number };
   /** Scale direct damage and a follow-up status from stacks consumed on a successful hit. */
   consumeTargetStatusForDamage?: { status: StatusEffectId; damageType: DamageType; powerScalingPerStack: number; applyStatus?: StatusEffectId; appliedStacksPerConsumedStack?: number };
   /** This ability costs 0 Energy against a target carrying the marker, then consumes it. */
@@ -398,6 +418,12 @@ export interface Ability {
     /** Presentation emitted only when this conditional benefit resolves. */
     vfx?: CombatAbilityVfxKind;
   }>;
+  /** Restores a fraction of maximum Health after a successful hit. */
+  selfHealPercentMaxHp?: number;
+  /** Grants Guard equal to this fraction of current Armor after a successful hit. */
+  selfGuardFromArmorRatio?: number;
+  /** Grants a temporary Energy-regeneration bonus after a successful hit. */
+  nextTurnEnergyRegenOnHit?: number;
   /** Incoming Guard and Barrier do not absorb this ability's direct damage. */
   ignoresAbsorption?: boolean;
   /** Restore this fraction of maximum Energy after paying the ability cost. */

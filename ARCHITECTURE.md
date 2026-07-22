@@ -149,8 +149,8 @@ Trigger events are typed as:
 
 ```text
 combat_start | turn_start | before_ability | on_hit | on_crit |
-on_kill | status_applied | status_removed | damage_taken | enemy_missed |
-enemy_stunned | turn_end
+on_kill | status_applied | status_removed | status_damage | health_restored |
+guard_gained | damage_taken | enemy_missed | enemy_stunned | turn_end
 ```
 
 Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, source kind, target status, newly applied or removed status, removal reason, damage absorbed by Guard/Barrier, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
@@ -162,6 +162,7 @@ Effect definitions support:
 - Status application to those target modes.
 - Flat or Max-Health-percentage self healing.
 - Self Energy gain.
+- Temporary next-turn Energy regeneration.
 - Self Guard gain.
 
 Luck's chance-effect bonus is added only to triggers with an explicit `chance` field. Final trigger chance is clamped from 0 to 1. Guaranteed triggers remain guaranteed.
@@ -190,10 +191,13 @@ Ability modifiers target one or more ability IDs and currently support:
 - Alternative scaling when bypassing that requirement.
 - Status duration, magnitude, start-expiration, and Power-scaled stack overrides.
 - Replacing or adding status applications.
+- Conditional applications and target-status-stack-derived applications.
 - Redirecting random multi-hits to the selected target.
 - Altering damage gained per target-status stack.
+- Scaling direct damage by living enemies carrying a configured status.
 - Pre-healing from the remaining damage of a self status.
 - Granting temporary next-turn Energy regeneration.
+- Overriding successful-hit healing or regeneration and triggering target status damage after a stack threshold.
 - Applying a new status after consuming another.
 - Retaining a ratio of stacks after detonation.
 - Overriding the ratio of target-status stacks consumed.
@@ -276,7 +280,7 @@ When `FloatingCombatText` reveals an index, the sequencer resolves all effects a
 
 Resolved status effects also produce short-lived `statusAnimations` presentation metadata. Poison uses it to pulse the receiving combatant green, while Electrified flashes its target yellow with a local lightning overlay. Contagion includes the source combatant ID on its queued status effect, allowing the UI to measure the live source and destination icons and animate a copied Poison icon between them without coupling animation code to combat rules. Damage effects may carry a `sourceLabel`; resolution exposes it through transient `damageSourceLabels` so Health bars can distinguish status damage from ordinary attacks without parsing combat text. Passive and on-hit triggers similarly emit `passiveAnimations` targeted at the affected combatant. These local effects are not sequencer events, so their CSS animation never blocks combat input or extends a turn.
 
-Abilities may declare a data-driven `vfx` kind. Resolution converts its `ability_vfx` pending effect into transient `abilityAnimations` metadata at the same event or attack impact as the mechanical result. Shadow abilities use this for smoke, flash, burst, transfer, and healing presentation. Arcanist abilities use the same event metadata for projectile paths and distinct Arcane, Frost, Fire, and Lightning impacts. Barrier absorption emits the same transient metadata to pulse the persistent card shimmer at the exact absorption event. The UI owns all of this presentation; none of these animations adds sequencer time. Status-application overlays are keyed by pending-effect ID rather than only a persistent CSS class, so refreshing an existing status reliably restarts its local application effect.
+Abilities may declare a data-driven `vfx` kind. Resolution converts its `ability_vfx` pending effect into transient `abilityAnimations` metadata at the same event or attack impact as the mechanical result. Shadow abilities use this for smoke, flash, burst, transfer, and healing presentation. Arcanist abilities use the same event metadata for projectile paths and distinct Arcane, Frost, Fire, and Lightning impacts. Brute abilities use it for fiery, bloody, swift, shield, and holy melee impacts while retaining the normal melee lunge. Barrier absorption emits the same transient metadata to pulse the persistent card shimmer at the exact absorption event. The UI owns all of this presentation; none of these animations adds sequencer time. Status-application overlays are keyed by pending-effect ID rather than only a persistent CSS class, so refreshing an existing status reliably restarts its local application effect.
 
 ### Direct-attack two-phase contract
 
