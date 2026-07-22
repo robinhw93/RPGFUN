@@ -171,7 +171,7 @@ Every contestant remains in one responsive row throughout the presentation. Card
 At the start of the player's turn:
 
 - One-round start-expiring defenses are removed.
-- Burn, Regenerate, Sleep, Stunned, and Electrified are processed.
+- Burn, Regenerate, Sleep, Frozen, Stunned, and Electrified are processed.
 - Energy is regenerated, limited by Max Energy.
 - Exhausted limits that regeneration to at most 1.
 - Ability cooldowns decrease by one player turn.
@@ -365,7 +365,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. Shadow is the first complete branch. Arcanist currently extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers. Brute and Cultist currently contain only their first class nodes.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 128 nodes: Shadow has 79 including its class node, Arcanist has 46 including its class node, and Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers.
 
 ### Unlock rules
 

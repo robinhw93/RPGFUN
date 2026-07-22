@@ -211,10 +211,10 @@ Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources,
 
 A `CombatTriggerDefinition` contains:
 
-- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
-- Optional ability, damage type, critical, minimum-damage, target-status, or Health-threshold conditions.
+- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `status_applied`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
+- Optional ability-ID, ability-branch, damage-type, critical, minimum-damage, target-status, applied-status, absorbed-status, or Health-threshold conditions.
 - Optional chance, once-per-turn rule, or cooldown.
-- One or more data-driven effects: flat/scaling damage, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, or Guard.
+- One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, or Guard.
 
 Triggered passives do not add central presentation events. Their damage, healing, status, and `passive_text` pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Proc names are grouped per affected target and appended to `combat.passiveAnimations`; the combatant-local CSS animation runs independently of the sequencer. Separate combat-log entries preserve inspectable trigger and result details.
 
@@ -238,7 +238,12 @@ Ability modifiers can currently:
 
 - Permit an ability without its normal required self status.
 - Change scaling when that requirement is missing.
-- Override status duration, magnitude, or start-expiration behavior.
+- Override status duration, magnitude, start-expiration behavior, or stack scaling from Physical/Magical Power.
+- Replace a status application or add further applications.
+- Redirect random multi-hits to the selected target.
+- Change damage gained per target-status stack.
+- Heal from the remaining damage of a self-affliction before replacing it.
+- Grant temporary Energy regeneration for the next turn.
 - Apply a status after consuming another status.
 - Retain a ratio of status stacks after detonation.
 - Override the fraction of target-status stacks consumed by supported abilities.
@@ -324,6 +329,31 @@ Current migration behavior:
 - Preload and decode Character-screen avatars, gear icons, and stat icons before rendering that screen. Use the game-owned loading state instead of allowing individual icons to pop in.
 - Keep combat usable without page scrolling on mobile.
 
+## Documentation maintenance
+
+The implementation is the source of truth, but documentation changes are part of the implementation rather than a later cleanup task. Update the relevant files in the same commit whenever behavior or content changes:
+
+| File | Update when |
+| --- | --- |
+| `README.md` | Headline scope, prerequisites, hosting, or the documentation map changes. |
+| `docs/GAME_SYSTEMS.md` | A player-visible rule, formula, flow, status interaction, reward, gear rule, or talent behavior changes. |
+| `docs/CONTENT_REFERENCE.md` | An ability, talent, status, enemy, item, set, adventure, reward, or live content count changes. |
+| `ARCHITECTURE.md` | State ownership, shared contracts, sequencing, persistence, data flow, or UI/rules boundaries change. |
+| `docs/DEVELOPMENT.md` | Setup, tooling, content-authoring steps, editor behavior, conventions, or verification changes. |
+| `AGENTS.md` | The durable collaboration workflow or repository-wide implementation conventions change. |
+
+Do not copy full content tables into several files. Keep exact catalogs in `CONTENT_REFERENCE.md`, player-system explanations in `GAME_SYSTEMS.md`, and link to them from higher-level documents.
+
+## Git and change discipline
+
+- Inspect `git status --short` before editing and before committing.
+- Treat pre-existing modifications as user-owned. Preserve unrelated changes and do not overwrite or reformat them as collateral work.
+- Use stable IDs for saved content. Renaming visible text is safe; changing an item, talent, ability, enemy, or avatar ID requires migration review.
+- Keep commits scoped to one coherent request, including its documentation and verification changes.
+- Do not commit `dist/`, temporary smoke-test scripts, logs, or dependency folders.
+- Avoid destructive Git operations such as hard resets. Resolve pull conflicts deliberately and preserve local work.
+- This project currently works directly on `main`; after a requested implementation is verified, commit it and push it unless the user explicitly asks to keep it local.
+
 ## Verification checklist
 
 Always run:
@@ -331,6 +361,8 @@ Always run:
 ```bash
 npm run build
 ```
+
+There is no dedicated unit-test runner yet. For rule-heavy changes, add a focused temporary TypeScript smoke script when useful, bundle it against the real modules with `esbuild`, run it, and remove the temporary source and output before committing. UI layout, touch behavior, animation, and VFX still require browser verification. If a managed Codex sandbox blocks Vite/esbuild process spawning with `EPERM`, rerun the same build with the appropriate approved escalation rather than changing project configuration to work around the sandbox.
 
 Then test the changed system in a browser. For combat changes, verify at minimum:
 

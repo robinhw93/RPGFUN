@@ -10,6 +10,7 @@ The game UI and all player-facing text are in English. Project documentation is 
 - [Content reference](docs/CONTENT_REFERENCE.md) — the currently implemented abilities, talents, enemies, encounters, items, set bonuses, and status effects.
 - [Development guide](docs/DEVELOPMENT.md) — local setup, Codespaces, deployment, content editing, the Talent Editor, verification, and project conventions.
 - [Architecture](ARCHITECTURE.md) — module ownership, state flow, data-driven combat features, timing contracts, save compatibility, and UI rules.
+- [AI collaborator guide](AGENTS.md) — repository-wide working agreements, implementation patterns, verification expectations, and handoff context for future coding sessions.
 
 The TypeScript implementation remains the source of truth. When a rule changes, update the relevant documentation in the same change.
 
@@ -45,9 +46,9 @@ The command runs the TypeScript project build and then creates the production bu
 - Character creation with ten selectable appearances and permadeath.
 - Five base attributes and ten displayed derived combat stats.
 - A four-node adventure: two regular combats, one choice event, and one boss.
-- Initiative-based combat against up to two enemies in current content; the state model supports larger groups.
+- Initiative-based combat against up to three enemies in current content; the state model supports larger groups.
 - Energy, cooldowns, multi-action player turns, buffs, debuffs, damage-over-time effects, enemy intent, floating combat text, and an inspectable combat log.
-- An 87-node classless talent tree with bidirectional ANY connections, pan, zoom, and a six-slot ability loadout.
+- A 128-node classless talent tree with bidirectional ANY connections, pan, zoom, and a six-slot ability loadout.
 - Eight equipment slots, weapon-hand rules, rarity, item comparison, inventory filtering/sorting, and the Ashborn Warplate set.
 - Experience, level-ups, stat points, talent points, gold, and loot rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.

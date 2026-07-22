@@ -108,7 +108,8 @@ UI modules display these results but never reproduce their formulas.
 
 - Raw Hit Chance and Critical Strike Chance are intentionally uncapped.
 - Permanent and temporary Dodge modifiers are combined through the shared combat-math helper, then capped at 50%.
-- Final Hit Chance is `raw Hit - capped Dodge`, clamped to 20–100%.
+- Blind multiplies the attacker's raw Hit Chance by 0.25 before opposed Hit/Dodge resolution.
+- Final Hit Chance is `modified raw Hit - capped Dodge`, clamped to 20–100%.
 - Strength and Agility feed Physical Power.
 - Intelligence feeds Magical Power.
 - Agility contributes 0.5 Initiative per point and Intelligence contributes 0.25 Initiative per point before direct Initiative bonuses.
@@ -135,8 +136,9 @@ Passives aggregate additively into:
 - Bleed reduction, loot rarity, and probabilistic-effect chance.
 - Per-status damage bonuses.
 - Status-preservation behavior.
+- Status immunities, companion applications, and additional applied stacks.
 - Starting combat statuses.
-- Energy-based incoming-damage reduction and reusable first-lethal-hit prevention.
+- Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, and reusable first-lethal-hit prevention.
 
 New generally reusable static bonuses belong in `PassiveBonuses`, not UI conditions or talent-ID branches.
 
@@ -146,16 +148,18 @@ Trigger events are typed as:
 
 ```text
 combat_start | turn_start | before_ability | on_hit | on_crit |
-on_kill | damage_taken | turn_end
+on_kill | status_applied | damage_taken | enemy_missed |
+enemy_stunned | turn_end
 ```
 
-Conditions can filter by ability, damage type, critical result, minimum damage, target status, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
+Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, target status, newly applied status, damage absorbed by Guard/Barrier, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
 
 Effect definitions support:
 
-- Damage to self, target, all enemies, or a random enemy.
+- Flat damage, Physical/Magical Power-scaled damage, trigger-damage ratios, or damage based specifically on Guard/Barrier absorption, targeting self, target, all enemies, or a random enemy.
+- Current-Health-percentage damage.
 - Status application to those target modes.
-- Self healing.
+- Flat or Max-Health-percentage self healing.
 - Self Energy gain.
 - Self Guard gain.
 
@@ -179,9 +183,15 @@ Ability modifiers target one or more ability IDs and currently support:
 
 - Bypassing a required self status.
 - Alternative scaling when bypassing that requirement.
-- Status duration, magnitude, and expiration overrides.
+- Status duration, magnitude, start-expiration, and Power-scaled stack overrides.
+- Replacing or adding status applications.
+- Redirecting random multi-hits to the selected target.
+- Altering damage gained per target-status stack.
+- Pre-healing from the remaining damage of a self status.
+- Granting temporary next-turn Energy regeneration.
 - Applying a new status after consuming another.
 - Retaining a ratio of stacks after detonation.
+- Overriding the ratio of target-status stacks consumed.
 - Changing Energy costs and cooldowns through additive integer deltas, clamped at zero.
 
 Each mechanical ability modifier may also provide a complete player-facing `descriptionOverride`. `getCharacterAbilityDescription` resolves description changes, while `getCharacterAbilityEnergyCost` and `getCharacterAbilityCooldownTurns` resolve numerical rule changes. Combat execution, action-queue projection, combat buttons, talent details, the loadout picker, and inspectable combat-log entries use these shared paths instead of reading character-owned base values directly.
@@ -251,6 +261,8 @@ Each pending effect has an `eventIndex` into `floatingEvents`:
 - `remove_status`
 - `set_status`
 - `energy_regen_bonus`
+- `passive_text`
+- `ability_vfx`
 - `turn`
 
 When `FloatingCombatText` reveals an index, the sequencer resolves all effects attached to that index.
@@ -264,7 +276,7 @@ Abilities may declare a data-driven `vfx` kind. Resolution converts its `ability
 Direct attack damage has two presentation phases:
 
 1. `primeCombatAttack` runs as the damage message appears, marks the attacker, and starts the backstep/charge animation.
-2. After `attackImpactMs`, `resolveCombatEvent` applies damage, wakes Sleep when relevant, marks the damaged target, and updates the HP bar.
+2. After `attackImpactMs`, `resolveCombatEvent` applies damage, wakes Sleep or Frozen when relevant, marks the damaged target, and updates the HP bar.
 
 Statuses attached to that same event index resolve at impact with damage. Non-attack effects resolve as soon as their floating message appears.
 
