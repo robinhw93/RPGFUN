@@ -170,6 +170,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   shatter: ShieldOff,
   vulnerable: Target,
   stunned: Zap,
+  diminishingReturns: ShieldCheck,
   exhausted: BatteryLow,
   slowed: Snail,
   reckless: Skull,
@@ -803,6 +804,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const electrifiedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "electrified");
   const frozenAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "frozen");
   const smiteAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "smite");
+  const diminishingReturnsAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "diminishingReturns");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
   const barrierPulseTargets = new Set(abilityAnimations.filter((animation) => animation.kind === "barrier_absorb").flatMap((animation) => animation.targetId ? [animation.targetId] : []));
@@ -855,6 +857,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
           {frozenAnimations.some((animation) => animation.targetId === "player") && <FrozenApplicationEffect />}
           {smiteAnimations.filter((animation) => animation.targetId === "player").map((animation) => <SmiteApplicationEffect key={animation.id} />)}
+          {diminishingReturnsAnimations.filter((animation) => animation.targetId === "player").map((animation) => <DiminishingReturnsApplicationEffect key={animation.id} />)}
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
           {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}
@@ -906,6 +909,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
               {frozenAnimations.some((animation) => animation.targetId === enemy.instanceId) && <FrozenApplicationEffect />}
               {smiteAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <SmiteApplicationEffect key={animation.id} />)}
+              {diminishingReturnsAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <DiminishingReturnsApplicationEffect key={animation.id} />)}
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
@@ -1406,6 +1410,10 @@ function FrozenApplicationEffect() {
 
 function SmiteApplicationEffect() {
   return <span className="smite-application-effect" aria-hidden="true"><Sun /><i /><i /><i /><i /></span>;
+}
+
+function DiminishingReturnsApplicationEffect() {
+  return <span className="diminishing-returns-application-effect" aria-hidden="true"><ShieldCheck /><i /><i /><i /></span>;
 }
 
 function ConductorFieldEffect() {

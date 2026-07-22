@@ -35,7 +35,8 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   weaken: { id: "weaken", name: "Weaken", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Deals 25% less damage." },
   shatter: { id: "shatter", name: "Shatter", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Armor is reduced by 50%." },
   vulnerable: { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 25% more damage from all sources." },
-  stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stackable: false, description: "Skips the next turn. Cannot stack." },
+  stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stackable: false, description: "Skips the next turn. When Stunned ends, gain Diminishing Returns for 3 turns." },
+  diminishingReturns: { id: "diminishingReturns", name: "Diminishing Returns", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Cannot become Stunned." },
   exhausted: { id: "exhausted", name: "Exhausted", kind: "debuff", duration: 1, description: "Regains only 1 Energy at the start of the next turn." },
   slowed: { id: "slowed", name: "Slowed", kind: "debuff", duration: 1, description: "Initiative is reduced to 0 until the end of the next turn." },
   reckless: { id: "reckless", name: "Reckless", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes damage equal to 50% of the damage it deals." },
@@ -81,6 +82,7 @@ export function isStatusEffectId(value: string): value is StatusEffectId {
 }
 
 export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffect): StatusEffect[] {
+  if (!canApplyStatusEffect(statuses, status.id)) return statuses;
   const stackable = STATUS_EFFECTS[status.id].stackable === true;
   const normalizedStatus = stackable ? status : { ...status, stacks: 1 };
   const existing = statuses.find((item) => item.id === status.id);
@@ -96,12 +98,22 @@ export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffec
   } : item);
 }
 
+export function canApplyStatusEffect(statuses: StatusEffect[], id: StatusEffectId): boolean {
+  return id !== "stunned" || !hasStatus(statuses, "diminishingReturns");
+}
+
+export function grantDiminishingReturnsAfterStun(previousStatuses: StatusEffect[], nextStatuses: StatusEffect[]): StatusEffect[] {
+  if (!hasStatus(previousStatuses, "stunned") || hasStatus(nextStatuses, "stunned")) return nextStatuses;
+  return addOrRefreshStatus(nextStatuses, createStatusEffect("diminishingReturns"));
+}
+
 export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect[] {
-  return statuses.flatMap((status) => {
+  const decremented = statuses.flatMap((status) => {
     if (status.permanent || status.expiresAtTurnStart === true || (status.id === "stealth" && status.expiresAtTurnStart !== false) || status.id === "guard") return [status];
     const duration = status.duration - 1;
     return duration > 0 ? [{ ...status, duration }] : [];
   });
+  return grantDiminishingReturnsAfterStun(statuses, decremented);
 }
 
 export interface DamageAbsorptionResult {

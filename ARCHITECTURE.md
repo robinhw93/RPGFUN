@@ -215,6 +215,8 @@ This is the preferred extension point for talents that transform an existing abi
 
 `createCombat` builds enemy instances, initializes Energy/statuses, rolls initiative, and applies starting statuses. `ensureCombatState` repairs older saved combats by adding missing fields, normalizing definitions while preserving status-specific magnitude and expiration timing, rounding legacy initiative values, correcting selection, and recreating initiative when absent.
 
+Status application uses the shared status-library guard before mutating or projecting state. Diminishing Returns blocks Stunned across direct abilities, triggers, copied statuses, self applications, Electrified, and queued-action projection. When Stunned is removed, duration reconciliation inserts Diminishing Returns after the removal so its three-turn duration is not decremented on the same turn.
+
 ### Turn order
 
 Base order is descending effective initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. Slowed sets effective initiative to 0. Permanent combat Initiative stacks such as Charged Up are added by the same effective-initiative helper, so `reorderCombat` moves the affected combatant when the pending status application resolves and the turn-order row displays the updated whole number. Pending turn effects identify the acting combatant by stable actor ID and translate that ID back to the current order when the event resolves. Initiative changes can therefore reorder the list without making an actor repeat or lose its turn.

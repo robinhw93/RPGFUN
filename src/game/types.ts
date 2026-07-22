@@ -56,6 +56,7 @@ export type StatusEffectId =
   | "shatter"
   | "vulnerable"
   | "stunned"
+  | "diminishingReturns"
   | "exhausted"
   | "slowed"
   | "reckless"

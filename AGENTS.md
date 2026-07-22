@@ -194,6 +194,6 @@ At the time of this handoff:
 - Shadow is the first complete talent branch.
 - Arcanist is implemented through `talent_156`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, and Elemental Fury with active-ability VFX.
 - Brute is implemented through `talent_199`, with Fire, Bleed, Armor/Guard, holy-vigor, and Smite paths. Cultist currently has only its class node.
-- The newest status in the catalog is Burning Momentum, a combat-only stackable buff that grants +1 Initiative per stack.
+- The newest status in the catalog is Diminishing Returns, a three-turn buff granted when Stunned ends that prevents further Stunned applications.
 
 Use `docs/CONTENT_REFERENCE.md` rather than this summary for exact live values and the full catalog.

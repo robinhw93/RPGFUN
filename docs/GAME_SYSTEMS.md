@@ -191,6 +191,8 @@ Using an ability never ends the turn automatically. The player presses **End Tur
 
 If the player becomes Stunned, Frozen, or Sleeping during their own active turn, further abilities are blocked but **End Turn** remains available. This lets self-control effects such as Conductor finish the current turn normally; the status still skips the next turn according to its usual rules.
 
+When Stunned ends for either the player or an enemy, that combatant immediately gains Diminishing Returns for 3 turns. Diminishing Returns prevents every new Stunned application, including ability effects, passive procs, copied debuffs, and Electrified's turn-start chance. Its full three-turn duration begins after Stunned is removed, so the turn that consumed Stunned does not also consume a Diminishing Returns turn.
+
 Ability input remains available while an earlier ability is animating. Further ability presses are added to a first-in, first-out queue and execute as soon as each preceding combat sequence and return animation finishes. The queue reserves Energy and cooldown availability before accepting each press, shows the queued count on affected ability buttons, and remembers the selected target for each cast. **End Turn** can also be queued; it executes after every ability already ahead of it and prevents later actions from being added.
 
 Abilities are classified as **Melee** or **Ranged**. Direct Melee attacks use the player's normal movement toward the target. Ranged attacks leave the player in place and use ability-specific presentation: launched bolts use projectiles, focused magic uses beams, transferred effects travel between their actual source and destination, and detonations, weather, freezes, and fields resolve directly at their targets. Damage, misses, and impact VFX still appear at the shared impact timing. Range is shown in ability details and can be set on ability nodes in the Talent Editor.
@@ -221,7 +223,7 @@ Blinding Light gives every player-applied Electrified effect a 20% base chance, 
 
 At the end of the player's turn, Poison resolves and normal status durations decrease.
 
-Stunned always has one stack. Applying Stunned again can never increase its stack count.
+Stunned always has one stack. Applying Stunned again can never increase its stack count, and Diminishing Returns blocks the application entirely.
 
 ### Enemy turn
 
@@ -235,7 +237,7 @@ At the start of an enemy's turn:
 - Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
 - Enemy turns do not add a separate floating turn announcement; the turn-order highlight advances with the preceding action's final event.
 
-Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease. Status icons retain their pre-turn state while those events are queued; the duration ring updates or the icon disappears only when the final status event is shown and resolved.
+Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease. If Stunned expires, its icon is replaced by Diminishing Returns at that same event. Status icons retain their pre-turn state while those events are queued; the duration ring updates or the icon disappears only when the final status event is shown and resolved.
 
 ### Targeting
 

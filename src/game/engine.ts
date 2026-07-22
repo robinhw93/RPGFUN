@@ -4,6 +4,7 @@ import { ABILITIES, ENEMIES } from "./data";
 import {
   absorbIncomingDamage,
   addOrRefreshStatus,
+  canApplyStatusEffect,
   createStatusEffect,
   DEFAULT_STATUS_DURATION,
   decrementStatusDurations,
@@ -17,6 +18,7 @@ import {
   getStatusDamage,
   getStatusHealing,
   getStatusInitiativeBonus,
+  grantDiminishingReturnsAfterStun,
   hasStatus,
   isMagicalDamage,
   isStatusEffectId,
@@ -205,6 +207,16 @@ function queueStatusReconciliation(
       queueStatusSet(pendingEffects, eventIndex, targetId, resolvedStatus);
     }
   });
+  resolvedStatuses.filter((resolvedStatus) => !displayedStatuses.some((status) => status.id === resolvedStatus.id)).forEach((resolvedStatus) => {
+    combatEffectSequence += 1;
+    pendingEffects.push({
+      id: `combat-effect-${Date.now()}-${combatEffectSequence}`,
+      eventIndex,
+      type: "status",
+      targetId,
+      status: { ...resolvedStatus },
+    });
+  });
 }
 
 function queueAbsorptionChanges(
@@ -302,7 +314,7 @@ function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
   return enemies.map((enemy) => {
     const template = ENEMIES[enemy.id];
     let statuses = normalizeStatuses(enemy.statuses ?? []);
-    if (enemy.stunned && !hasStatus(statuses, "stunned")) statuses = addOrRefreshStatus(statuses, createStatusEffect("stunned"));
+    if (enemy.stunned && !hasStatus(statuses, "stunned") && canApplyStatusEffect(statuses, "stunned")) statuses = addOrRefreshStatus(statuses, createStatusEffect("stunned"));
     return {
       ...template,
       ...enemy,
@@ -314,7 +326,7 @@ function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       attackDescription: enemy.attackDescription ?? template.attackDescription,
       onHitEffect: enemy.onHitEffect ?? template.onHitEffect,
       statuses,
-      stunned: enemy.stunned ?? false,
+      stunned: hasStatus(statuses, "stunned"),
     };
   });
 }
@@ -598,7 +610,7 @@ function processTurnStart(
   }
 
   const electrified = nextStatuses.find((status) => status.id === "electrified");
-  if (electrified && Math.random() < 0.1) {
+  if (electrified && canApplyStatusEffect(nextStatuses, "stunned") && Math.random() < 0.1) {
     nextStatuses = addOrRefreshStatus(nextStatuses, createStatusEffect("stunned", { sourceId: electrified.sourceId }));
     const logText = targetId === "player" ? "You are Stunned by Electrified." : `${targetName} is Stunned by Electrified.`;
     const eventText = targetId === "player" ? "You are Stunned by Electrified and skip the turn." : `${targetName} is Stunned by Electrified and skips the turn.`;
@@ -845,7 +857,9 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
       playerTurnEffect.energy = regeneratedEnergy;
     }
     if (playerStart.skipTurn) {
-      const skipped = moveToNextActor({ ...next, activeTurnIndex: nextIndex, turn: nextTurn, playerStatuses: decrementStatusDurations(next.playerStatuses) }, character, logs, events, pendingEffects);
+      const decrementedStatuses = decrementStatusDurations(next.playerStatuses);
+      if (events.length > 0) queueStatusReconciliation(pendingEffects, events.length - 1, "player", next.playerStatuses, decrementedStatuses);
+      const skipped = moveToNextActor({ ...next, activeTurnIndex: nextIndex, turn: nextTurn, playerStatuses: decrementedStatuses }, character, logs, events, pendingEffects);
       return { ...skipped, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn };
     }
   } else if (events.length > 0) {
@@ -976,7 +990,7 @@ function applyPlayerProcs(
         const appliedStatuses = [status, ...createPlayerCompanionStatuses(status.id, derived)];
         if (targetMode === "self") {
           if (derived.statusImmunities.includes(status.id)) return;
-          appliedStatuses.filter((applied) => !derived.statusImmunities.includes(applied.id)).forEach((applied) => {
+          appliedStatuses.filter((applied) => !derived.statusImmunities.includes(applied.id) && canApplyStatusEffect(playerStatuses, applied.id)).forEach((applied) => {
             playerStatuses = addOrRefreshStatus(playerStatuses, applied);
             logs.push(makeLog(`You gain ${applied.name}.`, statusInfo(applied)));
             markPassive("player", proc.name);
@@ -984,7 +998,7 @@ function applyPlayerProcs(
           });
         } else {
           enemyTargets.forEach((target) => {
-            appliedStatuses.forEach((applied) => {
+            appliedStatuses.filter((applied) => canApplyStatusEffect(enemies.find((enemy) => enemy.instanceId === target.instanceId)?.statuses ?? target.statuses, applied.id)).forEach((applied) => {
               enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, applied) } : enemy);
               logs.push(makeLog(`${target.name} gains ${applied.name}.`, statusInfo(applied)));
               markPassive(target.instanceId, proc.name);
@@ -1395,7 +1409,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         + derived.physicalPower * (ability.selfGuard.physicalPowerScaling ?? 0)
         + derived.magicalPower * ((ability.selfGuard.magicalPowerScaling ?? 0) + selfGuardMagicalPowerScalingBonus)
       ) * derived.guardMultiplier)) : 0;
-      const cleansed = removeAllSelfDebuffs ? playerStatuses.filter((status) => status.kind === "debuff") : [];
+      const statusesBeforeCleanse = playerStatuses;
+      const cleansed = removeAllSelfDebuffs ? statusesBeforeCleanse.filter((status) => status.kind === "debuff") : [];
       const resultParts = [
         ...(healing > 0 ? [`restore ${healing} Health`] : []),
         ...(guardAmount > 0 ? [`gain ${guardAmount} Guard`] : []),
@@ -1421,7 +1436,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueStatus(events, pendingEffects, resultText, "player", barrier, false, resultEventIndex);
       }
       cleansed.forEach((status) => queueStatusRemoval(pendingEffects, resultEventIndex, "player", status.id));
-      if (cleansed.length > 0) playerStatuses = playerStatuses.filter((status) => status.kind !== "debuff");
+      if (cleansed.length > 0) {
+        playerStatuses = grantDiminishingReturnsAfterStun(statusesBeforeCleanse, playerStatuses.filter((status) => status.kind !== "debuff"));
+        const diminishingReturns = cleansed.some((status) => status.id === "stunned")
+          ? playerStatuses.find((status) => status.id === "diminishingReturns")
+          : undefined;
+        if (diminishingReturns) queueStatus(events, pendingEffects, resultText, "player", diminishingReturns, false, resultEventIndex);
+      }
       if (ability.vfx) queueAbilityVfx(pendingEffects, resultEventIndex, ability.vfx, "player", "player");
       const triggerEvents: CombatTriggerEvent[] = [
         ...(healing > 0 ? ["health_restored" as const] : []),
@@ -1476,7 +1497,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       logs.push(makeLog(energyText, abilityInfo));
       events[abilityUseEventIndex] = energyText;
       if (ability.vfx) queueAbilityVfx(pendingEffects, abilityUseEventIndex, ability.vfx, "player", "player");
-    } else if (ability.effect && isStatusEffectId(ability.effect) && !derived.statusImmunities.includes(ability.effect)) {
+    } else if (ability.effect && isStatusEffectId(ability.effect) && !derived.statusImmunities.includes(ability.effect) && canApplyStatusEffect(playerStatuses, ability.effect)) {
       const status = createPlayerAppliedStatus(ability.effect, derived, { duration: effectiveStatusDuration, stacks: effectiveStatusStacks, magnitude: effectiveStatusMagnitude, expiresAtTurnStart: effectiveStatusExpiresAtTurnStart });
       playerStatuses = addOrRefreshStatus(playerStatuses, status);
       logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
@@ -1502,24 +1523,28 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         const spreadEventIndex = events.length;
         const names = debuffs.map((status) => status.name).join(", ");
         events.push(destinations.length > 0 && debuffs.length > 0 ? `${ability.name} spreads every debuff.` : `${ability.name} finds nothing to spread.`);
+        let spreadCount = 0;
         destinations.forEach((destination) => {
           debuffs.forEach((status) => {
             const copiedStatus = { ...status };
+            const currentDestination = enemies.find((enemy) => enemy.instanceId === destination.instanceId) ?? destination;
+            if (!canApplyStatusEffect(currentDestination.statuses, copiedStatus.id)) return;
             enemies = enemies.map((enemy) => enemy.instanceId === destination.instanceId
               ? { ...enemy, stunned: enemy.stunned || copiedStatus.id === "stunned", statuses: addOrRefreshStatus(enemy.statuses, copiedStatus) }
               : enemy);
+            spreadCount += 1;
             queueStatus(events, pendingEffects, `${destination.name} gains ${copiedStatus.name}.`, destination.instanceId, copiedStatus, copiedStatus.id === "stunned", spreadEventIndex, target.instanceId);
           });
         });
-        logs.push(makeLog(`${ability.name} spreads ${names || "no debuffs"} from ${target.name}.`, abilityInfo));
-        if (destinations.length > 0 && debuffs.length > 0 && ability.vfx) queueAbilityVfx(pendingEffects, spreadEventIndex, ability.vfx, undefined, target.instanceId);
+        logs.push(makeLog(spreadCount > 0 ? `${ability.name} spreads ${names || "no debuffs"} from ${target.name}.` : `${ability.name} finds no applicable debuffs to spread.`, abilityInfo));
+        if (spreadCount > 0 && ability.vfx) queueAbilityVfx(pendingEffects, spreadEventIndex, ability.vfx, undefined, target.instanceId);
         continue;
       }
       if (ability.spreadTargetStatus) {
         const sourceStatus = target.statuses.find((status) => status.id === ability.spreadTargetStatus);
         const destinations = enemies.filter((enemy) => enemy.hp > 0 && enemy.instanceId !== target.instanceId && !isEnemyStealthed(enemy));
         const destination = destinations[Math.floor(Math.random() * destinations.length)];
-        if (!sourceStatus || !destination) continue;
+        if (!sourceStatus || !destination || !canApplyStatusEffect(destination.statuses, sourceStatus.id)) continue;
         const copiedStatus = { ...sourceStatus };
         enemies = enemies.map((enemy) => enemy.instanceId === destination.instanceId
           ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, copiedStatus) }
@@ -1689,19 +1714,28 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
             });
           const appliedStatuses = [status, ...createPlayerCompanionStatuses(status.id, derived), ...(followUpStatus ? [followUpStatus] : []), ...additionalStatuses.flatMap((applied) => [applied, ...createPlayerCompanionStatuses(applied.id, derived)])];
           const affectedTargets = groupedAreaApplication ? targets : [target];
+          const applicableStatusesByTarget = new Map(affectedTargets.map((affectedTarget) => [
+            affectedTarget.instanceId,
+            appliedStatuses.filter((applied) => canApplyStatusEffect(affectedTarget.statuses, applied.id)),
+          ]));
+          const stunWasBlocked = affectedTargets.some((affectedTarget) => (
+            appliedStatuses.some((applied) => applied.id === "stunned")
+            && !applicableStatusesByTarget.get(affectedTarget.instanceId)?.some((applied) => applied.id === "stunned")
+          ));
           const modifierRatio = abilityModifiers.find((modifier) => modifier.statusConsumptionRatio !== undefined)?.statusConsumptionRatio;
           const consumptionRatio = Math.max(0, Math.min(1, modifierRatio ?? 1));
           enemies = enemies.map((enemy) => affectedTargets.some((affected) => affected.instanceId === enemy.instanceId) ? {
             ...enemy,
-            stunned: enemy.stunned || appliedStatuses.some((applied) => applied.id === "stunned"),
-            statuses: appliedStatuses.reduce(addOrRefreshStatus, consumedStatusId ? enemy.statuses.flatMap((existing) => {
+            stunned: enemy.stunned || Boolean(applicableStatusesByTarget.get(enemy.instanceId)?.some((applied) => applied.id === "stunned")),
+            statuses: (applicableStatusesByTarget.get(enemy.instanceId) ?? []).reduce(addOrRefreshStatus, consumedStatusId ? enemy.statuses.flatMap((existing) => {
               if (existing.id !== consumedStatusId) return [existing];
               const consumedStacks = Math.max(1, Math.ceil(existing.stacks * consumptionRatio));
               const remainingStacks = Math.max(0, existing.stacks - consumedStacks);
               return remainingStacks > 0 ? [{ ...existing, stacks: remainingStacks }] : [];
             }) : enemy.statuses),
           } : enemy);
-          const statusNames = appliedStatuses.map((applied) => `${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`).join(" and ");
+          const targetApplicableStatuses = applicableStatusesByTarget.get(target.instanceId) ?? [];
+          const statusNames = targetApplicableStatuses.map((applied) => `${applied.stacks > 1 ? `${applied.stacks} ` : ""}${applied.name}`).join(" and ");
           const combinesSelfAndTarget = Boolean(
             ability.combineSelfAndTargetStatusEvent
             && !groupedAreaApplication
@@ -1709,9 +1743,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           );
           const statusText = combinesSelfAndTarget
             ? `You and ${target.name} gain ${statusNames.toLocaleLowerCase()}.`
-            : groupedAreaApplication
-              ? `All enemies gain ${statusNames}.`
-              : `${target.name} gains ${statusNames}.`;
+            : stunWasBlocked && groupedAreaApplication
+              ? "Diminishing Returns prevents Stun on protected enemies."
+              : stunWasBlocked && targetApplicableStatuses.length === 0
+                ? `${target.name} is protected by Diminishing Returns.`
+                : groupedAreaApplication
+                  ? `All enemies gain ${appliedStatuses.map((applied) => applied.name).join(" and ")}.`
+                  : `${target.name} gains ${statusNames}.`;
           const statusEventIndex = events.length;
           events.push(statusText);
           logs.push(makeLog(statusText, statusInfo(status)));
@@ -1726,7 +1764,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
             if (remainingStacks > 0) queueStatusSet(pendingEffects, statusEventIndex, affectedTarget.instanceId, { ...consumedStatus, stacks: remainingStacks });
             else queueStatusRemoval(pendingEffects, statusEventIndex, affectedTarget.instanceId, consumedStatusId);
           });
-          affectedTargets.forEach((affectedTarget) => appliedStatuses.forEach((applied) => {
+          affectedTargets.forEach((affectedTarget) => (applicableStatusesByTarget.get(affectedTarget.instanceId) ?? []).forEach((applied) => {
             queueStatus(events, pendingEffects, statusText, affectedTarget.instanceId, applied, applied.id === "stunned", statusEventIndex);
           }));
           if (ability.vfx) queueAbilityVfx(pendingEffects, statusEventIndex, ability.vfx, groupedAreaApplication ? undefined : target.instanceId, "player");
@@ -1736,7 +1774,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
               {
                 abilityId: ability.id,
                 abilityBranch: ability.branch,
-                appliedStatusIds: appliedStatuses.map((applied) => applied.id),
+                appliedStatusIds: (applicableStatusesByTarget.get(affectedTarget.instanceId) ?? []).map((applied) => applied.id),
                 targetStatusIds: enemies.find((enemy) => enemy.instanceId === affectedTarget.instanceId)?.statuses.map((current) => current.id) ?? [],
                 targetStatusIdsBefore: affectedTarget.statuses.map((current) => current.id),
                 selfStatusIds: playerStatuses.map((current) => current.id),
@@ -1756,7 +1794,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
             abilityCooldowns = statusTriggers.state.abilityCooldowns ?? abilityCooldowns;
           });
           if (appliedStatuses.some((applied) => applied.id === "stunned")) {
-            affectedTargets.filter((affectedTarget) => !hasStatus(affectedTarget.statuses, "stunned")).forEach((affectedTarget) => {
+            affectedTargets.filter((affectedTarget) => !hasStatus(affectedTarget.statuses, "stunned") && applicableStatusesByTarget.get(affectedTarget.instanceId)?.some((applied) => applied.id === "stunned")).forEach((affectedTarget) => {
               const stunnedTriggers = runPlayerTriggerEvent(
                 "enemy_stunned",
                 { abilityId: ability.id, targetStatusIds: enemies.find((enemy) => enemy.instanceId === affectedTarget.instanceId)?.statuses.map((current) => current.id) ?? [] },
@@ -1905,7 +1943,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueStatus(events, pendingEffects, `${target.name} becomes Vulnerable.`, target.instanceId, vulnerableStatus, false, damageEventIndex);
         appliedStatusIds.push(vulnerableStatus.id);
       }
-      if (ability.effect === "stun" && Math.random() < Math.min(1, 0.45 + derived.chanceEffectBonus)) {
+      if (ability.effect === "stun" && canApplyStatusEffect(target.statuses, "stunned") && Math.random() < Math.min(1, 0.45 + derived.chanceEffectBonus)) {
         const stunned = createPlayerAppliedStatus("stunned", derived);
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, stunned: true, statuses: addOrRefreshStatus(enemy.statuses, stunned) } : enemy);
         logs.push(makeLog(`${target.name} is Stunned.`, statusInfo(stunned)));
@@ -1969,7 +2007,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           ? conditionalReplacement.replacement
           : modifierReplacement?.to ?? application.status;
         const status = createPlayerAppliedStatus(statusId, derived, { stacks: application.stacks, duration: application.duration });
-        const statuses = [status, ...createPlayerCompanionStatuses(status.id, derived)];
+        const currentTargetStatuses = enemies.find((enemy) => enemy.instanceId === target.instanceId)?.statuses ?? target.statuses;
+        const statuses = [status, ...createPlayerCompanionStatuses(status.id, derived)]
+          .filter((applied) => canApplyStatusEffect(currentTargetStatuses, applied.id));
+        if (statuses.length === 0) return;
         appliedExtraStatuses.push(...statuses);
         appliedStatusIds.push(...statuses.map((applied) => applied.id));
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
@@ -2216,7 +2257,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   }
 
   effectiveSelfStatusApplications.forEach((application) => {
-    if (derived.statusImmunities.includes(application.status)) return;
+    if (derived.statusImmunities.includes(application.status) || !canApplyStatusEffect(playerStatuses, application.status)) return;
     const status = createPlayerAppliedStatus(application.status, derived, application);
     playerStatuses = addOrRefreshStatus(playerStatuses, status);
     const sharedEvent = sharedSelfStatusEvent.current?.statusId === status.id ? sharedSelfStatusEvent.current : null;
@@ -2765,19 +2806,28 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     }
     if (effect.type === "set_status") {
       if (effect.targetId === "player") {
-        playerStatuses = [...playerStatuses.filter((status) => status.id !== effect.status.id), effect.status];
+        if (canApplyStatusEffect(playerStatuses, effect.status.id)) {
+          playerStatuses = [...playerStatuses.filter((status) => status.id !== effect.status.id), effect.status];
+        }
       } else {
-        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
-          ? { ...enemy, statuses: [...enemy.statuses.filter((status) => status.id !== effect.status.id), effect.status] }
-          : enemy);
+        enemies = enemies.map((enemy) => {
+          if (enemy.instanceId !== effect.targetId || !canApplyStatusEffect(enemy.statuses, effect.status.id)) return enemy;
+          const nextStatuses = [...enemy.statuses.filter((status) => status.id !== effect.status.id), effect.status];
+          return { ...enemy, statuses: nextStatuses, stunned: hasStatus(nextStatuses, "stunned") };
+        });
       }
       return;
     }
     if (effect.type === "remove_status") {
       if (effect.targetId === "player") {
-        playerStatuses = playerStatuses.filter((status) => status.id !== effect.statusId);
+        const nextStatuses = playerStatuses.filter((status) => status.id !== effect.statusId);
+        playerStatuses = grantDiminishingReturnsAfterStun(playerStatuses, nextStatuses);
       } else {
-        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== effect.statusId) } : enemy);
+        enemies = enemies.map((enemy) => {
+          if (enemy.instanceId !== effect.targetId) return enemy;
+          const nextStatuses = grantDiminishingReturnsAfterStun(enemy.statuses, enemy.statuses.filter((status) => status.id !== effect.statusId));
+          return { ...enemy, statuses: nextStatuses, stunned: hasStatus(nextStatuses, "stunned") };
+        });
       }
       return;
     }
@@ -2785,9 +2835,11 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       if (effect.targetId === "player") {
         playerStatuses = addOrRefreshStatus(playerStatuses, effect.status);
       } else {
-        enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
-          ? { ...enemy, statuses: addOrRefreshStatus(enemy.statuses, effect.status), stunned: effect.stunned ? true : enemy.stunned }
-          : enemy);
+        enemies = enemies.map((enemy) => {
+          if (enemy.instanceId !== effect.targetId) return enemy;
+          const nextStatuses = addOrRefreshStatus(enemy.statuses, effect.status);
+          return { ...enemy, statuses: nextStatuses, stunned: hasStatus(nextStatuses, "stunned") };
+        });
       }
       return;
     }

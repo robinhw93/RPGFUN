@@ -336,6 +336,7 @@ The duration is the default duration created by the status library. Ability or t
 | Static Charge | Until 5 charges | Yes | At 5 charges, all charges are removed and 2 Energy is restored. |
 | Charged Up | Until combat ends | Yes | Each stack grants +2 Initiative. |
 | Burning Momentum | Until combat ends | Yes | Each stack grants +1 Initiative. |
+| Diminishing Returns | 3 turns | No | Granted immediately when Stunned ends. Prevents every new Stunned application. |
 
 ### Debuffs
 
@@ -347,7 +348,7 @@ The duration is the default duration created by the status library. Ability or t
 | Weaken | 3 turns | No | Deals 25% less damage. |
 | Shatter | 3 turns | No | Effective Armor is reduced by 50%. |
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |
-| Stunned | 1 turn | No | Skips the next turn. |
+| Stunned | 1 turn | No | Skips the next turn, then grants Diminishing Returns for 3 turns. |
 | Exhausted | 1 turn | No | Energy regeneration is limited to 1 on the next turn. |
 | Slowed | 1 turn | No | Sets Initiative to 0 until the end of the affected combatant's next turn. It cannot grant another action in the current round. |
 | Reckless | 3 turns | No | Takes damage equal to 50% of direct damage it deals, rounded with a minimum of 1. |

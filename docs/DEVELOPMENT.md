@@ -206,6 +206,8 @@ Add status IDs to `StatusEffectId` in `src/game/types.ts`, then add the definiti
 
 The status definition alone provides metadata; special mechanics still require engine support.
 
+Stunned is globally gated by Diminishing Returns. All generic, triggered, copied, conditional, self-applied, and projected status paths must use the shared status-application guard. Natural expiration and explicit removal both replace Stunned with a fresh three-turn Diminishing Returns buff at the same presentation event.
+
 ## Data-driven combat features
 
 Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFeatureBundle`.

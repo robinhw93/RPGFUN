@@ -58,13 +58,17 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
       targetApplications.forEach((application) => {
         const replacement = replacements.find((candidate) => candidate.from === application.status);
         const statusId = replacement?.to ?? application.status;
+        if (statusId === "stunned" && statuses.has("diminishingReturns")) return;
         statuses.add(statusId);
         const stacks = targetStatusStacks.get(targetId);
         if (stacks) stacks.set(statusId, (stacks.get(statusId) ?? 0) + (application.stacks ?? 1));
       });
     });
     if (ability.effect && ability.target !== "self" && isStatusEffectId(ability.effect)) {
-      affectedTargetStatusSets.forEach((statuses) => statuses.add(ability.effect as StatusEffectId));
+      affectedTargetStatusSets.forEach((statuses) => {
+        if (ability.effect === "stunned" && statuses.has("diminishingReturns")) return;
+        statuses.add(ability.effect as StatusEffectId);
+      });
     }
     if (ability.consumeTargetStatus) {
       const statusId = ability.consumeTargetStatus;
@@ -78,15 +82,20 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
         else {
           stacks?.delete(statusId);
           targetStatuses.delete(statusId);
+          if (statusId === "stunned") targetStatuses.add("diminishingReturns");
         }
       }
       if (ability.energyPerConsumedTargetStatusStacks) energy = Math.min(combat.maxEnergy, energy + Math.floor(consumed / Math.max(1, ability.energyPerConsumedTargetStatusStacks.stacksPerEnergy)));
     }
-    if (ability.detonateStatus) targetStatuses.delete(ability.detonateStatus);
+    if (ability.detonateStatus) {
+      targetStatuses.delete(ability.detonateStatus);
+      if (ability.detonateStatus === "stunned") targetStatuses.add("diminishingReturns");
+    }
     if (ability.consumeStatusFromAllEnemies) {
       const affectedCount = [...targetStatusIds.entries()].filter(([, statuses]) => statuses.has(ability.consumeStatusFromAllEnemies!)).length;
       targetStatusIds.forEach((statuses, targetId) => {
         statuses.delete(ability.consumeStatusFromAllEnemies!);
+        if (ability.consumeStatusFromAllEnemies === "stunned") statuses.add("diminishingReturns");
         targetStatusStacks.get(targetId)?.delete(ability.consumeStatusFromAllEnemies!);
       });
       energy = Math.min(combat.maxEnergy, energy + affectedCount * (ability.energyPerConsumedEnemyStatus ?? 0));
