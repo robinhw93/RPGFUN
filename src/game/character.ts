@@ -63,6 +63,8 @@ export interface DerivedStats extends Stats {
   incomingDamageMultiplierWhileStunned: number;
   deathPreventionHealRatio: number;
   deathPreventionStealthDuration: number;
+  deathPreventionConsumeStatusForHealing?: StatusEffectId;
+  guaranteedHitAgainstStatusStacks: Partial<Record<StatusEffectId, number>>;
 }
 
 export function getDerivedStats(character: CharacterState): DerivedStats {
@@ -125,5 +127,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     incomingDamageMultiplierWhileStunned: features.passive.incomingDamageMultiplierWhileStunned,
     deathPreventionHealRatio: features.passive.deathPreventionHealRatio,
     deathPreventionStealthDuration: features.passive.deathPreventionStealthDuration,
+    deathPreventionConsumeStatusForHealing: features.passive.deathPreventionConsumeStatusForHealing,
+    guaranteedHitAgainstStatusStacks: { ...features.passive.guaranteedHitAgainstStatusStacks },
   };
 }

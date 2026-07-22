@@ -61,12 +61,13 @@ export interface CombatTriggerContext {
   removedStatusIds?: StatusEffect["id"][];
   removalReason?: "consumed" | "expired";
   sourceStatusId?: StatusEffect["id"];
+  sourceKind?: "player" | "enemy";
   targetHpBeforePercent?: number;
   targetHpAfterPercent?: number;
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusDurationBonuses">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusDurationBonuses" | "deathPreventionConsumeStatusForHealing" | "guaranteedHitAgainstStatusStacks">> & {
     stats: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
@@ -76,6 +77,8 @@ export interface CharacterCombatFeatures {
     statusDamageLeech: Partial<Record<StatusEffect["id"], number>>;
     statusApplicationCompanions: Partial<Record<StatusEffect["id"], StatusEffect["id"][]>>;
     statusDurationBonuses: Partial<Record<StatusEffect["id"], number>>;
+    deathPreventionConsumeStatusForHealing?: StatusEffect["id"];
+    guaranteedHitAgainstStatusStacks: Partial<Record<StatusEffect["id"], number>>;
   };
   triggers: ResolvedCombatTrigger[];
   damageModifiers: ResolvedCombatDamageModifier[];
@@ -115,6 +118,8 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   statusDamageLeech: {},
   statusApplicationCompanions: {},
   statusDurationBonuses: {},
+  deathPreventionConsumeStatusForHealing: undefined,
+  guaranteedHitAgainstStatusStacks: {},
 };
 
 function addPassive(target: CharacterCombatFeatures["passive"], passive?: PassiveBonuses): void {
@@ -144,6 +149,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.incomingDamageMultiplierWhileStunned = Math.min(target.incomingDamageMultiplierWhileStunned, passive.incomingDamageMultiplierWhileStunned ?? 1);
   target.deathPreventionHealRatio = Math.max(target.deathPreventionHealRatio, passive.deathPreventionHealRatio ?? 0);
   target.deathPreventionStealthDuration = Math.max(target.deathPreventionStealthDuration, passive.deathPreventionStealthDuration ?? 0);
+  target.deathPreventionConsumeStatusForHealing ??= passive.deathPreventionConsumeStatusForHealing;
   Object.entries(passive.statusDamage ?? {}).forEach(([statusId, amount]) => {
     const id = statusId as StatusEffect["id"];
     target.statusDamage[id] = (target.statusDamage[id] ?? 0) + (amount ?? 0);
@@ -171,6 +177,10 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   Object.entries(passive.statusDurationBonuses ?? {}).forEach(([statusId, amount]) => {
     const id = statusId as StatusEffect["id"];
     target.statusDurationBonuses[id] = (target.statusDurationBonuses[id] ?? 0) + (amount ?? 0);
+  });
+  Object.entries(passive.guaranteedHitAgainstStatusStacks ?? {}).forEach(([statusId, amount]) => {
+    const id = statusId as StatusEffect["id"];
+    target.guaranteedHitAgainstStatusStacks[id] = Math.max(target.guaranteedHitAgainstStatusStacks[id] ?? 0, amount ?? 0);
   });
 }
 
@@ -224,6 +234,7 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
       statusDamageLeech: { ...EMPTY_PASSIVE.statusDamageLeech },
       statusApplicationCompanions: Object.fromEntries(Object.entries(EMPTY_PASSIVE.statusApplicationCompanions).map(([id, companions]) => [id, [...(companions ?? [])]])),
       statusDurationBonuses: { ...EMPTY_PASSIVE.statusDurationBonuses },
+      guaranteedHitAgainstStatusStacks: { ...EMPTY_PASSIVE.guaranteedHitAgainstStatusStacks },
     },
     triggers: [],
     damageModifiers: [],
@@ -360,6 +371,7 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   if (conditions.removedAnyStatus?.length && !conditions.removedAnyStatus.some((id) => context.removedStatusIds?.includes(id))) return false;
   if (conditions.removalReasons?.length && (!context.removalReason || !conditions.removalReasons.includes(context.removalReason))) return false;
   if (conditions.sourceAnyStatus?.length && (!context.sourceStatusId || !conditions.sourceAnyStatus.includes(context.sourceStatusId))) return false;
+  if (conditions.sourceKinds?.length && (!context.sourceKind || !conditions.sourceKinds.includes(context.sourceKind))) return false;
   if (conditions.absorbedByAnyStatus?.length && !conditions.absorbedByAnyStatus.some((id) => context.absorbedByStatusIds?.includes(id))) return false;
   if (conditions.depletedAnyStatus?.length && !conditions.depletedAnyStatus.some((id) => context.depletedStatusIds?.includes(id))) return false;
   if (conditions.targetHealthCrossedBelow !== undefined) {

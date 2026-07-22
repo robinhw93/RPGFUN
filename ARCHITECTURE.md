@@ -139,7 +139,7 @@ Passives aggregate additively into:
 - Status-preservation behavior.
 - Status immunities, companion applications, and additional applied stacks.
 - Starting combat statuses.
-- Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, and reusable first-lethal-hit prevention.
+- Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, reusable first-lethal-hit prevention, status-consuming death prevention, and guaranteed hits above configured status-stack thresholds.
 
 New generally reusable static bonuses belong in `PassiveBonuses`, not UI conditions or talent-ID branches.
 
@@ -149,11 +149,11 @@ Trigger events are typed as:
 
 ```text
 combat_start | turn_start | before_ability | on_hit | on_crit |
-on_kill | status_applied | damage_taken | enemy_missed |
+on_kill | status_applied | status_removed | damage_taken | enemy_missed |
 enemy_stunned | turn_end
 ```
 
-Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, target status, newly applied status, damage absorbed by Guard/Barrier, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
+Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, source kind, target status, newly applied or removed status, removal reason, damage absorbed by Guard/Barrier, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
 
 Effect definitions support:
 
@@ -211,7 +211,7 @@ This is the preferred extension point for talents that transform an existing abi
 
 ### Turn order
 
-Base order is descending effective initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. Slowed sets effective initiative to 0, so `reorderCombat` moves the affected combatant to the appropriate place and the turn-order row displays 0.
+Base order is descending effective initiative. Exact player/enemy ties favor the player; remaining ties use actor ID. Slowed sets effective initiative to 0. Permanent combat Initiative stacks such as Charged Up are added by the same effective-initiative helper, so `reorderCombat` moves the affected combatant when the pending status application resolves and the turn-order row displays the updated whole number.
 
 `actedActorIds` records every combatant that has finished a turn in the current round. `moveToNextActor` always chooses the highest-initiative living combatant not in that set and clears the set only when a new round begins. Dynamic reordering therefore cannot give a Slowed combatant a second action after it has already acted.
 
@@ -242,11 +242,11 @@ The visible active index remains unchanged until the queued turn event resolves.
 
 Non-damaging `all_enemies` status abilities use one shared event index for every target. This keeps their status applications, presentation metadata, and floating text synchronized as a single area effect rather than a target-by-target sequence.
 
-Every ability also owns a `range` classification. A direct `melee` hit primes the existing attacker lunge. A direct `ranged` hit primes transient projectile metadata instead, leaving the player card stationary; the projectile travels from the attacker to the stored target and its duration is derived from the same impact timing as the pending damage. The impact still resolves through the normal pending-effect event, so misses, multi-hits, queued abilities, and death ordering do not depend on CSS completion. Ability-specific `vfx` selects the preferred projectile treatment, while damage type supplies a reusable fallback.
+Every ability also owns a `range` classification. A direct `melee` hit primes the existing attacker lunge. A direct `ranged` hit primes transient projectile metadata instead, leaving the player card stationary; the projectile travels from the attacker to the stored target and its duration is derived from the same impact timing as the pending damage. The impact still resolves through the normal pending-effect event, so misses, multi-hits, queued abilities, and death ordering do not depend on CSS completion. Ability-specific `vfx` selects the preferred projectile treatment, while damage type supplies a reusable fallback. Conditional no-debuff status applications are evaluated against the target snapshot before the hit adds statuses.
 
 Using an ability sets `playerActed` but does not move turn order. The player may continue using affordable ready abilities until calling `endPlayerTurn`.
 
-React keeps player inputs in a transient FIFO queue that is deliberately excluded from saved `GameState`. Ability buttons remain interactive while an earlier action animates. Queue projection reserves Energy, the free Distraction cast, and cooldowns (including Focus resets), so the UI cannot enqueue a sequence that is already known to be unaffordable or unavailable. Each ability stores the selected target at click time; if that target is no longer valid when the action reaches the front, normal targeting rules retain the current valid target. **End Turn** can be appended once and closes the queue to later abilities. The dispatcher waits for the current combat sequence and attack return animation, executes one action, then waits again before taking the next FIFO entry.
+React keeps player inputs in a transient FIFO queue that is deliberately excluded from saved `GameState`. Ability buttons remain interactive while an earlier action animates. Queue projection reserves Energy, the free Distraction cast, cooldowns (including Focus resets), target status stacks, and conditional no-debuff applications, so the UI cannot enqueue a sequence that is already known to be unaffordable or unavailable. Each ability stores the selected target at click time; if that target is no longer valid when the action reaches the front, normal targeting rules retain the current valid target. **End Turn** can be appended once and closes the queue to later abilities. The dispatcher waits for the current combat sequence and attack return animation, executes one action, then waits again before taking the next FIFO entry.
 
 ### Enemy turns
 

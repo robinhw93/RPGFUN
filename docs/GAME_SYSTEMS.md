@@ -191,7 +191,7 @@ Ability input remains available while an earlier ability is animating. Further a
 
 Abilities are classified as **Melee** or **Ranged**. Direct Melee attacks use the player's normal movement toward the target. Direct Ranged attacks leave the player in place and send an ability-specific or damage-type projectile to the target; damage, misses, and impact VFX appear when that projectile reaches the target. Range is shown in ability details and can be set on ability nodes in the Talent Editor.
 
-Queue projection also tracks target statuses. This allows a queued Arcane Overload to enable a queued free Arcane Blast against the same target, and lets status-consuming abilities become available after an earlier queued cast applies their requirement. Arcane Charge belongs to its target, so changing targets does not transfer the free cast.
+Queue projection also tracks target statuses. This allows a queued Arcane Overload to enable a queued free Arcane Blast against the same target, lets status-consuming abilities become available after an earlier queued cast applies their requirement, and previews Elemental Fury's no-debuff applications for later queued casts. Arcane Charge belongs to its target, so changing targets does not transfer the free cast.
 
 Distraction makes the next ability cost 0 Energy and is consumed when that ability is used. Pinpoint guarantees critical strikes for every hit of the next damaging ability and is consumed when that ability begins. Both persist until consumed or combat ends.
 
@@ -203,9 +203,11 @@ Epidemic applies 10 Poison to every living, targetable enemy and then grants Ste
 
 New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread reduces Epidemic's Energy cost from 3 to 2. Ability cost and cooldown modifiers are additive, use whole numbers, and cannot reduce either value below zero.
 
-Firestorm deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
+Firestorm deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning, and Greater Living Furnace also makes Fireball apply Charred. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
 
-The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, and Electrified charge chains. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, and Rapid Fire are all Ranged. Their mechanics resolve at projectile or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, Energy restoration, and cooldown changes.
+The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, Electrified charge chains, and Elemental Fury. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, Rapid Fire, and Elemental Fury are all Ranged. Their mechanics resolve at projectile or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, conditional applications, Energy restoration, and cooldown changes.
+
+Phoenix Heart prevents the first lethal hit in a combat only while the player is Burning, removes that Burn, and restores Health equal to the Burn's remaining damage. Charged Up grants a permanent combat stack worth +2 effective Initiative whenever the player applies Electrified, and turn order is recalculated when the stack becomes visible. Perfect Calculation bypasses the hit roll against enemies with at least 3 Arcane Wounds. Deep Chill rolls once per enemy attack, including misses and attacks fully absorbed by Guard or Barrier, for a 3% chance to Freeze the attacker; self-inflicted damage is not an attack. Elemental Fury deals 50% Magical Power as Arcane damage, then either seeds a clean target with its five configured debuffs or gains 50% damage per unique debuff already present.
 
 Blinding Light gives every player-applied Electrified effect a 20% base chance, plus Luck's bonus to chance-based effects, to also apply Blind.
 
@@ -374,7 +376,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 156 nodes: Shadow has 79 including its class node, Arcanist has 74 including its class node, and Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers, Arcane Wound and Barrier synergies, frost-control combinations, Electrified chains, and a self-Burn Firestorm route.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 161 nodes: Shadow and Arcanist each have 79 including their class node, while Brute and Cultist currently contain only their first class nodes. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths, including cross-element finishers, Arcane Wound and Barrier synergies, frost-control combinations, Electrified chains, self-Burn survival, and Elemental Fury.
 
 ### Unlock rules
 

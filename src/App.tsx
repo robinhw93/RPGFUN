@@ -183,6 +183,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   arcaneWound: CircleDot,
   arcaneCharge: Sparkles,
   staticCharge: Zap,
+  chargedUp: Zap,
   sleep: Moon,
 };
 
@@ -1478,6 +1479,12 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "ride_the_lightning" || kind === "charge") {
     return <span className={`ability-impact-effect new-lightning-impact ${kind}`} aria-hidden="true"><Zap /><i /><i /><i /><i /></span>;
   }
+  if (kind === "elemental_fury") {
+    return <span className="ability-impact-effect elemental-fury-impact" aria-hidden="true"><Flame /><Snowflake /><Zap /><CircleDot />{Array.from({ length: 8 }).map((_, index) => <i key={index} style={{ "--elemental-angle": `${index * 45}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "phoenix_heart") {
+    return <span className="ability-impact-effect phoenix-heart-impact" aria-hidden="true"><Flame /><Heart />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--phoenix-angle": `${index * 51.4}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
   return null;
 }
 
@@ -1566,6 +1573,9 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   }
   if (kind === "arcane_combustion") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-combustion-path"><CircleDot /><Flame /><i /><i /></CombatantPathEffect>;
+  }
+  if (kind === "elemental_fury") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path elemental-fury-path"><Sparkles /><Flame /><Snowflake /><Zap /><i /><i /></CombatantPathEffect>;
   }
   return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-bolt-path"><Sparkles /><i /><i /></CombatantPathEffect>;
 }

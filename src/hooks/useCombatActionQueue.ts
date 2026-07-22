@@ -4,7 +4,7 @@ import { ABILITIES } from "../game/data";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "../game/combatFeatures";
 import { endPlayerTurn, selectEnemyTarget, useAbility } from "../game/engine";
 import { isCombatSequencePending } from "../game/combatSequence";
-import { isStatusEffectId } from "../game/statusEffects";
+import { isStatusEffectId, STATUS_EFFECTS } from "../game/statusEffects";
 import type { CombatState, GameState, StatusEffectId } from "../game/types";
 
 export type QueuedCombatAction =
@@ -49,9 +49,14 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     const affectedTargetStatusSets = affectedTargetEntries.map(([, statuses]) => statuses);
     const replacements = modifiers.flatMap((modifier) => modifier.replaceStatusApplication ? [modifier.replaceStatusApplication] : []);
     const applications = [...(ability.statusApplications ?? []), ...modifiers.flatMap((modifier) => modifier.additionalStatusApplications ?? [])];
-    applications.forEach((application) => {
-      const replacement = replacements.find((candidate) => candidate.from === application.status);
-      affectedTargetEntries.forEach(([targetId, statuses]) => {
+    affectedTargetEntries.forEach(([targetId, statuses]) => {
+      const targetHadNoDebuffs = ![...statuses].some((statusId) => STATUS_EFFECTS[statusId].kind === "debuff");
+      const targetApplications = [
+        ...applications,
+        ...(targetHadNoDebuffs ? ability.statusApplicationsWhenTargetHasNoDebuffs ?? [] : []),
+      ];
+      targetApplications.forEach((application) => {
+        const replacement = replacements.find((candidate) => candidate.from === application.status);
         const statusId = replacement?.to ?? application.status;
         statuses.add(statusId);
         const stacks = targetStatusStacks.get(targetId);

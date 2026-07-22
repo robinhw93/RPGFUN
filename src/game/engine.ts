@@ -456,7 +456,12 @@ function getActorStatuses(combat: CombatState, actor: TurnOrderEntry): StatusEff
 }
 
 export function getCombatInitiative(combat: CombatState, actor: TurnOrderEntry): number {
-  return hasStatus(getActorStatuses(combat, actor), "slowed") ? 0 : actor.initiative;
+  const statuses = getActorStatuses(combat, actor);
+  if (hasStatus(statuses, "slowed")) return 0;
+  const chargedInitiative = actor.kind === "player"
+    ? (statuses.find((status) => status.id === "chargedUp")?.stacks ?? 0) * 2
+    : 0;
+  return actor.initiative + chargedInitiative;
 }
 
 function orderTurnEntries(combat: CombatState): TurnOrderEntry[] {
@@ -666,7 +671,24 @@ function applyPlayerDeathPrevention(
   events: string[],
   pendingEffects: CombatPendingEffect[],
 ): { hp: number; statuses: StatusEffect[]; used: boolean } {
-  if (hp > 0 || alreadyUsed || derived.deathPreventionHealRatio <= 0) return { hp, statuses, used: alreadyUsed };
+  if (hp > 0 || alreadyUsed) return { hp, statuses, used: alreadyUsed };
+  const consumedStatus = derived.deathPreventionConsumeStatusForHealing
+    ? statuses.find((status) => status.id === derived.deathPreventionConsumeStatusForHealing)
+    : undefined;
+  if (consumedStatus) {
+    const statusMultiplier = derived.statusDamageMultipliers[consumedStatus.id] ?? 1;
+    const healing = Math.min(maxHp, Math.max(1, getAfflictionDamage(consumedStatus, statuses, statusMultiplier, derived.armor, derived.magicResistance) * Math.max(1, consumedStatus.duration)));
+    const nextStatuses = statuses.filter((status) => status.id !== consumedStatus.id);
+    const text = `Phoenix Heart consumes ${consumedStatus.name} and restores ${healing} Health.`;
+    logs.push(makeLog(text, { title: "Phoenix Heart", description: "The first lethal hit each combat while Burning consumes Burn and restores Health equal to its remaining damage.", category: "ability" }));
+    const eventIndex = events.length;
+    events.push(text);
+    queueStatusRemoval(pendingEffects, eventIndex, "player", consumedStatus.id);
+    queueHealAtEvent(pendingEffects, eventIndex, "player", healing);
+    queueAbilityVfx(pendingEffects, eventIndex, "phoenix_heart", "player", "player");
+    return { hp: healing, statuses: nextStatuses, used: true };
+  }
+  if (derived.deathPreventionHealRatio <= 0) return { hp, statuses, used: alreadyUsed };
   const healing = Math.max(1, Math.round(maxHp * derived.deathPreventionHealRatio));
   const stealth = createPlayerAppliedStatus("stealth", derived, {
     duration: Math.max(1, derived.deathPreventionStealthDuration),
@@ -1467,7 +1489,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         continue;
       }
       const targetDodgeChance = getEffectiveDodgeChance(target.dodgeChance, getDodgeChanceBonus(target.statuses));
-      if (!rollHit(derived.hitChance * getHitChanceMultiplier(playerStatuses), targetDodgeChance)) {
+      const guaranteedHit = Object.entries(derived.guaranteedHitAgainstStatusStacks).some(([statusId, minimumStacks]) => (
+        target.statuses.find((status) => status.id === statusId)?.stacks ?? 0
+      ) >= (minimumStacks ?? Number.POSITIVE_INFINITY));
+      if (!guaranteedHit && !rollHit(derived.hitChance * getHitChanceMultiplier(playerStatuses), targetDodgeChance)) {
         playerHasMissed = true;
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
         queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, missed: true, ...getAbilityAttackPresentation(ability) });
@@ -1574,6 +1599,9 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const configuredExtraStatuses = ability.conditionalStatusApplications && hasStatus(target.statuses, ability.conditionalStatusApplications.whenTargetHas)
         ? [...ability.conditionalStatusApplications.applications]
         : [...effectiveStatusApplications];
+      if (ability.statusApplicationsWhenTargetHasNoDebuffs && !target.statuses.some((status) => status.kind === "debuff")) {
+        configuredExtraStatuses.push(...ability.statusApplicationsWhenTargetHasNoDebuffs);
+      }
       if (ability.randomSingleStatusApplication && target.instanceId === randomSingleStatusTargetId) {
         configuredExtraStatuses.push(ability.randomSingleStatusApplication);
       }
@@ -1986,7 +2014,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, missed: true });
       const missedTriggers = runPlayerTriggerEvent(
         "enemy_missed",
-        { abilityId: attackName, damageType: enemy.damageType, damage: 0, targetStatusIds: enemy.statuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
+        { abilityId: attackName, damageType: enemy.damageType, damage: 0, sourceKind: "enemy", targetStatusIds: enemy.statuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
         enemy.instanceId,
         character,
         combat,
@@ -2028,7 +2056,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       if (damage > 0 || absorption.absorbed > 0) {
         const result = runPlayerTriggerEvent(
           "damage_taken",
-          { damage, absorbedDamage: absorption.absorbed, absorbedByStatusIds, depletedStatusIds, absorbedDamageByStatus: absorption.absorbedBy, targetStatusIds: playerStatuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
+          { damage, absorbedDamage: absorption.absorbed, absorbedByStatusIds, depletedStatusIds, absorbedDamageByStatus: absorption.absorbedBy, sourceKind: "enemy", targetStatusIds: playerStatuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
           enemy.instanceId,
           character,
           combat,

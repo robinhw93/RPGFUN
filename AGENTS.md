@@ -121,7 +121,7 @@ Status refreshes must restart their application effect, so key transient overlay
 
 ## Talent-tree workflow
 
-The current live tree has 156 nodes: origin, four class nodes, 78 later Shadow nodes, and 73 later Arcanist nodes. Shadow has 79 nodes including its class node; Arcanist has 74; Brute and Cultist currently have one class node each. Verify these counts against `TALENTS` after every import.
+The current live tree has 161 nodes: origin, four class nodes, 78 later Shadow nodes, and 78 later Arcanist nodes. Shadow and Arcanist each have 79 nodes including their class node; Brute and Cultist currently have one class node each. Verify these counts against `TALENTS` after every import.
 
 - Talent IDs are save contracts. Preserve them unless a migration is intentionally implemented.
 - All requirements use ANY. There is no ALL mode.
@@ -192,8 +192,8 @@ At the time of this handoff:
 - The Ashen Road is the four-step story adventure.
 - Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
 - Shadow is the first complete talent branch.
-- Arcanist is implemented through `talent_151`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, and Electrified-chain mechanics with active-ability VFX.
+- Arcanist is implemented through `talent_156`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, and Elemental Fury with active-ability VFX.
 - Brute and Cultist currently have only their class nodes.
-- The newest status in the catalog is Static Charge, a combat-only stackable buff that restores 2 Energy at 5 charges.
+- The newest status in the catalog is Charged Up, a combat-only stackable buff that grants +2 Initiative per stack.
 
 Use `docs/CONTENT_REFERENCE.md` rather than this summary for exact live values and the full catalog.

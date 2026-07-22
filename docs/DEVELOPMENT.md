@@ -147,7 +147,7 @@ Important fields:
 - `requiredTargetStatusStacks`, fixed stack consumption, and their modifier overrides support stack-gated abilities. The action-queue projection must reserve the same stack counts as the engine.
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
-- `statusApplications` supports one or more on-hit statuses, including critical-only applications and independent base proc chances augmented by the character's chance-effect bonus.
+- `statusApplications` supports one or more on-hit statuses, including critical-only applications and independent base proc chances augmented by the character's chance-effect bonus. `statusApplicationsWhenTargetHasNoDebuffs` uses the target snapshot from before the hit and must be mirrored in action-queue projection.
 - Ability modifiers can add or replace status applications, redirect random multi-hits to the selected target, alter per-status-stack damage, scale status amounts from Physical or Magical Power, pre-heal from a self-affliction's remaining damage, and grant next-turn Energy regeneration.
 - `conditionalStatusReplacement` swaps an application when the target already has a configured status; Deep Freeze uses it to replace Slowed with Stunned.
 - `randomSingleStatusApplication` applies one status to exactly one randomly chosen target of an area ability.
@@ -209,7 +209,7 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, and reusable death prevention. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, reusable death prevention, status-consuming death prevention, and guaranteed-hit status-stack thresholds. Derived stats aggregate every active source.
 
 Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the source's current statuses. Matching bonuses add together before they multiply the normal status-damage result; this keeps conditional enemy Burn bonuses separate from self-inflicted Burn.
 
@@ -217,8 +217,8 @@ Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the 
 
 A `CombatTriggerDefinition` contains:
 
-- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `status_applied`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
-- Optional ability-ID, ability-branch, damage-type, critical, minimum-damage, target-status, applied-status, absorbed-status, or Health-threshold conditions.
+- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `status_applied`, `status_removed`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
+- Optional ability-ID, ability-branch, damage-type, critical, minimum-damage, source-kind, target-status, applied/removed-status, removal-reason, absorbed-status, or Health-threshold conditions.
 - Optional chance, once-per-turn rule, or cooldown.
 - One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, or Guard.
 

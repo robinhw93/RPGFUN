@@ -66,6 +66,7 @@ export type StatusEffectId =
   | "arcaneWound"
   | "arcaneCharge"
   | "staticCharge"
+  | "chargedUp"
   | "frozen"
   | "frozenPath"
   | "blind"
@@ -119,6 +120,10 @@ export interface PassiveBonuses {
   deathPreventionHealRatio?: number;
   /** Stealth duration granted by the combat's death-prevention effect. */
   deathPreventionStealthDuration?: number;
+  /** Consumes this self status on the first lethal hit and heals for its remaining damage. */
+  deathPreventionConsumeStatusForHealing?: StatusEffectId;
+  /** Cannot miss targets carrying at least this many stacks of the matching status. */
+  guaranteedHitAgainstStatusStacks?: Partial<Record<StatusEffectId, number>>;
 }
 
 export interface CombatTriggerCondition {
@@ -135,6 +140,8 @@ export interface CombatTriggerCondition {
   removalReasons?: Array<"consumed" | "expired">;
   /** Matches damage originating from one of these status effects. */
   sourceAnyStatus?: StatusEffectId[];
+  /** Matches whether the event source is an enemy or the player. */
+  sourceKinds?: Array<"player" | "enemy">;
   absorbedByAnyStatus?: Array<"guard" | "barrier">;
   depletedAnyStatus?: Array<"guard" | "barrier">;
   /** Matches only when direct damage crosses from at-or-above to below this Health ratio. */
@@ -293,7 +300,9 @@ export type CombatAbilityVfxKind =
   | "absolute_zero"
   | "blizzard"
   | "ride_the_lightning"
-  | "charge";
+  | "charge"
+  | "elemental_fury"
+  | "phoenix_heart";
 
 export type AbilityRange = "melee" | "ranged";
 
@@ -350,6 +359,8 @@ export interface Ability {
   spreadAllTargetDebuffs?: boolean;
   /** Statuses applied by a damaging ability after a successful hit. */
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
+  /** Statuses applied only when the struck target had no debuffs before the hit. */
+  statusApplicationsWhenTargetHasNoDebuffs?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; onlyOnCritical?: boolean }>;
   /** Replaces one application when the target already has a configured status. */
   conditionalStatusReplacement?: { status: StatusEffectId; whenTargetHas: StatusEffectId; replacement: StatusEffectId };
   /** Replaces the full configured status-application list when its condition matches. */
