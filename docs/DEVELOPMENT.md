@@ -155,6 +155,7 @@ Important fields:
 - `randomSingleStatusApplication` applies one status to exactly one randomly chosen target of an area ability.
 - `ignoresAbsorption`, `consumeTargetStatusRatio`, Energy restoration, and `grantsNextCritical` support the current advanced Shadow abilities. Ability modifiers can override status-consumption ratios, including Neurotoxin's partial Poison consumption.
 - `spreadAllTargetDebuffs`, `damagePerTargetDebuff`, `damagePerTargetStatusStack`, conditional Critical Chance, immediate turns, and on-kill refund/reset fields support talent mechanics without hard-coding talent IDs. Arcane Blast uses the status-stack multiplier for Arcane Wound.
+- `damageFromSelfStatusStacks` supports Guard- or Barrier-derived direct damage. `removeAllTargetBuffs` dispels target buffs at impact, while `consumeTargetStatusForOtherEnemiesDamage` consumes a target affliction and resolves its remaining damage against every other living enemy at the same event. Queue projection mirrors both removals.
 - `consumeStatusFromAllEnemies` combines with per-affected-enemy Energy and cooldown fields for area status consumers. Queue projection mirrors those rewards and removals before accepting later queued actions.
 - `freeAgainstTargetStatus` makes a cast free only against the marked target and consumes that marker. Both the engine and queued-action projection must use the target-aware Energy helper.
 - `consumeTargetStatusForDamage` scales a damage component and optional follow-up status from the consumed stack count. `spreadDetonatedStatusOnKillRatio` and `spreadOnKillVfx` support lethal detonation spread without checking an ability ID in the engine.
@@ -222,10 +223,10 @@ Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the 
 
 A `CombatTriggerDefinition` contains:
 
-- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `status_applied`, `status_removed`, `status_damage`, `health_restored`, `guard_gained`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
+- An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `damage_dealt`, `status_applied`, `status_removed`, `status_damage`, `health_restored`, `guard_gained`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
 - Optional ability-ID, ability-branch, damage-type, critical, minimum-damage, source-kind, target-status, applied/removed-status, removal-reason, absorbed-status, or Health-threshold conditions.
 - Optional chance, once-per-turn rule, or cooldown.
-- One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat or Max-Health-based healing, Energy, next-turn Energy regeneration, or Guard.
+- One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat, trigger-damage-ratio, or Max-Health-based healing, Energy, next-turn Energy regeneration, cooldown reduction, or Guard.
 
 Triggered passives do not add central presentation events. Their damage, healing, status, and `passive_text` pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Proc names are grouped per affected target and appended to `combat.passiveAnimations`; the combatant-local CSS animation runs independently of the sequencer. Separate combat-log entries preserve inspectable trigger and result details.
 

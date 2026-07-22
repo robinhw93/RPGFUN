@@ -150,7 +150,7 @@ Trigger events are typed as:
 
 ```text
 combat_start | turn_start | before_ability | on_hit | on_crit |
-on_kill | status_applied | status_removed | status_damage | health_restored |
+on_kill | damage_dealt | status_applied | status_removed | status_damage | health_restored |
 guard_gained | damage_taken | enemy_missed | enemy_stunned | turn_end
 ```
 
@@ -161,7 +161,7 @@ Effect definitions support:
 - Flat damage, Physical/Magical Power-scaled damage, trigger-damage ratios, or damage based specifically on Guard/Barrier absorption, targeting self, target, all enemies, or a random enemy.
 - Current-Health-percentage damage.
 - Status application to those target modes.
-- Flat or Max-Health-percentage self healing.
+- Flat, trigger-damage-ratio, or Max-Health-percentage self healing.
 - Self Energy gain.
 - Temporary next-turn Energy regeneration.
 - Self Guard gain.
@@ -242,7 +242,7 @@ The visible active index remains unchanged until the queued turn event resolves.
 3. Spends Energy and starts cooldown.
 4. Emits the ability-use message.
 5. Runs `before_ability` triggers.
-6. Resolves self utility, status consumption/detonation, or direct hit loops.
+6. Resolves self utility, status consumption/detonation, buff removal, cross-target affliction damage, or direct hit loops.
 7. For direct hits, rolls Hit, Critical, component damage, status application, conditional self benefits, on-hit/on-crit/on-kill triggers, and Reckless recoil.
 8. Applies any ability-owned self statuses.
 9. Resolves player Bleed and reusable lethal-damage prevention after the ability.

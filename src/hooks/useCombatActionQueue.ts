@@ -87,6 +87,19 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
       }
       if (ability.energyPerConsumedTargetStatusStacks) energy = Math.min(combat.maxEnergy, energy + Math.floor(consumed / Math.max(1, ability.energyPerConsumedTargetStatusStacks.stacksPerEnergy)));
     }
+    if (ability.consumeTargetStatusForOtherEnemiesDamage) {
+      const statusId = ability.consumeTargetStatusForOtherEnemiesDamage.status;
+      targetStatuses.delete(statusId);
+      targetStatusStacks.get(action.targetId)?.delete(statusId);
+      if (statusId === "stunned") targetStatuses.add("diminishingReturns");
+    }
+    if (ability.removeAllTargetBuffs) {
+      [...targetStatuses].forEach((statusId) => {
+        if (STATUS_EFFECTS[statusId].kind !== "buff") return;
+        targetStatuses.delete(statusId);
+        targetStatusStacks.get(action.targetId)?.delete(statusId);
+      });
+    }
     if (ability.detonateStatus) {
       targetStatuses.delete(ability.detonateStatus);
       if (ability.detonateStatus === "stunned") targetStatuses.add("diminishingReturns");

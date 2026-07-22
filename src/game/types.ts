@@ -75,7 +75,7 @@ export type StatusEffectId =
   | "blind"
   | "sleep";
 
-export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "status_applied" | "status_removed" | "status_damage" | "health_restored" | "guard_gained" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
+export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_dealt" | "status_applied" | "status_removed" | "status_damage" | "health_restored" | "guard_gained" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
 export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_enemy";
 
 export interface PassiveBonuses {
@@ -161,7 +161,7 @@ export type CombatEffectDefinition =
   | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scalingPower?: "physical" | "magical"; scaling?: number; triggerDamageRatio?: number; triggerAbsorbedStatus?: "guard" | "barrier" }
   | { type: "damage_percent_current_hp"; ratio: number; target?: CombatEffectTarget; damageType?: DamageType }
   | { type: "apply_status"; status: StatusEffect; target?: CombatEffectTarget }
-  | { type: "heal"; amount: number; target?: "self" }
+  | { type: "heal"; amount: number; triggerDamageRatio?: number; target?: "self" }
   | { type: "heal_percent_max_hp"; ratio: number; target?: "self" }
   | { type: "gain_energy"; amount: number; target?: "self" }
   | { type: "gain_next_turn_energy_regen"; amount: number; target?: "self" }
@@ -345,7 +345,12 @@ export type CombatAbilityVfxKind =
   | "bloodbath"
   | "furnace_breaker"
   | "divine_smite"
-  | "smite_retribution";
+  | "smite_retribution"
+  | "blood_frenzy"
+  | "crushing_impact"
+  | "explosive_strike"
+  | "explosive_strike_blast"
+  | "consecrated_ground";
 
 export type AbilityRange = "melee" | "ranged";
 export type AbilityAttackPresentation = "melee" | "projectile" | "target";
@@ -467,6 +472,10 @@ export interface Ability {
   damagePerTargetStatusStack?: { status: StatusEffectId; multiplier: number };
   /** Adds direct damage equal to a multiple of a self-status stack count. */
   damageFromSelfStatusStacks?: { status: StatusEffectId; multiplier: number; damageType: DamageType };
+  /** Consumes one target status after impact and deals its remaining damage to every other living enemy. */
+  consumeTargetStatusForOtherEnemiesDamage?: { status: StatusEffectId; damageType: DamageType; vfx?: CombatAbilityVfxKind };
+  /** Removes every buff from the struck target at the same impact event. */
+  removeAllTargetBuffs?: boolean;
   /** Removes a status from every living enemy before resolving the ability's rewards. */
   consumeStatusFromAllEnemies?: StatusEffectId;
   /** Travels from every enemy whose status was consumed back to the player at removal time. */

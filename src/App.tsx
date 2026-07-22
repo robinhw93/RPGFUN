@@ -1579,6 +1579,18 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind === "divine_smite" || kind === "smite_retribution") {
     return <span className={`ability-impact-effect divine-smite-impact ${kind}`} aria-hidden="true"><Sun /><Sparkles /><i /><i /><i /><b /></span>;
   }
+  if (kind === "blood_frenzy") {
+    return <span className="ability-impact-effect blood-frenzy-impact" aria-hidden="true"><Swords /><Droplets /><i /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "crushing_impact") {
+    return <span className="ability-impact-effect crushing-impact" aria-hidden="true"><ShieldOff /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "explosive_strike" || kind === "explosive_strike_blast") {
+    return <span className={`ability-impact-effect explosive-strike-impact ${kind}`} aria-hidden="true"><Flame />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--explosive-angle": `${index * 51.43}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "consecrated_ground") {
+    return <span className="ability-impact-effect consecrated-ground-impact" aria-hidden="true"><Sun /><Sparkles />{Array.from({ length: 8 }).map((_, index) => <i key={index} style={{ "--consecrated-angle": `${index * 45}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
   return null;
 }
 
