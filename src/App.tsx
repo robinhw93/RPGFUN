@@ -1532,8 +1532,44 @@ function CombatantPathEffect({ animation, className, children, durationMs }: { a
   );
 }
 
+function CombatantBeamEffect({ animation, className, children, durationMs }: { animation: Pick<CombatAbilityAnimation, "id" | "sourceTargetId" | "targetId">; className: string; children: ReactNode; durationMs: number }) {
+  const [beam, setBeam] = useState<{ left: number; top: number; length: number; angle: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!animation.sourceTargetId || !animation.targetId) return;
+    const combatants = [...document.querySelectorAll<HTMLElement>("[data-combatant-id]")];
+    const source = combatants.find((element) => element.dataset.combatantId === animation.sourceTargetId);
+    const target = combatants.find((element) => element.dataset.combatantId === animation.targetId);
+    if (!source || !target) return;
+    const sourceRect = source.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const sourceX = sourceRect.left + sourceRect.width / 2;
+    const sourceY = sourceRect.top + sourceRect.height / 2;
+    const targetX = targetRect.left + targetRect.width / 2;
+    const targetY = targetRect.top + targetRect.height / 2;
+    setBeam({
+      left: sourceX,
+      top: sourceY,
+      length: Math.hypot(targetX - sourceX, targetY - sourceY),
+      angle: Math.atan2(targetY - sourceY, targetX - sourceX) * 180 / Math.PI,
+    });
+  }, [animation.id, animation.sourceTargetId, animation.targetId]);
+
+  if (!beam) return null;
+  return (
+    <span
+      className={`combatant-beam-effect ${className}`}
+      style={{ left: beam.left, top: beam.top, width: beam.length, "--beam-angle": `${beam.angle}deg`, "--beam-duration": `${durationMs}ms` } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      {children}
+    </span>
+  );
+}
+
 function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAnimation }) {
   const durationMs = COMBAT_TIMING.attackImpactMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
+  const beamDurationMs = COMBAT_TIMING.attackDurationMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
   const kind = animation.vfx;
   if (kind === "frostbolt" || kind === "deep_freeze" || (!kind && animation.damageType === "frost")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
@@ -1541,10 +1577,16 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   if (kind === "absolute_zero" || kind === "blizzard") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className={`ability-projectile-path ${kind.replace("_", "-")}-path`}><Snowflake /><i /><i /></CombatantPathEffect>;
   }
-  if (kind === "fireball" || kind === "combustion" || kind === "firestorm" || (!kind && animation.damageType === "fire")) {
-    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path fireball-path"><Flame /><i /><i /></CombatantPathEffect>;
+  if (kind === "fireball") {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path fireball-path"><Flame /><i /><i /><i /><b /><b /><b /><b /></CombatantPathEffect>;
   }
-  if (kind === "lightning_beam" || kind === "thunderstorm" || (!kind && animation.damageType === "lightning")) {
+  if (kind === "combustion" || kind === "firestorm" || (!kind && animation.damageType === "fire")) {
+    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path ember-projectile-path"><Flame /><i /><i /></CombatantPathEffect>;
+  }
+  if (kind === "lightning_beam") {
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="lightning-multi-beam-path"><i /><i /><i /><i /><b /></CombatantBeamEffect>;
+  }
+  if (kind === "thunderstorm" || (!kind && animation.damageType === "lightning")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path lightning-beam-path"><Zap /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "charge" || kind === "ride_the_lightning") {
@@ -1563,7 +1605,7 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path physical-projectile-path"><Target /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "arcane_blast") {
-    return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path arcane-blast-path"><CircleDot /><i /><i /></CombatantPathEffect>;
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="arcane-beam-path"><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
   }
   if (kind === "rapid_fire" || kind === "focused_blast" || kind === "mana_fracture") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className={`ability-projectile-path ${kind.replace("_", "-")}-path`}><CircleDot /><i /><i /></CombatantPathEffect>;
