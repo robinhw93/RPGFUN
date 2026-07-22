@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import {
   Backpack, BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
   EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
-  ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Swords, Target, TrendingDown, Trophy,
+  ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Sun, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
@@ -185,6 +185,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   staticCharge: Zap,
   chargedUp: Zap,
   burningMomentum: Flame,
+  smite: Sun,
   sleep: Moon,
 };
 
@@ -801,6 +802,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const bleedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "bleed");
   const electrifiedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "electrified");
   const frozenAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "frozen");
+  const smiteAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "smite");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
   const barrierPulseTargets = new Set(abilityAnimations.filter((animation) => animation.kind === "barrier_absorb").flatMap((animation) => animation.targetId ? [animation.targetId] : []));
@@ -823,6 +825,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const rideTheLightningAnimations = abilityAnimations.filter((animation) => animation.kind === "ride_the_lightning");
   const blizzardAnimation = abilityAnimations.find((animation) => animation.kind === "blizzard");
   const chargeReturnAnimations = abilityAnimations.filter((animation) => animation.kind === "charge" && animation.targetId && animation.sourceTargetId);
+  const bloodBarrierAnimations = abilityAnimations.filter((animation) => animation.kind === "blood_barrier" && animation.targetId && animation.sourceTargetId);
   const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
@@ -851,6 +854,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {bleedAnimations.filter((animation) => animation.targetId === "player").map((animation) => <BleedApplicationEffect key={animation.id} />)}
           {electrifiedPulseTargets.has("player") && <ElectrifiedApplicationEffect />}
           {frozenAnimations.some((animation) => animation.targetId === "player") && <FrozenApplicationEffect />}
+          {smiteAnimations.filter((animation) => animation.targetId === "player").map((animation) => <SmiteApplicationEffect key={animation.id} />)}
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
           {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}
@@ -901,6 +905,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {bleedAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <BleedApplicationEffect key={animation.id} />)}
               {electrifiedPulseTargets.has(enemy.instanceId) && <ElectrifiedApplicationEffect />}
               {frozenAnimations.some((animation) => animation.targetId === enemy.instanceId) && <FrozenApplicationEffect />}
+              {smiteAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <SmiteApplicationEffect key={animation.id} />)}
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
@@ -932,6 +937,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       <LingeringThunderstormEffects animations={abilityAnimations} />
       <LingeringChargeSiphonEffects animations={abilityAnimations} />
       {chargeReturnAnimations.map((animation) => <CombatantBeamEffect key={animation.id} animation={animation} durationMs={COMBAT_TIMING.attackDurationMs} className="charge-lightning-path charge-return-path"><i /><i /><i /><b /></CombatantBeamEffect>)}
+      {bloodBarrierAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="blood-barrier-path"><Droplets /><i /><i /><i /></CombatantPathEffect>)}
       {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
@@ -1398,6 +1404,10 @@ function FrozenApplicationEffect() {
   return <span className="frozen-application-effect" aria-hidden="true"><Snowflake /><i /><i /><i /><i /></span>;
 }
 
+function SmiteApplicationEffect() {
+  return <span className="smite-application-effect" aria-hidden="true"><Sun /><i /><i /><i /><i /></span>;
+}
+
 function ConductorFieldEffect() {
   return <span className="conductor-field-effect" aria-hidden="true"><Zap />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--conductor-x": `${5 + index * 15}%`, "--conductor-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
 }
@@ -1536,6 +1546,30 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   }
   if (kind === "holy_strike") {
     return <span className="ability-impact-effect holy-strike-impact" aria-hidden="true"><Sparkles /><Heart /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "unbreakable") {
+    return <span className="ability-impact-effect unbreakable-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "blood_barrier") {
+    return <span className="ability-impact-effect blood-barrier-impact" aria-hidden="true"><Droplets /><ShieldPlus /><i /><i /><b /></span>;
+  }
+  if (kind === "burning_guard") {
+    return <span className="ability-impact-effect burning-guard-impact" aria-hidden="true"><Shield /><Flame /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "lay_on_hands") {
+    return <span className="ability-impact-effect lay-on-hands-impact" aria-hidden="true"><Hand /><Heart /><Sparkles /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "shield_charge") {
+    return <span className="ability-impact-effect shield-charge-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "bloodbath") {
+    return <span className="ability-impact-effect bloodbath-impact" aria-hidden="true"><Swords /><Droplets /><i /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "furnace_breaker") {
+    return <span className="ability-impact-effect furnace-breaker-impact" aria-hidden="true"><Flame /><ShieldOff /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "divine_smite" || kind === "smite_retribution") {
+    return <span className={`ability-impact-effect divine-smite-impact ${kind}`} aria-hidden="true"><Sun /><Sparkles /><i /><i /><i /><b /></span>;
   }
   return null;
 }

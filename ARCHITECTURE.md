@@ -140,6 +140,7 @@ Passives aggregate additively into:
 - Status immunities, companion applications, and additional applied stacks.
 - Starting combat statuses.
 - Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, reusable first-lethal-hit prevention, status-consuming death prevention, and guaranteed hits above configured status-stack thresholds.
+- Percentage Armor bonuses, applied after flat and Strength-derived Armor.
 
 New generally reusable static bonuses belong in `PassiveBonuses`, not UI conditions or talent-ID branches.
 
@@ -153,7 +154,7 @@ on_kill | status_applied | status_removed | status_damage | health_restored |
 guard_gained | damage_taken | enemy_missed | enemy_stunned | turn_end
 ```
 
-Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, source kind, target status, newly applied or removed status, removal reason, damage absorbed by Guard/Barrier, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
+Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, source kind, target status, newly applied or removed status, removal reason, damage absorbed by Guard/Barrier, the source ability of a depleted absorption status, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
 
 Effect definitions support:
 
@@ -202,6 +203,7 @@ Ability modifiers target one or more ability IDs and currently support:
 - Retaining a ratio of stacks after detonation.
 - Overriding the ratio of target-status stacks consumed.
 - Changing Energy costs and cooldowns through additive integer deltas, clamped at zero.
+- Retaining target statuses during consume-style benefits, adding Magical Power to self-Guard, and cleansing self debuffs.
 
 Each mechanical ability modifier may also provide a complete player-facing `descriptionOverride`. `getCharacterAbilityDescription` resolves description changes, while `getCharacterAbilityEnergyCost` and `getCharacterAbilityCooldownTurns` resolve numerical rule changes. Combat execution, action-queue projection, combat buttons, talent details, the loadout picker, and inspectable combat-log entries use these shared paths instead of reading character-owned base values directly.
 

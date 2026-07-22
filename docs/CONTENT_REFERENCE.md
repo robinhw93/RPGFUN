@@ -6,7 +6,7 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
-Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Elemental Fury. The current Brute abilities and all other obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, Divine Smite, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other obtainable Brute, Core, and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
 
 ### Core and currently obtainable abilities
 
@@ -51,6 +51,14 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Shield Bash | 2 (1 with Quick Guard) | 2 | Enemy | Deals 60% Physical Power as Physical damage and grants Guard equal to 10% of Armor. Concussive Bash adds a 5% Stun chance plus 0.1 percentage points per Armor. |
 | Bloodletting | 3 | 2 | Enemy | Deals 75% Physical Power as Physical damage and applies 1 Bleed per 3 existing Bleed, or per 2 with Bloodier-Letting. Hemorrhage immediately triggers Bleed damage when at least 3 stacks are applied. |
 | Holy Strike | 2 | 2 | Enemy | Deals 75% Physical Power as Physical damage and restores 2% Max Health, increased to 3% by Improved Holy Strike. |
+| Unbreakable | 3 | 5 | Self | Grants Guard equal to 100% of Armor. Counter also grants +2 Energy regeneration next turn. |
+| Blood Barrier | 2 | 3 | Bleeding enemy | Consumes up to 5 Bleed and grants Guard equal to 10% Max Health per stack. Thick Blood calculates the same Guard without consuming Bleed. |
+| Burning Guard | 2 | 4 | Self | Grants Guard equal to 50% Physical Power for 1 turn. If that Guard is destroyed, applies 3 Burn to the attacker. Magical Fires adds 50% Magical Power to the Guard amount. |
+| Lay on Hands | 5 | 5 | Self | Restores 10% Max Health and grants Barrier equal to the Health actually restored. Cleansing Hands also removes every debuff from the player. |
+| Shield Charge | 4 | 3 | Enemy | Deals Physical damage equal to 25% Physical Power plus 50% Armor. Applies Stunned if the player has Guard when the hit resolves. |
+| Bloodbath | 0 | None | Random enemies | Strikes five times. Each hit independently chooses a living enemy, deals 50% Physical Power as Physical damage, and applies 1 Bleed. |
+| Furnace Breaker | 4 | 3 | Enemy | Deals 100% Physical Power as Physical damage and immediately triggers the target's Burn damage once without removing Burn. |
+| Divine Smite | 5 | 5 | Enemy | A target-bound Ranged strike dealing 100% Magical Power as Magic damage and applying Smite for 3 turns. |
 | Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
 | Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
 | Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
@@ -90,7 +98,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 188 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 27 later Brute nodes. Branch counts are Shadow 79, Arcanist 79, Brute 28, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 204 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 43 later Brute nodes. Branch counts are Shadow 79, Arcanist 79, Brute 44, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -279,12 +287,28 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_175 | Improved Holy Strike | Passive | Sacred Vigor | Any | Holy Strike restores 3% Max Health. |
 | talent_176 | Concussive Bash | Passive | Shield Bash | Any | Shield Bash gains a 5% Stun chance plus 0.1 percentage points per Armor. |
 | talent_177 | Hemorrhage | Passive | Bloodletting | Any | Applying at least 3 Bleed with Bloodletting immediately triggers Bleed damage once. |
-| talent_178 | Quick Guard | Passive | Concussive Bash | Any | Shield Bash costs 1 less Energy. |
-| talent_179 | Bloodier-Letting | Passive | Hemorrhage | Any | Bloodletting applies 1 Bleed per 2 existing stacks instead of per 3. |
-| talent_180 | Light Metal | Passive | Holy Strike | Any | Swift Blade grants +2 Energy regeneration next turn instead of +1. |
+| talent_178 | Quick Guard | Passive | Concussive Bash or Fiery Weapon | Any | Shield Bash costs 1 less Energy. |
+| talent_179 | Bloodier-Letting | Passive | Hemorrhage or Bloodlust | Any | Bloodletting applies 1 Bleed per 2 existing stacks instead of per 3. |
+| talent_180 | Light Metal | Passive | Holy Strike or Bloodier-Letting | Any | Swift Blade grants +2 Energy regeneration next turn instead of +1. |
 | talent_181 | Bloodlust | Passive | Bloodletting | Any | Deals 15% more damage against Bleeding targets. |
-| talent_182 | Readiness | Passive | Shield Bash | Any | Once per turn, gaining Guard grants +1 Energy regeneration next turn. |
+| talent_182 | Readiness | Passive | Shield Bash or Quick Guard | Any | Once per turn, gaining Guard grants +1 Energy regeneration next turn. |
 | talent_183 | Fiery Weapon | Passive | Flame Cleave | Any | Searing Strike applies 2 Burn instead of 1. |
+| talent_184 | Unbreakable | Ability | Readiness | Any | Unlocks Unbreakable. |
+| talent_185 | Blood Barrier | Ability | Bloodlust | Any | Unlocks Blood Barrier. |
+| talent_186 | Burning Guard | Ability | Fiery Weapon | Any | Unlocks Burning Guard. |
+| talent_187 | Lay on Hands | Ability | Light Metal | Any | Unlocks Lay on Hands. |
+| talent_188 | Thick Blood | Passive | Blood Barrier | Any | Blood Barrier no longer consumes Bleed. |
+| talent_189 | Counter | Passive | Unbreakable | Any | Unbreakable grants +2 Energy regeneration next turn. |
+| talent_190 | Magical Fires | Passive | Burning Guard | Any | Burning Guard also gains Guard equal to 50% Magical Power. |
+| talent_191 | Cleansing Hands | Passive | Lay on Hands | Any | Lay on Hands removes every debuff from the player. |
+| talent_192 | Fortified | Passive | Unbreakable | Any | Grants 10% more Armor after flat and Strength-derived Armor. |
+| talent_193 | Eye for an Eye | Passive | Blood Barrier | Any | Whenever an enemy applies Bleed to the player, applies 1 Bleed to that enemy. |
+| talent_194 | Critical Judgement | Passive | Cleansing Hands | Any | Critical strikes apply Vulnerable. |
+| talent_195 | Scorched Wounds | Passive | Magical Fires | Any | Critical strikes apply 1 Burn. |
+| talent_196 | Shield Charge | Ability | Fortified | Any | Unlocks Shield Charge. |
+| talent_197 | Bloodbath | Ability | Eye for an Eye | Any | Unlocks Bloodbath. |
+| talent_198 | Furnace Breaker | Ability | Scorched Wounds | Any | Unlocks Furnace Breaker. |
+| talent_199 | Divine Smite | Ability | Critical Judgement | Any | Unlocks Divine Smite. |
 
 The three Brute Armor nodes intentionally share the player-facing name Armored. Internal IDs remain stable for save compatibility.
 
@@ -335,6 +359,7 @@ The duration is the default duration created by the status library. Ability or t
 | Blind | 3 turns | No | Raw Hit Chance is reduced by 75% before the target's Dodge Chance and the global 20% minimum final Hit Chance are applied. |
 | Arcane Wound | 3 turns | Yes | Each stack increases Arcane Blast damage against the afflicted target by 10%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
+| Smite | 3 turns | No | Whenever the player restores Health, takes Magic damage equal to 50% of the Health actually restored. |
 | Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |
 
 ## Enemies

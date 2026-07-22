@@ -121,7 +121,7 @@ Status refreshes must restart their application effect, so key transient overlay
 
 ## Talent-tree workflow
 
-The current live tree has 188 nodes: origin, four class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 27 later Brute nodes. Shadow and Arcanist each have 79 nodes including their class nodes; Brute has 28; Cultist currently has one class node. Verify these counts against `TALENTS` after every import.
+The current live tree has 204 nodes: origin, four class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 43 later Brute nodes. Shadow and Arcanist each have 79 nodes including their class nodes; Brute has 44; Cultist currently has one class node. Verify these counts against `TALENTS` after every import.
 
 - Talent IDs are save contracts. Preserve them unless a migration is intentionally implemented.
 - All requirements use ANY. There is no ALL mode.
@@ -193,7 +193,7 @@ At the time of this handoff:
 - Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
 - Shadow is the first complete talent branch.
 - Arcanist is implemented through `talent_156`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, and Elemental Fury with active-ability VFX.
-- Brute is implemented through `talent_183`, with its opening Fire, Bleed, Armor/Guard, and holy-vigor paths. Cultist currently has only its class node.
+- Brute is implemented through `talent_199`, with Fire, Bleed, Armor/Guard, holy-vigor, and Smite paths. Cultist currently has only its class node.
 - The newest status in the catalog is Burning Momentum, a combat-only stackable buff that grants +1 Initiative per stack.
 
 Use `docs/CONTENT_REFERENCE.md` rather than this summary for exact live values and the full catalog.

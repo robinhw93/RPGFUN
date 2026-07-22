@@ -50,9 +50,12 @@ export interface CombatTriggerContext {
   damageType?: DamageType;
   critical?: boolean;
   damage?: number;
+  /** Health actually restored after maximum-Health clamping. */
+  healthRestored?: number;
   absorbedDamage?: number;
   absorbedByStatusIds?: Array<"guard" | "barrier">;
   depletedStatusIds?: Array<"guard" | "barrier">;
+  depletedStatusSourceIds?: string[];
   absorbedDamageByStatus?: Partial<Record<"guard" | "barrier", number>>;
   targetStatusIds?: string[];
   targetStatusIdsBefore?: StatusEffect["id"][];
@@ -89,6 +92,7 @@ export interface CharacterCombatFeatures {
 const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   stats: { strength: 0, agility: 0, intelligence: 0, vitality: 0, luck: 0 },
   armor: 0,
+  armorMultiplier: 0,
   armorFromStrengthRatio: 0,
   magicResistance: 0,
   physicalPower: 0,
@@ -129,6 +133,7 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
     target.stats[stat as keyof Stats] += amount ?? 0;
   });
   target.armor += passive.armor ?? 0;
+  target.armorMultiplier += passive.armorMultiplier ?? 0;
   target.armorFromStrengthRatio += passive.armorFromStrengthRatio ?? 0;
   target.magicResistance += passive.magicResistance ?? 0;
   target.physicalPower += passive.physicalPower ?? 0;
@@ -376,6 +381,7 @@ function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerC
   if (conditions.sourceKinds?.length && (!context.sourceKind || !conditions.sourceKinds.includes(context.sourceKind))) return false;
   if (conditions.absorbedByAnyStatus?.length && !conditions.absorbedByAnyStatus.some((id) => context.absorbedByStatusIds?.includes(id))) return false;
   if (conditions.depletedAnyStatus?.length && !conditions.depletedAnyStatus.some((id) => context.depletedStatusIds?.includes(id))) return false;
+  if (conditions.depletedStatusSourceIds?.length && !conditions.depletedStatusSourceIds.some((id) => context.depletedStatusSourceIds?.includes(id))) return false;
   if (conditions.targetHealthCrossedBelow !== undefined) {
     const threshold = conditions.targetHealthCrossedBelow;
     if (context.targetHpBeforePercent === undefined || context.targetHpAfterPercent === undefined) return false;

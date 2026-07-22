@@ -48,6 +48,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   staticCharge: { id: "staticCharge", name: "Static Charge", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, description: "At 5 charges, remove them and restore 2 Energy." },
   chargedUp: { id: "chargedUp", name: "Charged Up", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 2, description: "Each stack grants +2 Initiative until combat ends." },
   burningMomentum: { id: "burningMomentum", name: "Burning Momentum", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 1, description: "Each stack grants +1 Initiative until combat ends." },
+  smite: { id: "smite", name: "Smite", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Whenever the player restores Health, take Magic Damage equal to 50% of the Health restored." },
   frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },

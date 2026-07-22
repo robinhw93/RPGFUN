@@ -73,10 +73,12 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
       const fixedAmount = modifiers.find((modifier) => modifier.consumeTargetStatusStacksAmount !== undefined)?.consumeTargetStatusStacksAmount ?? ability.consumeTargetStatusStacks;
       const consumed = Math.min(existing, fixedAmount ?? existing);
       const remaining = existing - consumed;
-      if (remaining > 0) stacks?.set(statusId, remaining);
-      else {
-        stacks?.delete(statusId);
-        targetStatuses.delete(statusId);
+      if (!modifiers.some((modifier) => modifier.retainTargetStatusOnConsume)) {
+        if (remaining > 0) stacks?.set(statusId, remaining);
+        else {
+          stacks?.delete(statusId);
+          targetStatuses.delete(statusId);
+        }
       }
       if (ability.energyPerConsumedTargetStatusStacks) energy = Math.min(combat.maxEnergy, energy + Math.floor(consumed / Math.max(1, ability.energyPerConsumedTargetStatusStacks.stacksPerEnergy)));
     }

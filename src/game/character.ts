@@ -91,6 +91,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     stats[stat as keyof Stats] = Math.round(stats[stat as keyof Stats]);
   });
   armor += features.passive.armor + Math.ceil(stats.strength * features.passive.armorFromStrengthRatio);
+  armor *= 1 + features.passive.armorMultiplier;
   magicResistance += features.passive.magicResistance;
   gearPhysicalPower += features.passive.physicalPower + features.passive.power;
   gearMagicalPower += features.passive.magicalPower + features.passive.power;
