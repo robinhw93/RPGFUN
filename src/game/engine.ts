@@ -22,7 +22,7 @@ import {
 } from "./statusEffects";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getCharacterStatusDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
-import type { Ability, AbilityRange, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
+import type { Ability, AbilityAttackPresentation, AbilityRange, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
   const derived = getDerivedStats(character);
@@ -95,6 +95,7 @@ function statusInfo(status: StatusEffect): InspectableInfo {
 interface QueueDamageOptions {
   attackerId?: "player" | string;
   attackRange?: AbilityRange;
+  attackPresentation?: AbilityAttackPresentation;
   projectileVfx?: CombatAbilityVfxKind;
   projectileDamageType?: DamageType;
   animationHitCount?: number;
@@ -115,6 +116,7 @@ function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], te
     damage,
     attackerId: options.attackerId,
     attackRange: options.attackRange,
+    attackPresentation: options.attackPresentation,
     projectileVfx: options.projectileVfx,
     projectileDamageType: options.projectileDamageType,
     animationHitCount: Math.max(1, Math.round(options.animationHitCount ?? 1)),
@@ -125,9 +127,10 @@ function queueDamage(events: string[], pendingEffects: CombatPendingEffect[], te
   return eventIndex;
 }
 
-function getAbilityAttackPresentation(ability: Ability): Pick<QueueDamageOptions, "attackRange" | "projectileVfx" | "projectileDamageType"> {
+function getAbilityAttackPresentation(ability: Ability): Pick<QueueDamageOptions, "attackRange" | "attackPresentation" | "projectileVfx" | "projectileDamageType"> {
   return {
     attackRange: ability.range,
+    attackPresentation: ability.range === "melee" ? "melee" : ability.rangedPresentation ?? "projectile",
     projectileVfx: ability.vfx,
     projectileDamageType: ability.damageType ?? ability.damageComponents?.[0]?.damageType ?? ability.consumeTargetStatusForDamage?.damageType,
   };
@@ -2311,10 +2314,12 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
   if (!attackEffect || combat.attackEffectId === attackEffect.id) return combat;
   const animationHitCount = Math.max(1, attackEffect.animationHitCount ?? 1);
   const animationDurationMultiplier = Math.max(0.1, attackEffect.animationDurationMultiplier ?? 1);
-  const usesProjectile = attackEffect.attackRange === "ranged" && attackEffect.attackerId === "player" && attackEffect.targetId !== "player";
+  const attackPresentation = attackEffect.attackPresentation ?? (attackEffect.attackRange === "ranged" ? "projectile" : "melee");
+  const usesProjectile = attackPresentation === "projectile" && attackEffect.attackerId === "player" && attackEffect.targetId !== "player";
+  const usesLunge = attackPresentation === "melee";
   return {
     ...combat,
-    attackingActorId: usesProjectile ? null : attackEffect.attackerId ?? null,
+    attackingActorId: usesLunge ? attackEffect.attackerId ?? null : null,
     attackAnimationId: (combat.attackAnimationId ?? 0) + 1,
     attackAnimationHitCount: animationHitCount,
     attackAnimationDurationMultiplier: animationDurationMultiplier,

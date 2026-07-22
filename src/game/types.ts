@@ -305,6 +305,7 @@ export type CombatAbilityVfxKind =
   | "phoenix_heart";
 
 export type AbilityRange = "melee" | "ranged";
+export type AbilityAttackPresentation = "melee" | "projectile" | "target";
 
 export interface Ability {
   id: string;
@@ -314,8 +315,10 @@ export interface Ability {
   /** Player turns before this ability can be used again. */
   cooldownTurns?: number;
   target: TargetType;
-  /** Controls direct-attack presentation. Ranged attacks fire a projectile instead of lunging. */
+  /** Controls targeting and the default direct-attack presentation. */
   range: AbilityRange;
+  /** Ranged abilities may resolve their VFX directly on the target instead of travelling there. */
+  rangedPresentation?: "projectile" | "target";
   damageType?: DamageType;
   damageComponents?: Array<{ damageType: DamageType; power?: number; powerScaling?: number }>;
   power?: number;
@@ -548,7 +551,7 @@ export interface CombatProjectileAnimation {
 }
 
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; attackRange?: AbilityRange; projectileVfx?: CombatAbilityVfxKind; projectileDamageType?: DamageType; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; attackRange?: AbilityRange; attackPresentation?: AbilityAttackPresentation; projectileVfx?: CombatAbilityVfxKind; projectileDamageType?: DamageType; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }

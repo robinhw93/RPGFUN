@@ -1453,7 +1453,7 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
     return <span className="ability-impact-effect arcane-combustion-impact" aria-hidden="true"><CircleDot /><Flame /><i /><i /><i /></span>;
   }
   if (kind === "thundersnow") {
-    return <span className="ability-impact-effect thundersnow-impact" aria-hidden="true"><Snowflake /><Zap />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--thundersnow-x": `${8 + index * 17}%`, "--thundersnow-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
+    return <span className="ability-impact-effect thundersnow-impact" aria-hidden="true"><Snowflake /><Zap />{Array.from({ length: 5 }).map((_, index) => <i key={index} style={{ "--thundersnow-x": `${12 + index * 19}%`, "--thundersnow-delay": `${index * 38}ms` } as React.CSSProperties} />)}</span>;
   }
   if (kind === "self_immolation") {
     return <span className="ability-impact-effect self-immolation-impact" aria-hidden="true"><Flame />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--immolation-angle": `${index * 51}deg` } as React.CSSProperties} />)}<b /></span>;
