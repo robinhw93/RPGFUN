@@ -191,7 +191,7 @@ If the player becomes Stunned, Frozen, or Sleeping during their own active turn,
 
 Ability input remains available while an earlier ability is animating. Further ability presses are added to a first-in, first-out queue and execute as soon as each preceding combat sequence and return animation finishes. The queue reserves Energy and cooldown availability before accepting each press, shows the queued count on affected ability buttons, and remembers the selected target for each cast. **End Turn** can also be queued; it executes after every ability already ahead of it and prevents later actions from being added.
 
-Abilities are classified as **Melee** or **Ranged**. Direct Melee attacks use the player's normal movement toward the target. Direct Ranged attacks leave the player in place and normally send an ability-specific or damage-type projectile to the target. Some Ranged spells instead resolve directly on the target as strikes, explosions, or other local effects. Damage, misses, and impact VFX still appear at the shared impact timing. Range is shown in ability details and can be set on ability nodes in the Talent Editor.
+Abilities are classified as **Melee** or **Ranged**. Direct Melee attacks use the player's normal movement toward the target. Ranged attacks leave the player in place and use ability-specific presentation: launched bolts use projectiles, focused magic uses beams, transferred effects travel between their actual source and destination, and detonations, weather, freezes, and fields resolve directly at their targets. Damage, misses, and impact VFX still appear at the shared impact timing. Range is shown in ability details and can be set on ability nodes in the Talent Editor.
 
 Queue projection also tracks target statuses. This allows a queued Arcane Overload to enable a queued free Arcane Blast against the same target, lets status-consuming abilities become available after an earlier queued cast applies their requirement, and previews Elemental Fury's no-debuff applications for later queued casts. Arcane Charge belongs to its target, so changing targets does not transfer the free cast.
 
@@ -265,8 +265,9 @@ This sequencing guarantees that:
 - Neurotoxin shakes and flashes its target green before the persistent yellow Stunned treatment remains visible.
 - Toxic Explosion deals the Poison's remaining-duration damage immediately, then creates a toxic burst on its target at the damage impact.
 - Venomborn pulls a Poison icon from its target toward the player and finishes with a green healing effect.
-- Thunderstorm repeatedly strikes random enemies from above; Electrified targets take its configured 50% bonus damage.
-- Deep Freeze launches a dense frost seal, while an already-Slowed target receives Stunned instead of another Slowed application.
+- Thunderstorm repeatedly calls white-cored, yellow-edged lightning from above the screen onto its random targets; Electrified targets take its configured 50% bonus damage.
+- Charge removes Electrified with one visible arc from every affected enemy into the player, then sends a second arc from the player to each enemy when that enemy's damage resolves.
+- Deep Freeze forms a dense frost seal directly around its target, while an already-Slowed target receives Stunned instead of another Slowed application.
 - Arcane Overload uses an expanding violet charge burst and marks its target for a free Arcane Blast.
 - Combustion erupts on its target. A lethal detonation sends visible fire trails to every surviving enemy before the copied Burn appears.
 - Arcane Combustion collapses Arcane Wounds into a mixed arcane-fire impact, scaling both Fire damage and new Burn stacks from the consumed stack count.

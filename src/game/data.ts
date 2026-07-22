@@ -35,7 +35,7 @@ export const ABILITIES: Record<string, Ability> = {
   Contagion: {
     range: "ranged",
     id: "Contagion", name: "Contagion", description: "Copy all Poison stacks from the selected enemy to another random living enemy.", energyCost: 2,
-    cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", spreadTargetStatus: "poison", icon: "☣", branch: "shadow",
+    cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", spreadTargetStatus: "poison", icon: "☣", branch: "shadow", vfx: "contagion",
   },
   Stealth: {
     range: "melee",
@@ -70,6 +70,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   ToxicExplosion: {
     range: "ranged",
+    rangedPresentation: "target",
     id: "ToxicExplosion", name: "Toxic Explosion", description: "Detonate all Poison on the target, dealing its remaining duration damage immediately and removing Poison.", energyCost: 5,
     cooldownTurns: 2, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", detonateStatus: "poison", icon: "☣", branch: "shadow", vfx: "toxic_explosion",
   },
@@ -288,6 +289,7 @@ export const ABILITIES: Record<string, Ability> = {
   },
   Firestorm: {
     range: "ranged",
+    rangedPresentation: "target",
     id: "Firestorm", name: "Firestorm", description: "Deal Fire Damage equal to 25% of your Magical Power to all enemies, then apply 2 Burn to all enemies and yourself.", energyCost: 5,
     cooldownTurns: 3, target: "all_enemies", damageType: "fire", powerScaling: 0.25, effect: "burn", statusStacks: 2,
     selfStatusApplications: [{ status: "burn", stacks: 2 }], selfStatusVfx: "firestorm", icon: "🔥", branch: "arcanist", vfx: "firestorm",
@@ -312,12 +314,14 @@ export const ABILITIES: Record<string, Ability> = {
   },
   AbsoluteZero: {
     range: "ranged",
+    rangedPresentation: "target",
     id: "AbsoluteZero", name: "Absolute Zero", description: "Deal Frost Damage equal to 50% of your Magical Power. If the target is Slowed, apply Frozen; otherwise apply Slowed and Exhausted.", energyCost: 3,
     cooldownTurns: 4, target: "enemy", damageType: "frost", powerScaling: 0.5, statusApplications: [{ status: "slowed" }, { status: "exhausted" }],
     conditionalStatusApplications: { whenTargetHas: "slowed", applications: [{ status: "frozen" }] }, icon: "❄", branch: "arcanist", vfx: "absolute_zero",
   },
   Blizzard: {
     range: "ranged",
+    rangedPresentation: "target",
     id: "Blizzard", name: "Blizzard", description: "Deal Frost Damage equal to 50% of your Magical Power to all enemies. Each target has a 50% chance to become Slowed, a 50% chance to become Exhausted, and a 10% chance to become Frozen.", energyCost: 5,
     cooldownTurns: 3, target: "all_enemies", damageType: "frost", powerScaling: 0.5,
     statusApplications: [{ status: "slowed", chance: 0.5 }, { status: "exhausted", chance: 0.5 }, { status: "frozen", chance: 0.1 }], icon: "❄", branch: "arcanist", vfx: "blizzard",
@@ -330,9 +334,10 @@ export const ABILITIES: Record<string, Ability> = {
   },
   Charge: {
     range: "ranged",
+    rangedPresentation: "target",
     id: "Charge", name: "Charge", description: "Consume Electrified from all enemies. For each enemy affected, reduce all ability cooldowns by 1 and restore 1 Energy, then deal Lightning Damage equal to 100% of your Magical Power to all enemies.", energyCost: 4,
     cooldownTurns: 6, target: "all_enemies", damageType: "lightning", powerScaling: 1, consumeStatusFromAllEnemies: "electrified",
-    energyPerConsumedEnemyStatus: 1, cooldownReductionPerConsumedEnemyStatus: 1, icon: "ϟ", branch: "arcanist", vfx: "charge",
+    energyPerConsumedEnemyStatus: 1, cooldownReductionPerConsumedEnemyStatus: 1, consumeStatusFromAllEnemiesVfx: "charge_siphon", icon: "ϟ", branch: "arcanist", vfx: "charge",
   },
   ElementalFury: {
     range: "ranged",
@@ -343,8 +348,9 @@ export const ABILITIES: Record<string, Ability> = {
   },
   siphon: {
     range: "ranged",
+    rangedPresentation: "target",
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
-    target: "enemy", damageType: "arcane", power: 7, scalingStat: "intelligence", icon: "◎", branch: "arcanist", effect: "energy",
+    target: "enemy", damageType: "arcane", power: 7, scalingStat: "intelligence", icon: "◎", branch: "arcanist", effect: "energy", vfx: "essence_siphon", vfxDirection: "to_player",
   },
 };
 

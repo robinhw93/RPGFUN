@@ -1177,7 +1177,12 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     enemies = enemies.map((enemy) => hasStatus(enemy.statuses, consumedStatusId)
       ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== consumedStatusId) }
       : enemy);
-    affected.forEach((enemy) => queueStatusRemoval(pendingEffects, abilityUseEventIndex, enemy.instanceId, consumedStatusId));
+    affected.forEach((enemy) => {
+      queueStatusRemoval(pendingEffects, abilityUseEventIndex, enemy.instanceId, consumedStatusId);
+      if (ability.consumeStatusFromAllEnemiesVfx) {
+        queueAbilityVfx(pendingEffects, abilityUseEventIndex, ability.consumeStatusFromAllEnemiesVfx, "player", enemy.instanceId);
+      }
+    });
     energy = Math.min(combat.maxEnergy, energy + consumedEnemyStatusCount * (ability.energyPerConsumedEnemyStatus ?? 0));
     const cooldownReduction = consumedEnemyStatusCount * (ability.cooldownReductionPerConsumedEnemyStatus ?? 0);
     if (cooldownReduction > 0) {
@@ -1279,7 +1284,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           : enemy);
         const statusLabel = copiedStatus.stacks > 1 ? `${copiedStatus.stacks} ${copiedStatus.name}` : copiedStatus.name;
         logs.push(makeLog(`${ability.name} spreads ${statusLabel} from ${target.name} to ${destination.name}.`, abilityInfo));
-        queueStatus(events, pendingEffects, `You spread ${statusLabel} to ${destination.name}.`, destination.instanceId, copiedStatus, false, undefined, target.instanceId);
+        const spreadEventIndex = events.length;
+        events.push(`You spread ${statusLabel} to ${destination.name}.`);
+        queueStatus(events, pendingEffects, `You spread ${statusLabel} to ${destination.name}.`, destination.instanceId, copiedStatus, false, spreadEventIndex, target.instanceId);
+        if (ability.vfx) queueAbilityVfx(pendingEffects, spreadEventIndex, ability.vfx, destination.instanceId, target.instanceId);
         continue;
       }
       if (ability.consumeStatusForHealing) {
@@ -1567,7 +1575,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", animationHitCount: totalHits, animationDurationMultiplier: ability.attackSequenceDurationMultiplier, ...getAbilityAttackPresentation(ability) });
       queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
-      if (ability.vfx) queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, target.instanceId, "player");
+      if (ability.vfx) {
+        if (ability.vfxDirection === "to_player") queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, "player", target.instanceId);
+        else queueAbilityVfx(pendingEffects, damageEventIndex, ability.vfx, target.instanceId, "player");
+      }
       const appliedStatusIds: StatusEffectId[] = [];
       if (ability.effect === "bleed") {
         const bleed = createPlayerAppliedStatus("bleed", derived);

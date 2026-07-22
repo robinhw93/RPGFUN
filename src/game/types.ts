@@ -253,6 +253,7 @@ export interface GearSetBonusDefinition extends CombatFeatureBundle {
 
 export type CombatAbilityVfxKind =
   | "poison_cloud"
+  | "contagion"
   | "neurotoxin"
   | "toxic_explosion"
   | "venomborn"
@@ -296,11 +297,13 @@ export type CombatAbilityVfxKind =
   | "conductor"
   | "firestorm"
   | "mana_fracture"
+  | "essence_siphon"
   | "rapid_fire"
   | "focused_blast"
   | "absolute_zero"
   | "blizzard"
   | "ride_the_lightning"
+  | "charge_siphon"
   | "charge"
   | "elemental_fury"
   | "phoenix_heart";
@@ -320,6 +323,8 @@ export interface Ability {
   range: AbilityRange;
   /** Ranged abilities may resolve their VFX directly on the target instead of travelling there. */
   rangedPresentation?: "projectile" | "target";
+  /** Reverses the resolved VFX from the struck target back to the player. */
+  vfxDirection?: "to_target" | "to_player";
   damageType?: DamageType;
   damageComponents?: Array<{ damageType: DamageType; power?: number; powerScaling?: number }>;
   power?: number;
@@ -405,6 +410,8 @@ export interface Ability {
   damageFromSelfStatusStacks?: { status: StatusEffectId; multiplier: number; damageType: DamageType };
   /** Removes a status from every living enemy before resolving the ability's rewards. */
   consumeStatusFromAllEnemies?: StatusEffectId;
+  /** Travels from every enemy whose status was consumed back to the player at removal time. */
+  consumeStatusFromAllEnemiesVfx?: CombatAbilityVfxKind;
   energyPerConsumedEnemyStatus?: number;
   cooldownReductionPerConsumedEnemyStatus?: number;
   /** Resolves a complete player turn ending and immediately starts a new player turn. */

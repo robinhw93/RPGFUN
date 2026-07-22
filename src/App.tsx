@@ -804,6 +804,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const abilityAnimations = combat.abilityAnimations ?? [];
   const barrierPulseTargets = new Set(abilityAnimations.filter((animation) => animation.kind === "barrier_absorb").flatMap((animation) => animation.targetId ? [animation.targetId] : []));
   const poisonCloudAnimations = abilityAnimations.filter((animation) => animation.kind === "poison_cloud");
+  const contagionAnimations = abilityAnimations.filter((animation) => animation.kind === "contagion" && animation.targetId && animation.sourceTargetId);
   const neurotoxinAnimations = abilityAnimations.filter((animation) => animation.kind === "neurotoxin");
   const toxicExplosionAnimations = abilityAnimations.filter((animation) => animation.kind === "toxic_explosion");
   const venombornAnimations = abilityAnimations.filter((animation) => animation.kind === "venomborn");
@@ -817,7 +818,9 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const combustionSpreadAnimations = abilityAnimations.filter((animation) => animation.kind === "combustion_spread");
   const conductorAnimations = abilityAnimations.filter((animation) => animation.kind === "conductor" && !animation.targetId);
   const manaFractureAnimations = abilityAnimations.filter((animation) => animation.kind === "mana_fracture" && animation.targetId && animation.sourceTargetId);
+  const essenceSiphonAnimations = abilityAnimations.filter((animation) => animation.kind === "essence_siphon" && animation.targetId && animation.sourceTargetId);
   const rideTheLightningAnimations = abilityAnimations.filter((animation) => animation.kind === "ride_the_lightning" && !animation.targetId);
+  const chargeReturnAnimations = abilityAnimations.filter((animation) => animation.kind === "charge" && animation.targetId && animation.sourceTargetId);
   const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
@@ -915,12 +918,17 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       </div>
 
       {poisonAnimations.filter((animation) => animation.sourceTargetId).map((animation) => <PoisonTransferAnimation key={animation.id} animation={animation} />)}
+      {contagionAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="ability-projectile-path contagion-path"><FlaskConical /><i /><i /></CombatantPathEffect>)}
       {venombornAnimations.map((animation) => <VenombornTransferAnimation key={animation.id} animation={animation} />)}
       {pandemicAnimations.map((animation) => <PandemicSpreadEffect key={animation.id} animation={animation} statusIds={combat.enemies.find((enemy) => enemy.instanceId === animation.sourceTargetId)?.statuses.filter((status) => status.kind === "debuff").map((status) => status.id) ?? []} />)}
       {lightSpeedAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="light-speed-path"><Zap /><i /><i /></CombatantPathEffect>)}
       {voltageSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="voltage-siphon-path"><Zap /><HeartPulse /><i /></CombatantPathEffect>)}
       {combustionSpreadAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="combustion-spread-path"><Flame /><i /><i /></CombatantPathEffect>)}
       {manaFractureAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="ability-projectile-path mana-fracture-path"><CircleDot /><i /><i /></CombatantPathEffect>)}
+      {essenceSiphonAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="ability-projectile-path essence-siphon-path"><CircleDot /><i /><i /><b /><b /></CombatantPathEffect>)}
+      <LingeringThunderstormEffects animations={abilityAnimations} />
+      <LingeringChargeSiphonEffects animations={abilityAnimations} />
+      {chargeReturnAnimations.map((animation) => <CombatantBeamEffect key={animation.id} animation={animation} durationMs={COMBAT_TIMING.attackDurationMs} className="charge-lightning-path charge-return-path"><i /><i /><i /><b /></CombatantBeamEffect>)}
       {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
@@ -1445,7 +1453,7 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
     return <span className="ability-impact-effect lightning-beam-impact" aria-hidden="true"><Zap /><i /><i /><i /></span>;
   }
   if (kind === "thunderstorm") {
-    return <span className="ability-impact-effect thunderstorm-impact" aria-hidden="true"><Zap />{Array.from({ length: 6 }).map((_, index) => <i key={index} style={{ "--storm-x": `${8 + index * 17}%`, "--storm-delay": `${index * 28}ms` } as React.CSSProperties} />)}</span>;
+    return <span className="ability-impact-effect thunderstorm-impact" aria-hidden="true"><Zap /><i /><i /><i /></span>;
   }
   if (kind === "deep_freeze") {
     return <span className="ability-impact-effect deep-freeze-impact" aria-hidden="true"><Snowflake /><i /><i /><i /><i /><b /></span>;
@@ -1479,6 +1487,9 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   }
   if (kind === "mana_fracture" || kind === "rapid_fire" || kind === "focused_blast") {
     return <span className={`ability-impact-effect new-arcane-impact ${kind}`} aria-hidden="true"><CircleDot /><Sparkles /><i /><i /><i /></span>;
+  }
+  if (kind === "essence_siphon") {
+    return <span className="ability-impact-effect essence-siphon-impact" aria-hidden="true"><CircleDot /><Sparkles /><i /><i /><i /></span>;
   }
   if (kind === "absolute_zero" || kind === "blizzard") {
     return <span className={`ability-impact-effect new-frost-impact ${kind}`} aria-hidden="true"><Snowflake /><i /><i /><i /><i /></span>;
@@ -1574,6 +1585,71 @@ function CombatantBeamEffect({ animation, className, children, durationMs }: { a
   );
 }
 
+function useLingeringAbilityAnimations(animations: CombatAbilityAnimation[], kind: CombatAbilityVfxKind, durationMs: number) {
+  const [visible, setVisible] = useState<CombatAbilityAnimation[]>([]);
+  const timers = useRef(new Map<string, number>());
+
+  useEffect(() => {
+    const incoming = animations.filter((animation) => animation.kind === kind && animation.targetId);
+    if (incoming.length === 0) return;
+    setVisible((current) => [...current, ...incoming.filter((animation) => !current.some((existing) => existing.id === animation.id))]);
+    incoming.forEach((animation) => {
+      if (timers.current.has(animation.id)) return;
+      const timer = window.setTimeout(() => {
+        setVisible((current) => current.filter((existing) => existing.id !== animation.id));
+        timers.current.delete(animation.id);
+      }, durationMs);
+      timers.current.set(animation.id, timer);
+    });
+  }, [animations, durationMs, kind]);
+
+  useEffect(() => () => {
+    timers.current.forEach((timer) => window.clearTimeout(timer));
+    timers.current.clear();
+  }, []);
+
+  return visible;
+}
+
+function LingeringChargeSiphonEffects({ animations }: { animations: CombatAbilityAnimation[] }) {
+  const visible = useLingeringAbilityAnimations(animations, "charge_siphon", COMBAT_TIMING.attackImpactMs);
+
+  return visible.map((animation) => (
+    <CombatantBeamEffect key={animation.id} animation={animation} durationMs={COMBAT_TIMING.attackImpactMs} className="charge-lightning-path charge-siphon-path">
+      <i /><i /><i /><b />
+    </CombatantBeamEffect>
+  ));
+}
+
+function LingeringThunderstormEffects({ animations }: { animations: CombatAbilityAnimation[] }) {
+  const visible = useLingeringAbilityAnimations(animations, "thunderstorm", COMBAT_TIMING.attackDurationMs);
+  return visible.map((animation) => <ScreenLightningStrikeEffect key={animation.id} animation={animation} />);
+}
+
+function ScreenLightningStrikeEffect({ animation }: { animation: Pick<CombatAbilityAnimation, "id" | "targetId"> }) {
+  const [strike, setStrike] = useState<{ left: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!animation.targetId) return;
+    const target = [...document.querySelectorAll<HTMLElement>("[data-combatant-id]")]
+      .find((element) => element.dataset.combatantId === animation.targetId);
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    setStrike({ left: rect.left + rect.width / 2 - 28, height: rect.top + rect.height / 2 });
+  }, [animation.id, animation.targetId]);
+
+  if (!strike) return null;
+  return (
+    <span className="screen-lightning-strike" style={{ left: strike.left, height: strike.height }} aria-hidden="true">
+      <i className="screen-lightning-outer" />
+      <i className="screen-lightning-core" />
+      <i className="screen-lightning-fork screen-lightning-fork-left" />
+      <i className="screen-lightning-fork screen-lightning-fork-right" />
+      <b />
+    </span>
+  );
+}
+
 function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAnimation }) {
   const durationMs = COMBAT_TIMING.attackImpactMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
   const beamDurationMs = COMBAT_TIMING.attackDurationMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
@@ -1614,7 +1690,10 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   if (kind === "arcane_blast") {
     return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="arcane-beam-path"><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
   }
-  if (kind === "rapid_fire" || kind === "focused_blast" || kind === "mana_fracture") {
+  if (kind === "focused_blast") {
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="focused-blast-beam-path"><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
+  }
+  if (kind === "rapid_fire" || kind === "mana_fracture") {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className={`ability-projectile-path ${kind.replace("_", "-")}-path`}><CircleDot /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "arcane_overload") {

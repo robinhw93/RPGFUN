@@ -883,6 +883,51 @@ main { min-height: calc(100vh - 68px); }
 @keyframes venomborn-trail { 0% { opacity: 0; transform: translate(0,0) scale(.5); } 32% { opacity: .9; } 100% { opacity: 0; transform: translate(-13px,7px) scale(1.25); } }
 @keyframes venomborn-heal-aura { 0% { opacity: 0; transform: scale(.94); } 20% { opacity: 1; transform: scale(1.018); } 100% { opacity: 0; transform: scale(1); } }
 @keyframes venomborn-heart-rise { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.55); } 28% { opacity: 1; transform: translate(-50%, -4px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -42px) scale(.82); } }
+
+/* Ranged VFX pass: lightning uses a white-hot core inside a soft yellow corona. */
+.lightning-impact > svg,.lightning-beam-impact > svg,.new-lightning-impact > svg,.conductor-impact > svg,.conductor-field-effect > svg,.ride-lightning-field > svg { color:#fff;fill:#fff;filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px #ffe23e) drop-shadow(0 0 19px rgba(255,200,28,.78)) }
+.lightning-impact > i,.lightning-beam-impact > i,.conductor-impact > i,.conductor-field-effect > i,.ride-lightning-field > i { background:linear-gradient(180deg,transparent,#fff 18%,#fff 72%,transparent);box-shadow:0 0 3px #fff,0 0 8px #ffe23e,0 0 15px rgba(255,190,20,.72) }
+.lightning-multi-beam-path > i { background:#fff;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px #ffe23e) drop-shadow(0 0 11px rgba(255,190,18,.82)) }
+.lightning-multi-beam-path > b { background:radial-gradient(circle,#fff 0 13%,#fff 18%,#ffe34a 38%,rgba(255,187,14,.42) 58%,transparent 74%);box-shadow:0 0 6px #fff,0 0 18px #ffe03b,0 0 34px rgba(255,185,14,.82) }
+.new-lightning-impact { background:radial-gradient(circle,#fff 0 5%,rgba(255,252,207,.82) 18%,rgba(240,186,17,.42) 48%,transparent 74%);box-shadow:inset 0 0 18px rgba(255,255,255,.54),inset 0 0 44px rgba(255,207,37,.58) }
+
+.contagion-path { --projectile-color:#87e45f;--projectile-core:#e9ffb7;background:radial-gradient(circle at 38% 35%,#efffc6,#6fc852 38%,#3b6e2d 63%,transparent 69%);box-shadow:0 0 8px #b5ef7d,0 0 20px rgba(83,191,65,.72) }
+.contagion-path > svg { color:#edffc6;filter:drop-shadow(0 0 7px #7fe062) }
+.essence-siphon-path { --projectile-color:#b86df1;--projectile-core:#f2dcff;background:radial-gradient(circle,#f8eaff 0 12%,#b05be7 32%,rgba(69,25,103,.72) 62%,transparent 70%);box-shadow:0 0 10px #c276f3,0 0 24px rgba(116,49,167,.76) }
+.essence-siphon-path > svg { color:#fff;filter:drop-shadow(0 0 7px #d78cff) }.essence-siphon-path > b { width:7px;height:7px;position:absolute;right:38px;top:var(--essence-y);border-radius:50%;background:#e7bcff;box-shadow:0 0 8px #ba68eb;animation:path-trail .32s ease-out infinite }.essence-siphon-path > b:nth-of-type(1){--essence-y:6px}.essence-siphon-path > b:nth-of-type(2){--essence-y:22px;animation-delay:90ms}
+.essence-siphon-impact { border:1px solid rgba(211,139,255,.82);background:radial-gradient(circle,rgba(247,224,255,.62),rgba(115,45,165,.36) 46%,transparent 75%);box-shadow:inset 0 0 48px rgba(173,82,225,.5) }.essence-siphon-impact > svg { color:#f7e8ff;filter:drop-shadow(0 0 10px #c777f0);animation:arcanist-impact-mark .8s ease-out both }.essence-siphon-impact > i { width:7px;height:7px;left:50%;top:50%;border-radius:50%;background:#e9c4ff;box-shadow:0 0 9px #bd6ee8;animation:arcanist-impact-mote .72s ease-out both }.essence-siphon-impact > i:nth-of-type(1){--impact-x:-42px;--impact-y:-24px}.essence-siphon-impact > i:nth-of-type(2){--impact-x:39px;--impact-y:-17px;animation-delay:45ms}.essence-siphon-impact > i:nth-of-type(3){--impact-x:4px;--impact-y:38px;animation-delay:90ms}
+
+.focused-blast-beam-path > i { left:0;top:50%;width:100%;transform-origin:0 50%;animation:arcane-beam-surge var(--beam-duration) cubic-bezier(.1,.76,.18,1) both }
+.focused-blast-beam-path > i:nth-of-type(1) { height:22px;margin-top:-11px;background:linear-gradient(90deg,rgba(138,48,190,.08),rgba(219,109,255,.72) 18%,#f5c8ff 72%,#fff);filter:blur(5px);box-shadow:0 0 22px #d866ff,0 0 40px rgba(137,40,205,.78) }
+.focused-blast-beam-path > i:nth-of-type(2) { height:5px;margin-top:-2.5px;background:linear-gradient(90deg,#a83ae1,#f7d3ff 45%,#fff 88%);box-shadow:0 0 5px #fff,0 0 13px #dc73ff;animation-name:arcane-beam-core }
+.focused-blast-beam-path > b { width:34px;height:34px;right:-17px;top:-2px;border-radius:50%;background:radial-gradient(circle,#fff 0 12%,#f4c9ff 20%,rgba(208,83,255,.62) 42%,transparent 72%);box-shadow:0 0 10px #fff,0 0 26px #d45fff;animation:arcane-beam-flare var(--beam-duration) ease-out both }
+.focused-blast-beam-path > svg { width:24px;height:24px;right:-12px;top:3px;color:#fff;filter:drop-shadow(0 0 8px #dd75ff);animation:arcane-beam-sigil var(--beam-duration) ease-out both }
+
+.screen-lightning-strike { position:fixed;z-index:151;top:0;width:56px;pointer-events:none;filter:drop-shadow(0 0 18px rgba(255,213,43,.46));animation:screen-lightning-container .82s linear both }
+.screen-lightning-strike > i { position:absolute;display:block;transform-origin:50% 0 }
+.screen-lightning-outer,.screen-lightning-core { top:-3%;height:106%;clip-path:polygon(36% 0,72% 0,56% 17%,84% 17%,42% 35%,70% 35%,31% 54%,62% 54%,20% 73%,50% 73%,0 100%,28% 78%,8% 78%,42% 58%,15% 58%,54% 39%,28% 39%,67% 21%,42% 21%) }
+.screen-lightning-outer { left:18px;width:19px;background:linear-gradient(180deg,rgba(255,242,129,.25),#ffd72f 14%,#ffbd16 84%,rgba(255,190,16,.15));filter:blur(4px) drop-shadow(0 0 9px #ffc81e);animation:screen-lightning-outer .74s cubic-bezier(.08,.78,.16,1) both }
+.screen-lightning-core { left:24px;width:7px;background:linear-gradient(180deg,rgba(255,255,255,.55),#fff 10%,#fff 89%,rgba(255,255,255,.4));filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px #ffe34a);animation:screen-lightning-core .68s cubic-bezier(.08,.78,.16,1) both }
+.screen-lightning-fork { bottom:8%;left:27px;width:4px;height:29%;background:#fff;box-shadow:0 0 3px #fff,0 0 8px #ffd92f;clip-path:polygon(20% 0,100% 0,58% 44%,100% 44%,0 100%,32% 55%,0 55%);transform-origin:50% 0;animation:screen-lightning-fork .62s ease-out both }
+.screen-lightning-fork-left { transform:rotate(31deg) }.screen-lightning-fork-right { transform:rotate(-34deg);animation-delay:45ms }
+.screen-lightning-strike > b { position:absolute;left:4px;bottom:-26px;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle,#fff 0 8%,rgba(255,255,255,.86) 12%,#ffe34b 24%,rgba(255,192,17,.34) 48%,transparent 72%);box-shadow:0 0 9px #fff,0 0 24px #ffdc32,0 0 44px rgba(255,183,12,.72);animation:screen-lightning-flare .75s ease-out both }
+.thunderstorm-impact > svg { color:#fff;fill:#fff;filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 11px #ffda2f) }
+.thunderstorm-impact > i { width:3px;height:48%;left:50%;top:28%;background:#fff;box-shadow:0 0 3px #fff,0 0 9px #ffd82c;clip-path:none;transform-origin:50% 50%;animation:lightning-spark .58s ease-out both }
+.thunderstorm-impact > i:nth-of-type(1){--lightning-angle:0deg;--lightning-x:-26px}.thunderstorm-impact > i:nth-of-type(2){--lightning-angle:52deg;--lightning-x:0px;animation-delay:45ms}.thunderstorm-impact > i:nth-of-type(3){--lightning-angle:104deg;--lightning-x:24px;animation-delay:90ms}
+
+.charge-lightning-path > i { left:0;top:50%;width:100%;transform-origin:0 50%;clip-path:polygon(0 40%,9% 4%,19% 66%,30% 12%,41% 70%,54% 17%,66% 67%,79% 9%,90% 61%,100% 34%,100% 68%,90% 92%,79% 43%,66% 98%,54% 50%,41% 100%,30% 48%,19% 96%,9% 39%,0 76%);animation:lightning-beam-pulse var(--beam-duration) cubic-bezier(.08,.74,.16,1) both }
+.charge-lightning-path > i:nth-of-type(1) { height:16px;margin-top:-8px;background:#ffd327;filter:blur(5px) drop-shadow(0 0 10px #ffbd10);--beam-offset:0px }
+.charge-lightning-path > i:nth-of-type(2) { height:6px;margin-top:-3px;background:#fff;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px #ffe33c);--beam-offset:0px;animation-delay:22ms }
+.charge-lightning-path > i:nth-of-type(3) { height:3px;margin-top:-11px;background:#fff;filter:drop-shadow(0 0 6px #ffda2b);--beam-offset:-5px;animation-delay:48ms }
+.charge-lightning-path > b { width:30px;height:30px;right:-15px;top:0;border-radius:50%;background:radial-gradient(circle,#fff 0 12%,#fff 18%,#ffe139 36%,rgba(255,185,12,.35) 58%,transparent 72%);box-shadow:0 0 7px #fff,0 0 19px #ffdc2e;animation:lightning-beam-flare var(--beam-duration) linear both }
+.charge-siphon-path { filter:hue-rotate(-4deg) saturate(.9) }.charge-return-path { filter:saturate(1.18) brightness(1.08) }
+.thundersnow-impact > svg:nth-of-type(2),.thundersnow-path > svg:nth-of-type(2),.elemental-fury-impact > svg:nth-of-type(3),.elemental-fury-path > svg:nth-of-type(4) { color:#fff;fill:#fff;filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px #ffe13a) drop-shadow(0 0 12px rgba(68,224,207,.62)) }
+
+@keyframes screen-lightning-container { 0%,100%{opacity:0} 7%{opacity:1} 18%{opacity:.28} 30%{opacity:1} 54%{opacity:.42} 68%{opacity:.92} }
+@keyframes screen-lightning-outer { 0%{opacity:0;transform:scaleY(.03)} 18%{opacity:1;transform:scaleY(1)} 68%{opacity:.84} 100%{opacity:0;transform:scaleY(.98)} }
+@keyframes screen-lightning-core { 0%{opacity:0;transform:scaleY(.02)} 14%{opacity:1;transform:scaleY(1)} 38%{opacity:.52} 51%{opacity:1} 100%{opacity:0} }
+@keyframes screen-lightning-fork { 0%,22%{opacity:0;scale:.2} 38%{opacity:1;scale:1} 100%{opacity:0;scale:1.15} }
+@keyframes screen-lightning-flare { 0%,12%{opacity:0;transform:scale(.15)} 29%{opacity:1;transform:scale(1.28)} 62%{opacity:.72;transform:scale(.8)} 100%{opacity:0;transform:scale(1.8)} }
 @keyframes venomborn-heal-mote { 0% { opacity: 0; transform: translateY(8px) scale(.4); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-52px) scale(1.35); } }
 @keyframes electrified-card-flash { 0% { opacity: 0; } 8% { opacity: 1; } 22% { opacity: .28; } 38% { opacity: .94; } 57% { opacity: .18; } 72% { opacity: .72; } 100% { opacity: 0; } }
 @keyframes electrified-bolt-strike { 0% { opacity: 0; transform: translateY(-18px) rotate(var(--electrified-rotation)) scale(.62); } 12% { opacity: 1; } 34% { opacity: .35; transform: translateY(0) rotate(var(--electrified-rotation)) scale(1.12); } 48% { opacity: 1; } 100% { opacity: 0; transform: translateY(15px) rotate(var(--electrified-rotation)) scale(.84); } }

@@ -6,7 +6,7 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
-Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other currently obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Direct Ranged damage launches a projectile instead of moving the player card into the normal attack lunge; targeted utility spells use the same ranged visual language without a melee lunge.
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other currently obtainable Core and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
 
 ### Core and currently obtainable abilities
 
@@ -66,7 +66,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Absolute Zero | 3 | 4 | Enemy | Deals 50% Magical Power as Frost damage. A Slowed target becomes Frozen; otherwise applies Slowed and Exhausted. |
 | Blizzard | 5 | 3 | All enemies | Deals 50% Magical Power as Frost damage. Each target independently rolls 50% Slowed, 50% Exhausted, and 10% Frozen. |
 | Ride the Lightning | 1 | 6 | All enemies | Consumes Electrified from every enemy, restores 1 Energy per affected enemy, and immediately begins a new turn. |
-| Charge | 4 | 6 | All enemies | Consumes Electrified from every enemy; each affected enemy restores 1 Energy and reduces every cooldown by 1, then all enemies take 100% Magical Power as Lightning damage. |
+| Charge | 4 | 6 | All enemies | Consumes Electrified from every enemy; each affected enemy restores 1 Energy and reduces every cooldown by 1, then all enemies take 100% Magical Power as Lightning damage. Electricity first arcs from affected enemies to the player, then returns from the player as each damage hit resolves. |
 | Elemental Fury | 3 | 6 | Enemy | Deals 50% Magical Power as Arcane damage. Against a target with no debuffs, applies 2 Burn, Electrified, Slowed, Exhausted, and 2 Arcane Wounds. Otherwise, deals 50% more damage per unique debuff already on the target. |
 
 ### Defined but not currently connected to the live talent tree

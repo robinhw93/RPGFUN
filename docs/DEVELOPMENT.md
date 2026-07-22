@@ -138,7 +138,7 @@ Add or edit `Ability` entries in `src/game/data.ts`.
 Important fields:
 
 - `energyCost`, `cooldownTurns`, and `target` define usability.
-- `range` is required and is either `melee` or `ranged`. Direct Melee attacks use the normal combatant lunge. Direct Ranged attacks keep the caster in place and launch `vfx` as a projectile, with a damage-type projectile fallback when no bespoke VFX kind is present.
+- `range` is required and is either `melee` or `ranged`. Direct Melee attacks use the normal combatant lunge. Direct Ranged attacks keep the caster in place. They launch `vfx` as a projectile by default, while `rangedPresentation: "target"` is required for detonations, weather, fields, freezes, and other effects that should resolve in place. Beams may retain projectile timing while rendering as a source-to-target connection.
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation.
 - `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget.
@@ -157,7 +157,7 @@ Important fields:
 - `freeAgainstTargetStatus` makes a cast free only against the marked target and consumes that marker. Both the engine and queued-action projection must use the target-aware Energy helper.
 - `consumeTargetStatusForDamage` scales a damage component and optional follow-up status from the consumed stack count. `spreadDetonatedStatusOnKillRatio` and `spreadOnKillVfx` support lethal detonation spread without checking an ability ID in the engine.
 - `damageModifiers` applies conditional multipliers owned by the ability.
-- `vfx` emits presentation metadata at the exact event where the ability resolves and supplies the preferred projectile appearance for direct Ranged attacks. Add the matching `CombatAbilityVfxKind` and UI renderer without putting animation timing into combat rules.
+- `vfx` emits presentation metadata at the exact event where the ability resolves and supplies the preferred Ranged treatment. `vfxDirection: "to_player"` reverses a resolved transfer from the struck target to the player. `consumeStatusFromAllEnemiesVfx` emits one source-enemy-to-player transfer at the shared removal event before later damage impacts. Add matching `CombatAbilityVfxKind` renderers without putting animation timing into combat rules.
 - Trigger damage can scale from Physical/Magical Power or from damage absorbed by a named defensive status. Reflective Barrier therefore reflects only the amount consumed from Barrier, even when Guard also absorbs the hit.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
