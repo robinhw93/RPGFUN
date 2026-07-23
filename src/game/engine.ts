@@ -34,8 +34,8 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     ...ENEMIES[id],
     instanceId: `${id}-${index}`,
     hp: ENEMIES[id].maxHp,
-    energy: 10,
-    maxEnergy: 10,
+    energy: ENEMIES[id].maxEnergy,
+    maxEnergy: ENEMIES[id].maxEnergy,
     statuses: [],
     stunned: false,
   }));
@@ -337,8 +337,10 @@ function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       ...enemy,
       // Migrate active training combats created while DUMMY incorrectly had 1000% Hit Chance.
       hitChance: enemy.id === "dummy" && enemy.hitChance === 10 ? template.hitChance : enemy.hitChance ?? template.hitChance,
-      energy: enemy.energy ?? 10,
-      maxEnergy: enemy.maxEnergy ?? 10,
+      energy: enemy.energy ?? template.maxEnergy,
+      maxEnergy: enemy.maxEnergy ?? template.maxEnergy,
+      energyRegen: enemy.energyRegen ?? template.energyRegen,
+      critChance: enemy.critChance ?? template.critChance,
       energyCost: enemy.energyCost ?? template.energyCost,
       attackDescription: enemy.attackDescription ?? template.attackDescription,
       onHitEffect: enemy.onHitEffect ?? template.onHitEffect,
@@ -2773,7 +2775,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     originalEnemy.magicResistance,
     (derived.statusDamageMultipliers.burn ?? 1) * getCharacterStatusDamageMultiplier(character, "burn", combat.playerStatuses),
   );
-  const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(1, enemyStart.statuses));
+  const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(originalEnemy.energyRegen, enemyStart.statuses));
   let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false };
   enemies[enemyIndex] = enemy;
   const sourceBurn = originalEnemy.statuses.find((status) => status.id === "burn");
@@ -2849,7 +2851,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       playerEnergy = missedTriggers.state.energy;
     } else {
       const defense = getDefense(derived.armor, derived.magicResistance, playerStatuses, enemy.damageType);
-      const critical = Math.random() < getCriticalChanceBonus(enemy.statuses);
+      const critical = Math.random() < enemy.critChance + getCriticalChanceBonus(enemy.statuses);
       const baseIncoming = Math.max(1, Math.round((enemy.power - Math.floor(defense * 0.35)) * (critical ? 1.6 : 1)));
       const incoming = Math.max(0, Math.round(getModifiedDamage(baseIncoming, enemy.statuses, playerStatuses, enemy.damageType) * getEnergyDefenseMultiplier(derived, playerEnergy, playerStatuses)));
       const absorptionStatusSources = new Map(playerStatuses

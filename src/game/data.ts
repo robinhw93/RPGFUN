@@ -1,4 +1,4 @@
-import type { Ability, AdventureNode, DamageType, EnemyTemplate, GearItem, GearSetBonusDefinition, Talent } from "./types";
+import type { Ability, AdventureDefinition, AdventureEventDefinition, AdventureNode, DamageType, EnemyTemplate, GearItem, GearSetBonusDefinition, Talent } from "./types";
 import { createStatusEffect } from "./statusEffects";
 
 type AbilityDefinition = Omit<Ability, "types"> & { types?: DamageType[] };
@@ -1098,11 +1098,14 @@ export const TALENTS: Talent[] = TALENT_NODES.map((talent) => {
 });
 
 export const ENEMIES: Record<string, EnemyTemplate> = {
-  dummy: { id: "dummy", name: "DUMMY", title: "Training Construct", maxHp: 100, power: 1, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0, damageType: "physical", energyCost: 1, intentText: "Training Strike · 1 damage", attackDescription: "A harmless training strike with 95% Hit Chance that deals 1 base Physical Damage. Costs 1 Energy.", accent: "#a8a69d" },
-  ashHound: { id: "ashHound", name: "Ash Hound", title: "Feral Beast", maxHp: 28, power: 7, armor: 1, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.08, damageType: "physical", energyCost: 3, intentText: "Raking Claws · 7 damage", attackDescription: "Rakes the target with ash-caked claws. Costs 3 Energy and applies Bleed when it deals damage.", onHitEffect: "bleed", accent: "#d47a43" },
-  cinderCultist: { id: "cinderCultist", name: "Cinder Cultist", title: "Fanatic", maxHp: 34, power: 9, armor: 2, magicResistance: 2, hitChance: 0.96, dodgeChance: 0.03, damageType: "arcane", energyCost: 4, intentText: "Searing Brand · 9 damage", attackDescription: "Brands the target with a searing sigil. Costs 4 Energy.", accent: "#a46ad4" },
-  emberWisp: { id: "emberWisp", name: "Ember Wisp", title: "Restless Flame", maxHp: 22, power: 6, armor: 0, magicResistance: 3, hitChance: 0.98, dodgeChance: 0.12, damageType: "arcane", energyCost: 3, intentText: "Scorch · 6 damage", attackDescription: "Releases a focused burst of living flame. Costs 3 Energy.", accent: "#d6ad53" },
-  ashenWarden: { id: "ashenWarden", name: "The Ashen Warden", title: "Keeper of the Black Gate", maxHp: 92, power: 12, armor: 4, magicResistance: 4, hitChance: 1, dodgeChance: 0.05, damageType: "physical", energyCost: 5, intentText: "Cinder Cleave · 12 damage", attackDescription: "Sweeps a burning blade across the battlefield. Costs 5 Energy.", accent: "#de5b47" },
+  dummy: { id: "dummy", name: "DUMMY", title: "Training Construct", maxHp: 100, power: 1, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0, critChance: 0, energyRegen: 1, maxEnergy: 10, damageType: "physical", energyCost: 1, intentText: "Training Strike · 1 damage", attackDescription: "A harmless training strike with 95% Hit Chance that deals 1 base Physical Damage. Costs 1 Energy.", abilitiesNotes: "Training Strike: 1 base Physical damage.", behaviorNotes: "Uses Training Strike whenever it has enough Energy.", accent: "#a8a69d" },
+  ashHound: { id: "ashHound", name: "Ash Hound", title: "Feral Beast", maxHp: 28, power: 7, armor: 1, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.08, critChance: 0, energyRegen: 1, maxEnergy: 10, damageType: "physical", energyCost: 3, intentText: "Raking Claws · 7 damage", attackDescription: "Rakes the target with ash-caked claws. Costs 3 Energy and applies Bleed when it deals damage.", abilitiesNotes: "Raking Claws: Physical damage and applies Bleed when it deals Health damage.", behaviorNotes: "Uses Raking Claws whenever it has enough Energy.", onHitEffect: "bleed", accent: "#d47a43" },
+  cinderCultist: { id: "cinderCultist", name: "Cinder Cultist", title: "Fanatic", maxHp: 34, power: 9, armor: 2, magicResistance: 2, hitChance: 0.96, dodgeChance: 0.03, critChance: 0, energyRegen: 1, maxEnergy: 10, damageType: "arcane", energyCost: 4, intentText: "Searing Brand · 9 damage", attackDescription: "Brands the target with a searing sigil. Costs 4 Energy.", abilitiesNotes: "Searing Brand: Arcane damage.", behaviorNotes: "Uses Searing Brand whenever it has enough Energy.", accent: "#a46ad4" },
+  emberWisp: { id: "emberWisp", name: "Ember Wisp", title: "Restless Flame", maxHp: 22, power: 6, armor: 0, magicResistance: 3, hitChance: 0.98, dodgeChance: 0.12, critChance: 0, energyRegen: 1, maxEnergy: 10, damageType: "arcane", energyCost: 3, intentText: "Scorch · 6 damage", attackDescription: "Releases a focused burst of living flame. Costs 3 Energy.", abilitiesNotes: "Scorch: Arcane damage.", behaviorNotes: "Uses Scorch whenever it has enough Energy.", accent: "#d6ad53" },
+  ashenWarden: { id: "ashenWarden", name: "The Ashen Warden", title: "Keeper of the Black Gate", maxHp: 92, power: 12, armor: 4, magicResistance: 4, hitChance: 1, dodgeChance: 0.05, critChance: 0, energyRegen: 1, maxEnergy: 10, damageType: "physical", energyCost: 5, intentText: "Cinder Cleave · 12 damage", attackDescription: "Sweeps a burning blade across the battlefield. Costs 5 Energy.", abilitiesNotes: "Cinder Cleave: Physical damage.", behaviorNotes: "Uses Cinder Cleave whenever it has enough Energy.", accent: "#de5b47" },
+  windsongWolf: { id: "windsongWolf", name: "Windsong Wolf", title: "Forest Hunter", maxHp: 30, power: 7, armor: 1, magicResistance: 0, hitChance: 0.94, dodgeChance: 0.1, critChance: 0.05, energyRegen: 1, maxEnergy: 10, damageType: "physical", energyCost: 3, intentText: "Rending Bite · 7 damage", attackDescription: "Lunges from the undergrowth with a tearing bite. Costs 3 Energy and applies Bleed when it deals Health damage.", abilitiesNotes: "Rending Bite: Physical damage and applies Bleed when it deals Health damage.", behaviorNotes: "Uses Rending Bite whenever it has enough Energy.", onHitEffect: "bleed", accent: "#79a86d" },
+  groveSprite: { id: "groveSprite", name: "Grove Sprite", title: "Wayward Spirit", maxHp: 24, power: 7, armor: 0, magicResistance: 4, hitChance: 0.97, dodgeChance: 0.14, critChance: 0.08, energyRegen: 2, maxEnergy: 12, damageType: "arcane", energyCost: 4, intentText: "Pollen Spark · 7 damage", attackDescription: "Fires a bright knot of forest magic. Costs 4 Energy.", abilitiesNotes: "Pollen Spark: Arcane damage.", behaviorNotes: "Uses Pollen Spark whenever it has enough Energy.", accent: "#b7cf6a" },
+  greybackBoar: { id: "greybackBoar", name: "Greyback Boar", title: "Ancient Tusker", maxHp: 82, power: 11, armor: 5, magicResistance: 2, hitChance: 0.93, dodgeChance: 0.03, critChance: 0.1, energyRegen: 1, maxEnergy: 10, damageType: "physical", energyCost: 5, intentText: "Stone-Tusk Charge · 11 damage", attackDescription: "Crashes forward behind stone-grey tusks. Costs 5 Energy.", abilitiesNotes: "Stone-Tusk Charge: heavy Physical damage.", behaviorNotes: "Uses Stone-Tusk Charge whenever it has enough Energy.", accent: "#9a9888" },
 };
 
 export const ITEMS: GearItem[] = [
@@ -1115,6 +1118,7 @@ export const ITEMS: GearItem[] = [
   { id: "garnetBand", name: "Garnet Signet", slot: "ring", rarity: "rare", description: "A noble crest has been scratched away.", stats: { strength: 1, luck: 2 } },
   { id: "moonRing", name: "Moonlit Coil", slot: "ring", rarity: "epic", description: "Its silver surface reflects an unfamiliar sky.", stats: { intelligence: 2, agility: 1, luck: 1 } },
   { id: "wardenHelm", name: "Warden's Broken Crown", slot: "head", armorMaterial: "plate", rarity: "epic", description: "The last ember still burns within.", stats: { vitality: 3, strength: 2 }, armor: 4, set: "ashborn", setName: "Ashborn Warplate" },
+  { id: "greybackTusk", name: "Greyback Tusk Charm", slot: "ring", rarity: "epic", description: "A pale tusk fragment wound with living green thread.", stats: { vitality: 3, luck: 2 }, armor: 2 },
   { id: "seerCowl", name: "Cowl of Quiet Sparks", slot: "head", armorMaterial: "cloth", rarity: "uncommon", description: "Tiny runes brighten whenever danger draws near.", stats: { intelligence: 2 }, magicResistance: 2 },
   { id: "nightstitchVest", name: "Nightstitch Vest", slot: "chest", armorMaterial: "leather", rarity: "uncommon", description: "Supple leather sewn for swift, silent movement.", stats: { agility: 2, vitality: 1 }, armor: 3 },
   { id: "emberweaveRobe", name: "Emberweave Robe", slot: "chest", armorMaterial: "cloth", rarity: "rare", description: "Warm threads carry old protective sigils.", stats: { intelligence: 3 }, armor: 1, magicResistance: 4 },
@@ -1159,12 +1163,55 @@ export const GEAR_SET_BONUSES: GearSetBonusDefinition[] = [
   },
 ];
 
-export const ADVENTURE: AdventureNode[] = [
-  { id: "road", type: "combat", eyebrow: "Encounter I", title: "Smoke on the Road", description: "Two shapes stalk through the drifting ash. They have already caught your scent.", enemies: ["ashHound", "ashHound"], reward: { experience: 55, gold: 9, loot: true } },
-  { id: "shrine", type: "event", eyebrow: "Unknown Event", title: "The Forgotten Shrine", description: "A cracked idol watches over a bowl of cold embers. Something valuable may still answer a prayer." },
-  { id: "pilgrims", type: "combat", eyebrow: "Encounter II", title: "The Charred Pilgrims", description: "A fanatic raises their torch as a living flame coils at their shoulder.", enemies: ["cinderCultist", "emberWisp"], reward: { experience: 75, gold: 14, loot: true } },
-  { id: "gate", type: "boss", eyebrow: "Boss Encounter", title: "The Black Gate", description: "The Warden rises from its throne. Iron groans, and the road behind you disappears.", enemies: ["ashenWarden"], reward: { experience: 125, gold: 32, loot: true } },
-];
+export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
+  brokenFootbridge: {
+    id: "brokenFootbridge",
+    name: "The Broken Footbridge",
+    eyebrow: "Forest Event",
+    description: "A rain-swollen stream has torn the footbridge from its anchors. The opposite bank is close, but the current is fast.",
+    choices: [
+      { id: "leap", label: "Leap the gap", description: "Trust your footing and clear the broken span.", stat: "agility", threshold: 62, success: { text: "You land lightly and find a dropped coin purse in the grass.", health: 0, gold: 8, experience: 0, talentPoints: 0, attributePoints: 0 }, failure: { text: "The wet timber gives way. You strike the stones before hauling yourself ashore.", health: -8, gold: 0, experience: 0, talentPoints: 0, attributePoints: 0 } },
+      { id: "ford", label: "Ford the stream", description: "Push through the current and keep your pack above water.", stat: "vitality", threshold: 58, success: { text: "You withstand the freezing current and emerge invigorated.", health: 10, gold: 0, experience: 0, talentPoints: 0, attributePoints: 0 }, failure: { text: "The current batters you against the grey stones.", health: -6, gold: 0, experience: 0, talentPoints: 0, attributePoints: 0 } },
+      { id: "repair", label: "Repair the bridge", description: "Read the old joinery and bind the span back together.", stat: "intelligence", threshold: 65, success: { text: "The repaired crossing holds. A grateful traveller rewards your work.", health: 0, gold: 12, experience: 15, talentPoints: 0, attributePoints: 0 }, failure: { text: "The repair consumes time and supplies, but the rotten frame will not hold.", health: 0, gold: -4, experience: 0, talentPoints: 0, attributePoints: 0 } },
+    ],
+  },
+  singingGrove: {
+    id: "singingGrove",
+    name: "The Singing Grove",
+    eyebrow: "Forest Event",
+    description: "Silver leaves turn without wind. Their song pulls at a memory you cannot quite name.",
+    choices: [
+      { id: "listen", label: "Listen to the song", description: "Let the grove's strange harmony guide you.", stat: "luck", threshold: 60, success: { text: "The melody settles into your bones and reveals a hidden cache.", health: 6, gold: 10, experience: 10, talentPoints: 0, attributePoints: 0 }, failure: { text: "The song leads you in circles until exhaustion breaks its hold.", health: -7, gold: 0, experience: 0, talentPoints: 0, attributePoints: 0 } },
+      { id: "mark", label: "Mark a safe path", description: "Ignore the song and navigate by bark, stone, and shadow.", stat: "intelligence", threshold: 55, success: { text: "Your marks lead cleanly through the shifting grove.", health: 0, gold: 0, experience: 18, talentPoints: 0, attributePoints: 0 }, failure: { text: "Every mark appears twice. You escape only after a punishing detour.", health: -5, gold: 0, experience: 0, talentPoints: 0, attributePoints: 0 } },
+    ],
+  },
+};
+
+export const ADVENTURES: AdventureDefinition[] = [{
+  id: "windsong-forest",
+  name: "Windsong Forest",
+  description: "Sunlit paths wind beneath whispering boughs, but something has driven the forest's gentler creatures into a restless fury.",
+  recommendedLevel: 1,
+  theme: "windsong_forest",
+  completionTitle: "The Forest Breathes Again",
+  completionDescription: "The Greyback falls silent. Wind returns to the bright canopy, carrying birdsong deeper into Emberfall.",
+  stages: [
+    { id: "forest-edge", name: "Forest Edge", entries: [
+      { id: "wolf-trail", type: "combat", chance: 70, eyebrow: "Forest Encounter", title: "Tracks in the Clover", description: "Two lean shapes slip between the sunlit trunks and close around the path.", enemyIds: ["windsongWolf", "windsongWolf"], reward: { experience: 55, gold: 9, loot: true } },
+      { id: "broken-bridge", type: "event", chance: 30, eyebrow: "Forest Event", title: "The Broken Footbridge", description: ADVENTURE_EVENTS.brokenFootbridge.description, eventId: "brokenFootbridge" },
+    ] },
+    { id: "green-hollows", name: "Green Hollows", entries: [
+      { id: "restless-grove", type: "combat", chance: 55, eyebrow: "Forest Encounter", title: "Restless Understory", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["windsongWolf", "groveSprite"], reward: { experience: 75, gold: 14, loot: true } },
+      { id: "singing-grove", type: "event", chance: 45, eyebrow: "Forest Event", title: "The Singing Grove", description: ADVENTURE_EVENTS.singingGrove.description, eventId: "singingGrove" },
+    ] },
+    { id: "grey-stones", name: "Grey Stones", entries: [
+      { id: "sprite-ring", type: "combat", chance: 100, eyebrow: "Forest Encounter", title: "A Ring of Sparks", description: "Three bright spirits wheel above a circle of rain-smoothed stones.", enemyIds: ["groveSprite", "groveSprite", "groveSprite"], reward: { experience: 90, gold: 18, loot: true } },
+    ] },
+    { id: "heartwood", name: "Heartwood", entries: [
+      { id: "greyback", type: "boss", chance: 100, eyebrow: "Boss Encounter", title: "The Ancient Greyback", description: "An enormous boar tears through fern and stone. Moss hangs from its tusks like banners.", enemyIds: ["greybackBoar"], reward: { experience: 130, gold: 32, loot: true } },
+    ] },
+  ],
+}];
 
 export const ENDLESS_ADVENTURE: AdventureNode = {
   id: "shadow-proving-grounds",

@@ -43,7 +43,8 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/game/save.ts`: load, save, and migrations.
 - `src/App.tsx`: application orchestration and rendering, not duplicated rule formulas.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
-- `src/components/TalentDevtool.tsx`: isolated editor draft/export UI. Saving there does not update live source data.
+- `src/components/TalentDevtool.tsx`: isolated talent draft/export UI.
+- `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Saving in any editor does not update live source data.
 
 See `ARCHITECTURE.md` for the complete map.
 
@@ -189,7 +190,7 @@ A change is complete only when the applicable items are true:
 
 At the time of this handoff:
 
-- The Ashen Road is the four-step story adventure.
+- Windsong Forest is the four-stage story adventure with weighted combat/event possibilities and a dedicated bright-forest combat theme.
 - Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
 - Shadow is the first complete talent branch.
 - Arcanist is implemented through `talent_156`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, and Elemental Fury with active-ability VFX.

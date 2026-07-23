@@ -6,11 +6,11 @@ This document describes the rules currently implemented in Emberfall Chronicles.
 
 1. Create and name a character, then choose one of ten appearances.
 2. Review equipment, allocate earned attribute points, choose talents, and prepare up to six active abilities.
-3. Begin **The Ashen Road**.
-4. Resolve combat and event nodes while carrying remaining Health between nodes.
+3. Begin **Windsong Forest**.
+4. Resolve its weighted combat and event stages while carrying remaining Health between stages.
 5. After each victory, receive experience, gold, and potentially loot on the score screen.
 6. Equip loot or adjust the build between fights.
-7. Defeat the final boss to complete the current adventure.
+7. Defeat the Ancient Greyback to complete the current adventure.
 
 Death is permanent. When combat reaches defeat, the browser save is deleted. The defeat screen returns the player to character creation, and the previous character, equipment, talents, and adventure progress cannot be recovered through the game UI.
 
@@ -154,7 +154,7 @@ The result has a minimum of 1 before critical and status modifiers. Guard then a
 
 - The player enters with carried Health, limited to current Max Health.
 - Player Energy starts full.
-- Every enemy starts with 10/10 Energy.
+- Every enemy starts at its configured Max Energy.
 - Starting statuses from talents or gear are added.
 - Every combatant rolls initiative.
 
@@ -236,7 +236,7 @@ Stunned always has one stack. Applying Stunned again can never increase its stac
 At the start of an enemy's turn:
 
 - The same start-of-turn status checks are resolved.
-- The enemy regenerates 1 Energy, up to 10.
+- The enemy regenerates its configured Energy Regeneration, up to its configured Max Energy.
 - If it lacks the Energy required by its attack, it gathers Energy instead of attacking.
 - If the player is Stealthed, the enemy cannot target the player.
 - While Stealthed, the player's combat card becomes lightly translucent and displays animated shadow-smoke until the status expires.
@@ -308,7 +308,7 @@ This sequencing guarantees that:
 
 - Default Max Energy: 10.
 - Default player Energy regeneration: 2 at the start of the player's own turn.
-- Default enemy Energy regeneration: 1 at the start of that enemy's own turn.
+- Enemy Energy regeneration and Max Energy come from that enemy's definition.
 - Energy cannot exceed Max Energy and cannot be spent below zero.
 - A cooldown is measured in player turns and decreases only when the next player turn begins. The visible counter updates with **Your turn.**, never during the final enemy action.
 - Focus clears every other cooldown, then keeps its own six-turn cooldown.
@@ -370,14 +370,13 @@ The result is then multiplied by the target's healing-received multiplier and li
 
 ## Adventures and events
 
-The current adventure is **The Ashen Road**, containing four ordered nodes. See the exact encounter list and rewards in [Content reference](CONTENT_REFERENCE.md#adventure-the-ashen-road).
+The current story adventure is **Windsong Forest**, containing four ordered stages. Each stage may contain any number of combat, boss, or event possibilities with configured percentage weights. The selected possibility is stored in adventure progress, so refreshing cannot reroll the active stage. See the live stage table in [Content reference](CONTENT_REFERENCE.md#adventure-windsong-forest).
 
-Remaining Health carries from one node to the next. Between nodes, the game shows an animated travel transition followed by the next encounter/event announcement.
+Remaining Health carries from one stage to the next. Between stages, the game shows an animated travel transition followed by the selected encounter or event announcement. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite.
 
-The Forgotten Shrine currently offers:
+Events contain two or three choices. Every choice specifies an attribute and success threshold. Choosing it rolls `d100 + selected derived attribute`. A total equal to or above the threshold applies the configured success outcome; a lower total applies the configured failure outcome. The result panel shows the die, attribute bonus, total, threshold, and narrative result.
 
-- **Rest:** restore 24 carried Health, capped at Max Health.
-- **Take the ember:** lose 10 carried Health, never falling below 1, and gain 1 talent point.
+Event outcomes can change carried Health, gold, experience, talent points, and unspent attribute points. Health remains between 1 and Max Health, and spendable currencies cannot fall below zero.
 
 ## Experience and levels
 
@@ -482,7 +481,7 @@ Regular encounters currently roll from the seven-item reward pool with base rari
 | Rare | 13 |
 | Epic | 4 |
 
-Luck's loot-rarity bonus increases Uncommon, Rare, and Epic weights by their rarity tier while leaving Common's weight unchanged. The final boss currently awards Warden's Broken Crown directly.
+Luck's loot-rarity bonus increases Uncommon, Rare, and Epic weights by their rarity tier while leaving Common's weight unchanged. Windsong Forest's final boss awards the Greyback Tusk Charm directly.
 
 Gold is stored on the character and displayed in the top bar and reward screens. There is no shop or gold-spending system yet.
 
@@ -495,4 +494,4 @@ Gold is stored on the character and displayed in the top bar and reward screens.
 - Defeat deletes the save without retaining a recoverable character.
 - Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, and reward state where possible.
 
-Developer Talent Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset.
+Developer Talent, Enemy, Event, and Adventure Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset.

@@ -8,27 +8,29 @@ import {
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GEAR_ICON_URLS, GearSlotIcon } from "./components/GearSlotIcon";
-import { TalentDevtool, TalentDevtoolAccessDialog } from "./components/TalentDevtool";
+import { TalentDevtool } from "./components/TalentDevtool";
+import { AdventureDevtool, DevtoolAccessDialog, EnemyDevtool, EventDevtool, type DevtoolKind } from "./components/ContentDevtools";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
-import { ABILITIES, ADVENTURE, ENDLESS_ADVENTURE, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
+import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
+import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, selectStageEntry } from "./game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "./game/combatSequence";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
-import { experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
+import { addExperience, experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureEventOutcome, AdventureMode, AdventureStageDefinition, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
 
-type View = "adventure" | "character" | "talents" | "talentDevtool";
+type View = "adventure" | "character" | "talents" | DevtoolKind;
 
 const SLOT_LABELS: Record<GearSlot, string> = {
   head: "Head", chest: "Chest", pants: "Pants", boots: "Boots",
@@ -134,12 +136,6 @@ function preloadCharacterAssets(avatarUrl: string): Promise<void[]> {
     ...GEAR_ICON_URLS,
     "/assets/resource-icons/gold.png",
   ])].map(preloadImage));
-}
-
-function getAdventureNode(mode: AdventureMode, index: number): AdventureNode {
-  return mode === "endless"
-    ? { ...ENDLESS_ADVENTURE, eyebrow: `Training Fight ${index + 1}` }
-    : ADVENTURE[index];
 }
 
 function rollDummyEncounter(): string[] {
@@ -266,7 +262,6 @@ function App() {
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
-  const [devtoolUnlocked, setDevtoolUnlocked] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
   const [playerTurnReadyEventId, setPlayerTurnReadyEventId] = useState<number | null>(null);
   const travelTimers = useRef<number[]>([]);
@@ -274,7 +269,7 @@ function App() {
   const combatSequencer = useCombatEventSequencer(game, setGame);
   const combatActionQueue = useCombatActionQueue(game, setGame, playerTurnReadyEventId);
   const combatLocked = game.adventure.combat?.outcome === "active";
-  const activeNode = getAdventureNode(game.adventure.mode, game.adventure.nodeIndex);
+  const activeNode = getAdventureNode(game.adventure);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
 
   useEffect(() => {
@@ -306,29 +301,27 @@ function App() {
   }, [game.character.avatarId]);
 
   const navigate = (next: View) => {
-    if (view === "talentDevtool" && next !== "talentDevtool") setDevtoolUnlocked(false);
     setView(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const openTalentDevtool = () => {
-    setDevtoolUnlocked(false);
-    setDevtoolGateOpen(true);
-  };
-
-  const unlockTalentDevtool = () => {
+  const openDevtool = (tool: DevtoolKind) => {
     setDevtoolGateOpen(false);
-    setDevtoolUnlocked(true);
-    setView("talentDevtool");
+    setView(tool);
     window.scrollTo({ top: 0 });
   };
 
-  const beginAdventure = (mode: AdventureMode) => {
-    const enemyIds = mode === "endless" ? rollDummyEncounter() : ADVENTURE[0].enemies!;
-    const combat = createCombat(game.character, enemyIds, derived.maxHp);
+  const beginAdventure = (mode: AdventureMode, adventureId = DEFAULT_ADVENTURE_ID) => {
+    if (mode === "story") {
+      const definition = getAdventureDefinition(adventureId);
+      if (definition.prerequisiteAdventureId && !game.character.completedAdventureIds.includes(definition.prerequisiteAdventureId)) return;
+    }
+    const entry = mode === "endless" ? null : selectStageEntry(getAdventureDefinition(adventureId), 0);
+    const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;
+    const combat = enemyIds?.length ? createCombat(game.character, enemyIds, derived.maxHp) : null;
     setGame((current) => ({
       ...current,
-      adventure: { mode, active: true, nodeIndex: 0, carryHp: derived.maxHp, combat, eventResolved: false, latestLoot: null, pendingReward: null, completed: false },
+      adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: derived.maxHp, combat, eventResolved: false, eventRollResult: null, latestLoot: null, pendingReward: null, completed: false },
     }));
   };
 
@@ -357,7 +350,7 @@ function App() {
     });
   };
 
-  const advanceJourney = (endlessEnemyIds?: string[]) => {
+  const advanceJourney = (endlessEnemyIds?: string[], nextStoryEntryId?: string) => {
     setGame((current) => {
       const adventure = current.adventure;
       const wonCombat = adventure.combat?.outcome === "victory";
@@ -379,39 +372,45 @@ function App() {
             carryHp: maxHp,
             combat,
             eventResolved: false,
+            eventRollResult: null,
+            stageEntryId: null,
             latestLoot: null,
             pendingReward: null,
           },
         };
       }
 
-      if (adventure.nodeIndex >= ADVENTURE.length - 1) {
+      const definition = getAdventureDefinition(adventure.adventureId);
+      if (adventure.nodeIndex >= definition.stages.length - 1) {
         return {
           ...current,
-          character,
+          character: { ...character, completedAdventureIds: [...new Set([...character.completedAdventureIds, definition.id])] },
           adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null },
         };
       }
 
       const nextIndex = adventure.nodeIndex + 1;
-      const nextNode = ADVENTURE[nextIndex];
-      const combat = nextNode.enemies ? createCombat(character, nextNode.enemies, carryHp) : null;
+      const stage = definition.stages[nextIndex];
+      const entry = stage.entries.find((candidate) => candidate.id === nextStoryEntryId) ?? selectStageEntry(definition, nextIndex);
+      const combat = entry.enemyIds?.length ? createCombat(character, entry.enemyIds, carryHp) : null;
       return {
         ...current,
         character,
-        adventure: { ...adventure, nodeIndex: nextIndex, carryHp, combat, eventResolved: false, latestLoot: wonCombat ? latestLoot : null, pendingReward: null },
+        adventure: { ...adventure, nodeIndex: nextIndex, stageEntryId: entry.id, carryHp, combat, eventResolved: false, eventRollResult: null, latestLoot: wonCombat ? latestLoot : null, pendingReward: null },
       };
     });
   };
 
   const continueJourney = () => {
     if (travelTransition) return;
-    if (game.adventure.mode === "story" && game.adventure.nodeIndex >= ADVENTURE.length - 1) {
+    const definition = getAdventureDefinition(game.adventure.adventureId);
+    if (game.adventure.mode === "story" && game.adventure.nodeIndex >= definition.stages.length - 1) {
       advanceJourney();
       return;
     }
     const endlessEnemyIds = game.adventure.mode === "endless" ? rollDummyEncounter() : undefined;
-    const nextNode = game.adventure.mode === "endless" ? null : ADVENTURE[game.adventure.nodeIndex + 1];
+    const nextEntry = game.adventure.mode === "endless" ? null : selectStageEntry(definition, game.adventure.nodeIndex + 1);
+    const nextNode = nextEntry ? entryToNode(nextEntry) : null;
     const message = endlessEnemyIds
       ? describeDummyEncounter(endlessEnemyIds)
       : nextNode?.enemies
@@ -426,7 +425,7 @@ function App() {
       setTravelTransition({ phase: "encounter", dots: 5, message });
     }, 2500);
     const completeTimer = window.setTimeout(() => {
-      advanceJourney(endlessEnemyIds);
+      advanceJourney(endlessEnemyIds, nextEntry?.id);
       setTravelTransition(null);
     }, 4000);
     travelTimers.current = [dotInterval, encounterTimer, completeTimer];
@@ -439,11 +438,14 @@ function App() {
         ...current,
         adventure: {
           mode: "story",
+          adventureId: DEFAULT_ADVENTURE_ID,
           active: false,
           nodeIndex: 0,
+          stageEntryId: null,
           carryHp: null,
           combat: null,
           eventResolved: false,
+          eventRollResult: null,
           latestLoot: null,
           pendingReward: null,
           completed: false,
@@ -452,17 +454,35 @@ function App() {
     });
   };
 
-  const resolveEvent = (choice: "rest" | "ember") => {
+  const resolveEvent = (choiceId: string) => {
     setGame((current) => {
+      if (current.adventure.eventResolved) return current;
+      const node = getAdventureNode(current.adventure);
+      const definition = node.eventId ? ADVENTURE_EVENTS[node.eventId] : undefined;
+      const choice = definition?.choices.find((candidate) => candidate.id === choiceId);
+      if (!choice) return current;
+      const statBonus = getDerivedStats(current.character)[choice.stat];
+      const dieRoll = Math.floor(Math.random() * 100) + 1;
+      const total = dieRoll + statBonus;
+      const success = total >= choice.threshold;
+      const outcome: AdventureEventOutcome = success ? choice.success : choice.failure;
       const maxHp = getDerivedStats(current.character).maxHp;
       const carryHp = current.adventure.carryHp ?? maxHp;
-      if (choice === "rest") {
-        return { ...current, adventure: { ...current.adventure, carryHp: Math.min(maxHp, carryHp + 24), eventResolved: true } };
-      }
+      const experience = outcome.experience > 0 ? addExperience(current.character, outcome.experience).character : current.character;
       return {
         ...current,
-        character: { ...current.character, talentPoints: current.character.talentPoints + 1 },
-        adventure: { ...current.adventure, carryHp: Math.max(1, carryHp - 10), eventResolved: true },
+        character: {
+          ...experience,
+          gold: Math.max(0, experience.gold + outcome.gold),
+          talentPoints: Math.max(0, experience.talentPoints + outcome.talentPoints),
+          unspentStatPoints: Math.max(0, experience.unspentStatPoints + outcome.attributePoints),
+        },
+        adventure: {
+          ...current.adventure,
+          carryHp: Math.min(maxHp, Math.max(1, carryHp + outcome.health)),
+          eventResolved: true,
+          eventRollResult: { choiceId, dieRoll, stat: choice.stat, statBonus, total, threshold: choice.threshold, success, outcomeText: outcome.text },
+        },
       };
     });
   };
@@ -589,7 +609,7 @@ function App() {
         </nav>
         <div className="resources">
           <span><GoldIcon /> {game.character.gold}</span>
-          <button className="icon-button devtool-menu-button" onClick={openTalentDevtool} data-game-tooltip="Developer tools" data-tooltip-placement="bottom" aria-label="Open developer tools"><Wrench size={14} /></button>
+          <button className="icon-button devtool-menu-button" onClick={() => setDevtoolGateOpen(true)} data-game-tooltip="Developer tools" data-tooltip-placement="bottom" aria-label="Open developer tools"><Wrench size={14} /></button>
           <button className="icon-button" onClick={() => setResetDialogOpen(true)} data-game-tooltip="Reset save" data-tooltip-placement="bottom" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
       </header>
@@ -623,7 +643,10 @@ function App() {
           </CharacterAssetBoundary>
         )}
         {view === "talents" && <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />}
-        {view === "talentDevtool" && devtoolUnlocked && <TalentDevtool onExit={() => navigate("talents")} />}
+        {view === "talentDevtool" && <TalentDevtool onExit={() => navigate("adventure")} />}
+        {view === "enemyDevtool" && <EnemyDevtool onExit={() => navigate("adventure")} />}
+        {view === "eventDevtool" && <EventDevtool onExit={() => navigate("adventure")} />}
+        {view === "adventureDevtool" && <AdventureDevtool onExit={() => navigate("adventure")} />}
       </main>
 
       <nav className="mobile-nav" aria-label="Mobile navigation">
@@ -640,7 +663,7 @@ function App() {
           onConfirm={returnToCharacterCreation}
         />
       )}
-      {devtoolGateOpen && <TalentDevtoolAccessDialog onClose={() => setDevtoolGateOpen(false)} onUnlock={unlockTalentDevtool} />}
+      {devtoolGateOpen && <DevtoolAccessDialog onClose={() => setDevtoolGateOpen(false)} onOpen={openDevtool} />}
       {travelTransition && (
         <div className={`travel-transition ${travelTransition.phase}`} role="status" aria-live="polite">
           <div className="travel-transition-content">
@@ -649,7 +672,7 @@ function App() {
                 <Footprints /><Footprints />
               </div>
             )}
-            <span>{travelTransition.phase === "travel" ? `${game.adventure.mode === "endless" ? "Returning to the proving grounds" : "Following the ashen road"}${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+            <span>{travelTransition.phase === "travel" ? `${game.adventure.mode === "endless" ? "Returning to the proving grounds" : "Walking beneath the windsong canopy"}${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
           </div>
         </div>
       )}
@@ -720,7 +743,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
-  onBegin: (mode: AdventureMode) => void;
+  onBegin: (mode: AdventureMode, adventureId?: string) => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
   onEndTurn: () => void;
@@ -731,7 +754,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   onInitiativeComplete: () => void;
   onContinue: () => void;
   onLeaveTraining: () => void;
-  onEvent: (choice: "rest" | "ember") => void;
+  onEvent: (choiceId: string) => void;
   onPermadeath: () => void;
   onTalents: () => void;
   onCharacter: () => void;
@@ -755,16 +778,17 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
 
   if (adventure.completed) {
+    const completedAdventure = getAdventureDefinition(adventure.adventureId);
     return (
       <section className="page narrow-page completion-page">
         <div className="boss-emblem"><Trophy size={34} /></div>
         <p className="eyebrow">Adventure Complete</p>
-        <h1>The Black Gate Falls</h1>
-        <p>The Warden's flame gutters out. Beyond the gate, Emberfall waits beneath a bruised and starless sky.</p>
+        <h1>{completedAdventure.completionTitle}</h1>
+        <p>{completedAdventure.completionDescription}</p>
         <div className="reward-strip">
           <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
         </div>
-        <button className="primary-button" onClick={() => onBegin("story")}>Venture Forth Again <ChevronRight size={17} /></button>
+        <button className="primary-button" onClick={() => onBegin("story", completedAdventure.id)}>Venture Forth Again <ChevronRight size={17} /></button>
         <button className="text-button" onClick={() => onBegin("endless")}>Enter Shadow Proving Grounds</button>
         <button className="text-button" onClick={onTalents}>Spend talent points</button>
       </section>
@@ -772,18 +796,21 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   }
 
   if (!adventure.active) {
+    const featuredAdventure = ADVENTURES[0];
+    const locked = Boolean(featuredAdventure.prerequisiteAdventureId && !game.character.completedAdventureIds.includes(featuredAdventure.prerequisiteAdventureId));
     return (
       <section className="page adventure-home">
         <div className="hero-card">
           <div className="hero-copy">
             <p className="eyebrow">Available Adventure</p>
-            <h1>The Ashen Road</h1>
-            <p>Caravans vanish on the old imperial road. Follow their trail through the cinderwood and discover what guards the Black Gate.</p>
-            <div className="adventure-tags"><span>Recommended Level 1</span><span>4 Encounters</span><span>Rare Loot</span></div>
-            <button className="primary-button" onClick={() => onBegin("story")}>Begin Journey <ChevronRight size={18} /></button>
+            <h1>{featuredAdventure.name}</h1>
+            <p>{featuredAdventure.description}</p>
+            <div className="adventure-tags"><span>Recommended Level {featuredAdventure.recommendedLevel}</span><span>{featuredAdventure.stages.length} Stages</span><span>Dynamic Encounters</span></div>
+            <button className="primary-button" disabled={locked} onClick={() => onBegin("story", featuredAdventure.id)}>{locked ? "Locked" : "Begin Journey"} <ChevronRight size={18} /></button>
           </div>
-          <div className="gate-art" aria-hidden="true"><div className="sun"/><div className="tower left"/><div className="tower right"/><div className="gate"/></div>
+          <div className="forest-art" aria-hidden="true"><div className="forest-sun"/><i className="tree tree-one"/><i className="tree tree-two"/><i className="tree tree-three"/><b className="forest-stone stone-one"/><b className="forest-stone stone-two"/></div>
         </div>
+        {ADVENTURES.length > 1 && <div className="story-adventure-list">{ADVENTURES.slice(1).map((definition) => { const prerequisiteMet = !definition.prerequisiteAdventureId || game.character.completedAdventureIds.includes(definition.prerequisiteAdventureId); return <article key={definition.id}><div><p className="eyebrow">Story Adventure</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{definition.prerequisiteAdventureId && <span>{prerequisiteMet ? "Unlocked" : `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}`}</span>}</div></div><button className="secondary-button" disabled={!prerequisiteMet} onClick={() => onBegin("story", definition.id)}>{prerequisiteMet ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button></article>; })}</div>}
         <div className="training-adventure-card">
           <div>
             <p className="eyebrow">Testing Adventure</p>
@@ -795,28 +822,27 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         </div>
         <div className="section-heading"><div><p className="eyebrow">Route Preview</p><h2>What lies ahead</h2></div><span className="muted">Progress saves automatically</span></div>
         <div className="route-grid">
-          {ADVENTURE.map((node, index) => <RouteCard key={node.id} node={node} index={index} />)}
+          {featuredAdventure.stages.map((stage, index) => <StageCard key={stage.id} stage={stage} index={index} />)}
         </div>
       </section>
     );
   }
 
-  const node = getAdventureNode(adventure.mode, adventure.nodeIndex);
+  const node = getAdventureNode(adventure);
   if (node.type === "event") {
+    const eventDefinition = node.eventId ? ADVENTURE_EVENTS[node.eventId] : undefined;
+    const rollResult = adventure.eventRollResult;
     return (
       <section className="page narrow-page event-page">
-        <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} />
+        <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
         <div className="event-sigil">♢</div>
         <p className="eyebrow">{node.eyebrow}</p>
         <h1>{node.title}</h1>
         <p>{node.description}</p>
         {!adventure.eventResolved ? (
-          <div className="event-choices">
-            <button className="choice-card" onClick={() => onEvent("rest")}><Heart /><span><strong>Rest by the shrine</strong><small>Recover up to 24 Health.</small></span><ChevronRight /></button>
-            <button className="choice-card danger" onClick={() => onEvent("ember")}><Sparkles /><span><strong>Touch the dying ember</strong><small>Lose 10 Health. Gain 1 Talent Point.</small></span><ChevronRight /></button>
-          </div>
+          <div className="event-choices">{eventDefinition?.choices.map((choice) => <button className="choice-card" key={choice.id} onClick={() => onEvent(choice.id)}><Sparkles /><span><strong>{choice.label}</strong><small>{choice.description}</small><em>d100 + {choice.stat} · {choice.threshold} to succeed</em></span><ChevronRight /></button>)}</div>
         ) : (
-          <div className="outcome-panel"><p>The shrine accepts your choice. Its ancient light fades, and the road calls once more.</p><button className="primary-button" onClick={onContinue}>Continue Journey <ChevronRight size={17} /></button></div>
+          <div className={`outcome-panel event-roll-outcome ${rollResult?.success ? "success" : "failure"}`}><strong>{rollResult?.success ? "Success" : "Failure"}</strong><div className="event-roll-math"><span>d100 <b>{rollResult?.dieRoll}</b></span><span>{rollResult?.stat} <b>+{rollResult?.statBonus}</b></span><span>Total <b>{rollResult?.total}</b> / {rollResult?.threshold}</span></div><p>{rollResult?.outcomeText}</p><button className="primary-button" onClick={onContinue}>Continue Journey <ChevronRight size={17} /></button></div>
         )}
       </section>
     );
@@ -870,8 +896,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
-    <section className={`combat-page compact-combat ${inspectedInfo ? "inspect-info-open" : ""}`}>
-      <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} />
+    <section className={`combat-page compact-combat ${adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).theme === "windsong_forest" ? "windsong-forest-combat" : ""} ${inspectedInfo ? "inspect-info-open" : ""}`}>
+      <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
       <div className="compact-arena">
@@ -951,8 +977,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
                 {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
               </div>
-              <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy ?? 10}/{enemy.maxEnergy ?? 10}</b></div>
-              <EnergySegments value={enemy.energy ?? 10} max={enemy.maxEnergy ?? 10} regen={1} />
+              <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy}/{enemy.maxEnergy}</b></div>
+              <EnergySegments value={enemy.energy} max={enemy.maxEnergy} regen={enemy.energyRegen} />
             </article>
           );})}
         </div>
@@ -1046,7 +1072,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           onTalents={onTalents}
           onContinue={onContinue}
           onLeaveTraining={onLeaveTraining}
-          finalEncounter={adventure.mode === "story" && adventure.nodeIndex === ADVENTURE.length - 1}
+          finalEncounter={adventure.mode === "story" && adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
           endless={adventure.mode === "endless"}
         />
       )}
@@ -1152,17 +1178,19 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, on
   );
 }
 
-function RouteCard({ node, index }: { node: AdventureNode; index: number }) {
+function StageCard({ stage, index }: { stage: AdventureStageDefinition; index: number }) {
   const icons = [<Footprints />, <Gem />, <Swords />, <Trophy />];
-  return <article className={`route-card ${node.type}`}><span className="route-number">0{index + 1}</span><span className="route-icon">{icons[index]}</span><p className="eyebrow">{node.eyebrow}</p><h3>{node.title}</h3><p>{node.description}</p></article>;
+  const possibilities = stage.entries.map((entry) => `${entry.chance}% ${entry.type === "event" ? "Event" : entry.type === "boss" ? "Boss" : "Combat"}`).join(" · ");
+  return <article className="route-card"><span className="route-number">0{index + 1}</span><span className="route-icon">{icons[index] ?? <Footprints />}</span><p className="eyebrow">Stage {index + 1}</p><h3>{stage.name}</h3><p>{possibilities}</p></article>;
 }
 
-function ProgressHeader({ index, mode }: { index: number; mode: AdventureMode }) {
+function ProgressHeader({ index, mode, adventureId }: { index: number; mode: AdventureMode; adventureId: string }) {
   if (mode === "endless") {
     return <div className="journey-progress endless"><span>Shadow Proving Grounds</span><div className="journey-progress-track" aria-hidden="true"><i style={{ width: "100%" }} /></div><span>Fight {index + 1}</span></div>;
   }
-  const progress = ((index + 1) / ADVENTURE.length) * 100;
-  return <div className="journey-progress"><span>The Ashen Road</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={ADVENTURE.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {ADVENTURE.length}</span></div>;
+  const definition = getAdventureDefinition(adventureId);
+  const progress = ((index + 1) / definition.stages.length) * 100;
+  return <div className="journey-progress"><span>{definition.name}</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={definition.stages.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {definition.stages.length}</span></div>;
 }
 
 function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplete: () => void }) {

@@ -433,24 +433,31 @@ The duration is the default duration created by the status library. Ability or t
 
 ## Enemies
 
-All current enemies start combat with 10 Max Energy and regenerate 1 Energy on their own turns.
+Enemy Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template.
 
-| Enemy | Health | Power | Armor | Magic Resistance | Hit | Dodge | Cost | Attack |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| DUMMY | 100 | 1 | 0 | 0 | 95% | 0% | 1 | Training Strike; 1 base Physical damage. |
-| Ash Hound | 28 | 7 | 1 | 0 | 95% | 8% | 3 | Raking Claws; Physical and applies Bleed when it deals Health damage. |
-| Cinder Cultist | 34 | 9 | 2 | 2 | 96% | 3% | 4 | Searing Brand; Arcane. |
-| Ember Wisp | 22 | 6 | 0 | 3 | 98% | 12% | 3 | Scorch; Arcane. |
-| The Ashen Warden | 92 | 12 | 4 | 4 | 100% | 5% | 5 | Cinder Cleave; Physical. |
+| Enemy | Health | Power | Armor | Magic Resistance | Hit | Dodge | Crit | Regen / Max | Cost | Attack |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| DUMMY | 100 | 1 | 0 | 0 | 95% | 0% | 0% | 1 / 10 | 1 | Training Strike; 1 base Physical damage. |
+| Ash Hound | 28 | 7 | 1 | 0 | 95% | 8% | 0% | 1 / 10 | 3 | Raking Claws; Physical and applies Bleed when it deals Health damage. |
+| Cinder Cultist | 34 | 9 | 2 | 2 | 96% | 3% | 0% | 1 / 10 | 4 | Searing Brand; Arcane. |
+| Ember Wisp | 22 | 6 | 0 | 3 | 98% | 12% | 0% | 1 / 10 | 3 | Scorch; Arcane. |
+| The Ashen Warden | 92 | 12 | 4 | 4 | 100% | 5% | 0% | 1 / 10 | 5 | Cinder Cleave; Physical. |
+| Windsong Wolf | 30 | 7 | 1 | 0 | 94% | 10% | 5% | 1 / 10 | 3 | Rending Bite; Physical and applies Bleed when it deals Health damage. |
+| Grove Sprite | 24 | 7 | 0 | 4 | 97% | 14% | 8% | 2 / 12 | 4 | Pollen Spark; Arcane. |
+| Greyback Boar | 82 | 11 | 5 | 2 | 93% | 3% | 10% | 1 / 10 | 5 | Stone-Tusk Charge; Physical. |
 
-## Adventure: The Ashen Road
+## Adventure: Windsong Forest
 
-| Step | Type | Node | Enemies/event | Reward |
-| ---: | --- | --- | --- | --- |
-| 1 | Combat | Smoke on the Road | Two Ash Hounds | 55 XP, 9 gold, loot roll. |
-| 2 | Event | The Forgotten Shrine | Rest for 24 Health, or lose 10 Health and gain 1 talent point. | Choice result only. |
-| 3 | Combat | The Charred Pilgrims | Cinder Cultist and Ember Wisp | 75 XP, 14 gold, loot roll. |
-| 4 | Boss | The Black Gate | The Ashen Warden | 125 XP, 32 gold, Warden's Broken Crown. |
+Stage possibilities use relative percentage weights and each stage totals 100% in the live definition.
+
+| Stage | Possibility | Chance | Enemies/event | Reward |
+| ---: | --- | ---: | --- | --- |
+| 1 | Tracks in the Clover | 70% | Two Windsong Wolves | 55 XP, 9 gold, loot roll. |
+| 1 | The Broken Footbridge | 30% | Three attribute-roll choices. | Choice outcome. |
+| 2 | Restless Understory | 55% | Windsong Wolf and Grove Sprite | 75 XP, 14 gold, loot roll. |
+| 2 | The Singing Grove | 45% | Two attribute-roll choices. | Choice outcome. |
+| 3 | A Ring of Sparks | 100% | Three Grove Sprites | 90 XP, 18 gold, loot roll. |
+| 4 | The Ancient Greyback | 100% | Greyback Boar | 130 XP, 32 gold, Greyback Tusk Charm. |
 
 ## Testing adventure: Shadow Proving Grounds
 
@@ -478,6 +485,7 @@ New characters begin with no equipped gear and an empty inventory. The items bel
 | Garnet Signet | Ring | Rare | +1 Strength, +2 Luck | — |
 | Moonlit Coil | Ring | Epic | +1 Agility, +2 Intelligence, +1 Luck | — |
 | Warden's Broken Crown | Plate Head | Epic | +4 Armor, +2 Strength, +3 Vitality | Ashborn Warplate |
+| Greyback Tusk Charm | Ring | Epic | +2 Armor, +3 Vitality, +2 Luck | — |
 | Cowl of Quiet Sparks | Cloth Head | Uncommon | +2 Magic Resistance, +2 Intelligence | — |
 | Nightstitch Vest | Leather Chest | Uncommon | +3 Armor, +2 Agility, +1 Vitality | — |
 | Emberweave Robe | Cloth Chest | Rare | +1 Armor, +4 Magic Resistance, +3 Intelligence | — |

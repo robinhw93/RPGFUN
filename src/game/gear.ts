@@ -1,4 +1,5 @@
-import { ADVENTURE, ITEMS } from "./data";
+import { ITEMS } from "./data";
+import { getAdventureDefinition } from "./adventures";
 import type { ArmorMaterial, CharacterState, GearItem, GearSlot, WeaponEquipType, WeaponKind } from "./types";
 
 const BASE_RARITY_WEIGHTS: Record<GearItem["rarity"], number> = {
@@ -15,8 +16,8 @@ const RARITY_TIERS: Record<GearItem["rarity"], number> = {
   epic: 3,
 };
 
-export function getLoot(nodeIndex: number, lootRarityBonus = 0): GearItem {
-  if (nodeIndex >= ADVENTURE.length - 1) return ITEMS[8];
+export function getLoot(nodeIndex: number, lootRarityBonus = 0, adventureId?: string): GearItem {
+  if (adventureId === "windsong-forest" && nodeIndex >= getAdventureDefinition(adventureId).stages.length - 1) return ITEMS.find((item) => item.id === "greybackTusk") ?? ITEMS[8];
   const pool = ITEMS.slice(1, 8);
   const weights = pool.map((item) => BASE_RARITY_WEIGHTS[item.rarity] * (1 + Math.max(0, lootRarityBonus) * RARITY_TIERS[item.rarity]));
   const totalWeight = weights.reduce((total, weight) => total + weight, 0);

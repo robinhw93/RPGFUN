@@ -609,10 +609,17 @@ export interface EnemyTemplate {
   magicResistance: number;
   hitChance: number;
   dodgeChance: number;
+  critChance: number;
+  energyRegen: number;
+  maxEnergy: number;
   damageType: DamageType;
   energyCost: number;
   intentText: string;
   attackDescription: string;
+  /** Free-form design notes used by the Enemy Editor and future AI implementations. */
+  abilitiesNotes: string;
+  /** Free-form design notes describing intended ability priorities and conditions. */
+  behaviorNotes: string;
   onHitEffect?: "bleed";
   accent: string;
 }
@@ -742,6 +749,7 @@ export interface CharacterState {
   equippedAbilities: string[];
   inventory: GearItem[];
   equipment: Partial<Record<GearSlot, GearItem>>;
+  completedAdventureIds: string[];
 }
 
 export interface AdventureNode {
@@ -751,11 +759,80 @@ export interface AdventureNode {
   title: string;
   description: string;
   enemies?: string[];
+  eventId?: string;
   reward?: {
     experience: number;
     gold: number;
     loot: boolean;
   };
+}
+
+export interface AdventureEventOutcome {
+  text: string;
+  health: number;
+  gold: number;
+  experience: number;
+  talentPoints: number;
+  attributePoints: number;
+}
+
+export interface AdventureEventChoice {
+  id: string;
+  label: string;
+  description: string;
+  stat: StatName;
+  threshold: number;
+  success: AdventureEventOutcome;
+  failure: AdventureEventOutcome;
+}
+
+export interface AdventureEventDefinition {
+  id: string;
+  name: string;
+  eyebrow: string;
+  description: string;
+  choices: AdventureEventChoice[];
+}
+
+export interface AdventureStageEntry {
+  id: string;
+  type: "combat" | "event" | "boss";
+  chance: number;
+  title: string;
+  eyebrow: string;
+  description: string;
+  enemyIds?: string[];
+  eventId?: string;
+  reward?: AdventureNode["reward"];
+}
+
+export interface AdventureStageDefinition {
+  id: string;
+  name: string;
+  entries: AdventureStageEntry[];
+}
+
+export interface AdventureDefinition {
+  id: string;
+  name: string;
+  description: string;
+  recommendedLevel: number;
+  prerequisiteAdventureId?: string;
+  theme: "windsong_forest";
+  stages: AdventureStageDefinition[];
+  completionTitle: string;
+  completionDescription: string;
+}
+
+export interface AdventureEventRollResult {
+  choiceId: string;
+  dieRoll: number;
+  stat: StatName;
+  statBonus: number;
+  total: number;
+  threshold: number;
+  success: boolean;
+  outcomeText: string;
 }
 
 export interface CombatReward {
@@ -775,11 +852,14 @@ export type AdventureMode = "story" | "endless";
 
 export interface AdventureProgress {
   mode: AdventureMode;
+  adventureId: string;
   active: boolean;
   nodeIndex: number;
+  stageEntryId: string | null;
   carryHp: number | null;
   combat: CombatState | null;
   eventResolved: boolean;
+  eventRollResult: AdventureEventRollResult | null;
   latestLoot: GearItem | null;
   pendingReward: CombatReward | null;
   completed: boolean;

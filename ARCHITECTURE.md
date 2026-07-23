@@ -42,13 +42,14 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/components/FloatingCombatText.tsx` presents the event queue and reports when each entry appears and when the sequence completes.
 - `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
 - `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
-- `src/components/TalentDevtool.tsx` owns the isolated developer draft model and export workflow; it does not mutate live game content.
+- `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow.
+- `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher.
 - `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
 
 ### Domain and content
 
 - `src/game/types.ts` is the shared domain schema.
-- `src/game/data.ts` is the canonical static catalog for abilities, talents, tree canvas, enemies, items, set thresholds, and adventure nodes.
+- `src/game/data.ts` is the canonical static catalog for abilities, talents, tree canvas, enemies, events, items, set thresholds, and staged adventures.
 - `src/game/statusEffects.ts` is the canonical status catalog and owns generic status stacking, duration, multipliers, ticking damage, and healing formulas.
 - `src/game/avatars.ts` owns the appearance catalog and normalization.
 
@@ -341,15 +342,15 @@ The initiative grid receives the live combatant count through a CSS variable. Tw
 
 ## Adventure and reward flow
 
-`AdventureProgress` stores the active adventure mode and carried Health independently of active combat. `story` uses the finite `ADVENTURE` node list; `endless` uses the dynamic Shadow Proving Grounds encounter.
+`AdventureProgress` stores the active adventure ID, selected stage-entry ID, mode, carried Health, event-roll result, and combat independently. Story adventures use finite weighted stage definitions; `stageEntryId` locks in a randomly selected possibility so refreshing cannot reroll it. `endless` uses the dynamic Shadow Proving Grounds encounter.
 
 - `beginAdventure` creates the first combat at Max Health.
 - Victory triggers `grantCombatReward` through a React effect.
 - Reward identity plus node index prevents duplicate application.
 - The score screen reads `pendingReward`, which records before/after level and XP values even though the character has already received the reward.
 - Continuing carries final Health into the next combat or event.
-- The event modifies carried Health or talent points.
-- Completing the final node clears active combat and marks the adventure completed.
+- Events roll `d100 + the selected derived attribute` against their configured threshold, then apply the structured success or failure outcome.
+- Completing the final stage clears active combat, records the adventure ID on the character, and marks the adventure completed.
 
 The endless route generates two or three `dummy` enemy IDs before each travel transition, then reuses that exact group when creating combat so the encounter message and battlefield agree. It increments `nodeIndex` as an unbounded fight counter, restores the character to current Max Health, and never marks the adventure completed. `grantCombatReward` calculates the exact XP needed to cross two complete level thresholds from the character's current level and XP; normal story rewards still come from the node definition. The `unlockTalent` state boundary also treats `endless` as a test-only free-unlock mode: it enforces connections and the combat lock but skips both the point check and point deduction.
 
@@ -397,6 +398,8 @@ The draft is initialized from live content only when no valid stored draft exist
 Canvas positions are percentages, but grid spacing is stored as fixed world units. When nodes approach an edge, `ensureCanvasRoom` expands that side and recalculates percentages so existing absolute alignment remains stable.
 
 An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions.
+
+Enemy, Event, and Adventure editors follow the same isolation contract. They use `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`; Save and automatic writes only update those local drafts. Adventure entries can reference locally drafted enemy/event IDs, but exported content does not become live until it is integrated into typed source data.
 
 ## Save boundary and migration
 

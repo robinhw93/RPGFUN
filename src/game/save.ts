@@ -1,6 +1,7 @@
 import type { GameState } from "./types";
 import { ITEMS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
+import { DEFAULT_ADVENTURE_ID } from "./adventures";
 
 const SAVE_KEY = "emberfall-save-v1";
 const REMOVED_TALENT_COSTS: Record<string, number> = {
@@ -55,11 +56,26 @@ export function loadGame(): GameState | null {
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),
         inventory,
         equipment,
+        completedAdventureIds: state.character.completedAdventureIds ?? [],
       },
       adventure: {
         ...state.adventure,
         mode: state.adventure.mode ?? "story",
+        adventureId: state.adventure.adventureId ?? DEFAULT_ADVENTURE_ID,
+        stageEntryId: state.adventure.mode === "endless" ? null : state.adventure.stageEntryId ?? null,
+        eventRollResult: state.adventure.eventRollResult ?? null,
         pendingReward: state.adventure.pendingReward ?? null,
+        ...(state.adventure.mode !== "endless" && !state.adventure.adventureId ? {
+          active: false,
+          nodeIndex: 0,
+          stageEntryId: null,
+          combat: null,
+          carryHp: null,
+          eventResolved: false,
+          eventRollResult: null,
+          pendingReward: null,
+          completed: false,
+        } : {}),
       },
     };
   } catch {

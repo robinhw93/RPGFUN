@@ -1,5 +1,5 @@
-import { ADVENTURE } from "./data";
 import { getDerivedStats } from "./character";
+import { getAdventureNode } from "./adventures";
 import { getLoot } from "./gear";
 import { addExperience, experienceForLevelGains } from "./progression";
 import type { CombatReward, GameState } from "./types";
@@ -11,10 +11,10 @@ export function grantCombatReward(state: GameState, timestamp = Date.now()): Gam
 
   const rewardDefinition = adventure.mode === "endless"
     ? { experience: experienceForLevelGains(state.character.level, state.character.xp, 2), gold: 0, loot: false }
-    : ADVENTURE[adventure.nodeIndex]?.reward;
+    : getAdventureNode(adventure).reward;
   if (!rewardDefinition) return state;
 
-  const lootTemplate = rewardDefinition.loot ? getLoot(adventure.nodeIndex, getDerivedStats(state.character).lootRarityBonus) : null;
+  const lootTemplate = rewardDefinition.loot ? getLoot(adventure.nodeIndex, getDerivedStats(state.character).lootRarityBonus, adventure.adventureId) : null;
   const loot = lootTemplate ? { ...lootTemplate, id: `${lootTemplate.id}-${adventure.nodeIndex}-${timestamp}` } : null;
   const experience = addExperience(state.character, rewardDefinition.experience);
   const reward: CombatReward = {

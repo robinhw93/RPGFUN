@@ -104,7 +104,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/App.tsx` | Top-level stateful UI, navigation, adventure screens, character/inventory UI, runtime talent tree, modals, and player actions. |
 | `src/styles.css` | Responsive layout, game-owned tooltips, modals, combat animations, paper-doll layout, talent maps, and mobile rules. |
 | `src/game/types.ts` | Shared domain types and data contracts. |
-| `src/game/data.ts` | Canonical abilities, talent nodes/canvas, enemies, items, gear-set bonuses, and adventure nodes. |
+| `src/game/data.ts` | Canonical abilities, talent nodes/canvas, enemies, events, items, gear-set bonuses, and staged adventures. |
 | `src/game/character.ts` | New-character state and derived-stat calculation. |
 | `src/game/engine.ts` | Combat transitions, initiative, abilities, targeting, status timing, enemy turns, and pending visible effects. |
 | `src/game/combatMath.ts` | Hit-versus-Dodge bounds and rolls. |
@@ -121,7 +121,8 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/talentRequirements.ts` | Bidirectional ANY talent-connection evaluation. |
 | `src/game/initiativeLayout.ts` | Pure FLIP geometry for initiative-card transitions. |
 | `src/game/avatars.ts` | Appearance catalog and saved-avatar normalization. |
-| `src/components/TalentDevtool.tsx` | Password gate and standalone Talent Editor draft UI. |
+| `src/components/TalentDevtool.tsx` | Standalone Talent Editor draft UI and export workflow. |
+| `src/components/ContentDevtools.tsx` | Developer-tool launcher plus Enemy, Event, and Adventure editor drafts/exports. |
 | `src/components/FloatingCombatText.tsx` | Timed floating-message presentation. |
 | `src/components/GameConfirmDialog.tsx` | Game-owned destructive-action confirmation. |
 | `src/components/GearSlotIcon.tsx` | Resolves equipment-category image assets. |
@@ -192,7 +193,10 @@ The runtime loadout remains a compact `equippedAbilities` array. The slot picker
 All live definitions are in `src/game/data.ts`:
 
 - Enemy IDs referenced by an adventure must exist in `ENEMIES`.
-- Adventure rewards are granted only to combat/boss nodes with a reward definition.
+- Enemy templates own Critical Strike Chance, Energy Regeneration, and Max Energy as well as their Health, Power, Armor, Magic Resistance, Hit, and Dodge values.
+- Story adventures are `ADVENTURES` definitions containing ordered stages. Every stage accepts an unlimited list of weighted combat, boss, and event entries. Runtime chooses one entry by its positive `chance` weights and saves that entry ID before presentation.
+- Event IDs referenced by an adventure must exist in `ADVENTURE_EVENTS`. Choices contain an attribute, threshold, and structured success/failure outcome.
+- Adventure rewards are granted only to combat/boss entries with a reward definition.
 - Gear IDs should remain stable because save hydration looks up current definitions by ID.
 - New set bonuses require both item `set` IDs and matching `GEAR_SET_BONUSES` entries.
 - Two-Hand weapons must use `weaponEquipType: "twoHand"`; legacy `weaponType` exists only for older saves.
@@ -312,6 +316,16 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 - Advanced triggers, damage modifiers, ability modifiers, and new status mechanics must currently be added in TypeScript after export.
 - Editor storage belongs to one browser/site origin.
 
+## Enemy, Event, and Adventure editors
+
+The developer-tool launcher also opens three isolated content editors:
+
+- **Create Enemy** edits combat stats, defense, Hit/Dodge/Critical chances, Energy values, default attack presentation, and free-form ability/behavior notes.
+- **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute, threshold, and success/failure text plus Health, gold, experience, talent-point, and attribute-point changes.
+- **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy counts support repeated templates in one encounter, and combat entries configure rewards.
+
+They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their storage keys are `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
+
 ## Save compatibility
 
 The live game key is `emberfall-save-v1`. When changing persistent types:
@@ -329,7 +343,7 @@ Current migration behavior:
 - Hydrates armor material and weapon metadata from current item definitions.
 - Resolves legacy two-handed weapon values and moves an invalid Off Hand item into inventory.
 - Restores missing avatar, stat-point, pending-reward, initiative, cooldown, status, per-round acted-actor, and combat-sequencing fields.
-- Restores a missing adventure mode as `story`; new saves may use `endless` for the Shadow Proving Grounds.
+- Restores a missing adventure mode as `story`; new saves may use `endless` for the Shadow Proving Grounds. Saves from the removed Ashen Road reset safely to the Windsong Forest map while preserving the character.
 
 ## UI conventions
 
