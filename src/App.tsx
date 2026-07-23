@@ -155,12 +155,18 @@ function pluralizeEnemyName(name: string): string {
   return `${name}s`;
 }
 
+function addIndefiniteArticle(name: string): string {
+  const existingArticle = name.match(/^(a|an|the)\s/i);
+  if (existingArticle) return `${existingArticle[1].toLowerCase()}${name.slice(existingArticle[1].length)}`;
+  return `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
+}
+
 function describeEnemyEncounter(enemyIds: string[]): string {
   const counts = new Map<string, number>();
   enemyIds.forEach((id) => counts.set(id, (counts.get(id) ?? 0) + 1));
   const groups = [...counts.entries()].map(([id, count]) => {
     const name = ENEMIES[id]?.name ?? id;
-    if (count === 1) return name;
+    if (count === 1) return addIndefiniteArticle(name);
     return `${ENCOUNTER_COUNT_WORDS[count] ?? count} ${pluralizeEnemyName(name)}`;
   });
   const description = groups.length <= 1
