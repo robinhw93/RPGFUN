@@ -706,6 +706,7 @@ export interface CombatAbilityAnimation {
   kind: CombatAbilityVfxKind;
   targetId?: "player" | string;
   sourceTargetId?: "player" | string;
+  shakeSource?: boolean;
 }
 
 export interface CombatProjectileAnimation {
@@ -726,7 +727,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
-  | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string }
+  | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatState {

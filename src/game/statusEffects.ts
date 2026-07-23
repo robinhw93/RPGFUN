@@ -63,7 +63,7 @@ export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<Sta
     id,
     name: definition.name,
     kind: definition.kind,
-    duration: isStealth ? definition.duration : options.duration ?? definition.duration,
+    duration: isStealth ? Math.max(1, Math.min(options.duration ?? definition.duration, definition.duration)) : options.duration ?? definition.duration,
     stacks: definition.stackable ? options.stacks ?? 1 : 1,
     description: options.description ?? definition.description,
     permanent: definition.permanent,
@@ -85,16 +85,19 @@ export function isStatusEffectId(value: string): value is StatusEffectId {
 export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffect): StatusEffect[] {
   if (!canApplyStatusEffect(statuses, status.id)) return statuses;
   const stackable = STATUS_EFFECTS[status.id].stackable === true;
-  const normalizedStatus = stackable ? status : { ...status, stacks: 1 };
+  const normalizedStatus = status.id === "stealth"
+    ? { ...status, duration: Math.max(1, Math.min(status.duration, STATUS_EFFECTS.stealth.duration)), stacks: 1, permanent: undefined, expiresAtTurnStart: false }
+    : stackable ? status : { ...status, stacks: 1 };
   const existing = statuses.find((item) => item.id === status.id);
   if (!existing) return [...statuses, normalizedStatus];
   return statuses.map((item) => item.id === status.id ? {
     ...item,
-    duration: item.permanent ? item.duration : item.id === "stealth" ? STATUS_EFFECTS.stealth.duration : Math.max(item.duration, normalizedStatus.duration),
+    duration: item.id === "stealth" ? Math.max(Math.min(item.duration, STATUS_EFFECTS.stealth.duration), normalizedStatus.duration) : item.permanent ? item.duration : Math.max(item.duration, normalizedStatus.duration),
     stacks: stackable ? item.stacks + normalizedStatus.stacks : 1,
     sourcePower: Math.max(item.sourcePower ?? 0, normalizedStatus.sourcePower ?? 0) || undefined,
     sourceId: normalizedStatus.sourceId ?? item.sourceId,
     magnitude: normalizedStatus.magnitude ?? item.magnitude,
+    permanent: item.id === "stealth" ? undefined : item.permanent,
     expiresAtTurnStart: item.id === "stealth" ? false : normalizedStatus.expiresAtTurnStart ?? item.expiresAtTurnStart,
   } : item);
 }
@@ -111,7 +114,7 @@ export function grantDiminishingReturnsAfterStun(previousStatuses: StatusEffect[
 export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect[] {
   const decremented = statuses.flatMap((status) => {
     const normalizedStatus = status.id === "stealth"
-      ? { ...status, duration: Math.min(status.duration, STATUS_EFFECTS.stealth.duration), expiresAtTurnStart: false }
+      ? { ...status, duration: Math.min(status.duration, STATUS_EFFECTS.stealth.duration), permanent: undefined, expiresAtTurnStart: false }
       : status;
     if (normalizedStatus.permanent || normalizedStatus.expiresAtTurnStart === true || normalizedStatus.id === "guard") return [normalizedStatus];
     const duration = normalizedStatus.duration - 1;

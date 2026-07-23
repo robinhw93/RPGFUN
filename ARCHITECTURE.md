@@ -374,7 +374,7 @@ The UI may preview and compare, but only these helpers authorize the transaction
 
 ## Talent prerequisites and runtime tree
 
-`areTalentRequirementsMet` is shared by visual availability and the actual unlock action:
+`areTalentRequirementsMet` is shared by visual availability and the actual unlock action. `isAdditionalClassTalentLocked` is applied by both paths as a second gate: once any non-origin class node is unlocked, other class nodes remain unavailable below level 10.
 
 - `getTalentConnectionIds` treats every stored edge as undirected by combining a node's own `requires` IDs with every node that references it.
 - A node with no adjacent connections is available.
@@ -382,7 +382,7 @@ The UI may preview and compare, but only these helpers authorize the transaction
 
 Each edge should be stored once. The runtime tree draws that one line, while availability and modal requirement text work from either end. The Talent Editor presents the checkbox as connected from both node perspectives, removes either stored orientation when disconnected, and normalizes duplicate reciprocal edges on load.
 
-The runtime tree derives its minimum bounding box from node world positions inside `TALENT_TREE_CANVAS`, then adds padding. It pans by scroll offset and zooms a scaled world surface between 20% and 160%. Wheel input zooms around the mouse position; a shared pointer-gesture state supports left/middle mouse dragging, one-finger touch panning, and two-finger pinch zoom. Node selection is resolved on pointer release only when movement stays below the drag threshold, so panning may begin over a node. The editor has independent zoom/canvas rules.
+The runtime tree derives its minimum bounding box from node world positions inside `TALENT_TREE_CANVAS`, then adds padding. It pans by scroll offset and zooms a scaled world surface between 20% and 160%. A non-passive native wheel listener prevents browser and scroll-container movement, accumulates a target zoom, and eases the rendered scale toward it around the mouse position. A shared pointer-gesture state supports left/middle mouse dragging, one-finger touch panning, and two-finger pinch zoom. Node selection is resolved on pointer release only when movement stays below the drag threshold, so panning may begin over a node. The editor has independent zoom/canvas rules.
 
 Connections render in an SVG layer with shape-aware black cutouts in a user-space mask for every node position. The lines therefore cannot show through nodes even when locked nodes use whole-element transparency. Circular passive nodes render at 75% of the square-node diameter, while unlocked nodes use a gold outer outline independent of branch color.
 

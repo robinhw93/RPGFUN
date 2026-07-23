@@ -109,6 +109,8 @@ The live tree has 263 nodes: the origin, four first-direction class nodes, 86 la
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
+Unlocking the first non-origin class node locks the other class nodes until level 10. From level 10 onward, additional class nodes use their normal connection and Talent Point requirements.
+
 | ID | Talent | Type | Declared connection(s) | Rule | Effect |
 | --- | --- | --- | --- | --- | --- |
 | origin | Wayfarer's Spark | Class | None | — | Starting node. |

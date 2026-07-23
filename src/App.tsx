@@ -23,7 +23,7 @@ import { addExperience, experienceProgressAfterGain, experienceToNextLevel, MAX_
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
-import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
+import { areTalentRequirementsMet, getTalentConnectionIds, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
 import type { Ability, AdventureEventOutcome, AdventureMode, AdventureStageDefinition, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
@@ -554,6 +554,7 @@ function App() {
       const freeTestingUnlock = current.adventure.mode === "endless";
       if (!talent || current.character.unlockedTalents.includes(talentId) || (!freeTestingUnlock && talent.cost > current.character.talentPoints)) return current;
       if (!areTalentRequirementsMet(talent, current.character.unlockedTalents, TALENTS)) return current;
+      if (isAdditionalClassTalentLocked(talent, current.character.unlockedTalents, current.character.level, TALENTS)) return current;
       const equipped = talent.abilityId && current.character.equippedAbilities.length < 6
         ? [...current.character.equippedAbilities, talent.abilityId]
         : current.character.equippedAbilities;
@@ -718,7 +719,7 @@ function App() {
             <nav className="character-submenu" aria-label="Character sections">
               <button type="button" className={characterSection === "overview" ? "active" : ""} aria-current={characterSection === "overview" ? "page" : undefined} onClick={() => openCharacterSection("overview")}><UserRound size={16} /> Character</button>
               <button type="button" className={characterSection === "equipment" ? "active" : ""} aria-current={characterSection === "equipment" ? "page" : undefined} onClick={() => openCharacterSection("equipment")}><Shield size={16} /> Equipment and Inventory</button>
-              <button type="button" className={characterSection === "talents" ? "active" : ""} aria-current={characterSection === "talents" ? "page" : undefined} onClick={() => openCharacterSection("talents")}><CircleDot size={16} /> Talents &amp; Abilities</button>
+              <button type="button" className={`${characterSection === "talents" ? "active" : ""} ${game.character.talentPoints > 0 ? "talent-attention" : ""}`.trim()} aria-current={characterSection === "talents" ? "page" : undefined} onClick={() => openCharacterSection("talents")}><CircleDot size={16} /> Talents &amp; Abilities</button>
             </nav>
             {characterSection !== "talents" ? (
               <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
@@ -1000,6 +1001,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
     <section className={`combat-page compact-combat ${adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).theme === "windsong_forest" ? "windsong-forest-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}>
+      <button type="button" className="combat-log-button combat-log-corner" onClick={() => setLogOpen(true)} aria-label="Open Combat Log"><BookOpen size={15} /></button>
       <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
@@ -1044,6 +1046,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
             const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
             const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
             const toxicExplosionEffects = toxicExplosionAnimations.filter((animation) => animation.targetId === enemy.instanceId);
+            const utilityCastShake = abilityAnimations.some((animation) => animation.shakeSource && animation.sourceTargetId === enemy.instanceId);
             return (
             <article
               key={enemy.instanceId}
@@ -1052,7 +1055,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               tabIndex={targetable ? 0 : -1}
               aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stealth") ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stealth") ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${utilityCastShake ? `utility-cast-shake cast-cycle-${combat.eventId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -1145,7 +1148,6 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       </div>
 
       <div className="combat-footer-controls">
-        <button className="combat-log-button" onClick={() => setLogOpen(true)}><BookOpen size={14} /> Combat Log</button>
         <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
@@ -2890,7 +2892,9 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
   const abilityEnergyCost = ability ? getCharacterAbilityEnergyCost(character, ability) : 0;
   const abilityCooldownTurns = ability ? getCharacterAbilityCooldownTurns(character, ability) : 0;
   const unlocked = character.unlockedTalents.includes(talent.id);
-  const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
+  const requirementsMet = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
+  const classLevelLocked = isAdditionalClassTalentLocked(talent, character.unlockedTalents, character.level, TALENTS);
+  const available = requirementsMet && !classLevelLocked;
   const abilityEquipped = Boolean(ability && character.equippedAbilities.includes(ability.id));
   const loadoutFull = character.equippedAbilities.length >= 6;
   const classBonus = talent.kind === "class" ? talent.description.replace(/\s*Unlocks?[^.]*\.?$/i, "").trim() : talent.description;
@@ -2931,7 +2935,9 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
 
   const unlockLabel = locked
     ? "Locked during combat"
-    : !available
+    : classLevelLocked
+      ? "Requires Level 10"
+    : !requirementsMet
       ? `Requires one of: ${requiredNames.join(", ")}`
       : freeUnlocks
         ? "Unlock for Free"
@@ -2942,9 +2948,10 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
   return (
     <div className="talent-detail-modal" role="dialog" aria-modal="true" aria-label={`${talent.name} details`} onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <article className={`talent-detail-card ${talent.branch}`}>
+        <button type="button" className="talent-detail-x" onClick={onClose} aria-label="Close talent details">×</button>
         <div className="talent-detail-heading">
           <div><p className="eyebrow">{typeLabel}</p><h2>{talent.name}</h2></div>
-          <span className={`talent-detail-state ${unlocked ? "unlocked" : available ? "available" : "locked"}`}>{talent.id === "origin" ? "Starting Node" : unlocked ? "Unlocked" : available ? "Available" : "Locked"}</span>
+          {(talent.id === "origin" || unlocked || !available) && <span className={`talent-detail-state ${unlocked ? "unlocked" : "locked"}`}>{talent.id === "origin" ? "Starting Node" : unlocked ? "Unlocked" : "Locked"}</span>}
         </div>
         {ability ? (
           <>
@@ -2965,8 +2972,8 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
             {talent.kind === "class" && <div className="talent-detail-effect"><small>Passive Bonus</small><p>{classBonus}</p></div>}
           </>
         ) : <div className="talent-detail-effect"><small>{talent.kind === "class" ? "Passive Bonus" : "Effect"}</small><p>{talent.description}</p></div>}
+        {classLevelLocked && <p className="talent-class-level-lock">You need to be lvl 10 before you can unlock another Class Node.</p>}
         <div className="talent-detail-actions">
-          <button type="button" className="talent-detail-close" onClick={onClose}>Close</button>
           {talent.id !== "origin" && !unlocked && <button type="button" className="talent-detail-primary" disabled={!canUnlock} onClick={() => onUnlock(talent.id)}>{unlockLabel}</button>}
           {unlocked && ability && <button type="button" className="talent-detail-primary" disabled={locked || (!abilityEquipped && loadoutFull)} onClick={() => onToggleAbility(ability.id)}>{abilityEquipped ? "Unequip Ability" : loadoutFull ? "Loadout Full" : "Equip Ability"}</button>}
         </div>
@@ -3118,6 +3125,9 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   const treeScrollRef = useRef<HTMLDivElement>(null);
   const treeCanvasRef = useRef<HTMLDivElement>(null);
   const treeZoomRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
+  const treeWheelZoomTargetRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
+  const treeWheelZoomFrameRef = useRef<number | null>(null);
+  const treeWheelZoomAnchorRef = useRef({ clientX: 0, clientY: 0 });
   const treePointersRef = useRef(new Map<number, RuntimeTalentPointer>());
   const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
   const closeTalentDetails = useCallback(() => setSelectedTalentId(null), []);
@@ -3137,7 +3147,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   }]));
   const selectedTalent = TALENTS.find((talent) => talent.id === selectedTalentId) ?? null;
 
-  const zoomTreeTo = (requestedZoom: number, anchorClientX?: number, anchorClientY?: number) => {
+  const zoomTreeTo = useCallback((requestedZoom: number, anchorClientX?: number, anchorClientY?: number) => {
     const scroller = treeScrollRef.current;
     const canvas = treeCanvasRef.current;
     const nextZoom = Math.max(RUNTIME_TALENT_MIN_ZOOM, Math.min(RUNTIME_TALENT_MAX_ZOOM, Math.round(requestedZoom * 1000) / 1000));
@@ -3156,7 +3166,46 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       scroller.scrollLeft = worldX * nextZoom - anchorX;
       scroller.scrollTop = worldY * nextZoom - anchorY;
     });
-  };
+  }, []);
+
+  const animateWheelZoom = useCallback(() => {
+    if (treeWheelZoomFrameRef.current !== null) return;
+    const step = () => {
+      const difference = treeWheelZoomTargetRef.current - treeZoomRef.current;
+      if (Math.abs(difference) < 0.001) {
+        zoomTreeTo(treeWheelZoomTargetRef.current, treeWheelZoomAnchorRef.current.clientX, treeWheelZoomAnchorRef.current.clientY);
+        treeWheelZoomFrameRef.current = null;
+        return;
+      }
+      zoomTreeTo(treeZoomRef.current + difference * 0.2, treeWheelZoomAnchorRef.current.clientX, treeWheelZoomAnchorRef.current.clientY);
+      treeWheelZoomFrameRef.current = window.requestAnimationFrame(step);
+    };
+    treeWheelZoomFrameRef.current = window.requestAnimationFrame(step);
+  }, [zoomTreeTo]);
+
+  useEffect(() => {
+    const scroller = treeScrollRef.current;
+    if (!scroller) return;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const normalizedDelta = event.deltaMode === 1
+        ? event.deltaY * 16
+        : event.deltaMode === 2 ? event.deltaY * scroller.clientHeight : event.deltaY;
+      treeWheelZoomAnchorRef.current = { clientX: event.clientX, clientY: event.clientY };
+      treeWheelZoomTargetRef.current = Math.max(
+        RUNTIME_TALENT_MIN_ZOOM,
+        Math.min(RUNTIME_TALENT_MAX_ZOOM, treeWheelZoomTargetRef.current * Math.exp(-normalizedDelta * 0.0013)),
+      );
+      animateWheelZoom();
+    };
+    scroller.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      scroller.removeEventListener("wheel", handleWheel);
+      if (treeWheelZoomFrameRef.current !== null) window.cancelAnimationFrame(treeWheelZoomFrameRef.current);
+      treeWheelZoomFrameRef.current = null;
+    };
+  }, [animateWheelZoom]);
 
   useEffect(() => {
     const scroller = treeScrollRef.current;
@@ -3217,7 +3266,14 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       const midpointX = (first.clientX + second.clientX) / 2;
       const midpointY = (first.clientY + second.clientY) / 2;
       if (gesture.pinchDistance && gesture.pinchDistance > 0) {
-        zoomTreeTo(treeZoomRef.current * distance / gesture.pinchDistance, midpointX, midpointY);
+        if (treeWheelZoomFrameRef.current !== null) window.cancelAnimationFrame(treeWheelZoomFrameRef.current);
+        treeWheelZoomFrameRef.current = null;
+        const requestedZoom = Math.max(
+          RUNTIME_TALENT_MIN_ZOOM,
+          Math.min(RUNTIME_TALENT_MAX_ZOOM, treeZoomRef.current * distance / gesture.pinchDistance),
+        );
+        treeWheelZoomTargetRef.current = requestedZoom;
+        zoomTreeTo(requestedZoom, midpointX, midpointY);
       }
       gesture.pinchDistance = distance;
       gesture.moved = true;
@@ -3268,9 +3324,6 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
 
   return (
     <section className="page talents-page">
-      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div></div>
-      {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
-      {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="talent-loadout-actions">
         <button type="button" className="talent-loadout-trigger" onClick={() => setAbilityLoadoutOpen(true)}>
           <Swords size={18} />
@@ -3279,13 +3332,10 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
           <ChevronRight size={17} />
         </button>
       </div>
+      {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
+      {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="runtime-talent-stage">
-        <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree" onWheel={(event) => {
-          event.preventDefault();
-          const scroller = treeScrollRef.current;
-          const normalizedDelta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * (scroller?.clientHeight ?? 600) : event.deltaY;
-          zoomTreeTo(treeZoomRef.current * Math.exp(-normalizedDelta * 0.0015), event.clientX, event.clientY);
-        }}>
+        <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree">
         <div className="runtime-talent-zoom-surface" style={{ width: treeWidth * treeZoom, height: treeHeight * treeZoom }}>
           <div ref={treeCanvasRef} className={`talent-map runtime-talent-map ${isPanning ? "panning" : ""}`} style={{ width: treeWidth, height: treeHeight, transform: `scale(${treeZoom})` }} onPointerDown={beginTreeGesture} onPointerMove={moveTreeGesture} onPointerUp={(event) => endTreeGesture(event)} onPointerCancel={(event) => endTreeGesture(event, true)} onLostPointerCapture={(event) => endTreeGesture(event, true)}>
             <svg className="runtime-talent-connections" viewBox={`0 0 ${treeWidth} ${treeHeight}`} aria-hidden="true">
@@ -3312,7 +3362,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
             </svg>
             {TALENTS.map((talent) => {
               const unlocked = character.unlockedTalents.includes(talent.id);
-              const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS);
+              const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS)
+                && !isAdditionalClassTalentLocked(talent, character.unlockedTalents, character.level, TALENTS);
               const state = unlocked ? "unlocked" : available ? "available" : "locked";
               const position = nodePositions.get(talent.id)!;
               const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";
@@ -3326,7 +3377,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
           </div>
         </div>
         </div>
-        <div className={`talent-points talent-points-overlay ${character.talentPoints > 0 ? "unspent-points-indicator" : ""}`}><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div>
+        <div className={`talent-points talent-points-overlay ${character.talentPoints > 0 ? "unspent-points-indicator" : ""}`} aria-label={`${character.talentPoints} Talent Points available`}><Sparkles /><span><strong>{character.talentPoints} Points</strong></span></div>
       </div>
       {selectedTalent && <TalentDetailModal
         talent={selectedTalent}

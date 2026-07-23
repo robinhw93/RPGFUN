@@ -298,6 +298,7 @@ This sequencing guarantees that:
 - Firestorm raises its field of flame across every enemy simultaneously and repeats its distinct eruption on the caster when self-Burn is applied.
 - Blizzard drives fast snow and wind diagonally across the full enemy side, while Ride the Lightning's yellow field appears with its Stealth application.
 - Elemental Fury connects to its target with layered frost, fire, lightning, and arcane beams. Focused Blast uses a deliberately broader, brighter arcane beam and impact flare.
+- When an enemy uses a utility ability without an attack movement, its combat card gives a short horizontal casting shake while the ability VFX resolves.
 - Frozen applications flash with an ice seal, and Frozen combatants retain a clear blue treatment until the control ends or damage breaks it.
 - A combatant flashes yellow with visible lightning when Electrified is applied. This local effect does not add sequence time or delay the next action.
 - Contagion animates a copied Poison icon from its selected source enemy to the random destination enemy.
@@ -400,7 +401,7 @@ Excess experience carries into later levels, and one reward can grant multiple l
 
 Level 50 is the maximum level. Characters at level 50 no longer accumulate experience, and older saves above the cap are normalized to level 50 when loaded.
 
-Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Positive unspent Attribute Point and Talent Point counters pulse with a slow gold text glow and a separately faded aura on their respective screens; the score-screen **Level up!** treatment uses the same continuous rhythm without scaling, brightness jumps, or discrete shadow changes. The Character hub has separate **Character**, **Equipment and Inventory**, and **Talents & Abilities** submenus. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
+Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Positive unspent Attribute Point and Talent Point counters pulse with a slow gold text glow and a separately faded aura on their respective screens; the score-screen **Level up!** treatment uses the same continuous rhythm without scaling, brightness jumps, or discrete shadow changes. While Talent Points remain, the **Talents & Abilities** Character tab uses the same pulse to direct the player to the tree. The Character hub has separate **Character**, **Equipment and Inventory**, and **Talents & Abilities** submenus. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
 
 ## Talents and ability loadout
 
@@ -411,6 +412,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 - A node costs its configured number of talent points in normal adventures. Shadow Proving Grounds temporarily makes valid unlocks free without changing the character's stored points.
 - Talent connections are bidirectional. If either node stores the connection, unlocking either end can make the node at the other end available.
 - Any one connected node is always enough; there is no alternate requirement mode.
+- After one non-origin class node is unlocked, the other class nodes remain locked until character level 10. At level 10, their normal connection and Talent Point requirements apply again.
 - Unlocking is permanent for the current character; there is no respec UI.
 - Unlocking an ability talent automatically equips the ability if fewer than six abilities are equipped.
 
@@ -425,7 +427,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 - Weight of Frost uses the shared passive-stat pipeline to add 5% of current Armor, rounded up, as flat damage to each direct hit.
 - Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
 - Circular passive nodes are 25% smaller than square class/ability nodes. Unlocked nodes receive a gold outer outline, and the connection layer is masked beneath every node so lines cannot show through transparent locked nodes.
-- The tree itself is the unframed background of the Talents page, with the available Talent Point counter overlaid on it. Desktop wheel input zooms around the pointer; left-drag or middle-button drag pans. On touch screens, one-finger drag pans and a two-finger pinch zooms. A drag may begin on a node without selecting it, while a stationary click or tap opens that node.
+- The **Equipped Abilities** control sits at the top and the tree itself fills the remaining unframed Talents page. Its Talent Point counter is overlaid without an extra label. Desktop wheel input is captured by the tree and eases continuously into pointer-anchored zoom without vertically scrolling the tree or page; left-drag or middle-button drag pans. On touch screens, one-finger drag pans and a two-finger pinch zooms. A drag may begin on a node without selecting it, while a stationary click or tap opens that node. Talent details close from the top-right cross.
 
 The complete current tree is listed in [Content reference](CONTENT_REFERENCE.md#talent-tree).
 

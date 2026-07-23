@@ -242,6 +242,8 @@ Player `You use ...` action events are presentation-hidden and use `COMBAT_TIMIN
 
 `endPlayerTurn` must preserve resolved player-status durations. When turn-end events exist, it queues status reconciliation on the final turn-end event; without a sequence, it returns the resolved status list directly. Do not restore `combat.playerStatuses` unconditionally, or finite buffs such as Stealth will appear permanent.
 
+Stealth normalization must also clear any legacy `permanent` flag during creation, refresh, combat loading, and duration decrement. Stealth created during its holder's active turn uses two owner-turn-end ticks (the current turn and the next); Stealth created after that holder's turn-end processing uses one, so both paths expire at the end of the holder's next turn.
+
 `FloatingCombatText` snapshots hidden event indexes when a sequence mounts. Pending damage effects are consumed as soon as their event resolves, so recalculating visibility from live pending effects would reveal the hidden damage sentence for the remainder of that event.
 
 Luck's chance-effect bonus is added only when `chance` is explicitly present. Final proc chance is clamped to 0–100%.

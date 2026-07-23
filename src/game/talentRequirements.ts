@@ -19,3 +19,19 @@ export function areTalentRequirementsMet(
   const unlocked = new Set(unlockedTalents);
   return connections.some((connection) => unlocked.has(connection));
 }
+
+export function isAdditionalClassTalentLocked(
+  talent: Pick<Talent, "id" | "kind">,
+  unlockedTalents: readonly string[],
+  level: number,
+  talents: readonly Talent[],
+): boolean {
+  if (talent.kind !== "class" || talent.id === "origin" || level >= 10) return false;
+  const unlocked = new Set(unlockedTalents);
+  return talents.some((candidate) => (
+    candidate.kind === "class"
+    && candidate.id !== "origin"
+    && candidate.id !== talent.id
+    && unlocked.has(candidate.id)
+  ));
+}

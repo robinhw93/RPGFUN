@@ -189,9 +189,9 @@ function queuePassiveAnimation(pendingEffects: CombatPendingEffect[], eventIndex
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "passive_text", targetId, text, lane: combatEffectSequence % 3 });
 }
 
-function queueAbilityVfx(pendingEffects: CombatPendingEffect[], eventIndex: number, kind: CombatAbilityVfxKind, targetId?: "player" | string, sourceTargetId?: "player" | string): void {
+function queueAbilityVfx(pendingEffects: CombatPendingEffect[], eventIndex: number, kind: CombatAbilityVfxKind, targetId?: "player" | string, sourceTargetId?: "player" | string, shakeSource = false): void {
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "ability_vfx", kind, targetId, sourceTargetId });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "ability_vfx", kind, targetId, sourceTargetId, shakeSource });
 }
 
 function queueStatus(events: string[], pendingEffects: CombatPendingEffect[], text: string, targetId: string, status: StatusEffect, stunned = false, attachedEventIndex?: number, sourceTargetId?: string): void {
@@ -735,6 +735,7 @@ function applyPlayerDeathPrevention(
   logs: CombatLogEntry[],
   events: string[],
   pendingEffects: CombatPendingEffect[],
+  stealthDuration = Math.max(1, derived.deathPreventionStealthDuration),
 ): { hp: number; statuses: StatusEffect[]; used: boolean; healing: number; healingEventIndex: number | null } {
   if (hp > 0 || alreadyUsed) return { hp, statuses, used: alreadyUsed, healing: 0, healingEventIndex: null };
   const consumedStatus = derived.deathPreventionConsumeStatusForHealing
@@ -756,7 +757,7 @@ function applyPlayerDeathPrevention(
   if (derived.deathPreventionHealRatio <= 0) return { hp, statuses, used: alreadyUsed, healing: 0, healingEventIndex: null };
   const healing = Math.max(1, Math.round(maxHp * derived.deathPreventionHealRatio));
   const stealth = createPlayerAppliedStatus("stealth", derived, {
-    duration: Math.max(1, derived.deathPreventionStealthDuration),
+    duration: stealthDuration,
     expiresAtTurnStart: false,
   });
   const text = `Panic saves you, restoring ${healing} Health and granting Stealth.`;
@@ -773,7 +774,7 @@ function moveToNextActor(combat: CombatState, character: CharacterState, logs: C
   combat = { ...combat, actedActorIds: [...actedActorIds], enemyActionsTaken: 0 };
   combat = reorderCombat(combat);
   const derived = getDerivedStats(character);
-  const saved = applyPlayerDeathPrevention(combat.playerHp, combat.playerStatuses, combat.deathPreventionUsed, combat.playerMaxHp, derived, logs, events, pendingEffects);
+  const saved = applyPlayerDeathPrevention(combat.playerHp, combat.playerStatuses, combat.deathPreventionUsed, combat.playerMaxHp, derived, logs, events, pendingEffects, 1);
   const savedTriggers = runDeathPreventionHealingTriggers(
     saved,
     character,
@@ -2522,7 +2523,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     ({ enemies, playerStatuses, playerHp, energy } = bleedTakenTriggers.state);
     abilityCooldowns = bleedTakenTriggers.state.abilityCooldowns ?? abilityCooldowns;
   }
-  const saved = applyPlayerDeathPrevention(playerHp, playerStatuses, combat.deathPreventionUsed, combat.playerMaxHp, derived, logs, events, pendingEffects);
+  const saved = applyPlayerDeathPrevention(playerHp, playerStatuses, combat.deathPreventionUsed, combat.playerMaxHp, derived, logs, events, pendingEffects, ability.grantsImmediateTurn ? 1 : Math.max(1, derived.deathPreventionStealthDuration));
   const savedTriggers = runDeathPreventionHealingTriggers(
     saved,
     character,
@@ -2926,7 +2927,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       const isSelfUtility = (enemyAbility.selfStatusApplications?.length ?? 0) > 0
         || (enemyAbility.nextTurnEnergyRegen ?? 0) > 0
         || enemyAbility.restoreFullEnergyNextTurn === true;
-      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId);
+      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId, true);
     } else if (successfulHits === 0) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, missed: true });
@@ -3289,7 +3290,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     ? [{ id: effect.id, statusId: effect.status.id, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId }]
     : []);
   const abilityAnimations = matchingEffects.flatMap((effect) => effect.type === "ability_vfx"
-    ? [{ id: effect.id, kind: effect.kind, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId }]
+    ? [{ id: effect.id, kind: effect.kind, targetId: effect.targetId, sourceTargetId: effect.sourceTargetId, shakeSource: effect.shakeSource }]
     : []);
   const passiveAnimations = matchingEffects.flatMap((effect) => effect.type === "passive_text"
     ? [{ id: effect.id, targetId: effect.targetId, text: effect.text, lane: effect.lane }]
@@ -3379,7 +3380,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       if (enemy.hp <= 0 || !reaction || reaction.allyId !== defeated.id) return enemy;
       const amount = Math.min(enemy.maxHp - enemy.hp, Math.max(1, Math.round(enemy.maxHp * reaction.maxHpRatio)));
       if (amount <= 0) return enemy;
-      abilityAnimations.push({ id: `ally-death-vfx-${eventId}-${eventIndex}-${defeated.instanceId}`, kind: reaction.vfx, targetId: enemy.instanceId, sourceTargetId: defeated.instanceId });
+      abilityAnimations.push({ id: `ally-death-vfx-${eventId}-${eventIndex}-${defeated.instanceId}`, kind: reaction.vfx, targetId: enemy.instanceId, sourceTargetId: defeated.instanceId, shakeSource: false });
       passiveAnimations.push({ id: `ally-death-heal-${eventId}-${eventIndex}-${defeated.instanceId}`, targetId: enemy.instanceId, text: `+${amount} Health`, lane: eventIndex % 3 });
       return { ...enemy, hp: enemy.hp + amount };
     });
