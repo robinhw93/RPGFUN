@@ -145,8 +145,30 @@ function rollDummyEncounter(): string[] {
   return Array.from({ length: Math.random() < 0.5 ? 2 : 3 }, () => "dummy");
 }
 
-function describeDummyEncounter(enemyIds: string[]): string {
-  return `You encounter ${enemyIds.length} DUMMIES.`;
+const ENCOUNTER_COUNT_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+
+function pluralizeEnemyName(name: string): string {
+  if (name === "DUMMY") return "DUMMIES";
+  if (/wolf$/i.test(name)) return name.replace(/wolf$/i, (word) => word === "WOLF" ? "WOLVES" : word === "Wolf" ? "Wolves" : "wolves");
+  if (/[^aeiou]y$/i.test(name)) return `${name.slice(0, -1)}ies`;
+  if (/(?:s|x|z|ch|sh)$/i.test(name)) return `${name}es`;
+  return `${name}s`;
+}
+
+function describeEnemyEncounter(enemyIds: string[]): string {
+  const counts = new Map<string, number>();
+  enemyIds.forEach((id) => counts.set(id, (counts.get(id) ?? 0) + 1));
+  const groups = [...counts.entries()].map(([id, count]) => {
+    const name = ENEMIES[id]?.name ?? id;
+    if (count === 1) return name;
+    return `${ENCOUNTER_COUNT_WORDS[count] ?? count} ${pluralizeEnemyName(name)}`;
+  });
+  const description = groups.length <= 1
+    ? groups[0] ?? "unknown enemies"
+    : groups.length === 2
+      ? groups.join(" and ")
+      : `${groups.slice(0, -1).join(", ")}, and ${groups.at(-1)}`;
+  return `You encounter ${description}.`;
 }
 
 const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
@@ -348,7 +370,7 @@ function App() {
     const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;
     const node = entry ? entryToNode(entry) : null;
     const message = enemyIds?.length
-      ? mode === "endless" ? describeDummyEncounter(enemyIds) : `You encounter ${enemyIds.map((id) => ENEMIES[id].name).join(" and ")}.`
+      ? describeEnemyEncounter(enemyIds)
       : `You discover ${node?.title ?? "a new path"}.`;
     playTravelTransition(mode, message, () => {
       setGame((current) => {
@@ -449,9 +471,9 @@ function App() {
     const nextEntry = game.adventure.mode === "endless" ? null : selectStageEntry(definition, game.adventure.nodeIndex + 1);
     const nextNode = nextEntry ? entryToNode(nextEntry) : null;
     const message = endlessEnemyIds
-      ? describeDummyEncounter(endlessEnemyIds)
+      ? describeEnemyEncounter(endlessEnemyIds)
       : nextNode?.enemies
-        ? `You encounter ${nextNode.enemies.map((id) => ENEMIES[id].name).join(" and ")}.`
+        ? describeEnemyEncounter(nextNode.enemies)
         : `You discover ${nextNode?.title}.`;
     playTravelTransition(game.adventure.mode, message, () => {
       advanceJourney(endlessEnemyIds, nextEntry?.id);
