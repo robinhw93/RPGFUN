@@ -358,7 +358,7 @@ Current migration behavior:
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
 - Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Spell Power**.
-- Preload and decode Character-screen avatars, gear icons, and stat icons before rendering that screen. Use the game-owned loading state instead of allowing individual icons to pop in.
+- Preload and decode Character-screen avatars, their combat portraits, gear icons, and stat icons before rendering that screen. Current-encounter enemy portraits and full bestiary art are warmed through the shared image cache when combat loads so the card and information modal do not pop in late.
 - Keep combat usable without page scrolling on mobile.
 
 ## Documentation maintenance

@@ -129,9 +129,10 @@ function preloadImage(url: string): Promise<void> {
   return promise;
 }
 
-function preloadCharacterAssets(avatarUrl: string): Promise<void[]> {
+function preloadCharacterAssets(avatarUrl: string, portraitUrl: string): Promise<void[]> {
   return Promise.all([...new Set([
     avatarUrl,
+    portraitUrl,
     ...Object.values(STAT_ICON_URLS),
     ...GEAR_ICON_URLS,
     "/assets/resource-icons/gold.png",
@@ -292,7 +293,8 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     setCharacterAssetsReady(false);
-    preloadCharacterAssets(getCharacterAvatar(game.character.avatarId).imageUrl).then(() => {
+    const avatar = getCharacterAvatar(game.character.avatarId);
+    preloadCharacterAssets(avatar.imageUrl, avatar.portraitUrl).then(() => {
       if (!cancelled) setCharacterAssetsReady(true);
     });
     return () => { cancelled = true; };
@@ -779,6 +781,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
   const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
   const inspectedEnemy = adventure.combat?.enemies.find((enemy) => enemy.instanceId === inspectedEnemyId) ?? null;
+  const enemyVisualKey = adventure.combat?.enemies.map((enemy) => enemy.id).join("|") ?? "";
   const combatEventId = adventure.combat?.eventId ?? 0;
   const initiativePlaying = Boolean(adventure.combat && adventure.combat.outcome === "active" && !adventure.combat.initiativeRevealed);
   const sequencePending = Boolean(adventure.combat && isCombatSequencePending(adventure.combat));
@@ -789,6 +792,15 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
     setInspectedInfo(null);
     setInspectedEnemyId(null);
   }, [adventure.nodeIndex]);
+  useEffect(() => {
+    if (!enemyVisualKey) return;
+    [...new Set(enemyVisualKey.split("|"))].forEach((enemyId) => {
+      const enemy = ENEMIES[enemyId];
+      if (!enemy) return;
+      void preloadImage(enemy.portraitUrl);
+      void preloadImage(enemy.imageUrl);
+    });
+  }, [enemyVisualKey]);
   useEffect(() => {
     if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || activeActor?.kind !== "enemy") return;
     const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
@@ -907,6 +919,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const isPlayerTurn = activeActor?.kind === "player";
   const playerIncapacitated = combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen");
   const abilityInputUnavailable = initiativePlaying || playerIncapacitated;
+  const combatAvatar = getCharacterAvatar(game.character.avatarId);
   const handleCombatEventShown = (eventId: number, eventIndex: number) => {
     if (eventRevealsPlayerTurn(combat, eventIndex)) onPlayerTurnReady(eventId);
     onCombatEvent(eventId, eventIndex);
@@ -938,6 +951,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
+          <span className="combatant-portrait player-combatant-portrait" aria-hidden="true"><img src={combatAvatar.portraitUrl} alt="" draggable={false} /></span>
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
@@ -989,6 +1003,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
               {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
+              <span className="combatant-portrait enemy-combatant-portrait" aria-hidden="true"><img src={enemy.portraitUrl} alt="" draggable={false} /></span>
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
               <div className="compact-resource-label">
@@ -2246,8 +2261,11 @@ function EnemyStatsModal({ enemy, onClose }: { enemy: EnemyState; onClose: () =>
         <p className="eyebrow">Enemy Information</p>
         <h2>{enemy.name}</h2>
         <p className="enemy-title">{enemy.title}</p>
-        <div className="enemy-stats-grid">
-          {stats.map(([label, value]) => <span key={label}><small>{label}</small><strong>{value}</strong></span>)}
+        <div className="enemy-stats-content">
+          <figure className="enemy-full-art"><img src={enemy.imageUrl} alt={`${enemy.name}, ${enemy.title}`} draggable={false} /></figure>
+          <div className="enemy-stats-grid">
+            {stats.map(([label, value]) => <span key={label}><small>{label}</small><strong>{value}</strong></span>)}
+          </div>
         </div>
         <button type="button" onClick={onClose}>Close</button>
       </div>

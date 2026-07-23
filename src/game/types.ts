@@ -641,6 +641,8 @@ export interface EnemyTemplate {
   id: string;
   name: string;
   title: string;
+  imageUrl: string;
+  portraitUrl: string;
   maxHp: number;
   physicalPower: number;
   spellPower: number;

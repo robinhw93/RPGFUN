@@ -51,7 +51,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/types.ts` is the shared domain schema.
 - `src/game/data.ts` is the canonical static catalog for abilities, talents, tree canvas, enemies, events, items, set thresholds, and staged adventures.
 - `src/game/statusEffects.ts` is the canonical status catalog and owns generic status stacking, duration, multipliers, ticking damage, and healing formulas.
-- `src/game/avatars.ts` owns the appearance catalog and normalization.
+- `src/game/avatars.ts` owns the appearance catalog, full-figure and combat-portrait asset mapping, and normalization.
 
 ### Rules and transitions
 

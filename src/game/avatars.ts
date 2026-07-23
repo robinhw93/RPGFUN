@@ -1,14 +1,14 @@
 export const CHARACTER_AVATARS = [
-  { id: "male-01", group: "male", label: "Male 1", imageUrl: "/assets/avatars/male-01.webp" },
-  { id: "male-02", group: "male", label: "Male 2", imageUrl: "/assets/avatars/male-02.webp" },
-  { id: "male-03", group: "male", label: "Male 3", imageUrl: "/assets/avatars/male-03.webp" },
-  { id: "male-04", group: "male", label: "Male 4", imageUrl: "/assets/avatars/male-04.webp" },
-  { id: "male-05", group: "male", label: "Male 5", imageUrl: "/assets/avatars/male-05.webp" },
-  { id: "female-01", group: "female", label: "Female 1", imageUrl: "/assets/avatars/female-01.webp" },
-  { id: "female-02", group: "female", label: "Female 2", imageUrl: "/assets/avatars/female-02.webp" },
-  { id: "female-03", group: "female", label: "Female 3", imageUrl: "/assets/avatars/female-03.webp" },
-  { id: "female-04", group: "female", label: "Female 4", imageUrl: "/assets/avatars/female-04.webp" },
-  { id: "female-05", group: "female", label: "Female 5", imageUrl: "/assets/avatars/female-05.webp" },
+  { id: "male-01", group: "male", label: "Male 1", imageUrl: "/assets/avatars/male-01.webp", portraitUrl: "/assets/avatar-portraits/male-01.webp" },
+  { id: "male-02", group: "male", label: "Male 2", imageUrl: "/assets/avatars/male-02.webp", portraitUrl: "/assets/avatar-portraits/male-02.webp" },
+  { id: "male-03", group: "male", label: "Male 3", imageUrl: "/assets/avatars/male-03.webp", portraitUrl: "/assets/avatar-portraits/male-03.webp" },
+  { id: "male-04", group: "male", label: "Male 4", imageUrl: "/assets/avatars/male-04.webp", portraitUrl: "/assets/avatar-portraits/male-04.webp" },
+  { id: "male-05", group: "male", label: "Male 5", imageUrl: "/assets/avatars/male-05.webp", portraitUrl: "/assets/avatar-portraits/male-05.webp" },
+  { id: "female-01", group: "female", label: "Female 1", imageUrl: "/assets/avatars/female-01.webp", portraitUrl: "/assets/avatar-portraits/female-01.webp" },
+  { id: "female-02", group: "female", label: "Female 2", imageUrl: "/assets/avatars/female-02.webp", portraitUrl: "/assets/avatar-portraits/female-02.webp" },
+  { id: "female-03", group: "female", label: "Female 3", imageUrl: "/assets/avatars/female-03.webp", portraitUrl: "/assets/avatar-portraits/female-03.webp" },
+  { id: "female-04", group: "female", label: "Female 4", imageUrl: "/assets/avatars/female-04.webp", portraitUrl: "/assets/avatar-portraits/female-04.webp" },
+  { id: "female-05", group: "female", label: "Female 5", imageUrl: "/assets/avatars/female-05.webp", portraitUrl: "/assets/avatar-portraits/female-05.webp" },
 ] as const;
 
 export type CharacterAvatar = (typeof CHARACTER_AVATARS)[number];
