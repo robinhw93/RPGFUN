@@ -44,6 +44,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
 - `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow.
 - `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher.
+- `src/components/PortraitDevtool.tsx` owns the isolated enemy/player artwork selection and normalized circular portrait-crop workflow.
 - `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
 
 ### Domain and content

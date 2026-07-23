@@ -487,4 +487,4 @@ Gold is stored on the character and displayed in the top bar and reward screens.
 - Defeat deletes the save without retaining a recoverable character.
 - Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, and reward state where possible.
 
-Developer Talent, Enemy, Event, and Adventure Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset.
+Developer Talent, Enemy, Event, Adventure, and Portrait Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset. Portrait crops use source-image percentage coordinates so the same selection renders consistently across desktop and mobile editor sizes.

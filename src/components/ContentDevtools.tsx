@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Copy, Download, LockKeyhole, Plus, Save, Skull, Trash2, Wrench, X } from "lucide-react";
+import { BookOpen, Copy, Download, Image, LockKeyhole, Plus, Save, Skull, Trash2, Wrench, X } from "lucide-react";
 import { ADVENTURES, ADVENTURE_EVENTS, ENEMIES } from "../game/data";
 import { experienceToNextLevel, MAX_LEVEL } from "../game/progression";
 import type { AbilityRange, AdventureDefinition, AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureStageEntry, StatName } from "../game/types";
 
-export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool";
+export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool" | "portraitDevtool";
 
 const DEVTOOL_CODE = "bajs321";
 export const ENEMY_DRAFT_STORAGE_KEY = "emberfall.enemy-devtool.v1";
@@ -127,6 +127,7 @@ export function DevtoolAccessDialog({ onClose, onOpen }: { onClose: () => void; 
         <button onClick={() => onOpen("enemyDevtool")}><Skull /><span><strong>Create Enemy</strong><small>Stats, abilities and behavior</small></span></button>
         <button onClick={() => onOpen("eventDevtool")}><Copy /><span><strong>Event Manager</strong><small>Scenarios, choices and rolls</small></span></button>
         <button onClick={() => onOpen("adventureDevtool")}><Wrench /><span><strong>Adventure Editor</strong><small>Stages, chances and prerequisites</small></span></button>
+        <button onClick={() => onOpen("portraitDevtool")}><Image /><span><strong>Portrait Editor</strong><small>Artwork and combat portrait crops</small></span></button>
       </div>}
     </section>
   </div>;

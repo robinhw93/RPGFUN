@@ -8,6 +8,7 @@ import {
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { FloatingCombatText } from "./components/FloatingCombatText";
 import { GEAR_ICON_URLS, GearSlotIcon } from "./components/GearSlotIcon";
+import { PortraitDevtool } from "./components/PortraitDevtool";
 import { TalentDevtool } from "./components/TalentDevtool";
 import { AdventureDevtool, DevtoolAccessDialog, EnemyDevtool, EventDevtool, type DevtoolKind } from "./components/ContentDevtools";
 import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } from "./game/avatars";
@@ -664,6 +665,7 @@ function App() {
         {view === "enemyDevtool" && <EnemyDevtool onExit={() => navigate("adventure")} />}
         {view === "eventDevtool" && <EventDevtool onExit={() => navigate("adventure")} />}
         {view === "adventureDevtool" && <AdventureDevtool onExit={() => navigate("adventure")} />}
+        {view === "portraitDevtool" && <PortraitDevtool onExit={() => navigate("adventure")} />}
       </main>
 
       <nav className="mobile-nav" aria-label="Mobile navigation">
