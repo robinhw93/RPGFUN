@@ -40,8 +40,8 @@ Every new character starts with:
 - No unspent attribute points.
 - Wayfarer's Spark unlocked.
 - Strike and Guard equipped.
-- Strength 5, Agility 5, Intelligence 5, Vitality 6, and Luck 3.
-- A full eight-slot equipment loadout and a large testing inventory. See [Content reference](CONTENT_REFERENCE.md#starting-equipment-and-inventory).
+- Strength 5, Agility 5, Intelligence 5, Vitality 5, and Luck 5.
+- No equipped gear and an empty inventory.
 
 ## Attributes
 
@@ -51,7 +51,7 @@ Attributes are whole numbers. Equipment and flat talent bonuses are added to bas
 | --- | --- |
 | Strength | +1 Physical Power per point and +1% Guard gained per point. |
 | Agility | +0.3 Physical Power, +0.5% raw Hit Chance, +0.4% Dodge Chance, and +0.5 Initiative per point. |
-| Intelligence | +1 Magical Power and +0.25 Initiative per point. |
+| Intelligence | +1 Spell Power and +0.25 Initiative per point. |
 | Vitality | +10 Max Health and +0.5% healing received per point. |
 | Luck | +0.75% Critical Strike Chance, +1% loot-rarity bonus, and +0.25% to explicitly chance-based combat triggers per point. |
 
@@ -63,11 +63,11 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 
 | Stat | Current rule |
 | --- | --- |
-| Max Health | `20 + Vitality × 10 + flat bonuses` |
+| Max Health | `Vitality × 10` |
 | Max Energy | `10 + flat bonuses` |
 | Energy Regeneration | `2 + flat bonuses` at the start of the player's turn. |
 | Physical Power | `(Strength + Agility × 0.3 + gear/talent Physical Power) × (100% + Physical Power bonuses)` |
-| Magical Power | `(Intelligence + gear/talent Magical Power) × (100% + Magical Power bonuses)` |
+| Spell Power | `(Intelligence + gear/talent Spell Power) × (100% + Spell Power bonuses)` |
 | Armor | Sum of equipped item, set, and talent Armor. Shatter can halve the effective value. |
 | Magic Resistance | Sum of equipped item, set, and talent Magic Resistance. |
 | Critical Strike Chance | `5% + Luck × 0.75% + bonuses` |
@@ -82,6 +82,10 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 Raw Hit Chance and Critical Strike Chance have no maximum cap. Dodge Chance is capped at 50%.
 
 Permanent Energy Regeneration bonuses from talents add together through the shared derived-stat pipeline. The current tree contains ten +1 sources: Immaculate Timing, Toxicology, Electrified, Energized, Arcane Mind, Feedback, Reflective Barrier, Ice Spikes, Smoke, and Brute Force. Recklessness is an additional +3 source paired with -5 Max Energy.
+
+## Ability types
+
+Every player ability exposes one or more types from the same damage schools used by combat: Physical, Shadow, Arcane, Fire, Frost, and Lightning. Mixed abilities list each relevant type. The first type is the ability's primary presentation type and controls its subtle action-bar color and icon. Long-press tooltips, talent details, and the loadout picker show the resolved type text. Damage modifiers such as Wet continue to use the actual damage type of each damage component.
 
 ### Hit versus Dodge
 
@@ -110,10 +114,10 @@ The implemented damage types are Physical, Arcane, Shadow, Fire, Frost, and Ligh
 | Damage type | Offensive power | Defense |
 | --- | --- | --- |
 | Physical | Physical Power | Armor |
-| Arcane | Magical Power | Magic Resistance |
-| Fire | Magical Power | Magic Resistance |
-| Frost | Magical Power | Magic Resistance |
-| Lightning | Magical Power | Magic Resistance |
+| Arcane | Spell Power | Magic Resistance |
+| Fire | Spell Power | Magic Resistance |
+| Frost | Spell Power | Magic Resistance |
+| Lightning | Spell Power | Magic Resistance |
 | Shadow | Physical Power in the current engine | Magic Resistance |
 
 Shadow's mixed rule is the current implementation, not a general design promise for future content.
@@ -203,23 +207,23 @@ Distraction makes the next ability cost 0 Energy and is consumed when that abili
 
 Light Speed performs a complete player turn transition without allowing enemies to act between the two turns. End-of-turn Poison and duration changes resolve, then start-of-turn Burn, Regenerate, Energy regeneration, and cooldown reduction resolve before control returns to the player.
 
-Voltage Stab deals Lightning damage from Magical Power. If the target was already Electrified when the hit landed, it restores 2% of Max Health and adds 2 to the player's next Energy-regeneration event. The temporary regeneration bonus stacks if another source grants the same effect, is previewed by the segmented Energy bar, and is consumed when the next player turn begins. Exhausted still limits the final regeneration to 1.
+Voltage Stab deals Lightning damage from Spell Power. If the target was already Electrified when the hit landed, it restores 2% of Max Health and adds 2 to the player's next Energy-regeneration event. The temporary regeneration bonus stacks if another source grants the same effect, is previewed by the segmented Energy bar, and is consumed when the next player turn begins. Exhausted still limits the final regeneration to 1.
 
 Epidemic applies 10 Poison to every living, targetable enemy and then grants Stealth until the end of the player's next turn.
 
 New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread reduces Epidemic's Energy cost from 3 to 2. Ability cost and cooldown modifiers are additive, use whole numbers, and cannot reduce either value below zero.
 
-Firestorm simultaneously deals 25% Magical Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning, and Greater Living Furnace also makes Fireball apply Charred. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
+Firestorm simultaneously deals 25% Spell Power as Fire damage to every enemy and applies 2 Burn to every enemy and the player. While the player is Burning, Pyromania and Greater Pyromania each increase direct Arcane, Fire, Frost, and Lightning damage by 10%; the two multiplicative bonuses combine to 21%. Living Furnace and Greater Living Furnace add a combined 15% to player-applied Burn damage against enemies while the player is Burning, and Greater Living Furnace also makes Fireball apply Charred. Heat Transfer restores 1 Energy whenever the player's own Burn deals Health damage to them.
 
 The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, Electrified charge chains, and Elemental Fury. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, Rapid Fire, and Elemental Fury are all Ranged. Rapid Fire deals Fire damage. Their mechanics resolve at beam or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, conditional applications, Energy restoration, and cooldown changes.
 
-The extended Brute section adds twenty-four active abilities across Fire, Bleed, Armor/Guard, and holy paths. Bash is granted by the Brute class node. Divine Smite, Consecrated Ground, and Beacon of Light are Ranged target-bound holy effects; the other Brute abilities are Melee or self-targeted and use distinct, non-blocking VFX. Its reusable mechanics include Armor from Strength and percentage Armor, Burn-driven permanent Initiative, combat-start statuses and absorption, Health-restoration and Guard triggers, Guard-derived damage, buff removal, Burn detonation and transfer, Bleed-damage healing, conditional hit counts, guaranteed and chance-based companion status applications, Guard derived from Armor, Physical Power, Magical Power, Max Health, and consumed status stacks, conditional Stun while Guarded, debuff cleansing, critical-strike status applications, immediate Burn/Bleed damage, and random multi-hit attacks.
+The extended Brute section adds twenty-four active abilities across Fire, Bleed, Armor/Guard, and holy paths. Bash is granted by the Brute class node. Divine Smite, Consecrated Ground, and Beacon of Light are Ranged target-bound holy effects; the other Brute abilities are Melee or self-targeted and use distinct, non-blocking VFX. Its reusable mechanics include Armor from Strength and percentage Armor, Burn-driven permanent Initiative, combat-start statuses and absorption, Health-restoration and Guard triggers, Guard-derived damage, buff removal, Burn detonation and transfer, Bleed-damage healing, conditional hit counts, guaranteed and chance-based companion status applications, Guard derived from Armor, Physical Power, Spell Power, Max Health, and consumed status stacks, conditional Stun while Guarded, debuff cleansing, critical-strike status applications, immediate Burn/Bleed damage, and random multi-hit attacks.
 
-The latest Brute paths extend beyond Furnace Breaker, Bloodbath, Shield Charge, and Divine Smite. Super Critical Burns makes every player-applied Burn also apply Charred. Word Above can apply Smite on critical strikes, Shatter Armor follows player-applied Stuns with Shatter, and Molten Metal applies Burn whenever the player deals direct or status damage while Guarded. Berserk grants Fierce after an enemy Critical Strike, Cannibal can heal from player-applied Bleed damage, and Renewal can reduce a random active cooldown whenever Health is actually restored. Further paths add Burn-reactive Barrier and Energy, combat-start Fierce, Guard, Barrier, Burn, and Martyrdom, Armor-scaling retaliation, Poison from Bleed, and the Guard, Vampirism, Fire Eater, and Beacon of Light abilities. Oath and Emberfused now extend the magical and hybrid Power routes beyond Divine Smite and Furnace Breaker. Time to Breathe can trigger only once per combat when Health first crosses below 40%.
+The latest Brute paths extend beyond Furnace Breaker, Bloodbath, Shield Charge, and Divine Smite. Super Critical Burns makes every player-applied Burn also apply Charred. Word Above can apply Smite on critical strikes, Shatter Armor follows player-applied Stuns with Shatter, and Molten Metal applies Burn whenever the player deals direct or status damage while Guarded. Berserk grants Fierce after an enemy Critical Strike, Cannibal can heal from player-applied Bleed damage, and Renewal can reduce a random active cooldown whenever Health is actually restored. Further paths add Burn-reactive Barrier and Energy, combat-start Fierce, Guard, Barrier, Burn, and Martyrdom, Armor-scaling retaliation, Poison from Bleed, and the Guard, Vampirism, Fire Eater, and Beacon of Light abilities. Oath and Emberfused now extend the Spell Power and hybrid Power routes beyond Divine Smite and Furnace Breaker. Time to Breathe can trigger only once per combat when Health first crosses below 40%.
 
 Smite is a three-turn debuff. Whenever the player actually restores Health, including through Phoenix Heart or Panic, every living enemy with Smite takes Magic damage based on 50% of that restored amount at the same presentation event. Overhealing does not increase Smite damage.
 
-Phoenix Heart prevents the first lethal hit in a combat only while the player is Burning, removes that Burn, and restores Health equal to the Burn's remaining damage. Charged Up grants a permanent combat stack worth +2 effective Initiative whenever the player applies Electrified, and turn order is recalculated when the stack becomes visible. Perfect Calculation bypasses the hit roll against enemies with at least 3 Arcane Wounds. Deep Chill rolls once per enemy attack, including misses and attacks fully absorbed by Guard or Barrier, for a 3% chance to Freeze the attacker; self-inflicted damage is not an attack. Elemental Fury deals 50% Magical Power as Arcane damage, then either seeds a clean target with its five configured debuffs or gains 50% damage per unique debuff already present.
+Phoenix Heart prevents the first lethal hit in a combat only while the player is Burning, removes that Burn, and restores Health equal to the Burn's remaining damage. Charged Up grants a permanent combat stack worth +2 effective Initiative whenever the player applies Electrified, and turn order is recalculated when the stack becomes visible. Perfect Calculation bypasses the hit roll against enemies with at least 3 Arcane Wounds. Deep Chill rolls once per enemy attack, including misses and attacks fully absorbed by Guard or Barrier, for a 3% chance to Freeze the attacker; self-inflicted damage is not an attack. Elemental Fury deals 50% Spell Power as Arcane damage, then either seeds a clean target with its five configured debuffs or gains 50% damage per unique debuff already present.
 
 Blinding Light gives every player-applied Electrified effect a 20% base chance, plus Luck's bonus to chance-based effects, to also apply Blind.
 
@@ -342,9 +346,9 @@ Detailed status definitions and formulas are in [Content reference](CONTENT_REFE
 All status damage is rounded to a whole number after multiplying by stacks.
 
 ```text
-Bleed per stack  = 2 + source Physical Power × 0.25
-Poison per stack = 2 + source Magical Power × 0.15
-Burn per stack   = 3 + source Magical Power × 0.30
+Bleed per stack  = 1 + source Physical Power × 0.10
+Poison per stack = 1 + source Spell Power × 0.15
+Burn per stack   = 1 + source Spell Power × 0.20
 ```
 
 - Bleed triggers whenever the afflicted combatant uses an ability or enemy attack.
@@ -359,7 +363,7 @@ Burn per stack   = 3 + source Magical Power × 0.30
 Regenerate uses:
 
 ```text
-healing per stack = 3 + source Magical Power × 0.20
+healing per stack = 3 + source Spell Power × 0.20
 ```
 
 The result is then multiplied by the target's healing-received multiplier and limited by missing Health.
@@ -392,7 +396,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 263 nodes: Shadow, Arcanist, and Brute each have 87 including their class node, and Cultist has 1. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, Arcane, Magical Power, Intelligence, Hit Chance, and Critical Strike paths. Brute extends through Fire, Bleed, Armor/Guard, holy-vigor, Magical Power, and hybrid Power paths. Shadow also includes new Physical Power, Agility, Intelligence, and Magical Power routes.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 263 nodes: Shadow, Arcanist, and Brute each have 87 including their class node, and Cultist has 1. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, Arcane, Spell Power, Intelligence, Hit Chance, and Critical Strike paths. Brute extends through Fire, Bleed, Armor/Guard, holy-vigor, Spell Power, and hybrid Power paths. Shadow also includes new Physical Power, Agility, Intelligence, and Spell Power routes.
 
 ### Unlock rules
 

@@ -1,6 +1,5 @@
 import { getCharacterCombatFeatures } from "./combatFeatures";
 import { getEffectiveDodgeChance } from "./combatMath";
-import { ITEMS } from "./data";
 import { DEFAULT_CHARACTER_AVATAR_ID } from "./avatars";
 import type { CharacterState, GameState, Stats, StatusEffectId } from "./types";
 
@@ -11,21 +10,12 @@ export const INITIAL_CHARACTER: CharacterState = {
   xp: 0,
   unspentStatPoints: 0,
   gold: 18,
-  baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 6, luck: 3 },
+  baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 5, luck: 5 },
   talentPoints: 3,
   unlockedTalents: ["origin"],
   equippedAbilities: ["strike", "guard"],
-  inventory: ITEMS.slice(8),
-  equipment: {
-    mainHand: ITEMS[0],
-    offHand: ITEMS[1],
-    head: ITEMS[2],
-    chest: ITEMS[3],
-    pants: ITEMS[4],
-    boots: ITEMS[5],
-    ring1: ITEMS[6],
-    ring2: ITEMS[7],
-  },
+  inventory: [],
+  equipment: {},
 };
 
 export const INITIAL_GAME: GameState = {
@@ -106,7 +96,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     magicResistance: Math.round(magicResistance),
     physicalPower: Math.round((stats.strength + stats.agility * 0.3 + gearPhysicalPower) * (1 + features.passive.physicalPowerMultiplier)),
     magicalPower: Math.round((stats.intelligence + gearMagicalPower) * (1 + features.passive.magicalPowerMultiplier)),
-    maxHp: Math.round(20 + stats.vitality * 10 + features.passive.maxHp),
+    maxHp: Math.round(stats.vitality * 10),
     maxEnergy: Math.round(maxEnergy),
     energyRegen: Math.round(energyRegen),
     critChance,

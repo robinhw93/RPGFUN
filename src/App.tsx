@@ -23,7 +23,7 @@ import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureNode, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
@@ -190,10 +190,37 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   sleep: Moon,
 };
 
+const ABILITY_TYPE_LABELS: Record<DamageType, string> = {
+  physical: "Physical",
+  shadow: "Shadow",
+  arcane: "Arcane",
+  fire: "Fire",
+  frost: "Frost",
+  lightning: "Lightning",
+};
+
+const ABILITY_TYPE_ICONS: Record<DamageType, LucideIcon> = {
+  physical: Swords,
+  shadow: Moon,
+  arcane: Sparkles,
+  fire: Flame,
+  frost: Snowflake,
+  lightning: Zap,
+};
+
+function getAbilityTypeLabel(ability: Ability): string {
+  return ability.types.map((type) => ABILITY_TYPE_LABELS[type]).join(" / ");
+}
+
+function AbilityTypeIcon({ ability, size = 18 }: { ability: Ability; size?: number }) {
+  const Icon = ABILITY_TYPE_ICONS[ability.types[0]];
+  return <Icon size={size} strokeWidth={1.8} />;
+}
+
 const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
   strength: "Increases your Physical Power and the amount of Guard you gain.",
   agility: "Increases your Physical Power, Hit Chance, Dodge Chance, and Initiative. Every 2 Agility grants 1 Initiative.",
-  intelligence: "Increases your Magical Power and Initiative. Every 4 Intelligence grants 1 Initiative.",
+  intelligence: "Increases your Spell Power and Initiative. Every 4 Intelligence grants 1 Initiative.",
   vitality: "Increases your Max Health and the amount of healing you receive.",
   luck: "Increases your Critical Chance, improves the quality of loot you find, and increases the chance for special effects to trigger.",
 };
@@ -201,7 +228,7 @@ const ATTRIBUTE_TOOLTIPS: Record<StatName, string> = {
 const ATTRIBUTE_SUMMARIES: Record<StatName, string> = {
   strength: "Physical Power & Guard",
   agility: "Physical Power, Hit Chance, Dodge Chance & Initiative",
-  intelligence: "Magical Power & Initiative",
+  intelligence: "Spell Power & Initiative",
   vitality: "Max Health & Healing Received",
   luck: "Critical Chance, Loot & Special Effects",
 };
@@ -2176,6 +2203,7 @@ function HoldAbilityButton({ ability, description, energyCost, baseCooldown, coo
   return (
     <button
       className={`compact-ability ${ability.branch} ${queuedCount > 0 ? "queued" : ""}`}
+      data-ability-type={ability.types[0]}
       disabled={disabled}
       onClick={activate}
       onPointerDown={beginHold}
@@ -2183,15 +2211,15 @@ function HoldAbilityButton({ ability, description, energyCost, baseCooldown, coo
       onPointerCancel={endHold}
       onPointerLeave={endHold}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`${ability.name}, ${ability.range === "ranged" ? "Ranged" : "Melee"}, ${energyCost} Energy, ${baseCooldown} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
+      aria-label={`${ability.name}, ${getAbilityTypeLabel(ability)}, ${ability.range === "ranged" ? "Ranged" : "Melee"}, ${energyCost} Energy, ${baseCooldown} turn base cooldown${cooldown > 0 ? `, ${cooldown} remaining` : ""}. Hold for details.`}
     >
-      <span className="compact-ability-icon">{ability.icon}</span>
+      <span className="compact-ability-icon"><AbilityTypeIcon ability={ability} /></span>
       <strong>{ability.name}</strong>
       <span className="compact-ability-cost">{energyCost}<Sparkles size={10} /></span>
       <span className="compact-ability-cooldown-value"><Hourglass size={9} />{baseCooldown}</span>
       {queuedCount > 0 && <span className="compact-ability-queued" aria-hidden="true">Queued{queuedCount > 1 ? ` ×${queuedCount}` : ""}</span>}
       {cooldown > 0 && <span className="compact-ability-cooldown" aria-hidden="true"><Hourglass size={15} /><b>{cooldown}</b></span>}
-      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{description}</small><em>{energyCost} Energy · {baseCooldown ? `${baseCooldown} turn cooldown` : "No cooldown"} · {ability.range === "ranged" ? "Ranged" : "Melee"}</em></span>
+      <span className={`ability-hold-tooltip ${tooltipOpen ? "force-open" : ""}`}><b>{ability.name}</b><small>{description}</small><em>Type: {getAbilityTypeLabel(ability)}</em><em>{energyCost} Energy · {baseCooldown ? `${baseCooldown} turn cooldown` : "No cooldown"} · {ability.range === "ranged" ? "Ranged" : "Melee"}</em></span>
     </button>
   );
 }
@@ -2201,7 +2229,7 @@ function CharacterLoadingScreen() {
     <section className="character-loading-screen" role="status" aria-live="polite">
       <span className="character-loading-sigil"><Shield /></span>
       <p className="eyebrow">Preparing Character</p>
-      <h1>Gathering your equipment…</h1>
+      <h1>Preparing your character…</h1>
     </section>
   );
 }
@@ -2315,7 +2343,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
           </div>
           <div className="derived-grid">
             <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><StatIcon stat="physicalPower" /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
-            <span data-game-tooltip="Determines the damage dealt by your arcane abilities."><StatIcon stat="magicalPower" /> <small>Magical Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
+            <span data-game-tooltip="Determines the damage dealt by your arcane abilities."><StatIcon stat="magicalPower" /> <small>Spell Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
             <span data-game-tooltip="Determines how likely your attacks are to hit."><StatIcon stat="hitChance" /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
             <span data-game-tooltip="Determines how likely you are to avoid enemy attacks."><StatIcon stat="dodgeChance" /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
             <span data-game-tooltip="Determines how likely your attacks are to critically strike."><StatIcon stat="critChance" /> <small>Critical Chance</small><strong>{formatPercent(derived.critChance)}</strong></span>
@@ -2458,7 +2486,7 @@ function getItemStatLines(item: GearItem): ItemStatLine[] {
   if (item.armor) lines.push({ label: "Armor", value: item.armor, icon: "armor" });
   if (item.magicResistance) lines.push({ label: "Magic Resistance", value: item.magicResistance, icon: "magicResistance" });
   if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower, icon: "physicalPower" });
-  if (item.magicalPower) lines.push({ label: "Magical Power", value: item.magicalPower, icon: "magicalPower" });
+  if (item.magicalPower) lines.push({ label: "Spell Power", value: item.magicalPower, icon: "magicalPower" });
   if (item.power) lines.push({ label: "Power", value: item.power, icon: "physicalPower" });
   return lines.sort((left, right) => left.label.localeCompare(right.label));
 }
@@ -2670,6 +2698,7 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
                 <section className="talent-core-ability" key={coreAbility.id}>
                   <div className="talent-core-ability-heading"><span aria-hidden="true">{coreAbility.icon}</span><strong>{coreAbility.name}</strong></div>
                   <div className="talent-ability-metrics">
+                    <span><small>Type</small><strong>{getAbilityTypeLabel(coreAbility)}</strong></span>
                     <span><small>Energy</small><strong>{energyCost}</strong></span>
                     <span><small>Cooldown</small><strong>{cooldownTurns ? `${cooldownTurns} ${cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
                     <span><small>Range</small><strong>{coreAbility.range === "ranged" ? "Ranged" : "Melee"}</strong></span>
@@ -2690,6 +2719,7 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
               </div>
             )}
             <div className="talent-ability-metrics">
+              <span><small>Type</small><strong>{getAbilityTypeLabel(ability)}</strong></span>
               <span><small>Energy</small><strong>{abilityEnergyCost}</strong></span>
               <span><small>Cooldown</small><strong>{abilityCooldownTurns ? `${abilityCooldownTurns} ${abilityCooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
               <span><small>Range</small><strong>{ability.range === "ranged" ? "Ranged" : "Melee"}</strong></span>
@@ -2771,9 +2801,9 @@ function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
                 disabled={equippedHere || unavailableForEmptySlot}
                 onClick={() => { onSetSlot(slotIndex, ability.id); onClose(); }}
               >
-                <span className="ability-slot-picker-icon" aria-hidden="true">{ability.icon}</span>
+                <span className="ability-slot-picker-icon" aria-hidden="true"><AbilityTypeIcon ability={ability} /></span>
                 <span className="ability-slot-picker-info"><strong>{ability.name}</strong><small>{abilityDescription}</small></span>
-                <span className="ability-slot-picker-metrics"><small>{energyCost} Energy</small><small>{cooldownTurns} CD · {ability.range === "ranged" ? "Ranged" : "Melee"}</small><em>{slotLabel}</em></span>
+                <span className="ability-slot-picker-metrics"><small>{getAbilityTypeLabel(ability)}</small><small>{energyCost} Energy</small><small>{cooldownTurns} CD · {ability.range === "ranged" ? "Ranged" : "Melee"}</small><em>{slotLabel}</em></span>
               </button>
             );
           })}

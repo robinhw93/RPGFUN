@@ -27,7 +27,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Ambush | 2 | None | Enemy | Requires Stealth. Deals 150% Physical Power with +50% Critical Strike Chance. |
 | Toxic Explosion | 5 | 2 | Poisoned enemy | Deals the target's remaining Poison duration immediately and removes Poison. |
 | Venomborn | 2 | 6 | Poisoned enemy | Consumes Poison and heals the player for three turns of that Poison's current damage. |
-| Lightning Strike | 4 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Magical Power as Lightning damage, then applies Electrified for three turns. |
+| Lightning Strike | 4 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Spell Power as Lightning damage, then applies Electrified for three turns. |
 | Focus | 1 | 6 | Self | Resets every other ability cooldown. Focus keeps its own cooldown. |
 | Recuperate | 1 | 4 | Self | Restores 50% of Max Energy after paying its Energy cost. |
 | Sharpened Blade | 2 | 1 | Enemy | Deals 100% Physical Power and ignores Guard and Barrier. |
@@ -39,13 +39,13 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Slice and Dice | 5 | 2 | Enemy | Hits six times for 15% Physical Power. Critical hits apply Exhausted and each hit triggers on-hit effects. |
 | Cheap Shot | 4 | 1 | Enemy | Requires Stealth. Applies Stunned and 5 Bleed without direct damage. |
 | Pandemic | 4 | 3 | Enemy | Copies every debuff on the target to all other living, targetable enemies. |
-| Light Speed | 6 | 5 | Enemy | Deals 50% Physical Power as Physical damage plus 100% Magical Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
+| Light Speed | 6 | 5 | Enemy | Deals 50% Physical Power as Physical damage plus 100% Spell Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
 | Chain Assassination | 5 | 3 | Enemy | Deals 125% Physical Power and gains +25% Critical Strike Chance while Stealthed. A kill refunds the Energy actually spent and resets its cooldown. |
-| Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
+| Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Spell Power. Both components gain 20% damage per unique debuff on the target. |
 | Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
-| Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
+| Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Spell Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
 | Bash | 1 | 1 | Enemy | Deals 60% Physical Power as Physical damage and has a 30% chance to grant +1 Energy regeneration next turn. Granted by the Brute class node. |
-| Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. Imbued Weapon changes the scaling to Magical Power, lowers the cost to 2, lowers the cooldown to 1, and applies 2 Burn. |
+| Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. Imbued Weapon changes the scaling to Spell Power, lowers the cost to 2, lowers the cooldown to 1, and applies 2 Burn. |
 | Wounding Strike | 2 | 2 | Enemy | Deals 40% Physical Power as Physical damage and applies 1 Bleed. |
 | Swift Blade | 0 | 2 | Enemy | Deals 40% Physical Power as Physical damage and grants +1 Energy regeneration next turn; Light Metal increases this to +2. |
 | Flame Cleave | 4 | 3 | All enemies | Simultaneously deals 60% Physical Power as Physical damage and applies 1 Burn. Scorching Sweep applies 2 Burn to targets already Burning; Wildfire Cleave adds 20% damage per living Burning enemy. |
@@ -54,44 +54,44 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Holy Strike | 2 | 2 | Enemy | Deals 75% Physical Power as Physical damage and restores 2% Max Health. Improved Holy Strike increases the healing to 3% and adds a 10% chance to apply Smite. |
 | Unbreakable | 3 | 5 | Self | Grants Guard equal to 100% of Armor. Counter also grants +2 Energy regeneration next turn. |
 | Blood Barrier | 2 | 3 | Bleeding enemy | Consumes up to 5 Bleed and grants Guard equal to 10% Max Health per stack. Thick Blood calculates the same Guard without consuming Bleed. |
-| Burning Guard | 2 | 4 | Self | Grants Guard equal to 50% Physical Power for 1 turn. If that Guard is destroyed, applies 3 Burn to the attacker. Magical Fires adds 50% Magical Power to the Guard amount. |
+| Burning Guard | 2 | 4 | Self | Grants Guard equal to 50% Physical Power for 1 turn. If that Guard is destroyed, applies 3 Burn to the attacker. Magical Fires adds 50% Spell Power to the Guard amount. |
 | Lay on Hands | 5 | 5 | Self | Restores 10% Max Health and grants Barrier equal to the Health actually restored. Cleansing Hands also removes every debuff from the player. |
 | Shield Charge | 4 | 3 | Enemy | Deals Physical damage equal to 25% Physical Power plus 50% Armor. Applies Stunned if the player has Guard when the hit resolves. |
 | Bloodbath | 4 | 2 | Random enemies | Strikes five times. Each hit independently chooses a living enemy, deals 50% Physical Power as Physical damage, and applies 1 Bleed. |
 | Furnace Breaker | 4 | 3 | Enemy | Deals 100% Physical Power as Physical damage and immediately triggers the target's Burn damage once without removing Burn. |
-| Divine Smite | 5 | 5 | Enemy | A target-bound Ranged strike dealing 100% Magical Power as Magic damage and applying Smite for 3 turns. |
+| Divine Smite | 5 | 5 | Enemy | A target-bound Ranged strike dealing 100% Spell Power as Magic damage and applying Smite for 3 turns. |
 | Blood Frenzy | 5 | 3 | Enemy | Strikes four times for 35% Physical Power and applies 1 Bleed per hit. Fierce increases the cast to six hits. |
 | Crushing Impact | 4 | 3 | Enemy | Deals Physical damage based on the player's current Guard and removes every buff from the target. |
 | Explosive Strike | 4 | 2 | Enemy | Deals 50% Physical Power as Physical damage, increased by 5% per Burn on the target, then consumes that Burn and deals its remaining damage to every other enemy. |
-| Consecrated Ground | 6 | 4 | All enemies | A target-bound Ranged field that simultaneously deals 80% Magical Power as Magic damage. Each enemy independently has a 20% chance to gain Smite, and the player gains Regenerate. |
+| Consecrated Ground | 6 | 4 | All enemies | A target-bound Ranged field that simultaneously deals 80% Spell Power as Magic damage. Each enemy independently has a 20% chance to gain Smite, and the player gains Regenerate. |
 | Guard (Brute) | 1 | None | Self | Grants Guard equal to 5% of Armor. |
 | Vampirism | 2 | None | Enemy | Deals 10% Physical Power as Physical damage and restores 2 Health per Bleed on the target. |
 | Fire Eater | 4 | 4 | Burning self and enemy | Consumes all Burn on the player, restores Health equal to its remaining damage, and transfers the consumed Burn to the selected enemy. |
 | Beacon of Light | 6 | 6 | All enemies and self | A target-bound Ranged effect that applies Smite to every enemy simultaneously and grants Regenerate to the player for 3 turns. |
-| Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
-| Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
-| Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
-| Fireball | 4 | 2 | Enemy | Deals 100% Magical Power as Fire damage and applies 2 Burn. |
-| Lightning Beam | 3 | 2 | Random enemies | Hits four times for 20% Magical Power as Lightning damage. Every hit independently selects a valid random enemy and has a 20% base chance, plus Luck's chance-effect bonus, to apply Electrified. |
-| Thunderstorm | 5 | 3 | Random enemies | Hits six times for 30% Magical Power as Lightning damage. Each hit independently chooses a living enemy and deals 50% more damage if that enemy is Electrified. |
-| Deep Freeze | 4 | 4 | Enemy | Deals 75% Magical Power as Frost damage. Applies Slowed, or Stunned instead if the target was already Slowed. |
-| Arcane Overload | 3 | 3 | Enemy | Deals 50% Magical Power as Arcane damage, applies 3 Arcane Wounds, and applies Arcane Charge for the next Arcane Blast against that target. |
+| Arcane Bolt | 1 | 1 | Enemy | Deals 75% Spell Power as Arcane damage. Granted by the Arcanist class node. |
+| Frostbolt | 3 | 1 | Enemy | Deals 50% Spell Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
+| Arcane Blast | 1 | None | Enemy | Deals 20% Spell Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
+| Fireball | 4 | 2 | Enemy | Deals 100% Spell Power as Fire damage and applies 2 Burn. |
+| Lightning Beam | 3 | 2 | Random enemies | Hits four times for 20% Spell Power as Lightning damage. Every hit independently selects a valid random enemy and has a 20% base chance, plus Luck's chance-effect bonus, to apply Electrified. |
+| Thunderstorm | 5 | 3 | Random enemies | Hits six times for 30% Spell Power as Lightning damage. Each hit independently chooses a living enemy and deals 50% more damage if that enemy is Electrified. |
+| Deep Freeze | 4 | 4 | Enemy | Deals 75% Spell Power as Frost damage. Applies Slowed, or Stunned instead if the target was already Slowed. |
+| Arcane Overload | 3 | 3 | Enemy | Deals 50% Spell Power as Arcane damage, applies 3 Arcane Wounds, and applies Arcane Charge for the next Arcane Blast against that target. |
 | Combustion | 4 | 3 | Burning enemy | Consumes Burn and deals its remaining-duration damage immediately. If the detonation kills, half the consumed stacks, rounded up, spread to every other living enemy. |
-| Arcane Combustion | 4 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds, deals 50% Magical Power as Fire damage per consumed stack, and applies the same number of Burn stacks. |
-| Thundersnow | 5 | 3 | All enemies | Simultaneously deals a combined 60% Magical Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
+| Arcane Combustion | 4 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds, deals 50% Spell Power as Fire damage per consumed stack, and applies the same number of Burn stacks. |
+| Thundersnow | 5 | 3 | All enemies | Simultaneously deals a combined 60% Spell Power per enemy, split evenly between Frost and Lightning, applies Slowed to every target, and applies Electrified to one random target. |
 | Self Immolation | 1 | 5 | Enemy | Simultaneously applies 5 Burn to the player and selected enemy. Feel the Burn heals for the self-Burn's full remaining damage before application; Refreshing Fires grants +2 Energy regeneration next turn. |
-| Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Magical Power for 3 turns; Improved Barrier raises this to 75%. A persistent shimmer pulses when Barrier absorbs damage. |
+| Arcane Barrier | 1 | 5 | Self | Gains Barrier equal to 50% Spell Power for 3 turns; Improved Barrier raises this to 75%. A persistent shimmer pulses when Barrier absorbs damage. |
 | Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
 | Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player, ending the current player turn and skipping every affected combatant's next turn. Electrified Hug also applies Electrified to every enemy. |
-| Firestorm | 5 | 3 | All enemies and self | Simultaneously deals 25% Magical Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
+| Firestorm | 5 | 3 | All enemies and self | Simultaneously deals 25% Spell Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
 | Mana Fracture | 1 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds and restores 1 Energy per 2 stacks consumed. |
-| Rapid Fire | 2 | 4 | Random enemies | Hits three times for 30% Magical Power as Fire damage with +20% Critical Strike Chance; hits six times while Burning. |
+| Rapid Fire | 2 | 4 | Random enemies | Hits three times for 30% Spell Power as Fire damage with +20% Critical Strike Chance; hits six times while Burning. |
 | Focused Blast | 4 | 2 | Enemy with 6 Arcane Wounds | Deals Arcane damage equal to current Barrier and consumes 3 Arcane Wounds. Focus Harder changes the requirement to 5 and consumption to 2. |
-| Absolute Zero | 3 | 4 | Enemy | Deals 50% Magical Power as Frost damage. A Slowed target becomes Frozen; otherwise applies Slowed and Exhausted. |
-| Blizzard | 5 | 3 | All enemies | Simultaneously deals 50% Magical Power as Frost damage. Each target independently rolls 50% Slowed, 50% Exhausted, and 10% Frozen. |
+| Absolute Zero | 3 | 4 | Enemy | Deals 50% Spell Power as Frost damage. A Slowed target becomes Frozen; otherwise applies Slowed and Exhausted. |
+| Blizzard | 5 | 3 | All enemies | Simultaneously deals 50% Spell Power as Frost damage. Each target independently rolls 50% Slowed, 50% Exhausted, and 10% Frozen. |
 | Ride the Lightning | 1 | 6 | All enemies | Consumes Electrified from every enemy, restores 1 Energy per affected enemy, and immediately begins a new turn. |
-| Charge | 4 | 6 | All enemies | Consumes Electrified from every enemy; each affected enemy restores 1 Energy and reduces every cooldown by 1, then all enemies take 100% Magical Power as Lightning damage. Electricity first arcs from affected enemies to the player, then returns from the player as each damage hit resolves. |
-| Elemental Fury | 3 | 6 | Enemy | Deals 50% Magical Power as Arcane damage. Against a target with no debuffs, applies 2 Burn, Electrified, Slowed, Exhausted, and 2 Arcane Wounds. Otherwise, deals 50% more damage per unique debuff already on the target. |
+| Charge | 4 | 6 | All enemies | Consumes Electrified from every enemy; each affected enemy restores 1 Energy and reduces every cooldown by 1, then all enemies take 100% Spell Power as Lightning damage. Electricity first arcs from affected enemies to the player, then returns from the player as each damage hit resolves. |
+| Elemental Fury | 3 | 6 | Enemy | Deals 50% Spell Power as Arcane damage. Against a target with no debuffs, applies 2 Burn, Electrified, Slowed, Exhausted, and 2 Arcane Wounds. Otherwise, deals 50% more damage per unique debuff already on the target. |
 
 ### Defined but not currently connected to the live talent tree
 
@@ -103,7 +103,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 | Ground Slam | 6 | None | Physical area attack with 7 flat power plus Physical Power; each target has a base 45% Stun chance plus Luck's chance-effect bonus. |
 | Sever | 3 | None | Shadow attack with 7 flat power plus Physical Power; applies Bleed. |
 | Venom Edge | 4 | None | Shadow attack with 5 flat power plus Physical Power; applies Poison. |
-| Essence Siphon | 4 | None | Arcane attack with 7 flat power plus Magical Power; restores 2 Energy after use. |
+| Essence Siphon | 4 | None | Arcane attack with 7 flat power plus Spell Power; restores 2 Energy after use. |
 
 ## Talent tree
 
@@ -157,8 +157,8 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_37 | Focus | Ability | Toxic Explosion or Ambush | Any | Unlocks Focus. |
 | talent_38 | Contagion | Ability | Poison Stab | Any | Unlocks Contagion. |
 | talent_39 | Sharpened Blade | Ability | Twin Strike | Any | Unlocks Sharpened Blade. |
-| talent_40 | Resistance | Passive | Venomborn | Any | Makes the player immune to Poison and grants +10 Magical Power. |
-| talent_41 | Thunderstruck | Passive | Lightning Strike | Any | Makes the player immune to Electrified and grants +20 Magical Power. |
+| talent_40 | Resistance | Passive | Venomborn | Any | Makes the player immune to Poison and grants +10 Spell Power. |
+| talent_41 | Thunderstruck | Passive | Lightning Strike | Any | Makes the player immune to Electrified and grants +20 Spell Power. |
 | talent_42 | Perfected Formula | Passive | Focus | Any | Player-applied Poison gains 1 additional stack. |
 | talent_43 | Distraction | Passive | Focus | Any | Kills grant Stealth until the end of the next player turn and make the next ability cost 0 Energy. |
 | talent_44 | Extra Dose | Passive | Poison Coating | Any | Critical strikes apply 2 Poison. |
@@ -234,10 +234,10 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_113 | Arcane Barrier | Ability | Arcane Knowledge or Charring Fires | Any | Unlocks Arcane Barrier. |
 | talent_114 | Frozen Path | Ability | Lower Temperature or Intense Beam | Any | Unlocks Frozen Path. |
 | talent_115 | Conductor | Ability | Intense Beam | Any | Unlocks Conductor. |
-| talent_116 | Improved Barrier | Passive | Arcane Barrier | Any | Arcane Barrier scales at 75% Magical Power. |
+| talent_116 | Improved Barrier | Passive | Arcane Barrier | Any | Arcane Barrier scales at 75% Spell Power. |
 | talent_117 | Reflective Barrier | Passive | Improved Barrier | Any | Reflects 20% of damage absorbed specifically by Barrier and grants +1 Energy regeneration. |
 | talent_118 | Barbed Boots | Passive | Frozen Path | Any | Frozen Path grants +40% Dodge Chance. |
-| talent_119 | Ice Spikes | Passive | Barbed Boots | Any | An enemy that misses takes 20% Magical Power as Frost damage; also grants +1 Energy regeneration. |
+| talent_119 | Ice Spikes | Passive | Barbed Boots | Any | An enemy that misses takes 20% Spell Power as Frost damage; also grants +1 Energy regeneration. |
 | talent_120 | Feel the Burn | Passive | Self Immolation | Any | Self Immolation heals for the self-Burn's full remaining damage before applying it. |
 | talent_121 | Refreshing Fires | Passive | Feel the Burn | Any | Self Immolation grants +2 Energy regeneration next turn. |
 | talent_122 | Electrified Hug | Passive | Conductor | Any | Conductor also Electrifies all enemies. |
@@ -254,7 +254,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_133 | Resonance | Passive | Arcane Reservoir | Any | Reapplying Arcane Wound restores 1% Max Health. |
 | talent_134 | Mana Fracture | Ability | Arcane Reservoir | Any | Unlocks Mana Fracture. |
 | talent_135 | Rapid Fire | Ability | Pyromania | Any | Unlocks Rapid Fire. |
-| talent_136 | Arcane Shell | Passive | Resonance | Any | Consumed or expired Arcane Wounds grant Barrier equal to 10% Magical Power. |
+| talent_136 | Arcane Shell | Passive | Resonance | Any | Consumed or expired Arcane Wounds grant Barrier equal to 10% Spell Power. |
 | talent_137 | Arcane Retaliation | Passive | Arcane Shell | Any | A destroyed Barrier applies 2 Arcane Wounds to its attacker. |
 | talent_138 | Focused Blast | Ability | Arcane Retaliation | Any | Unlocks Focused Blast. |
 | talent_139 | Treacherous Ground | Passive | Brittle | Any | While Frozen Path is active, enemies that miss become Slowed. |
@@ -265,7 +265,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_144 | Focus Harder | Passive | Focused Blast | Any | Focused Blast requires 5 Arcane Wounds and consumes 2. |
 | talent_145 | Chill Recovery | Passive | Absolute Zero | Any | Applying Slowed or Exhausted restores 1 Energy; Stunned or Frozen restores 2. |
 | talent_146 | Static Charge | Passive | Blinding Light | Any | Hits against Electrified enemies build charges; 5 charges restore 2 Energy. |
-| talent_147 | Chain Reaction | Passive | Static Charge | Any | Reapplying Electrified deals 20% Magical Power as Lightning damage to another random enemy. |
+| talent_147 | Chain Reaction | Passive | Static Charge | Any | Reapplying Electrified deals 20% Spell Power as Lightning damage to another random enemy. |
 | talent_148 | Rapid Discharge | Passive | Chain Reaction | Any | Every fourth hit in one turn reduces a random cooldown by 1. |
 | talent_149 | Ride the Lightning | Ability | Rapid Discharge | Any | Unlocks Ride the Lightning. |
 | talent_150 | Smoke | Passive | Ride the Lightning | Any | Ride the Lightning grants Stealth until the end of the next turn and grants +1 Energy regeneration. |
@@ -308,12 +308,12 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_187 | Lay on Hands | Ability | Light Metal | Any | Unlocks Lay on Hands. |
 | talent_188 | Thick Blood | Passive | Blood Barrier | Any | Blood Barrier no longer consumes Bleed. |
 | talent_189 | Counter | Passive | Unbreakable | Any | Unbreakable grants +2 Energy regeneration next turn. |
-| talent_190 | Magical Fires | Passive | Burning Guard | Any | Burning Guard also gains Guard equal to 50% Magical Power. |
-| talent_191 | Cleansing Hands | Passive | Lay on Hands | Any | Lay on Hands removes every debuff from the player and grants +10% Magical Power. |
+| talent_190 | Magical Fires | Passive | Burning Guard | Any | Burning Guard also gains Guard equal to 50% Spell Power. |
+| talent_191 | Cleansing Hands | Passive | Lay on Hands | Any | Lay on Hands removes every debuff from the player and grants +10% Spell Power. |
 | talent_192 | Fortified | Passive | Unbreakable | Any | Grants 10% more Armor after flat and Strength-derived Armor. |
 | talent_193 | Eye for an Eye | Passive | Blood Barrier | Any | Whenever an enemy applies Bleed to the player, applies 1 Bleed to that enemy. |
 | talent_194 | Critical Judgement | Passive | Cleansing Hands | Any | Critical strikes apply Vulnerable. |
-| talent_195 | Scorched Wounds | Passive | Magical Fires | Any | Applies 1 Burn on critical strikes and grants +10 Magical Power. |
+| talent_195 | Scorched Wounds | Passive | Magical Fires | Any | Applies 1 Burn on critical strikes and grants +10 Spell Power. |
 | talent_196 | Shield Charge | Ability | Fortified | Any | Unlocks Shield Charge. |
 | talent_197 | Bloodbath | Ability | Eye for an Eye | Any | Unlocks Bloodbath. |
 | talent_198 | Furnace Breaker | Ability | Scorched Wounds | Any | Unlocks Furnace Breaker. |
@@ -336,7 +336,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_215 | Stronger Shield | Passive | Shatter Armor | Any | Shield Bash gains damage equal to 10% of Armor. |
 | talent_216 | Stronger Bash | Passive | Stronger Shield | Any | Shield Bash gains 20% additional Physical Power scaling. |
 | talent_217 | Perfected Wounding Strike | Passive | Swift Wounding Strike or Stronger Bash | Any | Wounding Strike applies 2 Bleed. |
-| talent_218 | Imbued Weapon | Passive | Super Critical Burns | Any | Searing Strike scales with Magical Power, costs 2 Energy, has a 1-turn cooldown, and applies 2 Burn. |
+| talent_218 | Imbued Weapon | Passive | Super Critical Burns | Any | Searing Strike scales with Spell Power, costs 2 Energy, has a 1-turn cooldown, and applies 2 Burn. |
 | talent_219 | Divine Blade | Passive | Word Above | Any | Swift Blade gains +20% Critical Strike Chance and a 20% chance to apply Smite. |
 | talent_220 | Anger | Passive | Swift Wounding Strike | Any | Starts combat with Fierce. |
 | talent_221 | Prepared | Passive | Stronger Shield | Any | Starts combat with Guard equal to 3% Max Health. |
@@ -353,18 +353,18 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_232 | Vampirism | Ability | Anger | Any | Unlocks Vampirism. |
 | talent_233 | Fire Eater | Ability | Flameheart | Any | Unlocks Fire Eater. |
 | talent_234 | Beacon of Light | Ability | Heavenly Protection | Any | Unlocks Beacon of Light. |
-| talent_235 | Oath 1 | Passive | Divine Smite | Any | +5% Magical Power. |
-| talent_236 | Oath 2 | Passive | Oath 1 | Any | +5% Magical Power. |
-| talent_237 | Oath 3 | Passive | Oath 2 | Any | +10% Magical Power. |
-| talent_238 | Oath 4 | Passive | Oath 3 | Any | +15% Magical Power. |
-| talent_239 | Emberfused 1 | Passive | Furnace Breaker | Any | +5 Magical Power and +2% Physical Power. |
-| talent_240 | Emberfused 2 | Passive | Emberfused 1 | Any | +5 Magical Power and +2% Physical Power. |
-| talent_241 | Emberfused 3 | Passive | Emberfused 2 | Any | +10 Magical Power and +4% Physical Power. |
-| talent_242 | Emberfused 4 | Passive | Emberfused 3 | Any | +15 Magical Power and +5% Physical Power. |
-| talent_243 | Mystic Power 1 | Passive | Arcane Blast or Frostbolt | Any | +5 Magical Power. |
-| talent_244 | Mystic Power 2 | Passive | Mystic Power 1 | Any | +5 Magical Power. |
-| talent_245 | Mystic Power 3 | Passive | Mystic Power 2 | Any | +5 Magical Power. |
-| talent_246 | Mystic Power 4 | Passive | Mystic Power 3, Lower Temperature, or Arcane Knowledge | Any | +10% Magical Power. |
+| talent_235 | Oath 1 | Passive | Divine Smite | Any | +5% Spell Power. |
+| talent_236 | Oath 2 | Passive | Oath 1 | Any | +5% Spell Power. |
+| talent_237 | Oath 3 | Passive | Oath 2 | Any | +10% Spell Power. |
+| talent_238 | Oath 4 | Passive | Oath 3 | Any | +15% Spell Power. |
+| talent_239 | Emberfused 1 | Passive | Furnace Breaker | Any | +5 Spell Power and +2% Physical Power. |
+| talent_240 | Emberfused 2 | Passive | Emberfused 1 | Any | +5 Spell Power and +2% Physical Power. |
+| talent_241 | Emberfused 3 | Passive | Emberfused 2 | Any | +10 Spell Power and +4% Physical Power. |
+| talent_242 | Emberfused 4 | Passive | Emberfused 3 | Any | +15 Spell Power and +5% Physical Power. |
+| talent_243 | Mystic Power 1 | Passive | Arcane Blast or Frostbolt | Any | +5 Spell Power. |
+| talent_244 | Mystic Power 2 | Passive | Mystic Power 1 | Any | +5 Spell Power. |
+| talent_245 | Mystic Power 3 | Passive | Mystic Power 2 | Any | +5 Spell Power. |
+| talent_246 | Mystic Power 4 | Passive | Mystic Power 3, Lower Temperature, or Arcane Knowledge | Any | +10% Spell Power. |
 | talent_247 | Sharpened Intellect 1 | Passive | Greater Pyromania | Any | +5 Intelligence. |
 | talent_248 | Sharpened Intellect 2 | Passive | Sharpened Intellect 1 | Any | +10% Intelligence. |
 | talent_249 | Spellslinger 1 | Passive | Chain Reaction | Any | +3% Hit Chance. |
@@ -375,8 +375,8 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_254 | Nimble 1 | Passive | Immaculate Timing | Any | +2 Initiative and +2 Agility. |
 | talent_255 | Nimble 2 | Passive | Nimble 1 | Any | +2 Initiative and +2 Agility. |
 | talent_256 | Nimble 3 | Passive | Nimble 2 | Any | +2 Initiative and +10% Agility. |
-| talent_257 | Spellblade | Passive | Thunderstruck | Any | +20% Magical Power. |
-| talent_258 | Study | Passive | Resistance | Any | +10% Magical Power and +5 Intelligence. |
+| talent_257 | Spellblade | Passive | Thunderstruck | Any | +20% Spell Power. |
+| talent_258 | Study | Passive | Resistance | Any | +10% Spell Power and +5 Intelligence. |
 
 The three Brute Armor nodes intentionally share the player-facing name Armored. Internal IDs remain stable for save compatibility.
 
@@ -394,7 +394,7 @@ The duration is the default duration created by the status library. Ability or t
 | Enlightened | 3 turns | No | Deals 20% more Arcane, Fire, Frost, and Lightning damage. |
 | Fierce | 3 turns | No | +20% Critical Strike Chance. |
 | Shielded | 3 turns | No | Takes 25% less damage. |
-| Regenerate | 3 turns | No | Heals at turn start for `3 + 20% source Magical Power` per stack, then applies healing-received modifiers. |
+| Regenerate | 3 turns | No | Heals at turn start for `3 + 20% source Spell Power` per stack, then applies healing-received modifiers. |
 | Taunt | Permanent | No | Forces the player to target this living, visible enemy with single-target attacks. |
 | Stealth | Until the end of your next turn | No | Cannot be targeted by enemies. Reapplication refreshes duration but never adds stacks. |
 | Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default, subject to the 50% Dodge cap; Enduring Evasion changes magnitude and duration. |
@@ -410,9 +410,9 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `2 + 15% source Magical Power`; Magic Resistance is 50% effective against the combined tick. |
-| Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `2 + 25% source Physical Power`; Armor is 50% effective against the combined trigger. |
-| Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `3 + 30% source Magical Power`; Magic Resistance is 50% effective against the combined tick. |
+| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `1 + 15% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
+| Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `1 + 10% source Physical Power`; Armor is 50% effective against the combined trigger. |
+| Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `1 + 20% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
 | Weaken | 3 turns | No | Deals 25% less damage. |
 | Shatter | 3 turns | No | Effective Armor is reduced by 50%. |
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |
@@ -463,14 +463,14 @@ All current enemies start combat with 10 Max Energy and regenerate 1 Energy on t
 
 ## Equipment catalog
 
-### Starting equipment and inventory
+### Available items
 
-The first eight items below are equipped on a new character. Every item from Warden's Broken Crown onward is placed in the new character's inventory to support gear, slot, and comparison testing.
+New characters begin with no equipped gear and an empty inventory. The items below remain the canonical equipment catalog and reward loot pool.
 
 | Item | Slot/category | Rarity | Mechanical stats | Set |
 | --- | --- | --- | --- | --- |
 | Notched Iron Cleaver | One-Hand Axe | Uncommon | +3 Physical Power, +2 Strength | Ashborn Warplate |
-| Embershard Focus | Off-Hand Tome | Rare | +2 Magical Power, +3 Intelligence | — |
+| Embershard Focus | Off-Hand Tome | Rare | +2 Spell Power, +3 Intelligence | — |
 | Wanderer's Hood | Leather Head | Common | +1 Armor, +1 Agility | — |
 | Ashborn Cuirass | Plate Chest | Rare | +5 Armor, +2 Strength, +2 Vitality | Ashborn Warplate |
 | Veilwalker Trousers | Leather Pants | Uncommon | +2 Armor, +2 Agility | Veilwalker's Guile; no set bonuses are currently defined. |
@@ -489,12 +489,12 @@ The first eight items below are equipped on a new character. Every item from War
 | Warden's Shortsword | Main-Hand Sword | Uncommon | +4 Physical Power, +2 Strength | — |
 | Cinder Pilgrim's Mace | Main-Hand Mace | Rare | +5 Physical Power, +3 Strength, +1 Vitality | — |
 | Veilglass Dagger | One-Hand Dagger | Rare | +3 Physical Power, +3 Agility | — |
-| Ashen Conduit | One-Hand Wand | Epic | +5 Magical Power, +3 Intelligence, +1 Luck | — |
+| Ashen Conduit | One-Hand Wand | Epic | +5 Spell Power, +3 Intelligence, +1 Luck | — |
 | Black Gate Buckler | Off-Hand Shield | Uncommon | +3 Armor, +2 Vitality | — |
 | Roadcleaver Greatsword | Two-Hand Sword | Rare | +7 Physical Power, +4 Strength | — |
 | Ashfall Greataxe | Two-Hand Axe | Epic | +8 Physical Power, +5 Strength, +1 Vitality | — |
 | Gatebreaker Maul | Two-Hand Mace | Rare | +7 Physical Power, +4 Strength, +2 Vitality | — |
-| Embercaller's Staff | Two-Hand Staff | Epic | +8 Magical Power, +5 Intelligence | — |
+| Embercaller's Staff | Two-Hand Staff | Epic | +8 Spell Power, +5 Intelligence | — |
 | Cinderwatch Polearm | Two-Hand Polearm | Rare | +7 Physical Power, +2 Strength, +3 Agility | — |
 
 ### Gear set bonuses

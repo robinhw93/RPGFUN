@@ -111,7 +111,7 @@ UI modules display these results but never reproduce their formulas.
 - Blind multiplies the attacker's raw Hit Chance by 0.25 before opposed Hit/Dodge resolution.
 - Final Hit Chance is `modified raw Hit - capped Dodge`, clamped to 20–100%.
 - Strength and Agility feed Physical Power.
-- Intelligence feeds Magical Power.
+- Intelligence feeds Spell Power.
 - Agility contributes 0.5 Initiative per point and Intelligence contributes 0.25 Initiative per point before direct Initiative bonuses.
 - Abilities use their relevant derived power exactly once. `scalingStat` remains legacy/category metadata for older definitions and is not independently added to damage.
 - All visible stats and initiative values are rounded whole numbers.
@@ -158,7 +158,7 @@ Conditions can filter by ability ID, ability branch, damage type, critical resul
 
 Effect definitions support:
 
-- Flat damage, Physical/Magical Power/Armor-scaled damage, trigger-damage ratios, or damage based specifically on Guard/Barrier absorption, targeting self, target, all enemies, or a random enemy.
+- Flat damage, Physical/Spell Power/Armor-scaled damage, trigger-damage ratios, or damage based specifically on Guard/Barrier absorption, targeting self, target, all enemies, or a random enemy.
 - Current-Health-percentage damage.
 - Status application to those target modes.
 - Flat, trigger-damage-ratio, or Max-Health-percentage self healing.
@@ -203,7 +203,7 @@ Ability modifiers target one or more ability IDs and currently support:
 - Retaining a ratio of stacks after detonation.
 - Overriding the ratio of target-status stacks consumed.
 - Changing Energy costs and cooldowns through additive integer deltas, clamped at zero.
-- Retaining target statuses during consume-style benefits, adding Magical Power to self-Guard, and cleansing self debuffs.
+- Retaining target statuses during consume-style benefits, adding Spell Power to self-Guard, and cleansing self debuffs.
 
 Each mechanical ability modifier may also provide a complete player-facing `descriptionOverride`. `getCharacterAbilityDescription` resolves description changes, while `getCharacterAbilityEnergyCost` and `getCharacterAbilityCooldownTurns` resolve numerical rule changes. Combat execution, action-queue projection, combat buttons, talent details, the loadout picker, and inspectable combat-log entries use these shared paths instead of reading character-owned base values directly.
 

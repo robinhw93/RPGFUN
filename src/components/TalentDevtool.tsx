@@ -26,7 +26,7 @@ const CANVAS_ZOOM_STEP = 0.1;
 type TalentNodeKind = "class" | "passive" | "ability";
 type TalentNodeShape = "circle" | "square";
 type PercentagePassiveBonus = "strengthPercent" | "agilityPercent" | "intelligencePercent" | "vitalityPercent" | "luckPercent" | "physicalPowerPercent" | "magicalPowerPercent";
-type PassiveBonus = StatName | PercentagePassiveBonus | "armor" | "magicResistance" | "physicalPower" | "magicalPower" | "maxHp" | "maxEnergy" | "energyRegen" | "critChance" | "hitChance" | "dodgeChance" | "initiative";
+type PassiveBonus = StatName | PercentagePassiveBonus | "armor" | "magicResistance" | "physicalPower" | "magicalPower" | "maxEnergy" | "energyRegen" | "critChance" | "hitChance" | "dodgeChance" | "initiative";
 type DirectPassiveBonus = Exclude<PassiveBonus, StatName | PercentagePassiveBonus>;
 
 interface TalentPassiveBonus {
@@ -91,8 +91,7 @@ const PASSIVE_OPTIONS: Array<{ id: PassiveBonus; label: string }> = [
   { id: "armor", label: "Armor" },
   { id: "magicResistance", label: "Magic Resistance" },
   { id: "physicalPower", label: "Physical Power" },
-  { id: "magicalPower", label: "Magical Power" },
-  { id: "maxHp", label: "Max Health" },
+  { id: "magicalPower", label: "Spell Power" },
   { id: "maxEnergy", label: "Max Energy" },
   { id: "energyRegen", label: "Energy Regeneration" },
   { id: "critChance", label: "Critical Strike Chance" },
@@ -105,11 +104,11 @@ const PASSIVE_OPTIONS: Array<{ id: PassiveBonus; label: string }> = [
   { id: "vitalityPercent", label: "Vitality (%)" },
   { id: "luckPercent", label: "Luck (%)" },
   { id: "physicalPowerPercent", label: "Physical Power (%)" },
-  { id: "magicalPowerPercent", label: "Magical Power (%)" },
+  { id: "magicalPowerPercent", label: "Spell Power (%)" },
 ];
 
 const DIRECT_PASSIVE_BONUSES: DirectPassiveBonus[] = [
-  "armor", "magicResistance", "physicalPower", "magicalPower", "maxHp", "maxEnergy", "energyRegen", "critChance", "hitChance", "dodgeChance", "initiative",
+  "armor", "magicResistance", "physicalPower", "magicalPower", "maxEnergy", "energyRegen", "critChance", "hitChance", "dodgeChance", "initiative",
 ];
 const PERCENT_PASSIVE_BONUSES = new Set<PassiveBonus>([
   "critChance", "hitChance", "dodgeChance", "strengthPercent", "agilityPercent", "intelligencePercent", "vitalityPercent", "luckPercent", "physicalPowerPercent", "magicalPowerPercent",

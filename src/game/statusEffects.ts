@@ -23,15 +23,15 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   enlightened: { id: "enlightened", name: "Enlightened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Magic Damage." },
   fierce: { id: "fierce", name: "Fierce", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+20% Critical Strike Chance." },
   shielded: { id: "shielded", name: "Shielded", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Reduces damage taken by 25%." },
-  regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Magical Power at the start of each turn." },
+  regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Spell Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
   stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 2, stackable: false, expiresAtTurnStart: false, description: "Cannot be targeted by enemies until the end of your next turn." },
   evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn. Dodge Chance cannot exceed 50%." },
   distraction: { id: "distraction", name: "Distraction", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next ability costs 0 Energy." },
   pinpoint: { id: "pinpoint", name: "Pinpoint", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next damaging ability is guaranteed to critically strike." },
-  poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Arcane Damage at the end of each turn. Each stack deals 2 damage plus 15% of the applier's Magical Power. Magic Resistance is 50% effective against this damage." },
-  bleed: { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Physical Damage whenever it uses an ability. Damage scales with the applier's Physical Power. Armor is 50% effective against this damage." },
-  burn: { id: "burn", name: "Burn", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Fire Damage at the start of each turn. Damage scales with the applier's Magical Power. Magic Resistance is 50% effective against this damage." },
+  poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Arcane Damage at the end of each turn. Each stack deals 1 damage plus 15% of the applier's Spell Power. Magic Resistance is 50% effective against this damage." },
+  bleed: { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Physical Damage whenever it uses an ability. Each stack deals 1 damage plus 10% of the applier's Physical Power. Armor is 50% effective against this damage." },
+  burn: { id: "burn", name: "Burn", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Fire Damage at the start of each turn. Each stack deals 1 damage plus 20% of the applier's Spell Power. Magic Resistance is 50% effective against this damage." },
   weaken: { id: "weaken", name: "Weaken", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Deals 25% less damage." },
   shatter: { id: "shatter", name: "Shatter", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Armor is reduced by 50%." },
   vulnerable: { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 25% more damage from all sources." },
@@ -208,11 +208,11 @@ export function getStatusInitiativeBonus(statuses: StatusEffect[]): number {
 export function getStatusDamage(status: StatusEffect): number {
   const power = Math.max(0, status.sourcePower ?? 0);
   const perStack = status.id === "bleed"
-    ? 2 + power * 0.25
+    ? 1 + power * 0.1
     : status.id === "burn"
-      ? 3 + power * 0.3
+      ? 1 + power * 0.2
       : status.id === "poison"
-        ? 2 + power * 0.15
+        ? 1 + power * 0.15
         : 0;
   return Math.max(0, Math.round(perStack * status.stacks));
 }

@@ -104,7 +104,6 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   magicalPower: 0,
   magicalPowerMultiplier: 0,
   power: 0,
-  maxHp: 0,
   maxEnergy: 0,
   energyRegen: 0,
   critChance: 0,
@@ -153,7 +152,6 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   target.magicalPower += passive.magicalPower ?? 0;
   target.magicalPowerMultiplier += passive.magicalPowerMultiplier ?? 0;
   target.power += passive.power ?? 0;
-  target.maxHp += passive.maxHp ?? 0;
   target.maxEnergy += passive.maxEnergy ?? 0;
   target.energyRegen += passive.energyRegen ?? 0;
   target.critChance += passive.critChance ?? 0;
@@ -286,7 +284,6 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
     if (talent.passive) {
       addPassive(features.passive, {
         stats: talent.passive.stat ? { [talent.passive.stat]: talent.passive.amount ?? 0 } : undefined,
-        maxHp: talent.passive.maxHp,
         maxEnergy: talent.passive.maxEnergy,
         energyRegen: talent.passive.energyRegen,
         critChance: talent.passive.critChance,
@@ -395,7 +392,7 @@ export function getCharacterAbilityDescription(character: CharacterState, abilit
     ?? 1;
   const resolvedDescription = description
     .replaceAll("{powerScalingPercent}", String(Math.round(powerScaling * 100)))
-    .replaceAll("{powerSourceLabel}", powerSource === "magical" ? "Magical Power" : "Physical Power")
+    .replaceAll("{powerSourceLabel}", powerSource === "magical" ? "Spell Power" : "Physical Power")
     .replaceAll("{armorScalingClause}", armorScaling > 0 ? ` plus ${Math.round(armorScaling * 100)}% of your Armor` : "")
     .replaceAll("{primaryStatusStacks}", String(primaryStatusStacks));
   const followUp = modifiers.find((modifier) => modifier.applyStatusAfterConsume)?.applyStatusAfterConsume;

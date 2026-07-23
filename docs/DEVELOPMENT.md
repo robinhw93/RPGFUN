@@ -139,17 +139,18 @@ Important fields:
 
 - `energyCost`, `cooldownTurns`, and `target` define usability.
 - `range` is required and is either `melee` or `ranged`. Direct Melee attacks use the normal combatant lunge. Direct Ranged attacks keep the caster in place. They launch `vfx` as a projectile by default, while `rangedPresentation: "target"` is required for detonations, weather, fields, freezes, and other effects that should resolve in place. Beams may retain projectile timing while rendering as a source-to-target connection.
+- Runtime `types` use the same Physical, Shadow, Arcane, Fire, Frost, and Lightning schools as combat. They are inferred from damage components or `damageType`; utility, status, flavor-primary, and mixed-school exceptions belong in `ABILITY_TYPE_OVERRIDES`, while a definition may supply `types` explicitly. The first type controls the action-bar color and icon.
 - `damageType`, `power`, and `powerScaling` define a single damage component.
 - `damageComponents` defines mixed damage and supersedes the single-component fields for damage calculation. A component may also add `armorScaling` for reusable Armor-based direct damage.
 - `hits` and `randomTargetPerHit` define multi-hit behavior. Each queued direct hit carries the total hit count so presentation can restart the lunge and divide animation, impact, and floating-event timing proportionally. This keeps all hit animations consecutive within one normal attack-duration budget. `simultaneousAreaImpact` attaches every target of an `all_enemies` damage ability to one shared event so its damage, statuses, and VFX appear together.
 - `hitsWhenSelfHasStatus` changes the hit count from a live self-status without branching on an ability ID.
 - `requiredTargetStatus` and `requiredSelfStatus` gate use.
 - `requiredTargetStatusStacks`, fixed stack consumption, and their modifier overrides support stack-gated abilities. The action-queue projection must reserve the same stack counts as the engine.
-- `selfGuard` derives Guard from Armor, Physical Power, and Magical Power. `guardPerConsumedTargetStatusStackMaxHpRatio` derives Guard from a bounded status-stack count, while `barrierFromSelfHealingRatio` uses only Health actually restored.
+- `selfGuard` derives Guard from Armor, Physical Power, and Spell Power. `guardPerConsumedTargetStatusStackMaxHpRatio` derives Guard from a bounded status-stack count, while `barrierFromSelfHealingRatio` uses only Health actually restored.
 - `dealsDamage: false` creates a status/control utility ability.
 - `effect`, status options, detonation, consumption, healing, Energy restoration, and status spreading fields route through engine-supported behaviors.
 - `statusApplications` supports one or more on-hit statuses, including critical-only applications and independent base proc chances augmented by the character's chance-effect bonus. `statusApplicationsWhenTargetHasNoDebuffs` uses the target snapshot from before the hit and must be mirrored in action-queue projection.
-- Ability modifiers can add or replace status applications, redirect random multi-hits to the selected target, alter per-status-stack damage, scale status amounts from Physical or Magical Power, pre-heal from a self-affliction's remaining damage, and grant next-turn Energy regeneration.
+- Ability modifiers can add or replace status applications, redirect random multi-hits to the selected target, alter per-status-stack damage, scale status amounts from Physical or Spell Power, pre-heal from a self-affliction's remaining damage, and grant next-turn Energy regeneration.
 - `conditionalStatusReplacement` swaps an application when the target already has a configured status; Deep Freeze uses it to replace Slowed with Stunned.
 - `statusApplicationsWhenSelfHas` supports conditional applications such as Shield Charge's Stun while Guarded. `triggerTargetStatusDamage` resolves one non-consuming status-damage tick.
 - `randomSingleStatusApplication` applies one status to exactly one randomly chosen target of an area ability.
@@ -162,8 +163,8 @@ Important fields:
 - `selfHealPerTargetStatusStack` heals from a target's stack snapshot after a successful hit. `transferSelfStatusToTargetForHealing` consumes a self affliction, heals from its remaining damage, transfers it to the selected target, and must also be mirrored by action-queue status projection.
 - `damageModifiers` applies conditional multipliers owned by the ability.
 - `vfx` emits presentation metadata at the exact event where the ability resolves and supplies the preferred Ranged treatment. `areaVfxPerTarget` gives grouped, non-damaging area abilities one simultaneous local impact per target. `vfxDirection: "to_player"` reverses a resolved transfer from the struck target to the player. `consumeStatusFromAllEnemiesVfx` emits one source-enemy-to-player transfer at the shared removal event before later damage impacts. Add matching `CombatAbilityVfxKind` renderers without putting animation timing into combat rules.
-- Consume-based modifiers may retain the target status while still calculating benefits from its stacks. Self-ability modifiers may add Magical Power Guard scaling or remove every self debuff; each must provide a complete `descriptionOverride`. Additive Power/Armor scaling, Power-source changes, and primary status-stack overrides may use the shared description tokens so every unlocked modifier combination resolves accurate player-facing text.
-- Trigger damage can scale from Physical/Magical Power or from damage absorbed by a named defensive status. Reflective Barrier therefore reflects only the amount consumed from Barrier, even when Guard also absorbs the hit.
+- Consume-based modifiers may retain the target status while still calculating benefits from its stacks. Self-ability modifiers may add Spell Power Guard scaling or remove every self debuff; each must provide a complete `descriptionOverride`. Additive Power/Armor scaling, Power-source changes, and primary status-stack overrides may use the shared description tokens so every unlocked modifier combination resolves accurate player-facing text.
+- Trigger damage can scale from Physical/Spell Power or from damage absorbed by a named defensive status. Reflective Barrier therefore reflects only the amount consumed from Barrier, even when Guard also absorbs the hit.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
 
@@ -251,7 +252,7 @@ Ability modifiers can currently:
 
 - Permit an ability without its normal required self status.
 - Change scaling when that requirement is missing.
-- Override status duration, magnitude, start-expiration behavior, or stack scaling from Physical/Magical Power.
+- Override status duration, magnitude, start-expiration behavior, or stack scaling from Physical/Spell Power.
 - Replace a status application or add further applications.
 - Add applications only when the target already has a configured status, or derive applied stacks from target-status stacks.
 - Redirect random multi-hits to the selected target.
@@ -283,7 +284,7 @@ The editor supports:
 - Creating, deleting, selecting, and dragging nodes.
 - Live Shadow, Arcanist, Brute, and Cultist node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
-- Multiple flat and percentage passive bonuses, including attributes, Physical Power, and Magical Power.
+- Multiple flat and percentage passive bonuses, including attributes, Physical Power, and Spell Power.
 - Ability-ID references, Energy cost, cooldown turns, Melee/Ranged selection, and free-form effect/proc notes.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
@@ -341,7 +342,7 @@ Current migration behavior:
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
-- Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Magical Power**.
+- Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Spell Power**.
 - Preload and decode Character-screen avatars, gear icons, and stat icons before rendering that screen. Use the game-owned loading state instead of allowing individual icons to pop in.
 - Keep combat usable without page scrolling on mobile.
 
