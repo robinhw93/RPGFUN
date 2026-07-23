@@ -243,6 +243,7 @@ main { min-height: calc(100vh - 68px); }
 
 .talent-points { display: flex; align-items: center; gap: .7rem; min-width: 150px; padding: .75rem 1rem; border: 1px solid #4a4434; background: #171813; color: var(--gold); }
 .talent-points span { display: flex; flex-direction: column; }.talent-points small { color: var(--dim); font-size: .57rem; text-transform: uppercase; letter-spacing: .1em; }.talent-points strong { color: var(--text); font-family: Georgia, serif; font-size: 1.1rem; }
+.talent-points.unspent-points-indicator { color: var(--gold-bright); border-color: #b28a43; background: linear-gradient(135deg, #282114, #171810); }
 .character-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 1rem; }
 .paper-panel { padding: 1.2rem; border: 1px solid var(--line); background: linear-gradient(135deg, #151917, #101312); }
 .stats-list > div { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: .7rem; padding: .7rem 0; border-bottom: 1px solid #252a27; }
@@ -254,7 +255,8 @@ main { min-height: calc(100vh - 68px); }
 .character-xp > span { height: 5px; flex: 1; overflow: hidden; border: 1px solid #393d38; background: #0c0f0d; }
 .character-xp i { height: 100%; display: block; background: linear-gradient(90deg, #8f7041, #e0bd70); box-shadow: 0 0 10px rgba(213,177,104,.25); }
 .character-xp small { color: var(--dim); font-size: .55rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.stat-points-available { color: var(--gold-bright); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; }
+.stat-points-available { padding: .38rem .52rem; color: var(--gold-bright); border: 1px solid #aa8445; background: linear-gradient(135deg, #282114, #171810); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; }
+.unspent-points-indicator { text-shadow: 0 0 8px rgba(255,224,143,.4); animation: unspent-points-pulse 1.45s ease-in-out infinite; }
 .stat-value-actions { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; }
 .allocate-stat-button { width: 29px; height: 29px; display: grid; place-items: center; padding: 0; color: #17130c; border: 1px solid #d3af68; background: linear-gradient(135deg, #d9b970, #aa8247); font-size: 1.05rem; font-weight: 800; line-height: 1; cursor: pointer; }
 .allocate-stat-button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
@@ -1046,6 +1048,7 @@ main { min-height: calc(100vh - 68px); }
 @media (max-width: 760px) { .victory-score-actions { grid-template-columns: 1fr; } }
 @keyframes score-card-arrive { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes score-level-up-button-pulse { 0%, 100% { filter: brightness(1); box-shadow: 0 0 0 rgba(225,185,91,0), inset 0 0 12px rgba(225,185,91,.05); transform: scale(1); } 50% { filter: brightness(1.18); box-shadow: 0 0 24px rgba(225,185,91,.46), 0 0 5px rgba(255,229,158,.65), inset 0 0 18px rgba(225,185,91,.16); transform: scale(1.025); } }
+@keyframes unspent-points-pulse { 0%, 100% { filter: brightness(1); box-shadow: 0 0 0 rgba(225,185,91,0), inset 0 0 10px rgba(225,185,91,.04); transform: scale(1); } 50% { filter: brightness(1.18); box-shadow: 0 0 20px rgba(225,185,91,.4), 0 0 4px rgba(255,229,158,.58), inset 0 0 15px rgba(225,185,91,.13); transform: scale(1.025); } }
 
 .initiative-overlay { position: fixed; z-index: 180; inset: 0; display: grid; place-items: center; padding: 1rem; overflow: hidden; background-color: rgba(4,6,5,.98); backdrop-filter: blur(10px); }
 .initiative-overlay::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(104,83,47,.2), transparent 31rem); pointer-events: none; }
@@ -1399,6 +1402,7 @@ main { min-height: calc(100vh - 68px); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
   .score-character-button.level-up { animation: none !important; box-shadow: 0 0 18px rgba(225,185,91,.32), inset 0 0 14px rgba(225,185,91,.12); }
+  .unspent-points-indicator { animation: none !important; box-shadow: 0 0 16px rgba(225,185,91,.28), inset 0 0 12px rgba(225,185,91,.1); }
   .stealth-smoke { animation: none !important; opacity: .26; }
   .player-combatant.evasion-cast { animation: none !important; filter: brightness(1.08); }
   .player-combatant.focus-cast { animation: none !important; }

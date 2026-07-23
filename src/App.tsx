@@ -2469,7 +2469,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
       <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{reachedMaxLevel ? "Max Level" : `${character.xp} / ${requiredExperience} XP`}</small></div></div></div>
       <div className="character-layout">
         <div className="paper-panel">
-          <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 && <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong>}</div>
+          <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 && <strong className="stat-points-available unspent-points-indicator">{character.unspentStatPoints} Points Available</strong>}</div>
           <div className="stats-list">
             {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><StatIcon stat={stat.key} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
@@ -3022,7 +3022,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
 
   return (
     <section className="page talents-page">
-      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className="talent-points"><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className={`talent-points ${character.talentPoints > 0 ? "unspent-points-indicator" : ""}`}><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="loadout-panel paper-panel">
