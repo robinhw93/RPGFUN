@@ -1026,7 +1026,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           <button type="button" className="combatant-portrait player-combatant-portrait" aria-label="View your character stats" onClick={() => setPlayerAttributesOpen(true)}><img src={combatAvatar.portraitUrl} alt="" draggable={false} /></button>
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
-          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
+          <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageAmount={combat.damageAmounts?.player} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
           <div className="compact-status-row">
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
@@ -1087,7 +1087,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
                 <span>Health</span>
                 <b>{enemy.hp}/{enemy.maxHp}</b>
               </div>
-              <HealthBar value={enemy.hp} max={enemy.maxHp} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} missed={missedTargets.includes(enemy.instanceId)} />
+              <HealthBar value={enemy.hp} max={enemy.maxHp} damageAmount={combat.damageAmounts?.[enemy.instanceId]} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} missed={missedTargets.includes(enemy.instanceId)} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
                 {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
@@ -2143,7 +2143,7 @@ function PoisonTransferAnimation({ animation }: { animation: CombatStatusAnimati
   );
 }
 
-function HealthBar({ value, max, damageSource, missed = false }: { value: number; max: number; damageSource?: string; missed?: boolean }) {
+function HealthBar({ value, max, damageAmount, damageSource, missed = false }: { value: number; max: number; damageAmount?: number; damageSource?: string; missed?: boolean }) {
   const previousValue = useRef(value);
   const [change, setChange] = useState<{ id: number; kind: "damage" | "heal" | "miss"; delta: number; source?: string } | null>(null);
 
@@ -2151,11 +2151,12 @@ function HealthBar({ value, max, damageSource, missed = false }: { value: number
     const delta = value - previousValue.current;
     previousValue.current = value;
     if (delta !== 0) {
-      setChange({ id: Date.now(), kind: delta > 0 ? "heal" : "damage", delta, source: delta < 0 ? damageSource : undefined });
+      const displayedDelta = delta < 0 ? -(damageAmount && damageAmount > 0 ? damageAmount : Math.abs(delta)) : delta;
+      setChange({ id: Date.now(), kind: delta > 0 ? "heal" : "damage", delta: displayedDelta, source: delta < 0 ? damageSource : undefined });
     } else if (missed) {
       setChange({ id: Date.now(), kind: "miss", delta: 0 });
     }
-  }, [damageSource, missed, value]);
+  }, [damageAmount, damageSource, missed, value]);
 
   return (
     <div className="health-bar-wrap">

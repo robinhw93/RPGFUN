@@ -78,6 +78,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     nextTurnEnergyRegenBonus: 0,
     damagedTargets: [],
     missedTargets: [],
+    damageAmounts: {},
     damageSourceLabels: {},
     statusAnimations: [],
     abilityAnimations: martyrdomDamage > 0 ? [{ id: `martyrdom-${Date.now()}`, kind: "martyrdom", targetId: "player", sourceTargetId: "player" }] : [],
@@ -395,6 +396,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
         ?? ((combat.floatingEvents?.length ?? 0) > 0 && (combat.pendingEffects?.length ?? 0) > 0 ? (combat.eventId ?? 1) - 1 : combat.eventId ?? 1),
       damagedTargets: combat.damagedTargets ?? [],
       missedTargets: combat.missedTargets ?? [],
+      damageAmounts: combat.damageAmounts ?? {},
       damageSourceLabels: combat.damageSourceLabels ?? {},
       statusAnimations: combat.statusAnimations ?? [],
       abilityAnimations: combat.abilityAnimations ?? [],
@@ -435,6 +437,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0,
     damagedTargets: [],
     missedTargets: [],
+    damageAmounts: {},
     damageSourceLabels: {},
     statusAnimations: [],
     abilityAnimations: [],
@@ -3274,10 +3277,12 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const resolvesAttackImpact = matchingEffects.some((effect) => "damage" in effect && Boolean(effect.attackerId));
   const damagedTargets: string[] = [];
   const missedTargets = matchingEffects.flatMap((effect) => "damage" in effect && effect.missed ? [effect.targetId] : []);
+  const damageAmounts: Record<string, number> = {};
   const damageSourceLabels: Record<string, string> = {};
   matchingEffects.forEach((effect) => {
-    if ("damage" in effect && effect.damage > 0 && effect.sourceLabel) {
-      damageSourceLabels[effect.targetId] = effect.sourceLabel;
+    if ("damage" in effect && effect.damage > 0) {
+      damageAmounts[effect.targetId] = (damageAmounts[effect.targetId] ?? 0) + effect.damage;
+      if (effect.sourceLabel) damageSourceLabels[effect.targetId] = effect.sourceLabel;
     }
   });
   const statusAnimations = matchingEffects.flatMap((effect) => effect.type === "status"
@@ -3399,7 +3404,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const stableActiveTurnIndex = activeActorId
     ? Math.max(0, combat.turnOrder.findIndex((actor) => actor.actorId === activeActorId))
     : activeTurnIndex;
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageAmounts, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {
@@ -3425,6 +3430,7 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
     attackEffectId: attackEffect.id,
     damagedTargets: [],
     missedTargets: [],
+    damageAmounts: {},
     damageSourceLabels: {},
     statusAnimations: [],
     abilityAnimations: [],

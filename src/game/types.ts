@@ -750,6 +750,7 @@ export interface CombatState {
   nextTurnEnergyRegenBonus: number;
   damagedTargets: string[];
   missedTargets: string[];
+  damageAmounts: Record<string, number>;
   damageSourceLabels: Record<string, string>;
   statusAnimations: CombatStatusAnimation[];
   abilityAnimations: CombatAbilityAnimation[];
