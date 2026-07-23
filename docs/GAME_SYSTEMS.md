@@ -256,7 +256,7 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 - Dead enemies immediately lose all displayed status effects.
 - Stealthed enemies cannot be targeted.
 - A living, visible enemy with Taunt forces all single-target attacks to that enemy.
-- The selected enemy has a highlighted frame around its combat card. Its initiative entry also has a highlighted frame and target icon.
+- The selected enemy retains the combat card's hover highlight and has a highlighted frame around the card. Its initiative entry also has a highlighted frame and target icon.
 - Area abilities target all living enemies that are not Stealthed.
 - Non-damaging area status abilities such as Poison Cloud apply to every target in one shared event, producing one floating status message and simultaneous status feedback on all affected enemies.
 - Flurry chooses a new valid random enemy independently for every hit.
