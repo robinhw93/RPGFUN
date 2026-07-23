@@ -143,7 +143,7 @@ Multi-component abilities calculate each component separately and add the result
 
 ### Enemy direct damage
 
-Each enemy ability defines flat damage plus Physical Power and/or Spell Power scaling. Enemy abilities use a lighter defense reduction:
+Each enemy ability defines flat damage plus Physical Power and/or Spell Power scaling. A definition may instead roll its Power scaling within a configured range once per ability use. Enemy abilities use a lighter defense reduction:
 
 ```text
 ability damage + enemy Physical Power × physical scaling + enemy Spell Power × spell scaling
@@ -246,6 +246,7 @@ At the start of an enemy's turn:
 - While Stealthed, the player's combat card becomes lightly translucent and displays animated shadow-smoke until the status expires.
 - Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
 - Enemies configured for several actions resolve each ability separately, including its own text, hit roll, damage, VFX, Energy cost, and Bleed trigger. Start-of-turn regeneration and end-of-turn Poison still happen only once.
+- Forest Wisps repeatedly use Wisp Blast for random 50–100% Spell Power damage. Spending their final Energy applies Stunned through the same impact event, causing them to skip their next turn before gaining Diminishing Returns.
 - Enemy turns do not add a separate floating turn announcement; the turn-order highlight advances with the preceding action's final event.
 
 Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease. If Stunned expires, its icon is replaced by Diminishing Returns at that same event. Status icons retain their pre-turn state while those events are queued; the duration ring updates or the icon disappears only when the final status event is shown and resolved.

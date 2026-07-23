@@ -627,9 +627,12 @@ export interface EnemyAbilityDefinition {
   baseDamage?: number;
   physicalPowerScaling?: number;
   spellPowerScaling?: number;
+  /** Adds one randomly rolled Power-scaling component to each ability use. */
+  powerScalingRange?: { power: "physical" | "spell"; min: number; max: number };
   hits?: number;
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number }>;
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
+  selfStatusApplicationsWhenEnergyDepleted?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
   nextTurnEnergyRegen?: number;
   restoreFullEnergyNextTurn?: boolean;
   vfx: CombatAbilityVfxKind;

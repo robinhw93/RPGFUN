@@ -2891,9 +2891,14 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   } else {
     usedAbility = true;
     const abilityHits = enemyAbility.hits ?? 1;
+    const rolledPowerScaling = enemyAbility.powerScalingRange
+      ? enemyAbility.powerScalingRange.min + Math.random() * (enemyAbility.powerScalingRange.max - enemyAbility.powerScalingRange.min)
+      : 0;
+    const rolledPower = enemyAbility.powerScalingRange?.power === "physical" ? enemy.physicalPower : enemy.spellPower;
     const enemyAbilityPower = (enemyAbility.baseDamage ?? 0)
       + enemy.physicalPower * (enemyAbility.physicalPowerScaling ?? 0)
-      + enemy.spellPower * (enemyAbility.spellPowerScaling ?? 0);
+      + enemy.spellPower * (enemyAbility.spellPowerScaling ?? 0)
+      + rolledPower * rolledPowerScaling;
     const enemyAttackInfo: InspectableInfo = { title: enemyAbility.name, description: enemyAbility.description, category: "ability" };
     const abilityEventIndex = events.length;
     events.push(`${enemy.name} uses ${enemyAbility.name}.`);
@@ -3025,6 +3030,15 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         queueAbsorptionChanges(pendingEffects, recoilEventIndex, enemy.instanceId, recoilAbsorption);
       }
     }
+    const energyAfterAbility = Math.max(0, enemy.energy - enemyAbility.energyCost);
+    if (energyAfterAbility === 0) {
+      (enemyAbility.selfStatusApplicationsWhenEnergyDepleted ?? []).forEach((application) => {
+        if (!canApplyStatusEffect(enemy.statuses, application.status)) return;
+        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+        enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
+        logs.push(makeLog(`${enemy.name} gains ${status.name}.`, statusInfo(status)));
+      });
+    }
     enemy.nextTurnEnergyRegenBonus = enemyAbility.restoreFullEnergyNextTurn ? enemy.maxEnergy : enemy.nextTurnEnergyRegenBonus + (enemyAbility.nextTurnEnergyRegen ?? 0);
     enemy.abilityCooldowns = { ...enemy.abilityCooldowns, [enemyAbility.id]: enemyAbility.cooldownTurns };
     if (enemy.behavior === "rabid_rat") {
@@ -3038,7 +3052,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     const bleedResult = applyBleedAfterAbility(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, 1, enemy.armor);
     enemy = { ...enemy, hp: bleedResult.hp, statuses: bleedResult.statuses };
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId
-      ? { ...candidate, ...enemy, energy: Math.max(0, enemy.energy - enemyAbility.energyCost) }
+      ? { ...candidate, ...enemy, energy: energyAfterAbility }
       : candidate);
     if (bleedResult.damage > 0 && bleedResult.eventIndex !== null && bleedResult.sourceId === "player") {
       const bleedTriggers = runPlayerTriggerEvents(
