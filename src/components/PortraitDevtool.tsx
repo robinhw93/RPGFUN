@@ -36,10 +36,11 @@ interface ImageChoice {
 
 const PORTRAIT_DRAFT_STORAGE_KEY = "emberfall.portrait-devtool.v1";
 const PLAYER_DEFAULT_CROP: PortraitCrop = { centerX: 50, centerY: 11.161, diameter: 41.667 };
+const LEGACY_WINDSONG_WOLF_CROP: PortraitCrop = { centerX: 50.781, centerY: 22.786, diameter: 50.781 };
 const ENEMY_DEFAULT_CROPS: Record<string, PortraitCrop> = {
   dummy: { centerX: 50, centerY: 18.359, diameter: 41.406 },
   "enemy-mrxiut2a-k4kgv": { centerX: 47.852, centerY: 50.13, diameter: 58.594 },
-  "enemy-mrxj4o6o-o45ia": { centerX: 50.781, centerY: 22.786, diameter: 50.781 },
+  "enemy-mrxj4o6o-o45ia": { centerX: 58.594, centerY: 42.318, diameter: 58.594 },
   "enemy-mrxk609z-n04fq": { centerX: 49.805, centerY: 30.599, diameter: 50.781 },
   "enemy-mrxkar5z-g9o5d": { centerX: 46.875, centerY: 38.411, diameter: 60.547 },
   "enemy-mrxkjqs3-g7g5i": { centerX: 49.805, centerY: 17.578, diameter: 45.898 },
@@ -87,6 +88,12 @@ function finiteNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+function cropMatches(value: PortraitCrop, expected: PortraitCrop) {
+  return Math.abs(value.centerX - expected.centerX) < 0.01
+    && Math.abs(value.centerY - expected.centerY) < 0.01
+    && Math.abs(value.diameter - expected.diameter) < 0.01;
+}
+
 function normalizeCrop(crop: PortraitCrop, naturalWidth = 1, naturalHeight = 1): PortraitCrop {
   const diameter = clamp(finiteNumber(crop.diameter, 48), 20, 90);
   const radiusX = diameter / 2;
@@ -115,15 +122,21 @@ function normalizeExchange(value: unknown): PortraitExchange {
       const choices = IMAGE_CHOICES[fallback.kind];
       const image = choices.find((choice) => choice.id === saved.imageId) ?? choices.find((choice) => choice.imageUrl === saved.imageUrl);
       if (!image) return fallback;
+      const savedCrop = {
+        centerX: finiteNumber(saved.centerX, image.crop.centerX),
+        centerY: finiteNumber(saved.centerY, image.crop.centerY),
+        diameter: finiteNumber(saved.diameter, image.crop.diameter),
+      };
+      const crop = fallback.id === "enemy-mrxj4o6o-o45ia"
+        && image.id === "enemy:enemy-mrxj4o6o-o45ia"
+        && cropMatches(savedCrop, LEGACY_WINDSONG_WOLF_CROP)
+        ? image.crop
+        : savedCrop;
       return {
         ...fallback,
         imageId: image.id,
         imageUrl: image.imageUrl,
-        ...normalizeCrop({
-          centerX: finiteNumber(saved.centerX, image.crop.centerX),
-          centerY: finiteNumber(saved.centerY, image.crop.centerY),
-          diameter: finiteNumber(saved.diameter, image.crop.diameter),
-        }, image.naturalWidth, image.naturalHeight),
+        ...normalizeCrop(crop, image.naturalWidth, image.naturalHeight),
       };
     }),
   };
