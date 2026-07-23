@@ -431,7 +431,7 @@ The duration is the default duration created by the status library. Ability or t
 
 ## Enemies
 
-Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Attacks are implemented as explicit abilities rather than an implicit default attack. Every enemy template owns a full bestiary illustration and a head portrait cropped from the same design. The portrait appears on its combat card, while the combat info button beside Health opens the full illustration together with the complete stat and defense summary. Enemies with more than one action per turn resolve and present each ability separately.
+Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Attacks are implemented as explicit abilities rather than an implicit default attack. Every enemy template owns a full bestiary illustration and a head portrait cropped from the same design. The portrait appears on its combat card and opens the full illustration together with the complete stat and defense summary when pressed. Enemies with more than one action per turn resolve and present each ability separately.
 
 | Enemy | Health | Physical / Spell Power | Armor / Magic Resistance | Hit / Dodge / Crit | Regen / Max | Abilities |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |

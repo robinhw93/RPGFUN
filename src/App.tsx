@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Backpack, BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
-  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Info, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
+  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Sun, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
@@ -1005,11 +1005,17 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
               {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
-              <span className="combatant-portrait enemy-combatant-portrait" aria-hidden="true"><img src={enemy.portraitUrl} alt="" draggable={false} /></span>
+              <button
+                type="button"
+                className="combatant-portrait enemy-combatant-portrait"
+                aria-label={`View ${enemy.name} stats`}
+                onClick={(event) => { event.stopPropagation(); setInspectedEnemyId(enemy.instanceId); }}
+                onKeyDown={(event) => event.stopPropagation()}
+              ><img src={enemy.portraitUrl} alt="" draggable={false} /></button>
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
               <div className="compact-resource-label">
-                <span>Health <button type="button" className="enemy-info-button" aria-label={`View ${enemy.name} stats`} onClick={(event) => { event.stopPropagation(); setInspectedEnemyId(enemy.instanceId); }} onKeyDown={(event) => event.stopPropagation()}><Info size={12} /></button></span>
+                <span>Health</span>
                 <b>{enemy.hp}/{enemy.maxHp}</b>
               </div>
               <HealthBar value={enemy.hp} max={enemy.maxHp} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} missed={missedTargets.includes(enemy.instanceId)} />
