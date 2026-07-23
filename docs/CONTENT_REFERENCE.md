@@ -433,18 +433,18 @@ The duration is the default duration created by the status library. Ability or t
 
 ## Enemies
 
-Enemy Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template.
+Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Attacks are implemented as explicit abilities rather than an implicit default attack.
 
-| Enemy | Health | Power | Armor | Magic Resistance | Hit | Dodge | Crit | Regen / Max | Cost | Attack |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| DUMMY | 100 | 1 | 0 | 0 | 95% | 0% | 0% | 1 / 10 | 1 | Training Strike; 1 base Physical damage. |
-| Ash Hound | 28 | 7 | 1 | 0 | 95% | 8% | 0% | 1 / 10 | 3 | Raking Claws; Physical and applies Bleed when it deals Health damage. |
-| Cinder Cultist | 34 | 9 | 2 | 2 | 96% | 3% | 0% | 1 / 10 | 4 | Searing Brand; Arcane. |
-| Ember Wisp | 22 | 6 | 0 | 3 | 98% | 12% | 0% | 1 / 10 | 3 | Scorch; Arcane. |
-| The Ashen Warden | 92 | 12 | 4 | 4 | 100% | 5% | 0% | 1 / 10 | 5 | Cinder Cleave; Physical. |
-| Windsong Wolf | 30 | 7 | 1 | 0 | 94% | 10% | 5% | 1 / 10 | 3 | Rending Bite; Physical and applies Bleed when it deals Health damage. |
-| Grove Sprite | 24 | 7 | 0 | 4 | 97% | 14% | 8% | 2 / 12 | 4 | Pollen Spark; Arcane. |
-| Greyback Boar | 82 | 11 | 5 | 2 | 93% | 3% | 10% | 1 / 10 | 5 | Stone-Tusk Charge; Physical. |
+| Enemy | Health | Physical Power | Spell Power | Armor | Magic Resistance | Hit | Dodge | Crit | Regen / Max | Cost | Ability |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| DUMMY | 100 | 1 | 0 | 0 | 0 | 95% | 0% | 0% | 1 / 10 | 1 | Training Strike; 100% Physical Power as Physical damage. |
+| Ash Hound | 28 | 7 | 0 | 1 | 0 | 95% | 8% | 0% | 1 / 10 | 3 | Raking Claws; 100% Physical Power as Physical damage and applies Bleed after Health damage. |
+| Cinder Cultist | 34 | 0 | 9 | 2 | 2 | 96% | 3% | 0% | 1 / 10 | 4 | Searing Brand; 100% Spell Power as Arcane damage. |
+| Ember Wisp | 22 | 0 | 6 | 0 | 3 | 98% | 12% | 0% | 1 / 10 | 3 | Scorch; 100% Spell Power as Arcane damage. |
+| The Ashen Warden | 92 | 12 | 0 | 4 | 4 | 100% | 5% | 0% | 1 / 10 | 5 | Cinder Cleave; 100% Physical Power as Physical damage. |
+| Windsong Wolf | 30 | 7 | 0 | 1 | 0 | 94% | 10% | 5% | 1 / 10 | 3 | Rending Bite; 100% Physical Power as Physical damage and applies Bleed after Health damage. |
+| Grove Sprite | 24 | 0 | 7 | 0 | 4 | 97% | 14% | 8% | 2 / 12 | 4 | Pollen Spark; 100% Spell Power as Arcane damage. |
+| Greyback Boar | 82 | 11 | 0 | 5 | 2 | 93% | 3% | 10% | 1 / 10 | 5 | Stone-Tusk Charge; 100% Physical Power as Physical damage. |
 
 ## Adventure: Windsong Forest
 

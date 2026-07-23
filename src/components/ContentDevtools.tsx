@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Copy, Download, LockKeyhole, Plus, Save, Skull, Trash2, Wrench, X } from "lucide-react";
 import { ADVENTURES, ADVENTURE_EVENTS, ENEMIES } from "../game/data";
-import type { AdventureDefinition, AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureStageEntry, DamageType, EnemyTemplate, StatName } from "../game/types";
+import type { AdventureDefinition, AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureStageEntry, StatName } from "../game/types";
 
 export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool";
 
@@ -10,10 +10,23 @@ export const ENEMY_DRAFT_STORAGE_KEY = "emberfall.enemy-devtool.v1";
 export const EVENT_DRAFT_STORAGE_KEY = "emberfall.event-devtool.v1";
 export const ADVENTURE_DRAFT_STORAGE_KEY = "emberfall.adventure-devtool.v1";
 
-interface EnemyDraft extends Omit<EnemyTemplate, "hitChance" | "dodgeChance" | "critChance"> {
+interface EnemyDraft {
+  id: string;
+  name: string;
+  title: string;
+  maxHp: number;
+  physicalPower: number;
+  spellPower: number;
+  armor: number;
+  magicResistance: number;
   hitChance: number;
   dodgeChance: number;
   critChance: number;
+  energyRegen: number;
+  maxEnergy: number;
+  abilitiesNotes: string;
+  behaviorNotes: string;
+  accent: string;
 }
 
 interface EnemyExchange { format: "emberfall-enemies"; version: 1; enemies: EnemyDraft[] }
@@ -24,7 +37,6 @@ const EMPTY_OUTCOME: AdventureEventOutcome = { text: "", health: 0, gold: 0, exp
 const STAT_OPTIONS: Array<{ id: StatName; label: string }> = [
   { id: "strength", label: "Strength" }, { id: "agility", label: "Agility" }, { id: "intelligence", label: "Intelligence" }, { id: "vitality", label: "Vitality" }, { id: "luck", label: "Luck" },
 ];
-const DAMAGE_TYPES: DamageType[] = ["physical", "arcane", "shadow", "fire", "frost", "lightning"];
 
 function makeId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -52,8 +64,8 @@ async function copyJson(value: unknown) {
   await navigator.clipboard.writeText(JSON.stringify(value, null, 2));
 }
 
-function useLocalDraft<T>(key: string, fallback: T) {
-  const [draft, setDraft] = useState<T>(() => readExchange(key, fallback));
+function useLocalDraft<T>(key: string, fallback: T, normalize: (value: T) => T = (value) => value) {
+  const [draft, setDraft] = useState<T>(() => normalize(readExchange(key, fallback)));
   const [message, setMessage] = useState("Changes save automatically in this browser");
   useEffect(() => { window.localStorage.setItem(key, JSON.stringify(draft)); }, [draft, key]);
   const save = () => { window.localStorage.setItem(key, JSON.stringify(draft)); setMessage("Draft saved locally"); };
@@ -127,17 +139,69 @@ function TextField({ label, value, onChange, textarea = false }: { label: string
 }
 
 function canonicalEnemyExchange(): EnemyExchange {
-  return { format: "emberfall-enemies", version: 1, enemies: Object.values(ENEMIES).map((enemy) => ({ ...enemy, hitChance: enemy.hitChance * 100, dodgeChance: enemy.dodgeChance * 100, critChance: enemy.critChance * 100 })) };
+  return {
+    format: "emberfall-enemies",
+    version: 1,
+    enemies: Object.values(ENEMIES).map((enemy) => ({
+      id: enemy.id,
+      name: enemy.name,
+      title: enemy.title,
+      maxHp: enemy.maxHp,
+      physicalPower: enemy.physicalPower,
+      spellPower: enemy.spellPower,
+      armor: enemy.armor,
+      magicResistance: enemy.magicResistance,
+      hitChance: enemy.hitChance * 100,
+      dodgeChance: enemy.dodgeChance * 100,
+      critChance: enemy.critChance * 100,
+      energyRegen: enemy.energyRegen,
+      maxEnergy: enemy.maxEnergy,
+      abilitiesNotes: enemy.abilitiesNotes,
+      behaviorNotes: enemy.behaviorNotes,
+      accent: enemy.accent,
+    })),
+  };
+}
+
+function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
+  const fallbackById = ENEMIES;
+  return {
+    format: "emberfall-enemies",
+    version: 1,
+    enemies: (Array.isArray(exchange?.enemies) ? exchange.enemies : []).map((enemy) => {
+      const legacy = enemy as EnemyDraft & { power?: number; damageType?: string };
+      const fallback = fallbackById[legacy.id];
+      const legacyPower = Number.isFinite(legacy.power) ? legacy.power! : 0;
+      return {
+        id: legacy.id ?? makeId("enemy"),
+        name: legacy.name ?? "New Enemy",
+        title: legacy.title ?? "Creature",
+        maxHp: Number.isFinite(legacy.maxHp) ? legacy.maxHp : fallback?.maxHp ?? 30,
+        physicalPower: Number.isFinite(legacy.physicalPower) ? legacy.physicalPower : fallback?.physicalPower ?? (legacy.damageType === "physical" ? legacyPower : 0),
+        spellPower: Number.isFinite(legacy.spellPower) ? legacy.spellPower : fallback?.spellPower ?? (legacy.damageType && legacy.damageType !== "physical" ? legacyPower : 0),
+        armor: Number.isFinite(legacy.armor) ? legacy.armor : fallback?.armor ?? 0,
+        magicResistance: Number.isFinite(legacy.magicResistance) ? legacy.magicResistance : fallback?.magicResistance ?? 0,
+        hitChance: Number.isFinite(legacy.hitChance) ? legacy.hitChance : fallback ? fallback.hitChance * 100 : 95,
+        dodgeChance: Number.isFinite(legacy.dodgeChance) ? legacy.dodgeChance : fallback ? fallback.dodgeChance * 100 : 5,
+        critChance: Number.isFinite(legacy.critChance) ? legacy.critChance : fallback ? fallback.critChance * 100 : 5,
+        energyRegen: Number.isFinite(legacy.energyRegen) ? legacy.energyRegen : fallback?.energyRegen ?? 1,
+        maxEnergy: Number.isFinite(legacy.maxEnergy) ? legacy.maxEnergy : fallback?.maxEnergy ?? 10,
+        abilitiesNotes: legacy.abilitiesNotes ?? fallback?.abilitiesNotes ?? "",
+        behaviorNotes: legacy.behaviorNotes ?? fallback?.behaviorNotes ?? "",
+        accent: legacy.accent ?? fallback?.accent ?? "#79a86d",
+      };
+    }),
+  };
 }
 
 export function EnemyDevtool({ onExit }: { onExit: () => void }) {
-  const store = useLocalDraft<EnemyExchange>(ENEMY_DRAFT_STORAGE_KEY, canonicalEnemyExchange());
+  const store = useLocalDraft<EnemyExchange>(ENEMY_DRAFT_STORAGE_KEY, canonicalEnemyExchange(), normalizeEnemyExchange);
   const [selectedId, setSelectedId] = useState(store.draft.enemies[0]?.id ?? "");
   const selected = store.draft.enemies.find((enemy) => enemy.id === selectedId) ?? store.draft.enemies[0];
   const update = (change: Partial<EnemyDraft>) => store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.map((enemy) => enemy.id === selected?.id ? { ...enemy, ...change } : enemy) }));
   const add = () => {
     const id = makeId("enemy");
-    const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, power: 6, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, damageType: "physical", energyCost: 3, intentText: "Basic Attack · 6 damage", attackDescription: "A basic attack.", abilitiesNotes: "", behaviorNotes: "", accent: "#79a86d" };
+    const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, physicalPower: 6, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, abilitiesNotes: "", behaviorNotes: "", accent: "#79a86d" };
     store.setDraft((draft) => ({ ...draft, enemies: [...draft.enemies, enemy] })); setSelectedId(id);
   };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.filter((enemy) => enemy.id !== selected.id) })); setSelectedId(store.draft.enemies.find((enemy) => enemy.id !== selected.id)?.id ?? ""); };
@@ -146,10 +210,9 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New enemy</button>{store.draft.enemies.map((enemy) => <button className={enemy.id === selected?.id ? "selected" : ""} key={enemy.id} onClick={() => setSelectedId(enemy.id)}><strong>{enemy.name}</strong><small>{enemy.id}</small></button>)}</aside>
       {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Enemy Definition</p><h2>{selected.name}</h2></div><button className="danger-icon-button" onClick={remove}><Trash2 size={15} /> Delete</button></div><div className="content-form-grid">
         <TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Title" value={selected.title} onChange={(title) => update({ title })} /><TextField label="Accent color" value={selected.accent} onChange={(accent) => update({ accent })} />
-        <NumberField label="Health" value={selected.maxHp} min={1} onChange={(maxHp) => update({ maxHp })} /><NumberField label="Power" value={selected.power} min={0} onChange={(power) => update({ power })} /><NumberField label="Armor" value={selected.armor} min={0} onChange={(armor) => update({ armor })} /><NumberField label="Magic Resistance" value={selected.magicResistance} min={0} onChange={(magicResistance) => update({ magicResistance })} />
+        <NumberField label="Health" value={selected.maxHp} min={1} onChange={(maxHp) => update({ maxHp })} /><NumberField label="Physical Power" value={selected.physicalPower} min={0} onChange={(physicalPower) => update({ physicalPower })} /><NumberField label="Spell Power" value={selected.spellPower} min={0} onChange={(spellPower) => update({ spellPower })} /><NumberField label="Armor" value={selected.armor} min={0} onChange={(armor) => update({ armor })} /><NumberField label="Magic Resistance" value={selected.magicResistance} min={0} onChange={(magicResistance) => update({ magicResistance })} />
         <NumberField label="Hit Chance %" value={selected.hitChance} step={0.1} onChange={(hitChance) => update({ hitChance })} /><NumberField label="Dodge Chance %" value={selected.dodgeChance} step={0.1} onChange={(dodgeChance) => update({ dodgeChance })} /><NumberField label="Crit Chance %" value={selected.critChance} step={0.1} onChange={(critChance) => update({ critChance })} /><NumberField label="Energy Regeneration" value={selected.energyRegen} min={0} onChange={(energyRegen) => update({ energyRegen })} />
-        <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => update({ maxEnergy })} /><NumberField label="Default attack cost" value={selected.energyCost} min={0} onChange={(energyCost) => update({ energyCost })} /><label><span>Default damage type</span><select value={selected.damageType} onChange={(event) => update({ damageType: event.target.value as DamageType })}>{DAMAGE_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}</select></label><TextField label="Intent text" value={selected.intentText} onChange={(intentText) => update({ intentText })} />
-        <TextField label="Attack tooltip" value={selected.attackDescription} onChange={(attackDescription) => update({ attackDescription })} textarea /><TextField label="Abilities" value={selected.abilitiesNotes} onChange={(abilitiesNotes) => update({ abilitiesNotes })} textarea /><TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
+        <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => update({ maxEnergy })} /><TextField label="Abilities" value={selected.abilitiesNotes} onChange={(abilitiesNotes) => update({ abilitiesNotes })} textarea /><TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
       </div></section>}
     </div>
   </EditorShell>;

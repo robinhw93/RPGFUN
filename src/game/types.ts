@@ -599,12 +599,25 @@ export interface GearItem {
   combat?: CombatFeatureBundle;
 }
 
+export interface EnemyAbilityDefinition {
+  id: string;
+  name: string;
+  description: string;
+  energyCost: number;
+  damageType: DamageType;
+  baseDamage?: number;
+  physicalPowerScaling?: number;
+  spellPowerScaling?: number;
+  onHitEffect?: "bleed";
+}
+
 export interface EnemyTemplate {
   id: string;
   name: string;
   title: string;
   maxHp: number;
-  power: number;
+  physicalPower: number;
+  spellPower: number;
   armor: number;
   magicResistance: number;
   hitChance: number;
@@ -612,15 +625,12 @@ export interface EnemyTemplate {
   critChance: number;
   energyRegen: number;
   maxEnergy: number;
-  damageType: DamageType;
-  energyCost: number;
-  intentText: string;
-  attackDescription: string;
+  /** Executable abilities implemented in source after their editor notes are supplied. */
+  abilities: EnemyAbilityDefinition[];
   /** Free-form design notes used by the Enemy Editor and future AI implementations. */
   abilitiesNotes: string;
   /** Free-form design notes describing intended ability priorities and conditions. */
   behaviorNotes: string;
-  onHitEffect?: "bleed";
   accent: string;
 }
 

@@ -193,7 +193,7 @@ The runtime loadout remains a compact `equippedAbilities` array. The slot picker
 All live definitions are in `src/game/data.ts`:
 
 - Enemy IDs referenced by an adventure must exist in `ENEMIES`.
-- Enemy templates own Critical Strike Chance, Energy Regeneration, and Max Energy as well as their Health, Power, Armor, Magic Resistance, Hit, and Dodge values.
+- Enemy templates own separate Physical Power and Spell Power, executable abilities, Critical Strike Chance, Energy Regeneration, and Max Energy as well as Health, Armor, Magic Resistance, Hit, and Dodge values.
 - Story adventures are `ADVENTURES` definitions containing ordered stages. Every stage accepts an unlimited list of weighted combat, boss, and event entries. Runtime chooses one entry by its positive `chance` weights and saves that entry ID before presentation.
 - Event IDs referenced by an adventure must exist in `ADVENTURE_EVENTS`. Choices contain an attribute, threshold, and structured success/failure outcome.
 - Adventure rewards are granted only to combat/boss entries with a reward definition.
@@ -320,7 +320,7 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 
 The developer-tool launcher also opens three isolated content editors:
 
-- **Create Enemy** edits combat stats, defense, Hit/Dodge/Critical chances, Energy values, default attack presentation, and free-form ability/behavior notes.
+- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, Energy values, and free-form ability/behavior notes. It has no implicit default-attack fields. Ability and behavior text is design input for later TypeScript implementation and is not executable on its own.
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute, threshold, and success/failure text plus Health, gold, experience, talent-point, and attribute-point changes.
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy counts support repeated templates in one encounter, and combat entries configure rewards.
 

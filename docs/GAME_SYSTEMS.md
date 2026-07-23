@@ -140,10 +140,11 @@ Multi-component abilities calculate each component separately and add the result
 
 ### Enemy direct damage
 
-Enemy attacks currently use a lighter defense reduction:
+Each enemy ability defines flat damage plus Physical Power and/or Spell Power scaling. Enemy abilities use a lighter defense reduction:
 
 ```text
-enemy Power - floor(player defense × 0.35)
+ability damage + enemy Physical Power × physical scaling + enemy Spell Power × spell scaling
+  - floor(player defense × 0.35)
 ```
 
 The result has a minimum of 1 before critical and status modifiers. Guard then absorbs damage before Health is lost.

@@ -261,7 +261,7 @@ React keeps player inputs in a transient FIFO queue that is deliberately exclude
 
 `takeEnemyTurn` runs start statuses, regenerates Energy, handles insufficient Energy/Stealth, rolls the attack, applies defense/Guard/status effects, runs player `damage_taken` triggers, resolves enemy Bleed and Poison, then calls `moveToNextActor`. It snapshots visible enemy statuses and queues a reconciliation at the final status event, preventing duration changes or removals from appearing before their damage or skip effect resolves. Enemy-to-enemy and player-to-enemy turn transitions reuse the preceding sequence's final event instead of adding a standalone enemy-turn message.
 
-Enemy AI currently has one fixed attack per enemy template and no ability selection tree.
+Enemy templates contain separate Physical Power and Spell Power plus an ordered list of executable abilities. `takeEnemyTurn` uses the first affordable implemented ability. The editor's ability and behavior text remains design input; bespoke selection priorities and new mechanics are implemented in source after export.
 
 ## Combat timing contract
 
