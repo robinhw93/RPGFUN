@@ -464,7 +464,7 @@ Windsong Forest currently follows six fixed combat stages. Each stage has one 10
 | Length | Endless; the fight counter has no maximum. |
 | Encounter | Randomly two or three DUMMIES each fight. |
 | Reward | The exact XP required for two complete levels; no gold. |
-| Between fights | Restore full Health; Character, Talents, and Leave Training remain available from the score screen. |
+| Between fights | Restore full Health; the Character hub and Leave Training remain available from the score screen. Talents & Abilities is a submenu inside Character. |
 
 ## Equipment catalog
 

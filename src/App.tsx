@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  Backpack, BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
+  BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
   EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Sun, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
@@ -31,7 +31,8 @@ import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
 
-type View = "adventure" | "character" | "talents" | DevtoolKind;
+type View = "adventure" | "character" | DevtoolKind;
+type CharacterSection = "overview" | "talents";
 
 const SLOT_LABELS: Record<GearSlot, string> = {
   head: "Head", chest: "Chest", pants: "Pants", boots: "Boots",
@@ -259,6 +260,7 @@ function loadInitialGame(): GameState {
 function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
   const [view, setView] = useState<View>("adventure");
+  const [characterSection, setCharacterSection] = useState<CharacterSection>("overview");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string; travelLabel: string } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
@@ -302,7 +304,14 @@ function App() {
   }, [game.character.avatarId]);
 
   const navigate = (next: View) => {
+    if (next === "character") setCharacterSection("overview");
     setView(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openCharacterSection = (section: CharacterSection) => {
+    setCharacterSection(section);
+    setView("character");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -623,7 +632,6 @@ function App() {
         <nav className="desktop-nav" aria-label="Main navigation">
           <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Footprints size={17} />} label="Adventure" />
           <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={17} />} label="Character" />
-          <NavButton active={view === "talents"} onClick={() => navigate("talents")} icon={<CircleDot size={17} />} label="Talents" />
         </nav>
         <div className="resources">
           <span><GoldIcon /> {game.character.gold}</span>
@@ -651,16 +659,25 @@ function App() {
             onLeaveTraining={leaveTraining}
             onEvent={resolveEvent}
             onPermadeath={returnToCharacterCreation}
-            onTalents={() => navigate("talents")}
-            onCharacter={() => navigate("character")}
+            onTalents={() => openCharacterSection("talents")}
+            onCharacter={() => openCharacterSection("overview")}
           />
         )}
         {view === "character" && (
-          <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
-            <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
-          </CharacterAssetBoundary>
+          <>
+            <nav className="character-submenu" aria-label="Character sections">
+              <button type="button" className={characterSection === "overview" ? "active" : ""} aria-current={characterSection === "overview" ? "page" : undefined} onClick={() => openCharacterSection("overview")}><UserRound size={16} /> Character</button>
+              <button type="button" className={characterSection === "talents" ? "active" : ""} aria-current={characterSection === "talents" ? "page" : undefined} onClick={() => openCharacterSection("talents")}><CircleDot size={16} /> Talents &amp; Abilities</button>
+            </nav>
+            {characterSection === "overview" ? (
+              <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
+                <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+              </CharacterAssetBoundary>
+            ) : (
+              <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
+            )}
+          </>
         )}
-        {view === "talents" && <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />}
         {view === "talentDevtool" && <TalentDevtool onExit={() => navigate("adventure")} />}
         {view === "enemyDevtool" && <EnemyDevtool onExit={() => navigate("adventure")} />}
         {view === "eventDevtool" && <EventDevtool onExit={() => navigate("adventure")} />}
@@ -670,8 +687,7 @@ function App() {
 
       <nav className="mobile-nav" aria-label="Mobile navigation">
         <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Home size={19} />} label="Adventure" />
-        <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<Backpack size={19} />} label="Gear" />
-        <NavButton active={view === "talents"} onClick={() => navigate("talents")} icon={<CircleDot size={19} />} label="Talents" />
+        <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={19} />} label="Character" />
       </nav>
       {resetDialogOpen && (
         <GameConfirmDialog
@@ -1116,7 +1132,6 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           reward={adventure.pendingReward}
           encounterTitle={node.title}
           onCharacter={onCharacter}
-          onTalents={onTalents}
           onContinue={onContinue}
           onLeaveTraining={onLeaveTraining}
           finalEncounter={adventure.mode === "story" && adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
@@ -1138,11 +1153,10 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   );
 }
 
-function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, onContinue, onLeaveTraining, finalEncounter, endless }: {
+function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, onLeaveTraining, finalEncounter, endless }: {
   reward: CombatReward;
   encounterTitle: string;
   onCharacter: () => void;
-  onTalents: () => void;
   onContinue: () => void;
   onLeaveTraining: () => void;
   finalEncounter: boolean;
@@ -1150,8 +1164,8 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, on
 }) {
   const [displayedExperience, setDisplayedExperience] = useState(0);
   const displayedProgress = experienceProgressAfterGain(reward.levelBefore, reward.xpBefore, displayedExperience);
-  const displayLevelGain = displayedProgress.level - reward.levelBefore;
   const reachedMaxLevel = displayedProgress.level >= MAX_LEVEL;
+  const leveledUp = reward.levelsGained > 0;
 
   useEffect(() => {
     setDisplayedExperience(0);
@@ -1200,14 +1214,6 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, on
           <small className="score-xp-count">+{displayedExperience} XP</small>
         </div>
 
-        {reward.levelsGained > 0 && (
-          <div className={`score-level-up ${displayLevelGain > 0 ? "revealed" : ""}`}>
-            <strong>Level Up!</strong>
-            <span>+{reward.levelsGained * 3} Attribute Points</span>
-            <span>+{reward.levelsGained} Talent {reward.levelsGained === 1 ? "Point" : "Points"}</span>
-          </div>
-        )}
-
         {reward.loot && (
           <div className={`score-loot-card ${reward.loot.rarity}`}>
             <span className="score-loot-glyph"><GearSlotIcon slot={reward.loot.slot} item={reward.loot} size={24} /></span>
@@ -1216,8 +1222,7 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, on
         )}
 
         <div className="victory-score-actions">
-          <button className="score-character-button" onClick={onCharacter}><UserRound size={16} /> View Character</button>
-          <button className="score-character-button" onClick={onTalents}><CircleDot size={16} /> Talents & Abilities</button>
+          <button className={`score-character-button ${leveledUp ? "level-up" : ""}`} onClick={onCharacter}>{leveledUp ? <Sparkles size={16} /> : <UserRound size={16} />} {leveledUp ? "Level up!" : "View Character"}</button>
           <button className="primary-button" onClick={onContinue}>{endless ? "Continue Training" : finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
         {endless && <button className="text-button score-leave-training" onClick={onLeaveTraining}>Leave Training</button>}

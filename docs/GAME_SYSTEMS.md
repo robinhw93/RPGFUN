@@ -24,7 +24,7 @@ The adventure screen also offers a separate endless testing route for developing
 - Training victories award no gold.
 - Health is restored to the character's current maximum before the next training fight.
 - Talent nodes can be unlocked for free while this testing route is active. Requirements between nodes and the active-combat lock still apply, and the character's saved talent-point total is not reduced.
-- The victory screen links directly to Character and Talents so the player can allocate points, unlock talents, and change the six equipped abilities before continuing.
+- The victory screen links to the Character hub so the player can allocate points, open its **Talents & Abilities** submenu, and change the six equipped abilities before continuing.
 - Training can be left safely from the victory screen without losing the character or earned progression.
 - The route has no final encounter; its fight counter continues until the character dies or another adventure is started.
 
@@ -303,7 +303,7 @@ This sequencing guarantees that:
 ### Victory and defeat
 
 - Victory grants the current node's reward once and opens the score screen after all queued combat presentation is complete.
-- The score screen animates experience, shows gold, and allows access to the Character screen before continuing.
+- The score screen animates experience, shows gold, and allows access to the Character screen before continuing. When the reward grants at least one level, **View Character** changes to a continuously highlighted **Level up!** button; the awarded-point summary is not duplicated in a separate panel.
 - Panic prevents the first defeat in each combat: lethal damage is shown first, then the queued Panic event restores 20% of Max Health and grants Stealth for 2 turns. Later lethal damage in the same combat causes defeat normally.
 - Defeat clears the save immediately and presents the permadeath screen.
 
@@ -396,7 +396,7 @@ Excess experience carries into later levels, and one reward can grant multiple l
 
 Level 50 is the maximum level. Characters at level 50 no longer accumulate experience, and older saves above the cap are normalized to level 50 when loaded.
 
-Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
+Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. The talent tree and active-ability loadout are opened through the **Talents & Abilities** submenu inside the Character hub rather than through a separate primary navigation item. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
 
 ## Talents and ability loadout
 
