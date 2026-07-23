@@ -1117,7 +1117,7 @@ main { min-height: calc(100vh - 68px); }
   .player-combatant { align-self: center; border-left-width: 2px; }
   .compact-enemy-stack { gap: 5px; }
   .enemy-combatant { max-height: none; padding: .52rem; border-right-width: 2px; }
-  .compact-resource-label { margin-bottom: .2rem; font-size: .48rem; }.compact-resource-label b { font-size: .52rem; }
+  .compact-resource-label { align-items: center; justify-content: flex-start; gap: .32rem; margin-bottom: .2rem; padding-right: 2.8rem; font-size: .48rem; }.compact-resource-label > span, .compact-resource-label b { flex: 0 0 auto; }.compact-resource-label b { font-size: .52rem; }.compact-resource-label.energy-label { padding-right: 0; }
   .compact-combatant .health-bar, .compact-combatant .energy-bar, .compact-combatant .energy-segments { height: 6px; }
   .compact-status-row { min-height: 24px; max-height: 40px; gap: 10px; margin-top: .38rem; padding-bottom: 5px; }
   .compact-status-row .status-badge { padding: .18rem .28rem; font-size: .46rem; }
