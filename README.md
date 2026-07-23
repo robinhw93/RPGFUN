@@ -1,6 +1,6 @@
 # Arkenfall
 
-Arkenfall is a mobile-first, build-focused, text RPG made with React, TypeScript, and Vite. The current vertical slice follows one permadeath character through **Windsong Forest** in the world of Arkenfall, with turn-based combat, stat-roll events, a classless talent tree, equipment, loot, leveling, and browser-local saving.
+Arkenfall is a mobile-first, build-focused, text RPG made with React, TypeScript, and Vite. The current vertical slice follows one permadeath character through **Windsong Forest** in the world of Arkenfall, with turn-based combat, stat-roll events, a classless talent tree, equipment, leveling, and browser-local saving.
 
 The game UI and all player-facing text are in English. Project documentation is also kept in English so names and rules match the game exactly.
 
@@ -50,7 +50,7 @@ The command runs the TypeScript project build and then creates the production bu
 - Energy, cooldowns, multi-action player turns, buffs, debuffs, damage-over-time effects, enemy intent, floating combat text, and an inspectable combat log.
 - A 239-node classless talent tree with bidirectional ANY connections, pan, zoom, and a six-slot ability loadout.
 - Eight equipment slots, weapon-hand rules, rarity, item comparison, inventory filtering/sorting, and the Ashborn Warplate set.
-- Experience and level-ups through the level-50 cap, plus stat points, talent points, gold, and loot rewards.
+- Experience and level-ups through the level-50 cap, plus stat points, talent points, and gold rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.
 - Password-gated Talent, Enemy, Event, and Adventure editors with browser-local drafts and Codex-ready JSON exports.
 

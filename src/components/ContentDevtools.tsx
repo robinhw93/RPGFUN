@@ -307,7 +307,23 @@ export function EventDevtool({ onExit }: { onExit: () => void }) {
 }
 
 function canonicalAdventureExchange(): AdventureExchange { return { format: "arkenfall-adventures", version: 1, adventures: ADVENTURES.map((adventure) => structuredClone(adventure)) }; }
-function normalizeAdventureExchange(exchange: AdventureExchange): AdventureExchange { return { ...exchange, format: "arkenfall-adventures", version: 1 }; }
+function normalizeAdventureExchange(exchange: AdventureExchange): AdventureExchange {
+  return {
+    ...exchange,
+    format: "arkenfall-adventures",
+    version: 1,
+    adventures: exchange.adventures.map((adventure) => ({
+      ...adventure,
+      stages: adventure.stages.map((stage) => ({
+        ...stage,
+        entries: stage.entries.map((entry) => entry.reward ? {
+          ...entry,
+          reward: { experience: entry.reward.experience, gold: entry.reward.gold },
+        } : entry),
+      })),
+    })),
+  };
+}
 function localEnemies() {
   const stored = readExchange<EnemyExchange | null>(ENEMY_DRAFT_STORAGE_KEY, null);
   return [...new Map([
@@ -344,7 +360,7 @@ export function AdventureDevtool({ onExit }: { onExit: () => void }) {
   const updateStage = (stageId: string, change: Partial<AdventureDefinition["stages"][number]>) => update({ stages: selected.stages.map((stage) => stage.id === stageId ? { ...stage, ...change } : stage) });
   const updateEntry = (stageId: string, entryId: string, change: Partial<AdventureStageEntry>) => updateStage(stageId, { entries: selected.stages.find((stage) => stage.id === stageId)!.entries.map((entry) => entry.id === entryId ? { ...entry, ...change } : entry) });
   const add = () => { const id = makeId("adventure"); const adventure: AdventureDefinition = { id, name: "New Adventure", description: "", recommendedLevel: 1, theme: "windsong_forest", stages: [{ id: makeId("stage"), name: "Stage 1", entries: [] }], completionTitle: "Adventure Complete", completionDescription: "" }; store.setDraft((draft) => ({ ...draft, adventures: [...draft.adventures, adventure] })); setSelectedId(id); };
-  const addEntry = (stageId: string) => { const entry: AdventureStageEntry = { id: makeId("entry"), type: "combat", chance: 100, eyebrow: "Encounter", title: "New Encounter", description: "", enemyIds: [], reward: { experience: 50, gold: 8, loot: true } }; const stage = selected.stages.find((item) => item.id === stageId)!; updateStage(stageId, { entries: [...stage.entries, entry] }); };
+  const addEntry = (stageId: string) => { const entry: AdventureStageEntry = { id: makeId("entry"), type: "combat", chance: 100, eyebrow: "Encounter", title: "New Encounter", description: "", enemyIds: [], reward: { experience: 50, gold: 8 } }; const stage = selected.stages.find((item) => item.id === stageId)!; updateStage(stageId, { entries: [...stage.entries, entry] }); };
   const copy = async () => { try { await copyJson(store.draft); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
   return <EditorShell title="Adventure Editor" description="Build adventures from stages with unlimited weighted combat and event possibilities." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("arkenfall-adventures.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New adventure</button>{store.draft.adventures.map((adventure) => <button className={adventure.id === selected?.id ? "selected" : ""} key={adventure.id} onClick={() => setSelectedId(adventure.id)}><strong>{adventure.name}</strong><small>{adventure.stages.length} stages</small></button>)}</aside>
@@ -353,7 +369,7 @@ export function AdventureDevtool({ onExit }: { onExit: () => void }) {
           <div className="stage-entry-list">{stage.entries.map((entry) => <section className="stage-entry" key={entry.id}><div className="stage-entry-heading"><strong>{entry.title}</strong><button onClick={() => updateStage(stage.id, { entries: stage.entries.filter((item) => item.id !== entry.id) })}><Trash2 size={13} /></button></div><div className="content-form-grid"><TextField label="Entry ID" value={entry.id} onChange={(id) => updateEntry(stage.id, entry.id, { id })} /><label><span>Type</span><select value={entry.type} onChange={(event) => updateEntry(stage.id, entry.id, { type: event.target.value as AdventureStageEntry["type"], eventId: event.target.value === "event" ? events[0]?.id : undefined, enemyIds: event.target.value === "event" ? undefined : [] })}><option value="combat">Combat</option><option value="event">Event</option><option value="boss">Boss</option></select></label><NumberField label="Chance %" value={entry.chance} min={0} onChange={(chance) => updateEntry(stage.id, entry.id, { chance })} /><TextField label="Title" value={entry.title} onChange={(title) => updateEntry(stage.id, entry.id, { title })} /><TextField label="Eyebrow" value={entry.eyebrow} onChange={(eyebrow) => updateEntry(stage.id, entry.id, { eyebrow })} /><TextField label="Description" value={entry.description} onChange={(description) => updateEntry(stage.id, entry.id, { description })} textarea />
             {entry.type === "event" ? <label className="wide-field"><span>Event</span><select value={entry.eventId ?? ""} onChange={(event) => updateEntry(stage.id, entry.id, { eventId: event.target.value })}>{events.map((event) => <option value={event.id} key={event.id}>{event.name}</option>)}</select></label> : <>
               <fieldset className="enemy-picker wide-field"><legend>Enemies</legend>{enemies.map((enemy) => { const count = entry.enemyIds?.filter((id) => id === enemy.id).length ?? 0; return <label key={enemy.id}><span>{enemy.name}</span><input type="number" min={0} value={count} aria-label={`${enemy.name} count`} onChange={(event) => { const nextCount = Math.max(0, Math.floor(Number(event.target.value))); const withoutEnemy = (entry.enemyIds ?? []).filter((id) => id !== enemy.id); updateEntry(stage.id, entry.id, { enemyIds: [...withoutEnemy, ...Array.from({ length: nextCount }, () => enemy.id)] }); }} /></label>; })}</fieldset>
-              <fieldset className="encounter-reward-fields wide-field"><legend>Victory reward</legend><NumberField label="Experience" value={entry.reward?.experience ?? 0} min={0} onChange={(experience) => updateEntry(stage.id, entry.id, { reward: { experience, gold: entry.reward?.gold ?? 0, loot: entry.reward?.loot ?? false } })} /><NumberField label="Gold" value={entry.reward?.gold ?? 0} min={0} onChange={(gold) => updateEntry(stage.id, entry.id, { reward: { experience: entry.reward?.experience ?? 0, gold, loot: entry.reward?.loot ?? false } })} /><label><span>Loot roll</span><input type="checkbox" checked={entry.reward?.loot ?? false} onChange={(event) => updateEntry(stage.id, entry.id, { reward: { experience: entry.reward?.experience ?? 0, gold: entry.reward?.gold ?? 0, loot: event.target.checked } })} /></label></fieldset>
+              <fieldset className="encounter-reward-fields wide-field"><legend>Victory reward</legend><NumberField label="Experience" value={entry.reward?.experience ?? 0} min={0} onChange={(experience) => updateEntry(stage.id, entry.id, { reward: { experience, gold: entry.reward?.gold ?? 0 } })} /><NumberField label="Gold" value={entry.reward?.gold ?? 0} min={0} onChange={(gold) => updateEntry(stage.id, entry.id, { reward: { experience: entry.reward?.experience ?? 0, gold } })} /></fieldset>
             </>}
           </div></section>)}</div><button className="secondary-editor-button" onClick={() => addEntry(stage.id)}><Plus size={14} /> Add stage possibility</button>
         </article>; })}</div><button className="secondary-editor-button add-stage-button" onClick={() => update({ stages: [...selected.stages, { id: makeId("stage"), name: `Stage ${selected.stages.length + 1}`, entries: [] }] })}><Plus size={14} /> Add stage</button>

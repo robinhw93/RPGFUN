@@ -452,12 +452,12 @@ Stage possibilities use relative percentage weights and each stage totals 100% i
 
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
-| 1 | Rustling in the Clover | 70% | Two Rabid Rats | 55 XP, 9 gold, loot roll. |
+| 1 | Rustling in the Clover | 70% | Two Rabid Rats | 55 XP, 9 gold. |
 | 1 | The Broken Footbridge | 30% | Three attribute-roll choices. | Choice outcome. |
-| 2 | Restless Understory | 55% | Windsong Wolf and Forest Wisp | 75 XP, 14 gold, loot roll. |
+| 2 | Restless Understory | 55% | Windsong Wolf and Forest Wisp | 75 XP, 14 gold. |
 | 2 | The Singing Grove | 45% | Two attribute-roll choices. | Choice outcome. |
-| 3 | The Sleeping Giant | 100% | Brown Bear | 90 XP, 18 gold, loot roll. |
-| 4 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 130 XP, 32 gold, Forest Spirit Charm. |
+| 3 | The Sleeping Giant | 100% | Brown Bear | 90 XP, 18 gold. |
+| 4 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 130 XP, 32 gold. |
 
 ## Testing adventure: Shadow Proving Grounds
 
@@ -465,14 +465,14 @@ Stage possibilities use relative percentage weights and each stage totals 100% i
 | --- | --- |
 | Length | Endless; the fight counter has no maximum. |
 | Encounter | Randomly two or three DUMMIES each fight. |
-| Reward | The exact XP required for two complete levels; no gold or loot. |
+| Reward | The exact XP required for two complete levels; no gold. |
 | Between fights | Restore full Health; Character, Talents, and Leave Training remain available from the score screen. |
 
 ## Equipment catalog
 
 ### Available items
 
-New characters begin with no equipped gear and an empty inventory. The items below remain the canonical equipment catalog and reward loot pool.
+New characters begin with no equipped gear and an empty inventory. The items below remain the canonical equipment catalog. Drop sources are currently unassigned while enemy-owned loot tables are being designed.
 
 | Item | Slot/category | Rarity | Mechanical stats | Set |
 | --- | --- | --- | --- | --- |
@@ -514,17 +514,3 @@ Only equipped pieces count.
 | Ashborn Warplate | 2 | +2 Strength. |
 | Ashborn Warplate | 3 | Bleed deals 50% less damage to the player. |
 | Ashborn Warplate | 4 | +3 Vitality. |
-
-## Reward loot pool
-
-Regular combat loot selects from these seven templates:
-
-- Embershard Focus
-- Wanderer's Hood
-- Ashborn Cuirass
-- Veilwalker Trousers
-- Dustworn Boots
-- Garnet Signet
-- Moonlit Coil
-
-The boss bypasses the random pool and awards Warden's Broken Crown. Reward instances receive a unique runtime ID before entering inventory.

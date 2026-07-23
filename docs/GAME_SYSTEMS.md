@@ -8,8 +8,8 @@ This document describes the rules currently implemented in Arkenfall. Percentage
 2. Review equipment, allocate earned attribute points, choose talents, and prepare up to six active abilities.
 3. Begin **Windsong Forest**.
 4. Resolve its weighted combat and event stages while carrying remaining Health between stages.
-5. After each victory, receive experience, gold, and potentially loot on the score screen.
-6. Equip loot or adjust the build between fights.
+5. After each victory, receive experience and gold on the score screen.
+6. Adjust the build between fights.
 7. Defeat the Forest Spirit and its two Wisps to complete the current adventure.
 
 Death is permanent. When combat reaches defeat, the browser save is deleted. The defeat screen returns the player to character creation, and the previous character, equipment, talents, and adventure progress cannot be recovered through the game UI.
@@ -21,7 +21,7 @@ The adventure screen also offers a separate endless testing route for developing
 - Every fight contains a newly randomized group of two or three DUMMIES.
 - Each DUMMY has 100 Health, no defense or Dodge, and a 95% Hit Chance training attack with 1 base Physical damage.
 - Every victory awards exactly two complete levels, including six attribute points and two talent points.
-- Training victories award no gold or loot.
+- Training victories award no gold.
 - Health is restored to the character's current maximum before the next training fight.
 - Talent nodes can be unlocked for free while this testing route is active. Requirements between nodes and the active-combat lock still apply, and the character's saved talent-point total is not reduced.
 - The victory screen links directly to Character and Talents so the player can allocate points, unlock talents, and change the six equipped abilities before continuing.
@@ -301,7 +301,7 @@ This sequencing guarantees that:
 ### Victory and defeat
 
 - Victory grants the current node's reward once and opens the score screen after all queued combat presentation is complete.
-- The score screen animates experience, shows gold and loot, and allows access to the Character screen before continuing.
+- The score screen animates experience, shows gold, and allows access to the Character screen before continuing.
 - Panic prevents the first defeat in each combat: lethal damage is shown first, then the queued Panic event restores 20% of Max Health and grants Stealth for 2 turns. Later lethal damage in the same combat causes defeat normally.
 - Defeat clears the save immediately and presents the permadeath screen.
 
@@ -473,18 +473,7 @@ The current Ashborn Warplate thresholds are in [Content reference](CONTENT_REFER
 
 ## Loot and gold
 
-Each combat reward defines experience, gold, and whether loot is rolled. Loot is immediately added to inventory and shown on the score screen.
-
-Regular encounters currently roll from the seven-item reward pool with base rarity weights:
-
-| Rarity | Base weight |
-| --- | ---: |
-| Common | 55 |
-| Uncommon | 28 |
-| Rare | 13 |
-| Epic | 4 |
-
-Luck's loot-rarity bonus increases Uncommon, Rare, and Epic weights by their rarity tier while leaving Common's weight unchanged. Windsong Forest's final boss awards the Forest Spirit Charm directly.
+Adventure combat rewards define experience and gold only. Automatic gear drops are disabled until enemy-owned loot tables are implemented; Adventure definitions and the Adventure Editor do not control loot.
 
 Gold is stored on the character and displayed in the top bar and reward screens. There is no shop or gold-spending system yet.
 

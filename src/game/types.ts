@@ -803,7 +803,6 @@ export interface AdventureNode {
   reward?: {
     experience: number;
     gold: number;
-    loot: boolean;
   };
 }
 

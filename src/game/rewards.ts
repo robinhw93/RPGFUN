@@ -1,6 +1,4 @@
-import { getDerivedStats } from "./character";
 import { getAdventureNode } from "./adventures";
-import { getLoot } from "./gear";
 import { addExperience, experienceForLevelGains } from "./progression";
 import type { CombatReward, GameState } from "./types";
 
@@ -10,19 +8,17 @@ export function grantCombatReward(state: GameState, timestamp = Date.now()): Gam
   if (adventure.combat?.outcome !== "victory" || adventure.pendingReward?.nodeIndex === adventure.nodeIndex) return state;
 
   const rewardDefinition = adventure.mode === "endless"
-    ? { experience: experienceForLevelGains(state.character.level, state.character.xp, 2), gold: 0, loot: false }
+    ? { experience: experienceForLevelGains(state.character.level, state.character.xp, 2), gold: 0 }
     : getAdventureNode(adventure).reward;
   if (!rewardDefinition) return state;
 
-  const lootTemplate = rewardDefinition.loot ? getLoot(adventure.nodeIndex, getDerivedStats(state.character).lootRarityBonus, adventure.adventureId) : null;
-  const loot = lootTemplate ? { ...lootTemplate, id: `${lootTemplate.id}-${adventure.nodeIndex}-${timestamp}` } : null;
   const experience = addExperience(state.character, rewardDefinition.experience);
   const reward: CombatReward = {
     id: `combat-reward-${adventure.nodeIndex}-${timestamp}`,
     nodeIndex: adventure.nodeIndex,
     experience: rewardDefinition.experience,
     gold: rewardDefinition.gold,
-    loot,
+    loot: null,
     levelBefore: experience.levelBefore,
     xpBefore: experience.xpBefore,
     levelAfter: experience.levelAfter,
@@ -35,8 +31,7 @@ export function grantCombatReward(state: GameState, timestamp = Date.now()): Gam
     character: {
       ...experience.character,
       gold: experience.character.gold + rewardDefinition.gold,
-      inventory: loot ? [...experience.character.inventory, loot] : experience.character.inventory,
     },
-    adventure: { ...adventure, latestLoot: loot, pendingReward: reward },
+    adventure: { ...adventure, latestLoot: null, pendingReward: reward },
   };
 }

@@ -1211,18 +1211,18 @@ export const ADVENTURES: AdventureDefinition[] = [{
   completionDescription: "The Forest Spirit fades into green-gold light. Wind returns to the bright canopy, carrying birdsong deeper into Arkenfall.",
   stages: [
     { id: "forest-edge", name: "Forest Edge", entries: [
-      { id: "rat-pack", type: "combat", chance: 70, eyebrow: "Forest Encounter", title: "Rustling in the Clover", description: "Two rabid rats burst from the sunlit undergrowth and close around the path.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 55, gold: 9, loot: true } },
+      { id: "rat-pack", type: "combat", chance: 70, eyebrow: "Forest Encounter", title: "Rustling in the Clover", description: "Two rabid rats burst from the sunlit undergrowth and close around the path.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 55, gold: 9 } },
       { id: "broken-bridge", type: "event", chance: 30, eyebrow: "Forest Event", title: "The Broken Footbridge", description: ADVENTURE_EVENTS.brokenFootbridge.description, eventId: "brokenFootbridge" },
     ] },
     { id: "green-hollows", name: "Green Hollows", entries: [
-      { id: "restless-grove", type: "combat", chance: 55, eyebrow: "Forest Encounter", title: "Restless Understory", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["enemy-mrxj4o6o-o45ia", "enemy-mrxk609z-n04fq"], reward: { experience: 75, gold: 14, loot: true } },
+      { id: "restless-grove", type: "combat", chance: 55, eyebrow: "Forest Encounter", title: "Restless Understory", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["enemy-mrxj4o6o-o45ia", "enemy-mrxk609z-n04fq"], reward: { experience: 75, gold: 14 } },
       { id: "singing-grove", type: "event", chance: 45, eyebrow: "Forest Event", title: "The Singing Grove", description: ADVENTURE_EVENTS.singingGrove.description, eventId: "singingGrove" },
     ] },
     { id: "grey-stones", name: "Grey Stones", entries: [
-      { id: "sleeping-bear", type: "combat", chance: 100, eyebrow: "Forest Encounter", title: "The Sleeping Giant", description: "A great brown bear rises between the grey stones, shaking moss from its shoulders.", enemyIds: ["enemy-mrxkar5z-g9o5d"], reward: { experience: 90, gold: 18, loot: true } },
+      { id: "sleeping-bear", type: "combat", chance: 100, eyebrow: "Forest Encounter", title: "The Sleeping Giant", description: "A great brown bear rises between the grey stones, shaking moss from its shoulders.", enemyIds: ["enemy-mrxkar5z-g9o5d"], reward: { experience: 90, gold: 18 } },
     ] },
     { id: "heartwood", name: "Heartwood", entries: [
-      { id: "forest-spirit", type: "boss", chance: 100, eyebrow: "Boss Encounter", title: "The Forest Spirit", description: "An ancient spirit takes shape between two green-gold wisps, its burning gaze fixed upon you.", enemyIds: ["enemy-mrxkjqs3-g7g5i", "enemy-mrxk609z-n04fq", "enemy-mrxk609z-n04fq"], reward: { experience: 130, gold: 32, loot: true } },
+      { id: "forest-spirit", type: "boss", chance: 100, eyebrow: "Boss Encounter", title: "The Forest Spirit", description: "An ancient spirit takes shape between two green-gold wisps, its burning gaze fixed upon you.", enemyIds: ["enemy-mrxkjqs3-g7g5i", "enemy-mrxk609z-n04fq", "enemy-mrxk609z-n04fq"], reward: { experience: 130, gold: 32 } },
     ] },
   ],
 }];

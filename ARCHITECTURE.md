@@ -60,7 +60,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/combatMath.ts` owns opposed Hit/Dodge rules and caps.
 - `src/game/combatFeatures.ts` aggregates data-driven gear, set, and talent combat features.
 - `src/game/talentRequirements.ts` owns bidirectional ANY-connection evaluation for both UI state and unlock authorization.
-- `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, item category normalization, and loot selection.
+- `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, and item category normalization.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` applies a combat reward exactly once and stores the immutable score-screen snapshot.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
