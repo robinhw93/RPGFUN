@@ -438,9 +438,10 @@ main { min-height: calc(100vh - 68px); }
   overflow: hidden;
 }
 .windsong-forest-combat { position: relative; isolation: isolate; }
-.windsong-forest-combat::before { content: ""; position: absolute; z-index: -2; inset: 0 -100vw; background: linear-gradient(rgba(9,20,12,.46), rgba(7,14,9,.72)), radial-gradient(ellipse at 18% 78%, rgba(112,151,76,.42) 0 8%, transparent 9%), radial-gradient(ellipse at 84% 68%, rgba(132,139,126,.38) 0 6%, transparent 7%), repeating-linear-gradient(72deg, transparent 0 34px, rgba(124,174,88,.15) 35px 37px, transparent 38px 66px), linear-gradient(180deg, #365b40 0%, #24472f 48%, #172f20 72%, #142519 100%); }
-.windsong-forest-combat::after { content: ""; position: absolute; z-index: -1; inset: 74px -2vw 0; pointer-events: none; opacity: .52; background: radial-gradient(ellipse at 7% 16%, transparent 0 11%, #88ac72 12% 17%, transparent 18%), radial-gradient(ellipse at 93% 20%, transparent 0 10%, #79a064 11% 17%, transparent 18%), repeating-linear-gradient(90deg, transparent 0 13%, rgba(21,54,29,.72) 13.2% 14.1%, transparent 14.3% 24%); filter: drop-shadow(0 2px 0 rgba(9,29,15,.8)); }
-.windsong-forest-combat .turn-order-bar, .windsong-forest-combat .compact-combatant, .windsong-forest-combat .compact-controls { backdrop-filter: blur(8px); background-color: rgba(12,22,15,.86); }
+.windsong-forest-combat::before { content: ""; position: absolute; z-index: -2; top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw); background: linear-gradient(180deg, rgba(7,15,9,.1), rgba(5,12,7,.28)), url("/assets/backgrounds/windsong-forest-edge.webp") center 48% / cover no-repeat; }
+.windsong-forest-combat::after { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw); pointer-events: none; background: linear-gradient(90deg, rgba(4,10,6,.28), transparent 19%, transparent 81%, rgba(4,10,6,.28)), linear-gradient(180deg, rgba(5,12,7,.04), transparent 34%, rgba(4,9,5,.32)); }
+.windsong-forest-combat .turn-order-bar { backdrop-filter: blur(8px); background-color: rgba(10,18,12,.78); }
+.windsong-forest-combat .compact-combatant { backdrop-filter: blur(8px); background: linear-gradient(145deg, rgba(18,29,21,.78), rgba(7,14,9,.86)); }
 .compact-combat > .journey-progress { margin: 0; }
 .turn-order-bar { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .65rem; min-height: 34px; padding: .25rem .45rem; border: 1px solid #303632; background: #101311; }
 .turn-order-bar .round-label { color: var(--dim); font-size: .56rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }

@@ -373,7 +373,7 @@ The result is then multiplied by the target's healing-received multiplier and li
 
 ## Adventures and events
 
-The current story adventure is **Windsong Forest**, containing four ordered stages. Each stage may contain any number of combat, boss, or event possibilities with configured percentage weights. The selected possibility is stored in adventure progress, so refreshing cannot reroll the active stage. See the live stage table in [Content reference](CONTENT_REFERENCE.md#adventure-windsong-forest).
+The current story adventure is **Windsong Forest**, containing six ordered stages. Its combat board uses a dedicated illustrated forest-edge background with a centered, crop-safe clearing so the same scene remains readable on desktop and narrow mobile screens. Each stage may contain any number of combat, boss, or event possibilities with configured percentage weights. The selected possibility is stored in adventure progress, so refreshing cannot reroll the active stage. See the live stage table in [Content reference](CONTENT_REFERENCE.md#adventure-windsong-forest).
 
 Remaining Health carries from one stage to the next. Starting an adventure and moving between stages both show the animated footsteps transition first, followed by the selected encounter or event announcement. Combat and its initiative presentation are created only after that introduction finishes. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite.
 
