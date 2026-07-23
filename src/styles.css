@@ -470,14 +470,16 @@ main { min-height: calc(100vh - 68px); }
 .compact-arena { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: clamp(.7rem, 3vw, 2rem); }
 .compact-combatant { min-width: 0; position: relative; padding: 1rem; color: var(--text); border: 1px solid #343a36; background: linear-gradient(145deg, #171b19, #101311); }
 .compact-combatant h2 { margin: 0 0 1rem; padding-right: 3.75rem; overflow: hidden; font-size: clamp(1rem, 2.4vw, 1.45rem); text-overflow: ellipsis; white-space: nowrap; }
-.combatant-portrait { --portrait-ring: #71664a; width: 50px; height: 50px; position: absolute; z-index: 3; top: .65rem; right: .65rem; overflow: hidden; padding: 0; border: 1px solid var(--portrait-ring); border-radius: 2px; background: #0b0f0c; box-shadow: 0 3px 13px rgba(0,0,0,.42); isolation: isolate; pointer-events: none; }
+.combatant-portrait { --portrait-ring: #71664a; width: 44px; height: 44px; position: absolute; z-index: 3; top: .65rem; right: .65rem; overflow: hidden; padding: 0; border: 1px solid var(--portrait-ring); border-radius: 2px; background: #0b0f0c; box-shadow: 0 3px 13px rgba(0,0,0,.42); isolation: isolate; pointer-events: none; }
 .combatant-portrait img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
 .player-combatant-portrait { --portrait-ring: #a98549; box-shadow: 0 0 13px rgba(201,168,103,.18); }
-.enemy-combatant-portrait { --portrait-ring: color-mix(in srgb, var(--enemy-accent) 65%, #465048); box-shadow: 0 0 13px color-mix(in srgb, var(--enemy-accent) 18%, transparent); }
+.enemy-combatant-portrait { --portrait-ring: #672b30; box-shadow: 0 0 13px rgba(103,43,48,.24); }
 .enemy-combatant-portrait, .player-combatant-portrait { pointer-events: auto; cursor: pointer; touch-action: manipulation; transition: border-color .2s ease, box-shadow .2s ease; }
-.enemy-combatant-portrait:hover, .enemy-combatant-portrait:focus-visible, .player-combatant-portrait:hover, .player-combatant-portrait:focus-visible { --portrait-ring: #d1ad62; outline: 0; box-shadow: 0 0 10px rgba(224,190,108,.26); }
+.enemy-combatant-portrait:hover, .enemy-combatant-portrait:focus-visible { --portrait-ring: #672b30; outline: 0; box-shadow: 0 0 10px rgba(132,47,54,.34); }
+.player-combatant-portrait:hover, .player-combatant-portrait:focus-visible { --portrait-ring: #d1ad62; outline: 0; box-shadow: 0 0 10px rgba(224,190,108,.26); }
 .enemy-combatant-portrait:active, .player-combatant-portrait:active { background: #0b0f0c; filter: none; transform: none; }
-.enemy-combatant.dead .combatant-portrait { opacity: .42; filter: grayscale(1); }
+.enemy-combatant.dead .combatant-portrait { opacity: .42; }
+.enemy-combatant.dead .combatant-portrait img { filter: grayscale(1); }
 .player-combatant { width: 100%; max-width: 470px; align-self: center; justify-self: end; border-left: 2px solid var(--gold); }
 .compact-combatant.stealthed { opacity: .82; border-color: #6f657f; background: linear-gradient(145deg, rgba(28,27,34,.9), rgba(11,13,14,.82)); box-shadow: inset 0 0 34px rgba(77,66,91,.22), 0 0 20px rgba(38,32,48,.2); transition: opacity .28s ease, border-color .28s ease, box-shadow .28s ease; }
 .stealth-smoke { position: absolute; z-index: 7; width: 54%; height: 76%; border-radius: 50%; background: radial-gradient(ellipse, rgba(105,95,119,.42) 0%, rgba(39,35,47,.58) 43%, transparent 73%); box-shadow: inset 0 0 18px rgba(153,139,172,.12), 0 0 20px rgba(78,69,91,.2); filter: blur(9px); opacity: 0; pointer-events: none; will-change: transform, opacity; }.stealth-smoke::before { content: ""; position: absolute; inset: 18% -6%; border: 4px solid rgba(150,137,167,.26); border-bottom-color: transparent; border-left-color: transparent; border-radius: 50%; filter: blur(2px); }
@@ -1140,7 +1142,7 @@ main { min-height: calc(100vh - 68px); }
   .compact-arena { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
   .compact-combatant { padding: .6rem; }
   .compact-combatant h2 { margin: 0 0 .55rem; padding-right: 3rem; font-size: .86rem; }
-  .combatant-portrait { width: 40px; height: 40px; top: .42rem; right: .42rem; }
+  .combatant-portrait { width: 36px; height: 36px; top: .42rem; right: .42rem; }
   .player-combatant { align-self: center; border-left-width: 2px; }
   .compact-enemy-stack { gap: 5px; }
   .enemy-combatant { max-height: none; padding: .52rem; border-right-width: 2px; }
@@ -1168,7 +1170,7 @@ main { min-height: calc(100vh - 68px); }
 
 @media (max-width: 760px) and (max-height: 650px) {
   .combat-page.compact-combat { grid-template-rows: 25px 30px minmax(0, 1fr) 104px 30px; gap: 4px; padding-top: var(--combat-safe-top); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
-  .compact-combatant { padding: .42rem; }.compact-combatant h2 { margin-bottom: .35rem; padding-right: 2.6rem; font-size: .75rem; }.combatant-portrait { width: 34px; height: 34px; top: .3rem; right: .3rem; }
+  .compact-combatant { padding: .42rem; }.compact-combatant h2 { margin-bottom: .35rem; padding-right: 2.6rem; font-size: .75rem; }.combatant-portrait { width: 30px; height: 30px; top: .3rem; right: .3rem; }
   .compact-status-row { min-height: 18px; max-height: 34px; margin-top: .28rem; }.energy-label { margin-top: .3rem; }
   .compact-ability { grid-template-columns: 24px minmax(0, 1fr); padding: .25rem; }.compact-ability-icon { width: 24px; height: 24px; }.compact-ability strong { font-size: .59rem; }
   .ability-hold-tooltip { bottom: calc(max(4px, env(safe-area-inset-bottom)) + 8.6rem); }
