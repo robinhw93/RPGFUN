@@ -496,10 +496,14 @@ main { min-height: calc(100vh - 68px); }
 .compact-combatant.active-turn { box-shadow: inset 0 0 0 1px rgba(201,168,103,.24), 0 0 22px rgba(201,168,103,.08); }
 .compact-enemy-stack { min-height: 0; position: relative; display: grid; grid-auto-rows: max-content; align-content: center; gap: .55rem; }
 .compact-enemy-stack.count-1, .compact-enemy-stack.count-2, .compact-enemy-stack.count-3 { align-content: center; }
-.enemy-combatant { width: 100%; max-width: 470px; display: block; text-align: left; border-right: 2px solid var(--enemy-accent); cursor: pointer; touch-action: manipulation; transition: border-color .2s ease, background .2s ease, opacity .2s ease, box-shadow .2s ease; }
-.enemy-combatant:hover:not(.dead), .enemy-combatant.selected:not(.dead) { border-color: var(--enemy-accent); background: color-mix(in srgb, var(--enemy-accent) 7%, #141816); }
-.enemy-combatant:active:not(.dead) { background: color-mix(in srgb, var(--enemy-accent) 7%, #141816); filter: none; transform: none; }
-.enemy-combatant.untargetable { opacity: .58; cursor: not-allowed; }.enemy-combatant.untargetable:hover { background: #141816; }
+.enemy-combatant { width: 100%; max-width: 470px; display: block; text-align: left; border-right: 2px solid var(--enemy-accent); outline: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: border-color .2s ease, opacity .2s ease, box-shadow .2s ease; }
+.enemy-combatant::before { content: ""; position: absolute; inset: 0; background: linear-gradient(145deg, color-mix(in srgb, var(--enemy-accent) 9%, transparent), color-mix(in srgb, var(--enemy-accent) 4%, transparent)); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.enemy-combatant:hover:not(.dead), .enemy-combatant.selected:not(.dead) { border-color: var(--enemy-accent); }
+.enemy-combatant:hover:not(.dead)::before, .enemy-combatant.selected:not(.dead)::before { opacity: 1; }
+.enemy-combatant:focus { outline: 0; }
+.enemy-combatant:focus-visible:not(.dead) { outline: 1px solid color-mix(in srgb, var(--enemy-accent) 78%, #4c584f); outline-offset: -2px; }
+.enemy-combatant:active:not(.dead) { filter: none; transform: none; }
+.enemy-combatant.untargetable { opacity: .58; cursor: not-allowed; }.enemy-combatant.untargetable:hover::before { opacity: 0; }
 .enemy-combatant.selected { border-color: var(--enemy-accent); outline: 1px solid color-mix(in srgb, var(--enemy-accent) 82%, #4c584f); outline-offset: -2px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--enemy-accent) 34%, transparent), 0 0 20px color-mix(in srgb, var(--enemy-accent) 13%, transparent); }
 .enemy-combatant.is-stunned:not(.dead), .enemy-combatant.is-stunned:hover:not(.dead) { border-color: #d8b84d; background: linear-gradient(145deg, #453b18, #241f10 58%, #17170f); box-shadow: inset 0 0 0 1px rgba(255,226,113,.28), inset 0 0 34px rgba(224,189,77,.18), 0 0 18px rgba(224,189,77,.12); }
 .enemy-combatant.is-stunned.selected:not(.dead) { box-shadow: inset 0 0 0 1px rgba(255,232,139,.55), inset 0 0 38px rgba(224,189,77,.24), 0 0 24px rgba(224,189,77,.2); }
