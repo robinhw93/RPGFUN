@@ -320,11 +320,11 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 
 The developer-tool launcher also opens three isolated content editors:
 
-- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, Energy values, and free-form ability/behavior notes. It has no implicit default-attack fields. Ability and behavior text is design input for later TypeScript implementation and is not executable on its own.
+- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute, threshold, and success/failure text plus Health, gold, experience, talent-point, and attribute-point changes.
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy counts support repeated templates in one encounter, and combat entries configure rewards.
 
-They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their storage keys are `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
+They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their storage keys are `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`. The enemy JSON exchange format is version 2; version-1 ability text migrates into a structured Effect field without changing the browser storage key. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
 
 ## Save compatibility
 

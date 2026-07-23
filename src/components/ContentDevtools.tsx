@@ -24,12 +24,20 @@ interface EnemyDraft {
   critChance: number;
   energyRegen: number;
   maxEnergy: number;
-  abilitiesNotes: string;
+  abilities: EnemyAbilityDraft[];
   behaviorNotes: string;
   accent: string;
 }
 
-interface EnemyExchange { format: "emberfall-enemies"; version: 1; enemies: EnemyDraft[] }
+interface EnemyAbilityDraft {
+  id: string;
+  name: string;
+  energyCost: number;
+  cooldownTurns: number;
+  effect: string;
+}
+
+interface EnemyExchange { format: "emberfall-enemies"; version: 2; enemies: EnemyDraft[] }
 interface EventExchange { format: "emberfall-events"; version: 1; events: AdventureEventDefinition[] }
 interface AdventureExchange { format: "emberfall-adventures"; version: 1; adventures: AdventureDefinition[] }
 
@@ -40,6 +48,10 @@ const STAT_OPTIONS: Array<{ id: StatName; label: string }> = [
 
 function makeId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function finiteNumber(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 function readExchange<T>(key: string, fallback: T): T {
@@ -141,7 +153,7 @@ function TextField({ label, value, onChange, textarea = false }: { label: string
 function canonicalEnemyExchange(): EnemyExchange {
   return {
     format: "emberfall-enemies",
-    version: 1,
+    version: 2,
     enemies: Object.values(ENEMIES).map((enemy) => ({
       id: enemy.id,
       name: enemy.name,
@@ -156,7 +168,13 @@ function canonicalEnemyExchange(): EnemyExchange {
       critChance: enemy.critChance * 100,
       energyRegen: enemy.energyRegen,
       maxEnergy: enemy.maxEnergy,
-      abilitiesNotes: enemy.abilitiesNotes,
+      abilities: enemy.abilities.map((ability) => ({
+        id: ability.id,
+        name: ability.name,
+        energyCost: ability.energyCost,
+        cooldownTurns: 0,
+        effect: ability.description,
+      })),
       behaviorNotes: enemy.behaviorNotes,
       accent: enemy.accent,
     })),
@@ -167,26 +185,53 @@ function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
   const fallbackById = ENEMIES;
   return {
     format: "emberfall-enemies",
-    version: 1,
+    version: 2,
     enemies: (Array.isArray(exchange?.enemies) ? exchange.enemies : []).map((enemy) => {
-      const legacy = enemy as EnemyDraft & { power?: number; damageType?: string };
-      const fallback = fallbackById[legacy.id];
-      const legacyPower = Number.isFinite(legacy.power) ? legacy.power! : 0;
+      const legacy = enemy as Partial<EnemyDraft> & { power?: number; damageType?: string; energyCost?: number; intentText?: string; attackDescription?: string; abilitiesNotes?: string };
+      const fallback = legacy.id ? fallbackById[legacy.id] : undefined;
+      const legacyPower = finiteNumber(legacy.power, 0);
+      const fallbackAbilities: EnemyAbilityDraft[] = (fallback?.abilities ?? []).map((ability) => ({
+        id: ability.id,
+        name: ability.name,
+        energyCost: ability.energyCost,
+        cooldownTurns: 0,
+        effect: ability.description,
+      }));
+      const rawAbilities: Array<Partial<EnemyAbilityDraft> & { description?: string }> = Array.isArray(legacy.abilities) ? legacy.abilities : fallbackAbilities;
+      const abilities = rawAbilities.map((ability, index) => {
+        const raw = ability as Partial<EnemyAbilityDraft> & { description?: string };
+        return {
+          id: raw.id ?? makeId("enemy-ability"),
+          name: raw.name ?? `Ability ${index + 1}`,
+          energyCost: finiteNumber(raw.energyCost, 0),
+          cooldownTurns: finiteNumber(raw.cooldownTurns, 0),
+          effect: raw.effect ?? raw.description ?? "",
+        };
+      });
+      if (legacy.abilitiesNotes && abilities.length === 1) abilities[0] = { ...abilities[0], effect: legacy.abilitiesNotes };
+      const legacyEffect = legacy.abilitiesNotes ?? legacy.attackDescription;
+      if (legacyEffect && abilities.length === 0) abilities.push({
+        id: makeId("enemy-ability"),
+        name: legacy.intentText?.split(" · ")[0] || "New Ability",
+        energyCost: finiteNumber(legacy.energyCost, 0),
+        cooldownTurns: 0,
+        effect: legacyEffect,
+      });
       return {
         id: legacy.id ?? makeId("enemy"),
         name: legacy.name ?? "New Enemy",
         title: legacy.title ?? "Creature",
-        maxHp: Number.isFinite(legacy.maxHp) ? legacy.maxHp : fallback?.maxHp ?? 30,
-        physicalPower: Number.isFinite(legacy.physicalPower) ? legacy.physicalPower : fallback?.physicalPower ?? (legacy.damageType === "physical" ? legacyPower : 0),
-        spellPower: Number.isFinite(legacy.spellPower) ? legacy.spellPower : fallback?.spellPower ?? (legacy.damageType && legacy.damageType !== "physical" ? legacyPower : 0),
-        armor: Number.isFinite(legacy.armor) ? legacy.armor : fallback?.armor ?? 0,
-        magicResistance: Number.isFinite(legacy.magicResistance) ? legacy.magicResistance : fallback?.magicResistance ?? 0,
-        hitChance: Number.isFinite(legacy.hitChance) ? legacy.hitChance : fallback ? fallback.hitChance * 100 : 95,
-        dodgeChance: Number.isFinite(legacy.dodgeChance) ? legacy.dodgeChance : fallback ? fallback.dodgeChance * 100 : 5,
-        critChance: Number.isFinite(legacy.critChance) ? legacy.critChance : fallback ? fallback.critChance * 100 : 5,
-        energyRegen: Number.isFinite(legacy.energyRegen) ? legacy.energyRegen : fallback?.energyRegen ?? 1,
-        maxEnergy: Number.isFinite(legacy.maxEnergy) ? legacy.maxEnergy : fallback?.maxEnergy ?? 10,
-        abilitiesNotes: legacy.abilitiesNotes ?? fallback?.abilitiesNotes ?? "",
+        maxHp: finiteNumber(legacy.maxHp, fallback?.maxHp ?? 30),
+        physicalPower: finiteNumber(legacy.physicalPower, fallback?.physicalPower ?? (legacy.damageType === "physical" ? legacyPower : 0)),
+        spellPower: finiteNumber(legacy.spellPower, fallback?.spellPower ?? (legacy.damageType && legacy.damageType !== "physical" ? legacyPower : 0)),
+        armor: finiteNumber(legacy.armor, fallback?.armor ?? 0),
+        magicResistance: finiteNumber(legacy.magicResistance, fallback?.magicResistance ?? 0),
+        hitChance: finiteNumber(legacy.hitChance, fallback ? fallback.hitChance * 100 : 95),
+        dodgeChance: finiteNumber(legacy.dodgeChance, fallback ? fallback.dodgeChance * 100 : 5),
+        critChance: finiteNumber(legacy.critChance, fallback ? fallback.critChance * 100 : 5),
+        energyRegen: finiteNumber(legacy.energyRegen, fallback?.energyRegen ?? 1),
+        maxEnergy: finiteNumber(legacy.maxEnergy, fallback?.maxEnergy ?? 10),
+        abilities,
         behaviorNotes: legacy.behaviorNotes ?? fallback?.behaviorNotes ?? "",
         accent: legacy.accent ?? fallback?.accent ?? "#79a86d",
       };
@@ -199,9 +244,11 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
   const [selectedId, setSelectedId] = useState(store.draft.enemies[0]?.id ?? "");
   const selected = store.draft.enemies.find((enemy) => enemy.id === selectedId) ?? store.draft.enemies[0];
   const update = (change: Partial<EnemyDraft>) => store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.map((enemy) => enemy.id === selected?.id ? { ...enemy, ...change } : enemy) }));
+  const updateAbility = (abilityId: string, change: Partial<EnemyAbilityDraft>) => update({ abilities: selected.abilities.map((ability) => ability.id === abilityId ? { ...ability, ...change } : ability) });
+  const addAbility = () => update({ abilities: [...selected.abilities, { id: makeId("enemy-ability"), name: "New Ability", energyCost: 0, cooldownTurns: 0, effect: "" }] });
   const add = () => {
     const id = makeId("enemy");
-    const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, physicalPower: 6, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, abilitiesNotes: "", behaviorNotes: "", accent: "#79a86d" };
+    const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, physicalPower: 6, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, abilities: [], behaviorNotes: "", accent: "#79a86d" };
     store.setDraft((draft) => ({ ...draft, enemies: [...draft.enemies, enemy] })); setSelectedId(id);
   };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.filter((enemy) => enemy.id !== selected.id) })); setSelectedId(store.draft.enemies.find((enemy) => enemy.id !== selected.id)?.id ?? ""); };
@@ -212,7 +259,12 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
         <TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Title" value={selected.title} onChange={(title) => update({ title })} /><TextField label="Accent color" value={selected.accent} onChange={(accent) => update({ accent })} />
         <NumberField label="Health" value={selected.maxHp} min={1} onChange={(maxHp) => update({ maxHp })} /><NumberField label="Physical Power" value={selected.physicalPower} min={0} onChange={(physicalPower) => update({ physicalPower })} /><NumberField label="Spell Power" value={selected.spellPower} min={0} onChange={(spellPower) => update({ spellPower })} /><NumberField label="Armor" value={selected.armor} min={0} onChange={(armor) => update({ armor })} /><NumberField label="Magic Resistance" value={selected.magicResistance} min={0} onChange={(magicResistance) => update({ magicResistance })} />
         <NumberField label="Hit Chance %" value={selected.hitChance} step={0.1} onChange={(hitChance) => update({ hitChance })} /><NumberField label="Dodge Chance %" value={selected.dodgeChance} step={0.1} onChange={(dodgeChance) => update({ dodgeChance })} /><NumberField label="Crit Chance %" value={selected.critChance} step={0.1} onChange={(critChance) => update({ critChance })} /><NumberField label="Energy Regeneration" value={selected.energyRegen} min={0} onChange={(energyRegen) => update({ energyRegen })} />
-        <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => update({ maxEnergy })} /><TextField label="Abilities" value={selected.abilitiesNotes} onChange={(abilitiesNotes) => update({ abilitiesNotes })} textarea /><TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
+        <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => update({ maxEnergy })} />
+        <div className="enemy-ability-editor-list wide-field"><div className="enemy-ability-editor-heading"><div><span>Abilities</span><small>Add every ability this enemy can use.</small></div><button type="button" className="secondary-editor-button" onClick={addAbility}><Plus size={14} /> Add ability</button></div>
+          {selected.abilities.length === 0 && <p className="empty-editor-copy">No abilities added yet.</p>}
+          {selected.abilities.map((ability, index) => <article className="enemy-ability-editor" key={ability.id}><header><strong>Ability {index + 1}</strong><button type="button" onClick={() => update({ abilities: selected.abilities.filter((item) => item.id !== ability.id) })}><Trash2 size={14} /> Remove</button></header><div className="content-form-grid"><TextField label="Name" value={ability.name} onChange={(name) => updateAbility(ability.id, { name })} /><NumberField label="Energy Cost" value={ability.energyCost} min={0} onChange={(energyCost) => updateAbility(ability.id, { energyCost })} /><NumberField label="Cooldown" value={ability.cooldownTurns} min={0} onChange={(cooldownTurns) => updateAbility(ability.id, { cooldownTurns })} /><TextField label="Effect" value={ability.effect} onChange={(effect) => updateAbility(ability.id, { effect })} textarea /></div></article>)}
+        </div>
+        <TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
       </div></section>}
     </div>
   </EditorShell>;

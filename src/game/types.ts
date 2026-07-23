@@ -625,10 +625,8 @@ export interface EnemyTemplate {
   critChance: number;
   energyRegen: number;
   maxEnergy: number;
-  /** Executable abilities implemented in source after their editor notes are supplied. */
+  /** Executable abilities implemented in source after their editor drafts are integrated. */
   abilities: EnemyAbilityDefinition[];
-  /** Free-form design notes used by the Enemy Editor and future AI implementations. */
-  abilitiesNotes: string;
   /** Free-form design notes describing intended ability priorities and conditions. */
   behaviorNotes: string;
   accent: string;
