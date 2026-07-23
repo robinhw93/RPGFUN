@@ -11,9 +11,9 @@ export const INITIAL_CHARACTER: CharacterState = {
   unspentStatPoints: 0,
   gold: 18,
   baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 5, luck: 5 },
-  talentPoints: 3,
+  talentPoints: 1,
   unlockedTalents: ["origin"],
-  equippedAbilities: ["strike", "guard"],
+  equippedAbilities: [],
   inventory: [],
   equipment: {},
   completedAdventureIds: [],
@@ -88,7 +88,7 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
   magicResistance += features.passive.magicResistance;
   gearPhysicalPower += features.passive.physicalPower + features.passive.power;
   gearMagicalPower += features.passive.magicalPower + features.passive.power;
-  const maxEnergy = 10 + features.passive.maxEnergy;
+  const maxEnergy = 7 + features.passive.maxEnergy;
   const energyRegen = 2 + features.passive.energyRegen;
   const critChance = 0.05 + stats.luck * 0.0075 + features.passive.critChance;
   return {

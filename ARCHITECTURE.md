@@ -78,7 +78,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 
 `CombatState` contains both authoritative logical results and presentation synchronization state:
 
-- Turn number, sorted initiative entries, active index, per-round acted-actor IDs, and initiative-reveal state.
+- Turn number, sorted initiative entries, active index, per-round acted-actor IDs, the active enemy's resolved-action count, and initiative-reveal state.
 - Player/enemy Health, Energy, statuses, targeting, and cooldowns.
 - `floatingEvents`: ordered player-facing messages for the current sequence.
 - `pendingEffects`: state changes indexed to those messages.
@@ -259,7 +259,7 @@ React keeps player inputs in a transient FIFO queue that is deliberately exclude
 
 ### Enemy turns
 
-`takeEnemyTurn` runs start statuses, regenerates Energy, handles insufficient Energy/Stealth, rolls the attack, applies defense/Guard/status effects, runs player `damage_taken` triggers, resolves enemy Bleed and Poison, then calls `moveToNextActor`. It snapshots visible enemy statuses and queues a reconciliation at the final status event, preventing duration changes or removals from appearing before their damage or skip effect resolves. Enemy-to-enemy and player-to-enemy turn transitions reuse the preceding sequence's final event instead of adding a standalone enemy-turn message.
+`takeEnemyTurn` runs start statuses and Energy regeneration once, then resolves at most one enemy ability per presentation sequence. `enemyActionsTaken` keeps the active actor in place when its template permits another ready ability, so repeated attacks receive separate text, hit rolls, impact VFX, Energy costs, and Bleed triggers. Poison and duration reconciliation run only when the enemy's final action ends, after which `moveToNextActor` resets the counter. Visible enemy statuses are snapshotted and reconciled at the matching event, preventing duration changes or removals from appearing early. Enemy-to-enemy and player-to-enemy turn transitions reuse the preceding sequence's final event instead of adding a standalone enemy-turn message.
 
 Enemy templates contain separate Physical Power and Spell Power plus an ordered list of executable abilities. `takeEnemyTurn` uses the first affordable implemented ability. The Enemy Editor exports structured ability drafts with name, Energy cost, cooldown, and effect text. Those effects and the separate behavior text remain design input; bespoke mechanics, cooldown handling, and selection priorities are implemented in source after export.
 
@@ -343,6 +343,8 @@ The initiative grid receives the live combatant count through a CSS variable. Tw
 ## Adventure and reward flow
 
 `AdventureProgress` stores the active adventure ID, selected stage-entry ID, mode, carried Health, event-roll result, and combat independently. Story adventures use finite weighted stage definitions; `stageEntryId` locks in a randomly selected possibility so refreshing cannot reroll it. `endless` uses the dynamic Shadow Proving Grounds encounter.
+
+Starting an adventure uses the same travel-transition contract as advancing a stage: footsteps render first, the selected encounter copy is shown second, and only then is combat created so initiative cannot cover the introduction.
 
 - `beginAdventure` creates the first combat at Max Health.
 - Victory triggers `grantCombatReward` through a React effect.

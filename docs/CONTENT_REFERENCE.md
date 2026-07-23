@@ -6,14 +6,12 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
-Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, Divine Smite, Consecrated Ground, Beacon of Light, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other obtainable Brute, Core, and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, Divine Smite, Consecrated Ground, Beacon of Light, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other obtainable Brute and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place. Poison abilities use the generic **Spell Damage** classification rather than Arcane; it scales from Spell Power and is resisted by Magic Resistance.
 
 ### Core and currently obtainable abilities
 
 | Ability | Energy | Cooldown | Target | Effect |
 | --- | ---: | ---: | --- | --- |
-| Strike | 0 | 1 | Enemy | Deals `5 + 100% Physical Power` as Physical damage. |
-| Guard | 2 | None | Self | Grants base 6 Guard, multiplied by Guard generation, until the next turn. |
 | Quick Slash | 1 | None | Enemy | Deals 50% Physical Power as Physical damage. |
 | Twin Strike | 2 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
@@ -41,7 +39,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Pandemic | 4 | 3 | Enemy | Copies every debuff on the target to all other living, targetable enemies. |
 | Light Speed | 6 | 5 | Enemy | Deals 50% Physical Power as Physical damage plus 100% Spell Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
 | Chain Assassination | 5 | 3 | Enemy | Deals 125% Physical Power and gains +25% Critical Strike Chance while Stealthed. A kill refunds the Energy actually spent and resets its cooldown. |
-| Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Spell Power. Both components gain 20% damage per unique debuff on the target. |
+| Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power as Physical damage plus 25% Spell Power as Spell Damage. Both components gain 20% damage per unique debuff on the target. |
 | Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Spell Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
 | Bash | 1 | 1 | Enemy | Deals 60% Physical Power as Physical damage and has a 30% chance to grant +1 Energy regeneration next turn. Granted by the Brute class node. |
@@ -113,7 +111,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 
 | ID | Talent | Type | Declared connection(s) | Rule | Effect |
 | --- | --- | --- | --- | --- | --- |
-| origin | Wayfarer's Spark | Class | None | — | Starting node; unlocks Strike and Guard. |
+| origin | Wayfarer's Spark | Class | None | — | Starting node. |
 | brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength and unlocks Bash. |
 | shadow_1 | Shadow | Class | Wayfarer's Spark | Any | +2 Agility and unlocks Quick Slash. |
 | arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence and unlocks Arcane Bolt. |
@@ -410,7 +408,7 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Poison | 3 turns | Yes | At turn end, takes Arcane damage per stack equal to `1 + 15% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
+| Poison | 3 turns | Yes | At turn end, takes Spell Damage per stack equal to `1 + 15% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
 | Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `1 + 10% source Physical Power`; Armor is 50% effective against the combined trigger. |
 | Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `1 + 20% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
 | Weaken | 3 turns | No | Deals 25% less damage. |
@@ -433,7 +431,7 @@ The duration is the default duration created by the status library. Ability or t
 
 ## Enemies
 
-Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Attacks are implemented as explicit abilities rather than an implicit default attack.
+Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Attacks are implemented as explicit abilities rather than an implicit default attack. The combat info button beside an enemy's Health opens its complete stat and defense summary. Enemies with more than one action per turn resolve and present each ability separately.
 
 | Enemy | Health | Physical / Spell Power | Armor / Magic Resistance | Hit / Dodge / Crit | Regen / Max | Abilities |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |

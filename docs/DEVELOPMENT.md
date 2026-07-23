@@ -186,7 +186,7 @@ Each talent defines:
 
 Changing or removing IDs is a save-migration decision. Existing saves store unlocked talent IDs and equipped ability IDs.
 
-The runtime loadout remains a compact `equippedAbilities` array. The slot picker replaces or swaps occupied indices and appends newly selected abilities to the first available empty position; it never creates sparse slots. Its available list is derived from Strike, Guard, and `abilityId` values on currently unlocked talents.
+The runtime loadout remains a compact `equippedAbilities` array. The slot picker replaces or swaps occupied indices and appends newly selected abilities to the first available empty position; it never creates sparse slots. Its available list is derived from `abilityId` values on currently unlocked talents.
 
 ### Enemies, items, sets, and adventures
 

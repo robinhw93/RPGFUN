@@ -4,27 +4,26 @@ import { createStatusEffect } from "./statusEffects";
 type AbilityDefinition = Omit<Ability, "types"> & { types?: DamageType[] };
 
 const ABILITY_TYPE_OVERRIDES: Record<string, DamageType[]> = {
-  guard: ["physical"],
-  PoisonStab: ["physical", "arcane"],
-  PoisonCloud: ["arcane"],
-  Contagion: ["arcane"],
+  PoisonStab: ["physical", "spell"],
+  PoisonCloud: ["spell"],
+  Contagion: ["spell"],
   Stealth: ["shadow"],
   Evasion: ["shadow"],
-  Neurotoxin: ["arcane"],
-  VenomousStrike: ["physical", "arcane"],
-  ToxicExplosion: ["arcane"],
-  Venomborn: ["arcane"],
+  Neurotoxin: ["spell"],
+  VenomousStrike: ["physical", "spell"],
+  ToxicExplosion: ["spell"],
+  Venomborn: ["spell"],
   Focus: ["shadow"],
   Recouperate: ["shadow"],
-  SlowingVenom: ["physical", "arcane"],
-  WeakeningVenom: ["physical", "arcane"],
-  RabidVenom: ["physical", "arcane"],
+  SlowingVenom: ["physical", "spell"],
+  WeakeningVenom: ["physical", "spell"],
+  RabidVenom: ["physical", "spell"],
   CheapShot: ["physical"],
-  Pandemic: ["arcane"],
-  Epidemic: ["arcane", "shadow"],
+  Pandemic: ["spell"],
+  Epidemic: ["spell", "shadow"],
   LightningStrike: ["lightning", "physical"],
   LightSpeed: ["lightning", "physical"],
-  CullTheWeak: ["arcane", "physical"],
+  CullTheWeak: ["spell", "physical"],
   Combustion: ["fire"],
   ArcaneCombustion: ["fire", "arcane"],
   Thundersnow: ["frost", "lightning"],
@@ -57,16 +56,6 @@ function resolveAbilityTypes(ability: AbilityDefinition): DamageType[] {
 }
 
 const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
-  strike: {
-    range: "melee",
-    id: "strike", name: "Strike", description: "A reliable weapon attack.", energyCost: 0,
-    cooldownTurns: 1, target: "enemy", damageType: "physical", power: 5, scalingStat: "strength", icon: "⚔", branch: "core",
-  },
-  guard: {
-    range: "melee",
-    id: "guard", name: "Guard", description: "Gain 6 Guard until the next turn.", energyCost: 2,
-    target: "self", icon: "◆", branch: "core", effect: "guard", vfx: "guard",
-  },
   quickSlash: {
     range: "melee",
     id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 50% of your Physical Power.", energyCost: 1,
@@ -215,8 +204,8 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   CullTheWeak: {
     range: "ranged",
-    id: "CullTheWeak", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Spell Power as Arcane Damage. Both gain 20% damage per unique debuff on the target.", energyCost: 5,
-    cooldownTurns: 3, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.25 }, { damageType: "arcane", powerScaling: 0.25 }],
+    id: "CullTheWeak", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Spell Power as Spell Damage. Both gain 20% damage per unique debuff on the target.", energyCost: 5,
+    cooldownTurns: 3, target: "enemy", damageComponents: [{ damageType: "physical", powerScaling: 0.25 }, { damageType: "spell", powerScaling: 0.25 }],
     damagePerTargetDebuff: 0.2, icon: "◎", branch: "shadow", vfx: "cull_the_weak",
   },
   Epidemic: {
@@ -543,7 +532,7 @@ export const ABILITIES: Record<string, Ability> = Object.fromEntries(
 export const TALENT_TREE_CANVAS = { width: 5225, height: 3750 } as const;
 
 const TALENT_NODES: Talent[] = [
-  { id: "origin", name: "Wayfarer's Spark", description: "Your first step. Unlocks Strike and Guard.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 32.258, y: 50 }, icon: "✦", shape: "square" },
+  { id: "origin", name: "Wayfarer's Spark", description: "Your first step into Arkenfall.", branch: "core", kind: "class", tier: 0, cost: 0, requires: [], position: { x: 32.258, y: 50 }, icon: "✦", shape: "square" },
   { id: "brute_1", name: "Brute", description: "+2 Strength. Unlocks Bash.", branch: "brute", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 27.419, y: 50 }, icon: "◆", shape: "square", abilityId: "Bash", effectNotes: "Passive Bonus: +2 Strength.\nAbility: Bash\nCost: 1 Energy\nCooldown: 1 turn\nDeal 60% Physical Power as Physical Damage. Has a 30% chance to grant +1 Energy regeneration next turn.", combat: { passive: { stats: { strength: 2 } }, triggers: [{ id: "bash-energy", name: "Bash", description: "Bash has a 30% chance to grant +1 Energy regeneration next turn.", event: "on_hit", chance: 0.3, conditions: { abilityIds: ["Bash"] }, effects: [{ type: "gain_next_turn_energy_regen", amount: 1, target: "self" }] }] } },
   { id: "shadow_1", name: "Shadow", description: "+2 Agility. Unlocks Quick Slash.", branch: "shadow", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 37.097, y: 50 }, icon: "◈", shape: "square", abilityId: "quickSlash", effectNotes: "Passive Bonus: +2 Agility.\nAbility: Quick Slash\nCost: 1 Energy\nCooldown: None\nDeal 50% Physical Power as Physical Damage.", combat: { passive: { stats: { agility: 2 } } } },
   { id: "arcanist_1", name: "Arcanist", description: "+2 Intelligence. Unlocks Arcane Bolt.", branch: "arcanist", kind: "class", tier: 1, cost: 1, requires: ["origin"], position: { x: 32.258, y: 43.75 }, icon: "✧", shape: "square", abilityId: "arcaneBolt", effectNotes: "Passive Bonus: +2 Intelligence.\nAbility: Arcane Bolt\nCost: 1 Energy\nCooldown: 1 turn\nDeal 75% Spell Power as Arcane Damage.", combat: { passive: { stats: { intelligence: 2 } } } },
@@ -611,7 +600,7 @@ const TALENT_NODES: Talent[] = [
   { id: "talent_57", name: "Pandemic", description: "Copy every debuff on the target to all other living enemies.", branch: "shadow", kind: "ability", tier: 13, cost: 1, requires: ["talent_40", "talent_42"], position: { x: 82.25806451612904, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "Pandemic" },
   { id: "talent_58", name: "Light Speed", description: "Deal 50% Physical and 100% Magical damage, apply Electrified, and immediately begin a new turn.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_43", "talent_41"], position: { x: 82.25806451612904, y: 39.84375 }, icon: "✦", shape: "square", abilityId: "LightSpeed" },
   { id: "talent_59", name: "Chain Assassination", description: "Deal 125% Physical Power as damage. While Stealthed, gain +25% Critical Strike Chance. A kill refunds the Energy spent and resets the cooldown.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_43"], position: { x: 74.19354838709677, y: 39.84375 }, icon: "✦", shape: "square", abilityId: "ChainAssassination" },
-  { id: "talent_60", name: "Cull the Weak", description: "Deal 25% Physical and 25% Magical damage. Both gain 20% damage per unique debuff on the target.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_42"], position: { x: 74.19354838709677, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "CullTheWeak" },
+  { id: "talent_60", name: "Cull the Weak", description: "Deal 25% Physical Power as Physical Damage and 25% Spell Power as Spell Damage. Both gain 20% damage per unique debuff on the target.", branch: "shadow", kind: "ability", tier: 12, cost: 1, requires: ["talent_42"], position: { x: 74.19354838709677, y: 60.15625 }, icon: "✦", shape: "square", abilityId: "CullTheWeak" },
   { id: "talent_61", name: "Hit and Run", description: "Whenever you deal damage, you have a 2% chance to gain Stealth until the end of your next turn.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_56"], position: { x: 86.29032258064517, y: 50 }, icon: "✦", shape: "circle", combat: { triggers: [{ id: "hit-and-run", name: "Hit and Run", description: "Damage dealt has a 2% chance to grant Stealth until the end of your next turn.", event: "on_hit", chance: 0.02, conditions: { minimumDamage: 1 }, effects: [{ type: "apply_status", status: createStatusEffect("stealth", { duration: 2, expiresAtTurnStart: false }), target: "self" }] }] } },
   { id: "talent_62", name: "Spot Weakness", description: "Deal 5% more damage per unique debuff on the target.", branch: "shadow", kind: "passive", tier: 14, cost: 1, requires: ["talent_57"], position: { x: 86.29032258064517, y: 60.15625 }, icon: "✦", shape: "circle", combat: { damageModifiers: [{ id: "spot-weakness", name: "Spot Weakness", description: "Deal 5% more damage per unique target debuff.", multiplier: 1, multiplierPerTargetDebuff: 0.05 }] } },
   { id: "talent_63", name: "Avoidance", description: "+1 Max Energy. Take 3% less damage per unspent Energy.", branch: "shadow", kind: "passive", tier: 13, cost: 1, requires: ["talent_58"], position: { x: 86.29032258064517, y: 39.84375 }, icon: "✦", shape: "circle", combat: { passive: { maxEnergy: 1, incomingDamageReductionPerEnergy: 0.03 } } },

@@ -36,10 +36,10 @@ Every new character starts with:
 
 - Level 1 and 0 experience.
 - 18 gold.
-- 3 talent points.
+- 1 talent point.
 - No unspent attribute points.
 - Wayfarer's Spark unlocked.
-- Strike and Guard equipped.
+- No abilities equipped until the first class node is unlocked.
 - Strength 5, Agility 5, Intelligence 5, Vitality 5, and Luck 5.
 - No equipped gear and an empty inventory.
 
@@ -64,7 +64,7 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 | Stat | Current rule |
 | --- | --- |
 | Max Health | `Vitality × 10` |
-| Max Energy | `10 + flat bonuses` |
+| Max Energy | `7 + flat bonuses` |
 | Energy Regeneration | `2 + flat bonuses` at the start of the player's turn. |
 | Physical Power | `(Strength + Agility × 0.3 + gear/talent Physical Power) × (100% + Physical Power bonuses)` |
 | Spell Power | `(Intelligence + gear/talent Spell Power) × (100% + Spell Power bonuses)` |
@@ -109,11 +109,12 @@ Direct attacks roll Critical Strike Chance after a successful hit. A critical st
 
 ## Damage types and defenses
 
-The implemented damage types are Physical, Arcane, Shadow, Fire, Frost, and Lightning.
+The implemented damage types are Physical, Spell Damage, Arcane, Shadow, Fire, Frost, and Lightning. Spell Damage is generic magic that is not tied to an element; Poison uses it instead of Arcane.
 
 | Damage type | Offensive power | Defense |
 | --- | --- | --- |
 | Physical | Physical Power | Armor |
+| Spell Damage | Spell Power | Magic Resistance |
 | Arcane | Spell Power | Magic Resistance |
 | Fire | Spell Power | Magic Resistance |
 | Frost | Spell Power | Magic Resistance |
@@ -242,6 +243,7 @@ At the start of an enemy's turn:
 - If the player is Stealthed, the enemy cannot target the player.
 - While Stealthed, the player's combat card becomes lightly translucent and displays animated shadow-smoke until the status expires.
 - Otherwise it rolls Hit Chance against the player's capped Dodge Chance, spends Energy, attacks, and applies any on-hit effect.
+- Enemies configured for several actions resolve each ability separately, including its own text, hit roll, damage, VFX, Energy cost, and Bleed trigger. Start-of-turn regeneration and end-of-turn Poison still happen only once.
 - Enemy turns do not add a separate floating turn announcement; the turn-order highlight advances with the preceding action's final event.
 
 Bleed resolves after the enemy uses its attack. Poison resolves at the end of the enemy's turn, then durations decrease. If Stunned expires, its icon is replaced by Diminishing Returns at that same event. Status icons retain their pre-turn state while those events are queued; the duration ring updates or the icon disappears only when the final status event is shown and resolved.
@@ -307,7 +309,7 @@ This sequencing guarantees that:
 
 ## Energy and cooldowns
 
-- Default Max Energy: 10.
+- Default Max Energy: 7.
 - Default player Energy regeneration: 2 at the start of the player's own turn.
 - Enemy Energy regeneration and Max Energy come from that enemy's definition.
 - Energy cannot exceed Max Energy and cannot be spent below zero.
@@ -319,7 +321,7 @@ The segmented Energy bar previews Energy that will be available after the next r
 
 ## Damage absorption
 
-Guard is a temporary, stackable absorption status. The Guard ability grants a base of 6 Guard multiplied by the character's Guard multiplier. Incoming damage removes Guard first; only the remainder reduces Health. Normal Guard expires when its owner's next turn begins.
+Guard is a temporary, stackable absorption status granted by several talents and abilities. Incoming damage removes Guard first; only the remainder reduces Health. Normal Guard expires when its owner's next turn begins.
 
 Barrier is a visible, stackable absorption buff that lasts three turns. Its stack counter is the remaining Barrier amount, and a persistent shimmer covers the protected combatant. Incoming damage consumes Guard first, then Barrier, then Health; the shimmer pulses whenever Barrier absorbs damage. Barrier protects against both direct and status damage, and its amount changes at the same floating-text event as the damage.
 
@@ -355,7 +357,7 @@ Burn per stack   = 1 + source Spell Power × 0.20
 - Bleed triggers whenever the afflicted combatant uses an ability or enemy attack.
 - Poison triggers at the end of each afflicted combatant's turn.
 - Burn triggers at the start of each afflicted combatant's turn.
-- Bleed is Physical damage, Poison is Arcane damage, and Burn is Fire damage.
+- Bleed is Physical damage, Poison is generic Spell Damage, and Burn is Fire damage.
 - Armor is 50% effective against each combined Bleed trigger. Magic Resistance is 50% effective against each combined Poison or Burn tick.
 - The status stores the applier's power when applied; later stat changes do not rewrite an existing status's source power.
 - Player Poison damage can be modified by talent bonuses such as Toxicology and Virulence.
@@ -373,7 +375,7 @@ The result is then multiplied by the target's healing-received multiplier and li
 
 The current story adventure is **Windsong Forest**, containing four ordered stages. Each stage may contain any number of combat, boss, or event possibilities with configured percentage weights. The selected possibility is stored in adventure progress, so refreshing cannot reroll the active stage. See the live stage table in [Content reference](CONTENT_REFERENCE.md#adventure-windsong-forest).
 
-Remaining Health carries from one stage to the next. Between stages, the game shows an animated travel transition followed by the selected encounter or event announcement. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite.
+Remaining Health carries from one stage to the next. Starting an adventure and moving between stages both show the animated footsteps transition first, followed by the selected encounter or event announcement. Combat and its initiative presentation are created only after that introduction finishes. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite.
 
 Events contain two or three choices. Every choice specifies an attribute and success threshold. Choosing it rolls `d100 + selected derived attribute`. A total equal to or above the threshold applies the configured success outcome; a lower total applies the configured failure outcome. The result panel shows the die, attribute bonus, total, threshold, and narrative result.
 
@@ -411,8 +413,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 ### Loadout
 
 - The combat loadout has six slots.
-- Strike and Guard are permanently unlocked core abilities. They can be equipped or unequipped from Wayfarer's Spark like other available abilities.
-- Other unlocked abilities can be equipped or removed outside combat.
+- Abilities become available through unlocked talent nodes and can be equipped or removed outside combat.
 - Selecting any equipped or empty loadout slot opens the in-game ability picker. An occupied slot can replace or swap its ability with another equipped slot, while **Unequip Slot** removes its current ability.
 - Ability descriptions are resolved from the character's unlocked talents. Combat tooltips, talent details, the loadout picker, and new combat-log entries therefore describe the modified effect rather than the ability's original base effect.
 - Enemy misses, newly applied statuses, and newly applied Stuns are reusable passive-trigger events. Recovery, Spotting Opportunity, Biding Time, Break, Mischief, and Comparative Momentum attach their results to the triggering combat moment without slowing the event sequence.

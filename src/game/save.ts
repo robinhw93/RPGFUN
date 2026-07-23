@@ -26,7 +26,13 @@ export function loadGame(): GameState | null {
     const talentAbilities = TALENTS
       .filter((talent) => unlockedTalents.includes(talent.id) && talent.abilityId)
       .map((talent) => talent.abilityId!);
-    const validAbilities = new Set(["strike", "guard", ...talentAbilities]);
+    const validAbilities = new Set(talentAbilities);
+    const talentPoints = normalizedLevel === 1
+      && unlockedTalents.length === 1
+      && unlockedTalents[0] === "origin"
+      && state.character.talentPoints === 3
+      ? 1
+      : state.character.talentPoints;
     const itemDefinitions = new Map(ITEMS.map((item) => [item.id, item]));
     const hydrateGearMetadata = <T extends GameState["character"]["inventory"][number]>(item: T): T => {
       const definition = itemDefinitions.get(item.id);
@@ -55,7 +61,7 @@ export function loadGame(): GameState | null {
         level: normalizedLevel,
         xp: normalizedLevel >= MAX_LEVEL ? 0 : Math.max(0, state.character.xp ?? 0),
         unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (normalizedLevel - 1) * 3),
-        talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
+        talentPoints: talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
         unlockedTalents,
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),
         inventory,

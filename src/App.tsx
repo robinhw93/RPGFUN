@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Backpack, BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
-  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
+  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Info, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Sun, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
@@ -25,7 +25,7 @@ import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureEventOutcome, AdventureMode, AdventureStageDefinition, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureEventOutcome, AdventureMode, AdventureStageDefinition, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
@@ -188,6 +188,7 @@ const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
 
 const ABILITY_TYPE_LABELS: Record<DamageType, string> = {
   physical: "Physical",
+  spell: "Spell Damage",
   shadow: "Shadow",
   arcane: "Arcane",
   fire: "Fire",
@@ -197,6 +198,7 @@ const ABILITY_TYPE_LABELS: Record<DamageType, string> = {
 
 const ABILITY_TYPE_ICONS: Record<DamageType, LucideIcon> = {
   physical: Swords,
+  spell: FlaskConical,
   shadow: Moon,
   arcane: Sparkles,
   fire: Flame,
@@ -230,13 +232,9 @@ const ATTRIBUTE_SUMMARIES: Record<StatName, string> = {
 };
 
 function getAvailableCharacterAbilities(character: CharacterState): Ability[] {
-  const abilityIds = [
-    "strike",
-    "guard",
-    ...TALENTS
-      .filter((talent) => talent.abilityId && character.unlockedTalents.includes(talent.id))
-      .map((talent) => talent.abilityId!),
-  ];
+  const abilityIds = TALENTS
+    .filter((talent) => talent.abilityId && character.unlockedTalents.includes(talent.id))
+    .map((talent) => talent.abilityId!);
   return [...new Set(abilityIds)].flatMap((abilityId) => ABILITIES[abilityId] ? [ABILITIES[abilityId]] : []);
 }
 
@@ -259,7 +257,7 @@ function loadInitialGame(): GameState {
 function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
   const [view, setView] = useState<View>("adventure");
-  const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string } | null>(null);
+  const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string; travelLabel: string } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
@@ -311,6 +309,24 @@ function App() {
     window.scrollTo({ top: 0 });
   };
 
+  const playTravelTransition = (mode: AdventureMode, message: string, onComplete: () => void) => {
+    if (travelTransition) return;
+    const travelLabel = mode === "endless" ? "Returning to the proving grounds" : "Walking beneath the windsong canopy";
+    setTravelTransition({ phase: "travel", dots: 1, message, travelLabel });
+    const dotInterval = window.setInterval(() => {
+      setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
+    }, 500);
+    const encounterTimer = window.setTimeout(() => {
+      window.clearInterval(dotInterval);
+      setTravelTransition({ phase: "encounter", dots: 5, message, travelLabel });
+    }, 2500);
+    const completeTimer = window.setTimeout(() => {
+      onComplete();
+      setTravelTransition(null);
+    }, 4000);
+    travelTimers.current = [dotInterval, encounterTimer, completeTimer];
+  };
+
   const beginAdventure = (mode: AdventureMode, adventureId = DEFAULT_ADVENTURE_ID) => {
     if (mode === "story") {
       const definition = getAdventureDefinition(adventureId);
@@ -318,11 +334,20 @@ function App() {
     }
     const entry = mode === "endless" ? null : selectStageEntry(getAdventureDefinition(adventureId), 0);
     const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;
-    const combat = enemyIds?.length ? createCombat(game.character, enemyIds, derived.maxHp) : null;
-    setGame((current) => ({
-      ...current,
-      adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: derived.maxHp, combat, eventResolved: false, eventRollResult: null, latestLoot: null, pendingReward: null, completed: false },
-    }));
+    const node = entry ? entryToNode(entry) : null;
+    const message = enemyIds?.length
+      ? mode === "endless" ? describeDummyEncounter(enemyIds) : `You encounter ${enemyIds.map((id) => ENEMIES[id].name).join(" and ")}.`
+      : `You discover ${node?.title ?? "a new path"}.`;
+    playTravelTransition(mode, message, () => {
+      setGame((current) => {
+        const maxHp = getDerivedStats(current.character).maxHp;
+        const combat = enemyIds?.length ? createCombat(current.character, enemyIds, maxHp) : null;
+        return {
+          ...current,
+          adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, latestLoot: null, pendingReward: null, completed: false },
+        };
+      });
+    });
   };
 
   const selectEnemy = (enemyId: string) => {
@@ -416,19 +441,9 @@ function App() {
       : nextNode?.enemies
         ? `You encounter ${nextNode.enemies.map((id) => ENEMIES[id].name).join(" and ")}.`
         : `You discover ${nextNode?.title}.`;
-    setTravelTransition({ phase: "travel", dots: 1, message });
-    const dotInterval = window.setInterval(() => {
-      setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
-    }, 500);
-    const encounterTimer = window.setTimeout(() => {
-      window.clearInterval(dotInterval);
-      setTravelTransition({ phase: "encounter", dots: 5, message });
-    }, 2500);
-    const completeTimer = window.setTimeout(() => {
+    playTravelTransition(game.adventure.mode, message, () => {
       advanceJourney(endlessEnemyIds, nextEntry?.id);
-      setTravelTransition(null);
-    }, 4000);
-    travelTimers.current = [dotInterval, encounterTimer, completeTimer];
+    });
   };
 
   const leaveTraining = () => {
@@ -672,7 +687,7 @@ function App() {
                 <Footprints /><Footprints />
               </div>
             )}
-            <span>{travelTransition.phase === "travel" ? `${game.adventure.mode === "endless" ? "Returning to the proving grounds" : "Walking beneath the windsong canopy"}${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+            <span>{travelTransition.phase === "travel" ? `${travelTransition.travelLabel}${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
           </div>
         </div>
       )}
@@ -762,6 +777,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const adventure = game.adventure;
   const [logOpen, setLogOpen] = useState(false);
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
+  const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
+  const inspectedEnemy = adventure.combat?.enemies.find((enemy) => enemy.instanceId === inspectedEnemyId) ?? null;
   const combatEventId = adventure.combat?.eventId ?? 0;
   const initiativePlaying = Boolean(adventure.combat && adventure.combat.outcome === "active" && !adventure.combat.initiativeRevealed);
   const sequencePending = Boolean(adventure.combat && isCombatSequencePending(adventure.combat));
@@ -770,12 +787,13 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   useEffect(() => {
     setLogOpen(false);
     setInspectedInfo(null);
+    setInspectedEnemyId(null);
   }, [adventure.nodeIndex]);
   useEffect(() => {
-    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || activeActor?.kind !== "enemy") return;
+    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || activeActor?.kind !== "enemy") return;
     const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
     return () => window.clearTimeout(timer);
-  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
+  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
 
   if (adventure.completed) {
     const completedAdventure = getAdventureDefinition(adventure.adventureId);
@@ -973,7 +991,10 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
-              <div className="compact-resource-label"><span>Health</span><b>{enemy.hp}/{enemy.maxHp}</b></div>
+              <div className="compact-resource-label">
+                <span>Health <button type="button" className="enemy-info-button" aria-label={`View ${enemy.name} stats`} onClick={(event) => { event.stopPropagation(); setInspectedEnemyId(enemy.instanceId); }} onKeyDown={(event) => event.stopPropagation()}><Info size={12} /></button></span>
+                <b>{enemy.hp}/{enemy.maxHp}</b>
+              </div>
               <HealthBar value={enemy.hp} max={enemy.maxHp} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} missed={missedTargets.includes(enemy.instanceId)} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
@@ -1065,6 +1086,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       )}
 
       {inspectedInfo && <InspectInfoModal info={inspectedInfo} onClose={() => setInspectedInfo(null)} />}
+      {inspectedEnemy && <EnemyStatsModal enemy={inspectedEnemy} onClose={() => setInspectedEnemyId(null)} />}
 
       {combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
         <VictoryScoreScreen
@@ -2205,6 +2227,34 @@ function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onIn
   );
 }
 
+function EnemyStatsModal({ enemy, onClose }: { enemy: EnemyState; onClose: () => void }) {
+  const stats = [
+    ["Max Health", enemy.maxHp],
+    ["Physical Power", enemy.physicalPower],
+    ["Spell Power", enemy.spellPower],
+    ["Armor", enemy.armor],
+    ["Magic Resistance", enemy.magicResistance],
+    ["Hit Chance", formatPercent(enemy.hitChance)],
+    ["Dodge Chance", formatPercent(enemy.dodgeChance)],
+    ["Critical Strike Chance", formatPercent(enemy.critChance)],
+    ["Energy Regeneration", enemy.energyRegen],
+    ["Max Energy", enemy.maxEnergy],
+  ] as const;
+  return (
+    <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${enemy.name} stats`} onClick={onClose}>
+      <div className="inspect-info-card enemy-stats-card" onClick={(event) => event.stopPropagation()}>
+        <p className="eyebrow">Enemy Information</p>
+        <h2>{enemy.name}</h2>
+        <p className="enemy-title">{enemy.title}</p>
+        <div className="enemy-stats-grid">
+          {stats.map(([label, value]) => <span key={label}><small>{label}</small><strong>{value}</strong></span>)}
+        </div>
+        <button type="button" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 function InspectInfoModal({ info, onClose }: { info: InspectableInfo; onClose: () => void }) {
   return (
     <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${info.title} details`} onClick={onClose}>
@@ -2677,7 +2727,6 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
   onToggleAbility: (id: string) => void;
 }) {
   const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
-  const coreAbilities = talent.id === "origin" ? [ABILITIES.strike, ABILITIES.guard] : [];
   const abilityDescription = ability ? getCharacterAbilityDescription(character, ability) : null;
   const abilityEnergyCost = ability ? getCharacterAbilityEnergyCost(character, ability) : 0;
   const abilityCooldownTurns = ability ? getCharacterAbilityCooldownTurns(character, ability) : 0;
@@ -2738,29 +2787,7 @@ function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, on
           <div><p className="eyebrow">{typeLabel}</p><h2>{talent.name}</h2></div>
           <span className={`talent-detail-state ${unlocked ? "unlocked" : available ? "available" : "locked"}`}>{talent.id === "origin" ? "Starting Node" : unlocked ? "Unlocked" : available ? "Available" : "Locked"}</span>
         </div>
-        {coreAbilities.length > 0 ? (
-          <div className="talent-core-abilities">
-            {coreAbilities.map((coreAbility) => {
-              const equipped = character.equippedAbilities.includes(coreAbility.id);
-              const cannotEquip = !equipped && loadoutFull;
-              const energyCost = getCharacterAbilityEnergyCost(character, coreAbility);
-              const cooldownTurns = getCharacterAbilityCooldownTurns(character, coreAbility);
-              return (
-                <section className="talent-core-ability" key={coreAbility.id}>
-                  <div className="talent-core-ability-heading"><span aria-hidden="true">{coreAbility.icon}</span><strong>{coreAbility.name}</strong></div>
-                  <div className="talent-ability-metrics">
-                    <span><small>Type</small><strong>{getAbilityTypeLabel(coreAbility)}</strong></span>
-                    <span><small>Energy</small><strong>{energyCost}</strong></span>
-                    <span><small>Cooldown</small><strong>{cooldownTurns ? `${cooldownTurns} ${cooldownTurns === 1 ? "turn" : "turns"}` : "None"}</strong></span>
-                    <span><small>Range</small><strong>{coreAbility.range === "ranged" ? "Ranged" : "Melee"}</strong></span>
-                  </div>
-                  <p>{getCharacterAbilityDescription(character, coreAbility)}</p>
-                  <button type="button" disabled={locked || cannotEquip} onClick={() => onToggleAbility(coreAbility.id)}>{equipped ? "Unequip Ability" : cannotEquip ? "Loadout Full" : "Equip Ability"}</button>
-                </section>
-              );
-            })}
-          </div>
-        ) : ability ? (
+        {ability ? (
           <>
             {talent.kind === "class" && (
               <div className="talent-ability-grant">

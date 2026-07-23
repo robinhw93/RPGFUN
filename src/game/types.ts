@@ -9,7 +9,7 @@ export type WeaponEquipType = "mainHand" | "oneHand" | "offHand" | "twoHand";
 export type WeaponKind = "sword" | "axe" | "mace" | "dagger" | "wand" | "shield" | "tome" | "staff" | "polearm";
 /** Legacy save value. New items should use weaponEquipType. */
 export type WeaponType = "oneHanded" | "twoHanded";
-export type DamageType = "physical" | "arcane" | "shadow" | "fire" | "frost" | "lightning";
+export type DamageType = "physical" | "spell" | "arcane" | "shadow" | "fire" | "frost" | "lightning";
 export type TargetType = "enemy" | "self" | "all_enemies";
 
 export interface Stats {
@@ -731,6 +731,8 @@ export interface CombatState {
   actedActorIds: string[];
   initiativeRevealed: boolean;
   playerActed: boolean;
+  /** Number of separate abilities the active enemy has resolved during its current turn. */
+  enemyActionsTaken: number;
   abilityCooldowns: Record<string, number>;
   eventId: number;
   completedSequenceEventId: number;
