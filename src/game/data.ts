@@ -1208,7 +1208,7 @@ export const ADVENTURES: AdventureDefinition[] = [{
   recommendedLevel: 1,
   theme: "windsong_forest",
   completionTitle: "The Forest Breathes Again",
-  completionDescription: "The Forest Spirit fades into green-gold light. Wind returns to the bright canopy, carrying birdsong deeper into Emberfall.",
+  completionDescription: "The Forest Spirit fades into green-gold light. Wind returns to the bright canopy, carrying birdsong deeper into Arkenfall.",
   stages: [
     { id: "forest-edge", name: "Forest Edge", entries: [
       { id: "rat-pack", type: "combat", chance: 70, eyebrow: "Forest Encounter", title: "Rustling in the Clover", description: "Two rabid rats burst from the sunlit undergrowth and close around the path.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 55, gold: 9, loot: true } },

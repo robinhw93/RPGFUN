@@ -600,7 +600,7 @@ function App() {
       <header className="topbar">
         <button className="brand" onClick={() => navigate("adventure")} aria-label="Go to adventure">
           <span className="brand-mark"><Sparkles size={17} /></span>
-          <span><strong>EMBERFALL</strong><small>CHRONICLES</small></span>
+          <span><strong>ARKENFALL</strong></span>
         </button>
         <nav className="desktop-nav" aria-label="Main navigation">
           <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Footprints size={17} />} label="Adventure" />
@@ -698,7 +698,7 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: Ch
         <div className="creation-sigil"><UserRound size={28} /></div>
         <p className="eyebrow">A New Chronicle</p>
         <h1>Create Your Character</h1>
-        <p>Choose the wanderer who will brave Emberfall. This journey uses permadeath: if your character falls, their progress and possessions are lost.</p>
+        <p>Choose the wanderer who will brave Arkenfall. This journey uses permadeath: if your character falls, their progress and possessions are lost.</p>
         <form onSubmit={submit}>
           <fieldset className="avatar-picker">
             <legend>Choose appearance</legend>

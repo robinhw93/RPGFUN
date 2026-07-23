@@ -300,14 +300,14 @@ The editor supports:
 
 ### What Save does
 
-Every editor change already auto-saves the draft to browser `localStorage` under `emberfall.talent-devtool.v1`. The **Save** button performs the same write immediately and confirms it in the editor UI. It does not:
+Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same write immediately and confirms it in the editor UI. It does not:
 
 - Change `src/game/data.ts`.
 - Update the live player talent tree.
 - Push to GitHub.
 - Synchronize to another browser or computer.
 
-**Copy for Codex** copies the full export JSON. **Export JSON** downloads `emberfall-talents.json`. Those exports describe layout, connections, flat and percentage passive bonuses, ability IDs, Energy costs, cooldowns, and design notes; they still require review and integration into source code.
+**Copy for Codex** copies the full export JSON. **Export JSON** downloads `arkenfall-talents.json`. Those exports describe layout, connections, flat and percentage passive bonuses, ability IDs, Energy costs, cooldowns, and design notes; they still require review and integration into source code.
 
 ### Editor limitations
 
@@ -324,11 +324,11 @@ The developer-tool launcher also opens three isolated content editors:
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute, threshold, and success/failure text plus Health, gold, experience, talent-point, and attribute-point changes.
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy counts support repeated templates in one encounter, and combat entries configure rewards.
 
-They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their storage keys are `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
+They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
 
 ## Save compatibility
 
-The live game key is `emberfall-save-v1`. When changing persistent types:
+The live game key remains `emberfall-save-v1` for compatibility with saves created before the Arkenfall rename. When changing persistent types:
 
 1. Make new fields optional while loading older saves.
 2. Normalize them in `loadGame` or `ensureCombatState`.

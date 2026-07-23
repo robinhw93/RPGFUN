@@ -1,4 +1,4 @@
-# Emberfall architecture
+# Arkenfall architecture
 
 ## Architectural goals
 
@@ -399,11 +399,11 @@ Canvas positions are percentages, but grid spacing is stored as fixed world unit
 
 An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions.
 
-Enemy, Event, and Adventure editors follow the same isolation contract. They use `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`; Save and automatic writes only update those local drafts. Adventure entries can reference locally drafted enemy/event IDs, but exported content does not become live until it is integrated into typed source data.
+Enemy, Event, and Adventure editors follow the same isolation contract. They retain the legacy storage keys `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`; Save and automatic writes only update those local drafts. New files and exchange-format labels use the Arkenfall name. Adventure entries can reference locally drafted enemy/event IDs, but exported content does not become live until it is integrated into typed source data.
 
 ## Save boundary and migration
 
-The game save key is `emberfall-save-v1`.
+The game save key remains `emberfall-save-v1` as a legacy compatibility contract. Renaming the product must not invalidate existing characters.
 
 `loadGame` is a defensive boundary:
 

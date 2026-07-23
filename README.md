@@ -1,6 +1,6 @@
-# Emberfall Chronicles
+# Arkenfall
 
-Emberfall Chronicles is a mobile-first, build-focused, text RPG made with React, TypeScript, and Vite. The current vertical slice follows one permadeath character through **Windsong Forest**, with turn-based combat, stat-roll events, a classless talent tree, equipment, loot, leveling, and browser-local saving.
+Arkenfall is a mobile-first, build-focused, text RPG made with React, TypeScript, and Vite. The current vertical slice follows one permadeath character through **Windsong Forest** in the world of Arkenfall, with turn-based combat, stat-roll events, a classless talent tree, equipment, loot, leveling, and browser-local saving.
 
 The game UI and all player-facing text are in English. Project documentation is also kept in English so names and rules match the game exactly.
 

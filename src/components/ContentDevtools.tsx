@@ -38,9 +38,9 @@ interface EnemyAbilityDraft {
   effect: string;
 }
 
-interface EnemyExchange { format: "emberfall-enemies"; version: 3; enemies: EnemyDraft[] }
-interface EventExchange { format: "emberfall-events"; version: 1; events: AdventureEventDefinition[] }
-interface AdventureExchange { format: "emberfall-adventures"; version: 1; adventures: AdventureDefinition[] }
+interface EnemyExchange { format: "arkenfall-enemies"; version: 3; enemies: EnemyDraft[] }
+interface EventExchange { format: "arkenfall-events"; version: 1; events: AdventureEventDefinition[] }
+interface AdventureExchange { format: "arkenfall-adventures"; version: 1; adventures: AdventureDefinition[] }
 
 const EMPTY_OUTCOME: AdventureEventOutcome = { text: "", health: 0, gold: 0, experience: 0, talentPoints: 0, attributePoints: 0 };
 const STAT_OPTIONS: Array<{ id: StatName; label: string }> = [
@@ -153,7 +153,7 @@ function TextField({ label, value, onChange, textarea = false }: { label: string
 
 function canonicalEnemyExchange(): EnemyExchange {
   return {
-    format: "emberfall-enemies",
+    format: "arkenfall-enemies",
     version: 3,
     enemies: Object.values(ENEMIES).map((enemy) => ({
       id: enemy.id,
@@ -186,7 +186,7 @@ function canonicalEnemyExchange(): EnemyExchange {
 function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
   const fallbackById = ENEMIES;
   return {
-    format: "emberfall-enemies",
+    format: "arkenfall-enemies",
     version: 3,
     enemies: (Array.isArray(exchange?.enemies) ? exchange.enemies : []).map((enemy) => {
       const legacy = enemy as Partial<EnemyDraft> & { power?: number; damageType?: string; energyCost?: number; intentText?: string; attackDescription?: string; abilitiesNotes?: string };
@@ -259,7 +259,7 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
   };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.filter((enemy) => enemy.id !== selected.id) })); setSelectedId(store.draft.enemies.find((enemy) => enemy.id !== selected.id)?.id ?? ""); };
   const copy = async () => { try { await copyJson(store.draft); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
-  return <EditorShell title="Create Enemy" description="Build enemy stat blocks and describe their abilities and combat priorities." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("emberfall-enemies.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
+  return <EditorShell title="Create Enemy" description="Build enemy stat blocks and describe their abilities and combat priorities." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("arkenfall-enemies.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New enemy</button>{store.draft.enemies.map((enemy) => <button className={enemy.id === selected?.id ? "selected" : ""} key={enemy.id} onClick={() => setSelectedId(enemy.id)}><strong>{enemy.name}</strong><small>{enemy.id}</small></button>)}</aside>
       {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Enemy Definition</p><h2>{selected.name}</h2></div><button className="danger-icon-button" onClick={remove}><Trash2 size={15} /> Delete</button></div><div className="content-form-grid">
         <TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Title" value={selected.title} onChange={(title) => update({ title })} /><TextField label="Accent color" value={selected.accent} onChange={(accent) => update({ accent })} />
@@ -276,7 +276,8 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
   </EditorShell>;
 }
 
-function canonicalEventExchange(): EventExchange { return { format: "emberfall-events", version: 1, events: Object.values(ADVENTURE_EVENTS).map((event) => structuredClone(event)) }; }
+function canonicalEventExchange(): EventExchange { return { format: "arkenfall-events", version: 1, events: Object.values(ADVENTURE_EVENTS).map((event) => structuredClone(event)) }; }
+function normalizeEventExchange(exchange: EventExchange): EventExchange { return { ...exchange, format: "arkenfall-events", version: 1 }; }
 function blankChoice(index: number): AdventureEventChoice { return { id: makeId("choice"), label: `Choice ${index}`, description: "", stat: "strength", threshold: 60, success: { ...EMPTY_OUTCOME, text: "Success." }, failure: { ...EMPTY_OUTCOME, text: "Failure." } }; }
 
 function OutcomeFields({ title, outcome, onChange }: { title: string; outcome: AdventureEventOutcome; onChange: (outcome: AdventureEventOutcome) => void }) {
@@ -286,7 +287,7 @@ function OutcomeFields({ title, outcome, onChange }: { title: string; outcome: A
 }
 
 export function EventDevtool({ onExit }: { onExit: () => void }) {
-  const store = useLocalDraft<EventExchange>(EVENT_DRAFT_STORAGE_KEY, canonicalEventExchange());
+  const store = useLocalDraft<EventExchange>(EVENT_DRAFT_STORAGE_KEY, canonicalEventExchange(), normalizeEventExchange);
   const [selectedId, setSelectedId] = useState(store.draft.events[0]?.id ?? "");
   const selected = store.draft.events.find((event) => event.id === selectedId) ?? store.draft.events[0];
   const update = (change: Partial<AdventureEventDefinition>) => store.setDraft((draft) => ({ ...draft, events: draft.events.map((event) => event.id === selected?.id ? { ...event, ...change } : event) }));
@@ -294,7 +295,7 @@ export function EventDevtool({ onExit }: { onExit: () => void }) {
   const add = () => { const id = makeId("event"); const next = { id, name: "New Event", eyebrow: "Unknown Event", description: "Describe the scenario.", choices: [blankChoice(1), blankChoice(2)] }; store.setDraft((draft) => ({ ...draft, events: [...draft.events, next] })); setSelectedId(id); };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, events: draft.events.filter((event) => event.id !== selected.id) })); setSelectedId(store.draft.events.find((event) => event.id !== selected.id)?.id ?? ""); };
   const copy = async () => { try { await copyJson(store.draft); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
-  return <EditorShell title="Event Manager" description="Create two- or three-choice events resolved by d100 plus a selected attribute." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("emberfall-events.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
+  return <EditorShell title="Event Manager" description="Create two- or three-choice events resolved by d100 plus a selected attribute." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("arkenfall-events.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New event</button>{store.draft.events.map((event) => <button className={event.id === selected?.id ? "selected" : ""} key={event.id} onClick={() => setSelectedId(event.id)}><strong>{event.name}</strong><small>{event.choices.length} choices</small></button>)}</aside>
       {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Event Definition</p><h2>{selected.name}</h2></div><button className="danger-icon-button" onClick={remove}><Trash2 size={15} /> Delete</button></div><div className="content-form-grid"><TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Eyebrow" value={selected.eyebrow} onChange={(eyebrow) => update({ eyebrow })} /><TextField label="Scenario" value={selected.description} onChange={(description) => update({ description })} textarea /></div>
         <div className="choice-editor-list">{selected.choices.map((choice, index) => <article className="choice-editor" key={choice.id}><header><strong>Choice {index + 1}</strong>{selected.choices.length > 2 && <button onClick={() => update({ choices: selected.choices.filter((item) => item.id !== choice.id) })}><Trash2 size={14} /> Remove</button>}</header><div className="content-form-grid"><TextField label="Choice ID" value={choice.id} onChange={(id) => updateChoice(choice.id, { id })} /><TextField label="Button label" value={choice.label} onChange={(label) => updateChoice(choice.id, { label })} /><TextField label="Choice description" value={choice.description} onChange={(description) => updateChoice(choice.id, { description })} textarea /><label><span>Attribute</span><select value={choice.stat} onChange={(event) => updateChoice(choice.id, { stat: event.target.value as StatName })}>{STAT_OPTIONS.map((stat) => <option key={stat.id} value={stat.id}>{stat.label}</option>)}</select></label><NumberField label="Success threshold" value={choice.threshold} min={1} onChange={(threshold) => updateChoice(choice.id, { threshold })} /></div><div className="choice-outcomes"><OutcomeFields title="On success" outcome={choice.success} onChange={(success) => updateChoice(choice.id, { success })} /><OutcomeFields title="On failure" outcome={choice.failure} onChange={(failure) => updateChoice(choice.id, { failure })} /></div></article>)}</div>
@@ -304,12 +305,13 @@ export function EventDevtool({ onExit }: { onExit: () => void }) {
   </EditorShell>;
 }
 
-function canonicalAdventureExchange(): AdventureExchange { return { format: "emberfall-adventures", version: 1, adventures: ADVENTURES.map((adventure) => structuredClone(adventure)) }; }
+function canonicalAdventureExchange(): AdventureExchange { return { format: "arkenfall-adventures", version: 1, adventures: ADVENTURES.map((adventure) => structuredClone(adventure)) }; }
+function normalizeAdventureExchange(exchange: AdventureExchange): AdventureExchange { return { ...exchange, format: "arkenfall-adventures", version: 1 }; }
 function localEnemyIds() { const stored = readExchange<EnemyExchange | null>(ENEMY_DRAFT_STORAGE_KEY, null); return [...new Set([...(stored?.enemies.map((enemy) => enemy.id) ?? []), ...Object.keys(ENEMIES)])]; }
 function localEvents() { const stored = readExchange<EventExchange | null>(EVENT_DRAFT_STORAGE_KEY, null); return [...new Map([...(stored?.events ?? []), ...Object.values(ADVENTURE_EVENTS)].map((event) => [event.id, event])).values()]; }
 
 export function AdventureDevtool({ onExit }: { onExit: () => void }) {
-  const store = useLocalDraft<AdventureExchange>(ADVENTURE_DRAFT_STORAGE_KEY, canonicalAdventureExchange());
+  const store = useLocalDraft<AdventureExchange>(ADVENTURE_DRAFT_STORAGE_KEY, canonicalAdventureExchange(), normalizeAdventureExchange);
   const [selectedId, setSelectedId] = useState(store.draft.adventures[0]?.id ?? "");
   const selected = store.draft.adventures.find((adventure) => adventure.id === selectedId) ?? store.draft.adventures[0];
   const enemyIds = useMemo(localEnemyIds, []); const events = useMemo(localEvents, []);
@@ -319,7 +321,7 @@ export function AdventureDevtool({ onExit }: { onExit: () => void }) {
   const add = () => { const id = makeId("adventure"); const adventure: AdventureDefinition = { id, name: "New Adventure", description: "", recommendedLevel: 1, theme: "windsong_forest", stages: [{ id: makeId("stage"), name: "Stage 1", entries: [] }], completionTitle: "Adventure Complete", completionDescription: "" }; store.setDraft((draft) => ({ ...draft, adventures: [...draft.adventures, adventure] })); setSelectedId(id); };
   const addEntry = (stageId: string) => { const entry: AdventureStageEntry = { id: makeId("entry"), type: "combat", chance: 100, eyebrow: "Encounter", title: "New Encounter", description: "", enemyIds: [], reward: { experience: 50, gold: 8, loot: true } }; const stage = selected.stages.find((item) => item.id === stageId)!; updateStage(stageId, { entries: [...stage.entries, entry] }); };
   const copy = async () => { try { await copyJson(store.draft); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
-  return <EditorShell title="Adventure Editor" description="Build adventures from stages with unlimited weighted combat and event possibilities." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("emberfall-adventures.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
+  return <EditorShell title="Adventure Editor" description="Build adventures from stages with unlimited weighted combat and event possibilities." message={store.message} onSave={store.save} onCopy={copy} onExport={() => { downloadJson("arkenfall-adventures.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New adventure</button>{store.draft.adventures.map((adventure) => <button className={adventure.id === selected?.id ? "selected" : ""} key={adventure.id} onClick={() => setSelectedId(adventure.id)}><strong>{adventure.name}</strong><small>{adventure.stages.length} stages</small></button>)}</aside>
       {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Adventure Definition</p><h2>{selected.name}</h2></div></div><div className="content-form-grid"><TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><NumberField label="Recommended level" value={selected.recommendedLevel} min={1} onChange={(recommendedLevel) => update({ recommendedLevel })} /><label><span>Required completed adventure</span><select value={selected.prerequisiteAdventureId ?? ""} onChange={(event) => update({ prerequisiteAdventureId: event.target.value || undefined })}><option value="">None</option>{store.draft.adventures.filter((adventure) => adventure.id !== selected.id).map((adventure) => <option value={adventure.id} key={adventure.id}>{adventure.name}</option>)}</select></label><TextField label="Description" value={selected.description} onChange={(description) => update({ description })} textarea /><TextField label="Completion title" value={selected.completionTitle} onChange={(completionTitle) => update({ completionTitle })} /><TextField label="Completion description" value={selected.completionDescription} onChange={(completionDescription) => update({ completionDescription })} textarea /></div>
         <div className="stage-editor-list">{selected.stages.map((stage, stageIndex) => { const chanceTotal = stage.entries.reduce((sum, entry) => sum + entry.chance, 0); return <article className="stage-editor" key={stage.id}><header><div><small>Stage {stageIndex + 1}</small><input value={stage.name} onChange={(event) => updateStage(stage.id, { name: event.target.value })} /></div><span className={chanceTotal === 100 ? "valid" : "warning"}>{chanceTotal}% total</span><button onClick={() => update({ stages: selected.stages.filter((item) => item.id !== stage.id) })} disabled={selected.stages.length === 1}><Trash2 size={14} /> Remove stage</button></header>

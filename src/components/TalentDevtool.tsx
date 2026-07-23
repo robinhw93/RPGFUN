@@ -397,7 +397,7 @@ function clampCanvasZoom(zoom: number): number {
 
 function exportDraft(draft: TalentDraft): string {
   return JSON.stringify({
-    format: "emberfall-talent-tree",
+    format: "arkenfall-talent-tree",
     version: draft.version,
     note: "Positions use percentages measured from the top-left of the talent canvas. Canvas dimensions expand automatically.",
     canvas: draft.canvas,
@@ -717,7 +717,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     const url = URL.createObjectURL(new Blob([exportDraft(draft)], { type: "application/json" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "emberfall-talents.json";
+    anchor.download = "arkenfall-talents.json";
     anchor.click();
     URL.revokeObjectURL(url);
     setMessage("JSON exported");

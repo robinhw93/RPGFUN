@@ -1,4 +1,4 @@
-# Emberfall collaborator guide
+# Arkenfall collaborator guide
 
 This file applies to the complete repository. Read it before changing the project. It is the durable handoff for future Codex/ChatGPT coding sessions and records the working agreements established with the project owner.
 
@@ -16,7 +16,7 @@ Do not infer current rules from an old conversation alone. This game changes fre
 
 ## Product contract
 
-- Emberfall Chronicles is a mobile-first, browser-based, build-focused text RPG made with React, TypeScript, and Vite.
+- Arkenfall is a mobile-first, browser-based, build-focused text RPG made with React, TypeScript, and Vite. The game world is also named Arkenfall.
 - All game UI, player-facing descriptions, tooltips, combat text, and content names are English. Communicate with the project owner in Swedish unless they use another language.
 - Write for players. Do not expose internal field names, formulas labelled as developer rules, debug terminology, or implementation notes in the game UI.
 - Never use browser-native `alert`, `confirm`, `prompt`, or `title` tooltips. Use game-owned dialogs, modals, and `data-game-tooltip` behavior.
@@ -147,7 +147,7 @@ The Talent Editor's **Save** button only writes its browser-local draft. It does
 
 ## Saves and compatibility
 
-The live save key is `emberfall-save-v1`. Existing characters may load into any new code.
+The live save key remains the legacy compatibility key `emberfall-save-v1`. Existing characters may load into any new code.
 
 - Keep ability, talent, item, enemy, avatar, and set IDs stable.
 - Normalize new persistent fields at the load boundary and in `ensureCombatState` where appropriate.

@@ -1,6 +1,6 @@
 # Game systems
 
-This document describes the rules currently implemented in Emberfall Chronicles. Percentages are written as player-facing percentages even though the code stores them as decimals.
+This document describes the rules currently implemented in Arkenfall. Percentages are written as player-facing percentages even though the code stores them as decimals.
 
 ## Core loop
 
@@ -488,7 +488,7 @@ Gold is stored on the character and displayed in the top bar and reward screens.
 
 ## Saving and reset behavior
 
-- The game automatically writes the full `GameState` to browser `localStorage` under `emberfall-save-v1` after state changes.
+- The game automatically writes the full `GameState` to browser `localStorage` under the legacy compatibility key `emberfall-save-v1` after state changes.
 - Refreshing or reopening the same site origin restores the character and in-progress adventure.
 - Saves are local to the browser profile and exact site origin; they are not cloud-synced.
 - The reset button uses a game-owned confirmation dialog and deletes the save.
