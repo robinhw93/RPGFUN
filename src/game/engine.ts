@@ -2902,6 +2902,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       ? Array.from({ length: abilityHits }, () => rollHit(enemy.hitChance * getHitChanceMultiplier(enemy.statuses), playerDodgeChance)).filter(Boolean).length
       : 0;
     if (!enemyAbility.damageType) {
+      logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name}.`, enemyAttackInfo));
       (enemyAbility.statusApplications ?? []).forEach((application) => {
         if (derived.statusImmunities.includes(application.status) || Math.random() >= (application.chance ?? 1)) return;
         const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
@@ -2914,7 +2915,10 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
         queueStatus(events, pendingEffects, `${enemy.name} gains ${status.name}.`, enemy.instanceId, status, application.status === "stunned", abilityEventIndex);
       });
-      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, enemyAbility.selfStatusApplications?.length ? enemy.instanceId : "player", enemy.instanceId);
+      const isSelfUtility = (enemyAbility.selfStatusApplications?.length ?? 0) > 0
+        || (enemyAbility.nextTurnEnergyRegen ?? 0) > 0
+        || enemyAbility.restoreFullEnergyNextTurn === true;
+      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId);
     } else if (successfulHits === 0) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, missed: true });
