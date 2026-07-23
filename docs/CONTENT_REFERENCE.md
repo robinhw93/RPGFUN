@@ -451,7 +451,7 @@ Windsong Forest currently follows six fixed combat stages. Each stage has one 10
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
 | 1 | Rustling in the Clover | 100% | Two Rabid Rats | 50 XP, 3 gold. |
-| 2 | Prowling Ambush | 100% | Windsong Wolf and Forest Wisp | 53 XP, 8 gold. |
+| 2 | Prowling Ambush | 100% | Windsong Wolf | 53 XP, 8 gold. |
 | 3 | Skittering Rats | 100% | Three Rabid Rats | 73 XP, 6 gold. |
 | 4 | Unwelcome Guest | 100% | Forest Wisp | 36 XP, 5 gold. |
 | 5 | They see you | 100% | Three Forest Wisps | 68 XP, 10 gold. |

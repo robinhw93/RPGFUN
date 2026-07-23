@@ -1203,7 +1203,7 @@ export const ADVENTURES: AdventureDefinition[] = [{
       { id: "rat-pack", type: "combat", chance: 100, eyebrow: "Forest Encounter", title: "Rustling in the Clover", description: "Two rabid rats burst from the sunlit undergrowth and close around the path.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 50, gold: 3 } },
     ] },
     { id: "green-hollows", name: "Wayfarer’s Trail", entries: [
-      { id: "restless-grove", type: "combat", chance: 100, eyebrow: "Encounter", title: "Prowling Ambush", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["enemy-mrxj4o6o-o45ia", "enemy-mrxk609z-n04fq"], reward: { experience: 53, gold: 8 } },
+      { id: "restless-grove", type: "combat", chance: 100, eyebrow: "Encounter", title: "Prowling Ambush", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["enemy-mrxj4o6o-o45ia"], reward: { experience: 53, gold: 8 } },
     ] },
     { id: "grey-stones", name: "Mossy Cliffs", entries: [
       { id: "skittering-rats", type: "combat", chance: 100, eyebrow: "Encounter", title: "Skittering Rats", description: "The ground skitters with Rabid Rats.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 73, gold: 6 } },
