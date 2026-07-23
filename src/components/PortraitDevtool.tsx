@@ -281,7 +281,7 @@ export function PortraitDevtool({ onExit }: { onExit: () => void }) {
 
   return <section className="content-devtool-page portrait-devtool-page">
     <header className="content-devtool-header">
-      <div><p className="eyebrow"><Wrench size={13} /> Developer Tool</p><h1>Portrait Editor</h1><p>Choose artwork and drag the circle over the exact crop used for enemy and player combat portraits.</p></div>
+      <div><p className="eyebrow"><Wrench size={13} /> Developer Tool</p><h1>Portrait Editor</h1><p>Choose artwork and drag the square over the exact crop used for enemy and player combat portraits.</p></div>
       <div className="content-devtool-actions">
         <span aria-live="polite">{message}</span>
         <button type="button" onClick={save}><Save size={15} /> Save</button>
@@ -342,7 +342,7 @@ export function PortraitDevtool({ onExit }: { onExit: () => void }) {
             <div className="portrait-crop-controls">
               <label><span>Horizontal position</span><output>{selected.centerX.toFixed(1)}%</output><input aria-label="Horizontal position" type="range" min="0" max="100" step="0.1" value={selected.centerX} onChange={(event) => updateCrop({ ...selected, centerX: Number(event.target.value) })} /></label>
               <label><span>Vertical position</span><output>{selected.centerY.toFixed(1)}%</output><input aria-label="Vertical position" type="range" min="0" max="100" step="0.1" value={selected.centerY} onChange={(event) => updateCrop({ ...selected, centerY: Number(event.target.value) })} /></label>
-              <label><span>Circle size</span><output>{selected.diameter.toFixed(1)}%</output><input aria-label="Circle size" type="range" min="20" max="90" step="0.1" value={selected.diameter} onChange={(event) => updateCrop({ ...selected, diameter: Number(event.target.value) })} /></label>
+              <label><span>Crop size</span><output>{selected.diameter.toFixed(1)}%</output><input aria-label="Crop size" type="range" min="20" max="90" step="0.1" value={selected.diameter} onChange={(event) => updateCrop({ ...selected, diameter: Number(event.target.value) })} /></label>
             </div>
           </aside>
         </div>

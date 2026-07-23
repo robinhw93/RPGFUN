@@ -136,7 +136,7 @@ export interface PassiveBonuses {
   incomingDamageMultiplierWhileStunned?: number;
   /** Fraction of Max Health restored the first time lethal damage is taken each combat. */
   deathPreventionHealRatio?: number;
-  /** Stealth duration granted by the combat's death-prevention effect. */
+  /** Legacy-compatible Stealth duration request; shared Stealth rules normalize it to the end of the next turn. */
   deathPreventionStealthDuration?: number;
   /** Consumes this self status on the first lethal hit and heals for its remaining damage. */
   deathPreventionConsumeStatusForHealing?: StatusEffectId;

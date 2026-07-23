@@ -122,8 +122,9 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/initiativeLayout.ts` | Pure FLIP geometry for initiative-card transitions. |
 | `src/game/avatars.ts` | Appearance catalog and saved-avatar normalization. |
 | `src/components/TalentDevtool.tsx` | Standalone Talent Editor draft UI and export workflow. |
-| `src/components/ContentDevtools.tsx` | Developer-tool launcher plus Enemy, Event, and Adventure editor drafts/exports. |
-| `src/components/PortraitDevtool.tsx` | Enemy/player artwork selection and normalized circular combat-portrait crop drafts. |
+| `src/components/ContentDevtools.tsx` | Developer-tool launcher plus Enemy, Event, and Adventure editor drafts/exports; existing-enemy numeric stats also use the local source-sync route. |
+| `src/components/PortraitDevtool.tsx` | Enemy/player artwork selection and normalized square combat-portrait crop drafts. |
+| `vite.config.ts` | Vite setup plus the development-only, field-restricted enemy-stat source-sync route. |
 | `src/components/FloatingCombatText.tsx` | Timed floating-message presentation. |
 | `src/components/GameConfirmDialog.tsx` | Game-owned destructive-action confirmation. |
 | `src/components/GearSlotIcon.tsx` | Resolves equipment-category image assets. |
@@ -321,12 +322,12 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 
 The developer-tool launcher also opens four isolated content editors:
 
-- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, Melee/Ranged attack type, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
+- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Changing any of those numeric fields for an existing enemy writes that single field directly to its canonical `src/game/data.ts` definition through the local Vite development server. Sending only the changed field prevents older browser drafts from overwriting unrelated live stats. New enemies remain drafts until implemented. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, Melee/Ranged attack type, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute, threshold, and success/failure text plus Health, gold, experience, talent-point, and attribute-point changes.
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy pickers display readable names while preserving stable enemy IDs in saved/exported data. Enemy counts support repeated templates in one encounter, and combat entries configure only XP and gold; loot is reserved for future enemy-owned loot tables. Legacy editor drafts that still contain an adventure-level `loot` flag are normalized without it. Its **XP Guide** lists the experience needed from the previous level and the cumulative total for every level through the level-50 cap; the table is derived from the live progression formula.
-- **Portrait Editor** switches between enemies and player avatars, selects from the generated full-art library, and positions/resizes a circular crop directly over the source image. It shows the exact circular combat preview and exports normalized percentage coordinates, so the crop is independent of the editor's screen size.
+- **Portrait Editor** switches between enemies and player avatars, selects from the generated full-art library, and positions/resizes a square crop directly over the source image. It shows the exact square combat preview and exports normalized percentage coordinates, so the crop is independent of the editor's screen size.
 
-They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
+They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another. The only direct source mutation is the restricted existing-enemy numeric-stat flow described above; explicit Save buttons, ability rules, events, adventures, portraits, and new enemies remain browser-local until implemented.
 
 ## Save compatibility
 
@@ -357,7 +358,7 @@ Current migration behavior:
 - Tap uses an ability; long-press shows its explanation without firing it.
 - Combat ability cards show their content icon, Energy cost, and base cooldown; do not reintroduce keyboard-slot numbers into the card corner.
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
-- Combat portraits use a real circular border and clipped image surface. The player portrait opens current Attributes, while enemy portraits open enemy information.
+- Combat portraits use a thin square border and clipped image surface. Hover/focus may add a restrained gold glow but must not scale or flash white on press. The player portrait opens current Attributes, while enemy portraits open enemy information.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
 - Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Spell Power**.

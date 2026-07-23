@@ -757,7 +757,7 @@ function applyPlayerDeathPrevention(
     expiresAtTurnStart: false,
   });
   const text = `Panic saves you, restoring ${healing} Health and granting Stealth.`;
-  logs.push(makeLog(text, { title: "Panic", description: "The first lethal hit each combat restores 20% of your maximum Health and grants Stealth for 2 turns.", category: "ability" }));
+  logs.push(makeLog(text, { title: "Panic", description: "The first lethal hit each combat restores 20% of your maximum Health and grants Stealth until the end of your next turn.", category: "ability" }));
   const eventIndex = queueHeal(events, pendingEffects, text, "player", healing);
   queueStatus(events, pendingEffects, text, "player", stealth, false, eventIndex);
   return { hp: healing, statuses: addOrRefreshStatus(statuses, stealth), used: true, healing, healingEventIndex: eventIndex };

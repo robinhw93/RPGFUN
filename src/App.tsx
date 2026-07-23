@@ -3017,9 +3017,65 @@ function AbilitySlotPicker({ slotIndex, character, onClose, onSetSlot }: {
   );
 }
 
+function AbilityLoadoutModal({ character, locked, onClose, onSelectSlot }: {
+  character: CharacterState;
+  locked: boolean;
+  onClose: () => void;
+  onSelectSlot: (slotIndex: number) => void;
+}) {
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const root = document.documentElement;
+    const previousBody = { overflow: body.style.overflow, position: body.style.position, top: body.style.top, width: body.style.width };
+    const previousRootOverflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      root.style.overflow = previousRootOverflow;
+      body.style.overflow = previousBody.overflow;
+      body.style.position = previousBody.position;
+      body.style.top = previousBody.top;
+      body.style.width = previousBody.width;
+      window.scrollTo(0, scrollY);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="ability-loadout-dialog" role="dialog" aria-modal="true" aria-label="Equipped Abilities" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <article className="ability-loadout-card">
+        <div className="ability-loadout-heading">
+          <div><p className="eyebrow">Active Loadout</p><h2>Equipped Abilities</h2></div>
+          <button type="button" onClick={onClose} aria-label="Close equipped abilities">Close</button>
+        </div>
+        <p className="ability-loadout-copy">Choose an equipped or empty slot to change the abilities available in combat.</p>
+        {locked && <div className="lock-banner"><Shield size={15} /> Ability loadouts are locked during combat.</div>}
+        <div className="loadout-slots ability-loadout-slots">
+          {Array.from({ length: 6 }).map((_, index) => {
+            const id = character.equippedAbilities[index];
+            const ability = id ? ABILITIES[id] : null;
+            return (
+              <button key={index} type="button" disabled={locked} className={ability ? ability.branch : "empty"} aria-label={`Ability Slot ${index + 1}: ${ability?.name ?? "Empty"}. Choose ability.`} onClick={() => onSelectSlot(index)} data-game-tooltip="Choose ability">
+                {ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}
+              </button>
+            );
+          })}
+        </div>
+      </article>
+    </div>
+  );
+}
+
 function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; freeUnlocks: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [selectedAbilitySlot, setSelectedAbilitySlot] = useState<number | null>(null);
+  const [abilityLoadoutOpen, setAbilityLoadoutOpen] = useState(false);
   const [treeZoom, setTreeZoom] = useState(RUNTIME_TALENT_DEFAULT_ZOOM);
   const [isPanning, setIsPanning] = useState(false);
   const treeScrollRef = useRef<HTMLDivElement>(null);
@@ -3027,6 +3083,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   const treeZoomRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treePanRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const closeTalentDetails = useCallback(() => setSelectedTalentId(null), []);
+  const closeAbilityLoadout = useCallback(() => setAbilityLoadoutOpen(false), []);
   const padding = 86;
   const xs = TALENTS.map((talent) => talent.position.x / 100 * TALENT_TREE_CANVAS.width);
   const ys = TALENTS.map((talent) => talent.position.y / 100 * TALENT_TREE_CANVAS.height);
@@ -3116,9 +3173,13 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className={`talent-points ${character.talentPoints > 0 ? "unspent-points-indicator" : ""}`}><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
-      <div className="loadout-panel paper-panel">
-        <div><p className="eyebrow">Active Loadout</p><h3>Equipped Abilities</h3></div>
-        <div className="loadout-slots">{Array.from({ length: 6 }).map((_, index) => { const id = character.equippedAbilities[index]; const ability = id ? ABILITIES[id] : null; return <button key={index} type="button" disabled={locked} className={ability ? ability.branch : "empty"} aria-label={`Ability Slot ${index + 1}: ${ability?.name ?? "Empty"}. Choose ability.`} onClick={() => setSelectedAbilitySlot(index)} data-game-tooltip="Choose ability">{ability ? <><span>{ability.icon}</span><small>{ability.name}</small></> : <><span>+</span><small>Empty</small></>}</button>; })}</div>
+      <div className="talent-loadout-actions">
+        <button type="button" className="talent-loadout-trigger" onClick={() => setAbilityLoadoutOpen(true)}>
+          <Swords size={18} />
+          <span><small>Combat Loadout</small><strong>Equipped Abilities</strong></span>
+          <em>{character.equippedAbilities.length} / 6</em>
+          <ChevronRight size={17} />
+        </button>
       </div>
       <div className="runtime-talent-toolbar">
         <span><Hand size={14} /> Drag empty space to pan</span>
@@ -3186,6 +3247,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
         }}
         onToggleAbility={onToggleAbility}
       />}
+      {abilityLoadoutOpen && <AbilityLoadoutModal character={character} locked={locked} onClose={closeAbilityLoadout} onSelectSlot={setSelectedAbilitySlot} />}
       {selectedAbilitySlot !== null && <AbilitySlotPicker slotIndex={selectedAbilitySlot} character={character} onClose={() => setSelectedAbilitySlot(null)} onSetSlot={onSetAbilitySlot} />}
     </section>
   );

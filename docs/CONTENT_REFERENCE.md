@@ -17,7 +17,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
 | Poison Cloud | 3 | 2 | All enemies | Applies 2 Poison to every target simultaneously without direct damage. |
 | Contagion | 2 | 3 | Poisoned enemy | Copies all Poison stacks to another random living enemy without removing them from the selected enemy. |
-| Stealth | 2 | 3 | Self | Enemies cannot target the player until the end of the player's next turn. |
+| Stealth | 2 | 3 | Self | Cannot be targeted until the end of the holder's next turn. |
 | Evasion | 2 | 3 | Self | Grants +60% Dodge Chance until the next player turn. |
 | Neurotoxin | 3 | 2 | Poisoned enemy | Consumes all Poison and applies Stunned. |
 | Venomous Strike | 4 | 3 | Enemy | Deals 100% Physical Power, applies 2 Poison, and deals double direct damage if the target was already Poisoned. |
@@ -180,7 +180,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_62 | Spot Weakness | Passive | Pandemic | Any | Deals 5% more damage per unique debuff on the target. |
 | talent_63 | Avoidance | Passive | Light Speed | Any | +1 Max Energy and 3% less incoming damage per unspent Energy. |
 | talent_64 | Epidemic | Ability | Spot Weakness | Any | Unlocks Epidemic. |
-| talent_65 | Panic | Passive | Hit and Run | Any | The first lethal hit each combat restores 20% of Max Health and grants Stealth for 2 turns. |
+| talent_65 | Panic | Passive | Hit and Run | Any | The first lethal hit each combat restores 20% of Max Health and grants Stealth until the end of the next turn. |
 | talent_66 | Voltage Stab | Ability | Avoidance | Any | Unlocks Voltage Stab. |
 | talent_67 | Recovery | Passive | Enduring Evasion | Any | Enemy misses have a 50% base chance to restore 1 Energy. |
 | talent_68 | Fleetfooted | Passive | Recovery | Any | +2% Dodge Chance. |
@@ -394,7 +394,7 @@ The duration is the default duration created by the status library. Ability or t
 | Shielded | 3 turns | No | Takes 25% less damage. |
 | Regenerate | 3 turns | No | Heals at turn start for `3 + 20% source Spell Power` per stack, then applies healing-received modifiers. |
 | Taunt | Permanent | No | Forces the player to target this living, visible enemy with single-target attacks. |
-| Stealth | Until the end of your next turn | No | Cannot be targeted by enemies. Reapplication refreshes duration but never adds stacks. |
+| Stealth | Until the end of your next turn | No | Cannot be targeted. Reapplication refreshes duration but never adds stacks, and longer explicit or legacy durations are normalized. |
 | Evasion | 1 turn | No | +60% Dodge Chance until the next turn by default, subject to the 50% Dodge cap; Enduring Evasion changes magnitude and duration. |
 | Distraction | Until consumed | No | The next ability costs 0 Energy. Removed when an ability is used. |
 | Pinpoint | Until consumed | No | The next damaging ability is guaranteed to critically strike. Removed when that ability is used. |
@@ -440,7 +440,7 @@ Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical
 | Windsong Wolf | 17 | 3 / 0 | 1 / 0 | 95% / 10% / 10% | 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
 | Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 40% / 5% | 2 / 5 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
 | Brown Bear | 30 | 5 / 0 | 5 / 0 | 85% / 5% / 5% | 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
-| The Forest Spirit | 40 | 0 / 10 | 0 / 2 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
+| The Forest Spirit | 40 | 0 / 10 | 0 / 2 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth until the end of its next turn and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
 
 The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
 

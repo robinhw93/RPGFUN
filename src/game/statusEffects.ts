@@ -25,7 +25,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   shielded: { id: "shielded", name: "Shielded", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Reduces damage taken by 25%." },
   regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Spell Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
-  stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 2, stackable: false, expiresAtTurnStart: false, description: "Cannot be targeted by enemies until the end of your next turn." },
+  stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 2, stackable: false, expiresAtTurnStart: false, description: "Cannot be targeted until the end of your next turn." },
   evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn. Dodge Chance cannot exceed 50%." },
   distraction: { id: "distraction", name: "Distraction", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next ability costs 0 Energy." },
   pinpoint: { id: "pinpoint", name: "Pinpoint", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next damaging ability is guaranteed to critically strike." },
@@ -58,18 +58,19 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
 
 export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<StatusEffect, "duration" | "stacks" | "description" | "sourcePower" | "sourceId" | "magnitude" | "expiresAtTurnStart">> = {}): StatusEffect {
   const definition = STATUS_EFFECTS[id];
+  const isStealth = id === "stealth";
   return {
     id,
     name: definition.name,
     kind: definition.kind,
-    duration: options.duration ?? definition.duration,
+    duration: isStealth ? definition.duration : options.duration ?? definition.duration,
     stacks: definition.stackable ? options.stacks ?? 1 : 1,
     description: options.description ?? definition.description,
     permanent: definition.permanent,
     sourcePower: options.sourcePower,
     sourceId: options.sourceId,
     magnitude: options.magnitude,
-    expiresAtTurnStart: options.expiresAtTurnStart ?? definition.expiresAtTurnStart,
+    expiresAtTurnStart: isStealth ? false : options.expiresAtTurnStart ?? definition.expiresAtTurnStart,
   };
 }
 
@@ -89,12 +90,12 @@ export function addOrRefreshStatus(statuses: StatusEffect[], status: StatusEffec
   if (!existing) return [...statuses, normalizedStatus];
   return statuses.map((item) => item.id === status.id ? {
     ...item,
-    duration: item.permanent ? item.duration : Math.max(item.duration, normalizedStatus.duration),
+    duration: item.permanent ? item.duration : item.id === "stealth" ? STATUS_EFFECTS.stealth.duration : Math.max(item.duration, normalizedStatus.duration),
     stacks: stackable ? item.stacks + normalizedStatus.stacks : 1,
     sourcePower: Math.max(item.sourcePower ?? 0, normalizedStatus.sourcePower ?? 0) || undefined,
     sourceId: normalizedStatus.sourceId ?? item.sourceId,
     magnitude: normalizedStatus.magnitude ?? item.magnitude,
-    expiresAtTurnStart: normalizedStatus.expiresAtTurnStart ?? item.expiresAtTurnStart,
+    expiresAtTurnStart: item.id === "stealth" ? false : normalizedStatus.expiresAtTurnStart ?? item.expiresAtTurnStart,
   } : item);
 }
 
@@ -109,9 +110,12 @@ export function grantDiminishingReturnsAfterStun(previousStatuses: StatusEffect[
 
 export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect[] {
   const decremented = statuses.flatMap((status) => {
-    if (status.permanent || status.expiresAtTurnStart === true || (status.id === "stealth" && status.expiresAtTurnStart !== false) || status.id === "guard") return [status];
-    const duration = status.duration - 1;
-    return duration > 0 ? [{ ...status, duration }] : [];
+    const normalizedStatus = status.id === "stealth"
+      ? { ...status, duration: Math.min(status.duration, STATUS_EFFECTS.stealth.duration), expiresAtTurnStart: false }
+      : status;
+    if (normalizedStatus.permanent || normalizedStatus.expiresAtTurnStart === true || normalizedStatus.id === "guard") return [normalizedStatus];
+    const duration = normalizedStatus.duration - 1;
+    return duration > 0 ? [{ ...normalizedStatus, duration }] : [];
   });
   return grantDiminishingReturnsAfterStun(statuses, decremented);
 }

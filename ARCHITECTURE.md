@@ -43,9 +43,10 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
 - `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
 - `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow.
-- `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher.
-- `src/components/PortraitDevtool.tsx` owns the isolated enemy/player artwork selection and normalized circular portrait-crop workflow.
+- `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher. Existing-enemy numeric stat edits call the restricted local source-sync route; ability mechanics and other content remain draft/export input.
+- `src/components/PortraitDevtool.tsx` owns the isolated enemy/player artwork selection and normalized square portrait-crop workflow.
 - `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
+- `vite.config.ts` owns the development-only enemy-stat source-sync route. It accepts only known numeric stat fields for an enemy already present in the canonical catalog and writes only that enemy's matching fields in `src/game/data.ts`.
 
 ### Domain and content
 
@@ -262,7 +263,7 @@ React keeps player inputs in a transient FIFO queue that is deliberately exclude
 
 `takeEnemyTurn` runs start statuses and Energy regeneration once, then resolves at most one enemy ability per presentation sequence. `enemyActionsTaken` keeps the active actor in place when its template permits another ready ability, so repeated attacks receive separate text, hit rolls, impact VFX, Energy costs, and Bleed triggers. Poison and duration reconciliation run only when the enemy's final action ends, after which `moveToNextActor` resets the counter. Visible enemy statuses are snapshotted and reconciled at the matching event, preventing duration changes or removals from appearing early. Enemy-to-enemy and player-to-enemy turn transitions reuse the preceding sequence's final event instead of adding a standalone enemy-turn message.
 
-Enemy templates contain separate Physical Power and Spell Power plus an ordered list of executable abilities. Ability damage can use fixed Physical/Spell scaling or a reusable randomly rolled Power-scaling range. Energy-depletion self statuses attach to the ability impact, then participate in normal end-of-turn duration and Diminishing Returns handling. `takeEnemyTurn` uses the first affordable implemented ability. The Enemy Editor exports structured ability drafts with name, Energy cost, cooldown, and effect text. Those effects and the separate behavior text remain design input; bespoke mechanics, cooldown handling, and selection priorities are implemented in source after export.
+Enemy templates contain separate Physical Power and Spell Power plus an ordered list of executable abilities. Ability damage can use fixed Physical/Spell scaling or a reusable randomly rolled Power-scaling range. Energy-depletion self statuses attach to the ability impact, then participate in normal end-of-turn duration and Diminishing Returns handling. `takeEnemyTurn` uses the first affordable implemented ability. The Enemy Editor writes changed numeric stats for existing enemies directly to `src/game/data.ts` through a development-only Vite route, one edited field at a time so stale browser drafts cannot overwrite unrelated values. It still exports structured ability drafts with name, Energy cost, cooldown, and effect text. Those effects and the separate behavior text remain design input; bespoke mechanics, cooldown handling, and selection priorities are implemented in source after export.
 
 ## Combat timing contract
 
@@ -385,7 +386,7 @@ The runtime tree derives its minimum bounding box from node world positions insi
 
 Connections render in an SVG layer with shape-aware black cutouts in a user-space mask for every node position. The lines therefore cannot show through nodes even when locked nodes use whole-element transparency. Circular passive nodes render at 75% of the square-node diameter, while unlocked nodes use a gold outer outline independent of branch color.
 
-Ability-slot selection is an explicit indexed state transaction. Occupied slots can replace or swap abilities; removing a slot compacts the loadout, and empty selections append without creating sparse array entries. The picker only exposes core abilities and abilities granted by unlocked talents.
+Ability-slot selection is an explicit indexed state transaction. The Talent Tree opens its six-slot loadout from a compact button into a scroll-locking game-owned modal; selecting a slot opens the existing ability picker above it. Occupied slots can replace or swap abilities; removing a slot compacts the loadout, and empty selections append without creating sparse array entries. The picker only exposes core abilities and abilities granted by unlocked talents.
 
 ## Talent Editor isolation
 

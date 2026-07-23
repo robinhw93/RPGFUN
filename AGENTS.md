@@ -44,7 +44,7 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/App.tsx`: application orchestration and rendering, not duplicated rule formulas.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
 - `src/components/TalentDevtool.tsx`: isolated talent draft/export UI.
-- `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Saving in any editor does not update live source data.
+- `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Existing-enemy numeric stat fields use the local Vite source-sync route; ability rules, new enemies, events, adventures, and each editor's explicit Save action remain browser-local drafts.
 
 See `ARCHITECTURE.md` for the complete map.
 

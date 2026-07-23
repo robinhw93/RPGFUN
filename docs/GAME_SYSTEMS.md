@@ -30,7 +30,7 @@ The adventure screen also offers a separate endless testing route for developing
 
 ## Character creation and starting state
 
-Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a clipped circular frame; clicking the player's portrait opens the character's five current Attributes, while clicking an enemy portrait opens that enemy's combat information.
+Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a clipped square image with a thin frame; clicking the player's portrait opens the character's five current Attributes, while clicking an enemy portrait opens that enemy's combat information.
 
 Every new character starts with:
 
@@ -307,7 +307,7 @@ This sequencing guarantees that:
 
 - Victory grants the current node's reward once and opens the score screen after all queued combat presentation is complete.
 - The score screen animates experience once, shows gold, and allows access to the Character screen before continuing. Returning from the Character screen shows the completed experience result immediately instead of replaying it. When the reward grants at least one level and Attribute or Talent Points remain unspent, **View Character** changes to a continuously highlighted **Level up!** button; after those points are spent, it returns to its normal label and presentation. The awarded-point summary is not duplicated in a separate panel.
-- Panic prevents the first defeat in each combat: lethal damage is shown first, then the queued Panic event restores 20% of Max Health and grants Stealth for 2 turns. Later lethal damage in the same combat causes defeat normally.
+- Panic prevents the first defeat in each combat: lethal damage is shown first, then the queued Panic event restores 20% of Max Health and grants Stealth until the end of the player's next turn. Later lethal damage in the same combat causes defeat normally.
 - Defeat clears the save immediately and presents the permadeath screen.
 
 ## Energy and cooldowns
@@ -343,7 +343,7 @@ Applying a status that is already present:
 - Keeps the greater source power.
 - Refreshes the source ID to the latest applier when provided.
 - Non-stackable statuses, including Stealth, always retain exactly one stack when reapplied.
-- Stealth always expires at the end of the player's next turn. Ending a turn now reconciles duration changes even when no damage or status message was queued, preventing buffs from retaining their old duration in visible combat state.
+- Stealth always expires at the end of its holder's next turn. Its shared creation, refresh, and turn-end normalization rejects longer explicit or legacy durations, so player and enemy Stealth can never last three turns. Ending a turn reconciles duration changes even when no damage or status message was queued, preventing buffs from retaining their old duration in visible combat state.
 
 Detailed status definitions and formulas are in [Content reference](CONTENT_REFERENCE.md#status-effects).
 
@@ -399,7 +399,7 @@ Excess experience carries into later levels, and one reward can grant multiple l
 
 Level 50 is the maximum level. Characters at level 50 no longer accumulate experience, and older saves above the cap are normalized to level 50 when loaded.
 
-Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Positive unspent Attribute Point and Talent Point counters pulse with a gold highlight on their respective screens. The talent tree and active-ability loadout are opened through the **Talents & Abilities** submenu inside the Character hub rather than through a separate primary navigation item. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
+Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Positive unspent Attribute Point and Talent Point counters pulse with a slow, smoothly interpolated gold glow on their respective screens; the score-screen **Level up!** treatment uses the same rhythm without scaling or brightness jumps. The talent tree and active-ability loadout are opened through the **Talents & Abilities** submenu inside the Character hub rather than through a separate primary navigation item. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
 
 ## Talents and ability loadout
 
@@ -417,7 +417,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 
 - The combat loadout has six slots.
 - Abilities become available through unlocked talent nodes and can be equipped or removed outside combat.
-- Selecting any equipped or empty loadout slot opens the in-game ability picker. An occupied slot can replace or swap its ability with another equipped slot, while **Unequip Slot** removes its current ability.
+- The Talent Tree shows a compact **Equipped Abilities** button instead of permanently displaying all six slots. The button opens the loadout in a game-owned modal. Selecting any equipped or empty slot there opens the in-game ability picker. An occupied slot can replace or swap its ability with another equipped slot, while **Unequip Slot** removes its current ability.
 - Ability descriptions are resolved from the character's unlocked talents. Combat tooltips, talent details, the loadout picker, and new combat-log entries therefore describe the modified effect rather than the ability's original base effect.
 - Enemy misses, newly applied statuses, and newly applied Stuns are reusable passive-trigger events. Recovery, Spotting Opportunity, Biding Time, Break, Mischief, and Comparative Momentum attach their results to the triggering combat moment without slowing the event sequence.
 - Combat tracks whether the player has taken damage or missed since combat began. Elemental Surprise and Confidence read those combat-scoped flags rather than checking talent IDs in the engine.
