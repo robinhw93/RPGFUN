@@ -35,15 +35,51 @@ interface ImageChoice {
 }
 
 const PORTRAIT_DRAFT_STORAGE_KEY = "emberfall.portrait-devtool.v1";
-const PLAYER_DEFAULT_CROP: PortraitCrop = { centerX: 50, centerY: 11.161, diameter: 41.667 };
-const LEGACY_WINDSONG_WOLF_CROP: PortraitCrop = { centerX: 50.781, centerY: 22.786, diameter: 50.781 };
+const PLAYER_DEFAULT_CROPS: Record<string, PortraitCrop> = {
+  "male-01": { centerX: 49.61, centerY: 10.341, diameter: 41.667 },
+  "male-02": { centerX: 50.431, centerY: 10.045, diameter: 41.667 },
+  "male-03": { centerX: 49.815, centerY: 14.922, diameter: 41.667 },
+  "male-04": { centerX: 50, centerY: 11.161, diameter: 41.667 },
+  "male-05": { centerX: 49.815, centerY: 10.045, diameter: 41.667 },
+  "female-01": { centerX: 50.636, centerY: 10.045, diameter: 41.667 },
+  "female-02": { centerX: 50.226, centerY: 13.041, diameter: 41.667 },
+  "female-03": { centerX: 50, centerY: 11.161, diameter: 41.667 },
+  "female-04": { centerX: 50, centerY: 11.161, diameter: 41.667 },
+  "female-05": { centerX: 50, centerY: 11.161, diameter: 41.667 },
+};
+const PLAYER_IMAGE_SIZES: Record<string, { width: number; height: number }> = {
+  "male-01": { width: 864, height: 1821 },
+  "male-02": { width: 864, height: 1821 },
+  "male-03": { width: 864, height: 1821 },
+  "male-04": { width: 870, height: 1807 },
+  "male-05": { width: 865, height: 1818 },
+  "female-01": { width: 864, height: 1821 },
+  "female-02": { width: 863, height: 1823 },
+  "female-03": { width: 862, height: 1825 },
+  "female-04": { width: 862, height: 1824 },
+  "female-05": { width: 864, height: 1821 },
+};
 const ENEMY_DEFAULT_CROPS: Record<string, PortraitCrop> = {
   dummy: { centerX: 50, centerY: 18.359, diameter: 41.406 },
-  "enemy-mrxiut2a-k4kgv": { centerX: 47.852, centerY: 50.13, diameter: 58.594 },
-  "enemy-mrxj4o6o-o45ia": { centerX: 58.594, centerY: 42.318, diameter: 58.594 },
+  "enemy-mrxiut2a-k4kgv": { centerX: 36.285, centerY: 53.111, diameter: 58.594 },
+  "enemy-mrxj4o6o-o45ia": { centerX: 56.581, centerY: 45.31, diameter: 58.594 },
   "enemy-mrxk609z-n04fq": { centerX: 49.805, centerY: 30.599, diameter: 50.781 },
-  "enemy-mrxkar5z-g9o5d": { centerX: 46.875, centerY: 38.411, diameter: 60.547 },
+  "enemy-mrxkar5z-g9o5d": { centerX: 39.565, centerY: 38.057, diameter: 60.547 },
   "enemy-mrxkjqs3-g7g5i": { centerX: 49.805, centerY: 17.578, diameter: 45.898 },
+};
+const LEGACY_DEFAULT_CROPS: Record<string, PortraitCrop[]> = {
+  "enemy:enemy-mrxiut2a-k4kgv": [{ centerX: 47.852, centerY: 50.13, diameter: 58.594 }],
+  "enemy:enemy-mrxj4o6o-o45ia": [
+    { centerX: 50.781, centerY: 22.786, diameter: 50.781 },
+    { centerX: 58.594, centerY: 42.318, diameter: 58.594 },
+  ],
+  "enemy:enemy-mrxkar5z-g9o5d": [{ centerX: 46.875, centerY: 38.411, diameter: 60.547 }],
+  "player:male-01": [{ centerX: 50, centerY: 11.161, diameter: 41.667 }],
+  "player:male-02": [{ centerX: 50, centerY: 11.161, diameter: 41.667 }],
+  "player:male-03": [{ centerX: 50, centerY: 11.161, diameter: 41.667 }],
+  "player:male-05": [{ centerX: 50, centerY: 11.161, diameter: 41.667 }],
+  "player:female-01": [{ centerX: 50, centerY: 11.161, diameter: 41.667 }],
+  "player:female-02": [{ centerX: 50, centerY: 11.161, diameter: 41.667 }],
 };
 
 const ENEMY_IMAGES: ImageChoice[] = Object.values(ENEMIES).map((enemy) => ({
@@ -59,9 +95,9 @@ const PLAYER_IMAGES: ImageChoice[] = CHARACTER_AVATARS.map((avatar) => ({
   id: `player:${avatar.id}`,
   name: avatar.label,
   imageUrl: avatar.imageUrl,
-  naturalWidth: 864,
-  naturalHeight: 1792,
-  crop: PLAYER_DEFAULT_CROP,
+  naturalWidth: PLAYER_IMAGE_SIZES[avatar.id]?.width ?? 864,
+  naturalHeight: PLAYER_IMAGE_SIZES[avatar.id]?.height ?? 1821,
+  crop: PLAYER_DEFAULT_CROPS[avatar.id] ?? { centerX: 50, centerY: 11.161, diameter: 41.667 },
 }));
 
 const IMAGE_CHOICES: Record<PortraitSubjectKind, ImageChoice[]> = {
@@ -127,9 +163,9 @@ function normalizeExchange(value: unknown): PortraitExchange {
         centerY: finiteNumber(saved.centerY, image.crop.centerY),
         diameter: finiteNumber(saved.diameter, image.crop.diameter),
       };
-      const crop = fallback.id === "enemy-mrxj4o6o-o45ia"
-        && image.id === "enemy:enemy-mrxj4o6o-o45ia"
-        && cropMatches(savedCrop, LEGACY_WINDSONG_WOLF_CROP)
+      const subjectKey = `${fallback.kind}:${fallback.id}`;
+      const crop = image.id === subjectKey
+        && LEGACY_DEFAULT_CROPS[subjectKey]?.some((legacyCrop) => cropMatches(savedCrop, legacyCrop))
         ? image.crop
         : savedCrop;
       return {
