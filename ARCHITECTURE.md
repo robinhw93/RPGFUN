@@ -413,6 +413,7 @@ The game save key remains `emberfall-save-v1` as a legacy compatibility contract
 - Item metadata is hydrated from current definitions.
 - Invalid legacy Two-Hand plus Off Hand combinations are repaired.
 - Avatar, stat points, and pending rewards receive fallbacks.
+- Character level is clamped to the level-50 cap, with no stored experience retained at max level.
 - Missing adventure mode is normalized to `story`.
 
 `ensureCombatState` performs the separate in-combat migration because combat definitions and animation fields evolve more frequently.

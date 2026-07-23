@@ -2,6 +2,7 @@ import type { GameState } from "./types";
 import { ITEMS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
+import { MAX_LEVEL } from "./progression";
 
 const SAVE_KEY = "emberfall-save-v1";
 const REMOVED_TALENT_COSTS: Record<string, number> = {
@@ -18,6 +19,7 @@ export function loadGame(): GameState | null {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const state = JSON.parse(raw) as GameState;
+    const normalizedLevel = Math.min(MAX_LEVEL, Math.max(1, Math.floor(state.character.level || 1)));
     const validTalentIds = new Set(TALENTS.map((talent) => talent.id));
     const removedTalents = state.character.unlockedTalents.filter((id) => !validTalentIds.has(id));
     const unlockedTalents = state.character.unlockedTalents.filter((id) => validTalentIds.has(id));
@@ -50,7 +52,9 @@ export function loadGame(): GameState | null {
       character: {
         ...state.character,
         avatarId: normalizeCharacterAvatarId(state.character.avatarId),
-        unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (state.character.level - 1) * 3),
+        level: normalizedLevel,
+        xp: normalizedLevel >= MAX_LEVEL ? 0 : Math.max(0, state.character.xp ?? 0),
+        unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (normalizedLevel - 1) * 3),
         talentPoints: state.character.talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
         unlockedTalents,
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),

@@ -322,7 +322,7 @@ The developer-tool launcher also opens three isolated content editors:
 
 - **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, Melee/Ranged attack type, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute, threshold, and success/failure text plus Health, gold, experience, talent-point, and attribute-point changes.
-- **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy counts support repeated templates in one encounter, and combat entries configure rewards.
+- **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy pickers display readable names while preserving stable enemy IDs in saved/exported data. Enemy counts support repeated templates in one encounter, and combat entries configure rewards. Its **XP Guide** lists the experience needed from the previous level and the cumulative total for every level through the level-50 cap; the table is derived from the live progression formula.
 
 They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another, but none of these editors modifies live TypeScript content.
 
@@ -343,6 +343,7 @@ Current migration behavior:
 - Hydrates armor material and weapon metadata from current item definitions.
 - Resolves legacy two-handed weapon values and moves an invalid Off Hand item into inventory.
 - Restores missing avatar, stat-point, pending-reward, initiative, cooldown, status, per-round acted-actor, and combat-sequencing fields.
+- Clamps loaded characters to the level-50 cap and clears stored experience at the cap.
 - Restores a missing adventure mode as `story`; new saves may use `endless` for the Shadow Proving Grounds. Saves from the removed Ashen Road reset safely to the Windsong Forest map while preserving the character.
 
 ## UI conventions

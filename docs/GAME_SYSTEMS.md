@@ -392,6 +392,8 @@ Excess experience carries into later levels, and one reward can grant multiple l
 - 3 attribute points.
 - 1 talent point.
 
+Level 50 is the maximum level. Characters at level 50 no longer accumulate experience, and older saves above the cap are normalized to level 50 when loaded.
+
 Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
 
 ## Talents and ability loadout

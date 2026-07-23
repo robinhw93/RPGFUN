@@ -18,7 +18,7 @@ import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePendi
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
-import { addExperience, experienceProgressAfterGain, experienceToNextLevel } from "./game/progression";
+import { addExperience, experienceProgressAfterGain, experienceToNextLevel, MAX_LEVEL } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
@@ -1106,6 +1106,7 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, on
   const [displayedExperience, setDisplayedExperience] = useState(0);
   const displayedProgress = experienceProgressAfterGain(reward.levelBefore, reward.xpBefore, displayedExperience);
   const displayLevelGain = displayedProgress.level - reward.levelBefore;
+  const reachedMaxLevel = displayedProgress.level >= MAX_LEVEL;
 
   useEffect(() => {
     setDisplayedExperience(0);
@@ -1147,9 +1148,9 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onTalents, on
         </div>
 
         <div className="score-experience-panel">
-          <div className="score-experience-meta"><strong>Level {displayedProgress.level}</strong><span>{displayedProgress.xp} / {displayedProgress.required} XP</span></div>
-          <div className="score-experience-track" role="progressbar" aria-label="Experience progress" aria-valuemin={0} aria-valuemax={displayedProgress.required} aria-valuenow={displayedProgress.xp}>
-            <i style={{ width: `${Math.min(100, (displayedProgress.xp / displayedProgress.required) * 100)}%` }} />
+          <div className="score-experience-meta"><strong>Level {displayedProgress.level}</strong><span>{reachedMaxLevel ? "Max Level" : `${displayedProgress.xp} / ${displayedProgress.required} XP`}</span></div>
+          <div className="score-experience-track" role="progressbar" aria-label="Experience progress" aria-valuemin={0} aria-valuemax={reachedMaxLevel ? 100 : displayedProgress.required} aria-valuenow={reachedMaxLevel ? 100 : displayedProgress.xp}>
+            <i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (displayedProgress.xp / displayedProgress.required) * 100)}%` }} />
           </div>
           <small className="score-xp-count">+{displayedExperience} XP</small>
         </div>
@@ -2375,6 +2376,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
+  const reachedMaxLevel = character.level >= MAX_LEVEL;
   const visibleInventory = character.inventory
     .filter((item) => itemMatchesInventoryFilter(item, inventoryFilter))
     .sort((left, right) => inventorySort === "name"
@@ -2383,7 +2385,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
   const activeInventoryFilter = INVENTORY_GEAR_FILTERS.find((filter) => filter.id === inventoryFilter)!;
   return (
     <section className="page character-page">
-      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{character.xp} / {requiredExperience} XP</small></div></div></div>
+      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{reachedMaxLevel ? "Max Level" : `${character.xp} / ${requiredExperience} XP`}</small></div></div></div>
       <div className="character-layout">
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 && <strong className="stat-points-available">{character.unspentStatPoints} Points Available</strong>}</div>
