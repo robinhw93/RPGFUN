@@ -908,7 +908,6 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
             <div className="adventure-tags"><span>Recommended Level {featuredAdventure.recommendedLevel}</span><span>{featuredAdventure.stages.length} Stages</span><span>Dynamic Encounters</span></div>
             <button className="primary-button" disabled={locked} onClick={() => onBegin("story", featuredAdventure.id)}>{locked ? "Locked" : "Begin Journey"} <ChevronRight size={18} /></button>
           </div>
-          <div className="forest-art" aria-hidden="true" />
         </div>
         {ADVENTURES.length > 1 && <div className="story-adventure-list">{ADVENTURES.slice(1).map((definition) => { const prerequisiteMet = !definition.prerequisiteAdventureId || game.character.completedAdventureIds.includes(definition.prerequisiteAdventureId); return <article key={definition.id}><div><p className="eyebrow">Story Adventure</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{definition.prerequisiteAdventureId && <span>{prerequisiteMet ? "Unlocked" : `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}`}</span>}</div></div><button className="secondary-button" disabled={!prerequisiteMet} onClick={() => onBegin("story", definition.id)}>{prerequisiteMet ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button></article>; })}</div>}
         <div className="training-adventure-card">
