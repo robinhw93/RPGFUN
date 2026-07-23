@@ -359,6 +359,7 @@ Current migration behavior:
 - Combat ability cards show their content icon, Energy cost, and base cooldown; do not reintroduce keyboard-slot numbers into the card corner.
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
 - Combat portraits use a thin square border and clipped image surface. Hover/focus may add a restrained gold glow but must not scale or flash white on press. The player portrait opens current Attributes, while enemy portraits open enemy information.
+- Combat resource values stay centered over the full Health/Energy bar width at every viewport size; do not offset them toward the portrait or pair them directly beside the left-aligned resource label.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
 - Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Spell Power**.

@@ -277,6 +277,7 @@ This sequencing guarantees that:
 
 - Damage appears when the attack lands.
 - HP bars animate from the old value to the new value.
+- Current/maximum Health and Energy values are centered directly above their respective combat bars on both desktop and mobile, while the resource names remain left-aligned.
 - Statuses appear with the message that applies them.
 - Enemies pulse green once when Poison is applied.
 - Refreshing or adding stacks to an existing Poison also restarts that green pulse.
