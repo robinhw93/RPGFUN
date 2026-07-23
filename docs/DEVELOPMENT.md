@@ -357,6 +357,7 @@ Current migration behavior:
 - Tap uses an ability; long-press shows its explanation without firing it.
 - Combat ability cards show their content icon, Energy cost, and base cooldown; do not reintroduce keyboard-slot numbers into the card corner.
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
+- Combat portraits use a real circular border and clipped image surface. The player portrait opens current Attributes, while enemy portraits open enemy information.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
 - Player-facing copy must use consistent names: **Hit Chance**, **Dodge Chance**, **Critical Strike Chance**, **Initiative**, **Physical Power**, and **Spell Power**.

@@ -850,6 +850,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const [logOpen, setLogOpen] = useState(false);
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
   const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
+  const [playerAttributesOpen, setPlayerAttributesOpen] = useState(false);
   const inspectedEnemy = adventure.combat?.enemies.find((enemy) => enemy.instanceId === inspectedEnemyId) ?? null;
   const enemyVisualKey = adventure.combat?.enemies.map((enemy) => enemy.id).join("|") ?? "";
   const combatEventId = adventure.combat?.eventId ?? 0;
@@ -861,6 +862,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
     setLogOpen(false);
     setInspectedInfo(null);
     setInspectedEnemyId(null);
+    setPlayerAttributesOpen(false);
   }, [adventure.nodeIndex]);
   useEffect(() => {
     if (!enemyVisualKey) return;
@@ -872,10 +874,10 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
     });
   }, [enemyVisualKey]);
   useEffect(() => {
-    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || activeActor?.kind !== "enemy") return;
+    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || playerAttributesOpen || activeActor?.kind !== "enemy") return;
     const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
     return () => window.clearTimeout(timer);
-  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, sequencePending]);
+  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, playerAttributesOpen, sequencePending]);
 
   if (adventure.completed) {
     const completedAdventure = getAdventureDefinition(adventure.adventureId);
@@ -996,7 +998,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
-    <section className={`combat-page compact-combat ${adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).theme === "windsong_forest" ? "windsong-forest-combat" : ""} ${inspectedInfo ? "inspect-info-open" : ""}`}>
+    <section className={`combat-page compact-combat ${adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).theme === "windsong_forest" ? "windsong-forest-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}>
       <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
@@ -1020,7 +1022,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
-          <span className="combatant-portrait player-combatant-portrait" aria-hidden="true"><img src={combatAvatar.portraitUrl} alt="" draggable={false} /></span>
+          <button type="button" className="combatant-portrait player-combatant-portrait" aria-label="View your attributes" onClick={() => setPlayerAttributesOpen(true)}><img src={combatAvatar.portraitUrl} alt="" draggable={false} /></button>
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
@@ -1176,6 +1178,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
 
       {inspectedInfo && <InspectInfoModal info={inspectedInfo} onClose={() => setInspectedInfo(null)} />}
       {inspectedEnemy && <EnemyStatsModal enemy={inspectedEnemy} onClose={() => setInspectedEnemyId(null)} />}
+      {playerAttributesOpen && <PlayerAttributesModal name={game.character.name} derived={derived} onClose={() => setPlayerAttributesOpen(false)} />}
 
       {combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
         <VictoryScoreScreen
@@ -2342,6 +2345,31 @@ function EnemyStatsModal({ enemy, onClose }: { enemy: EnemyState; onClose: () =>
           <div className="enemy-stats-grid">
             {stats.map(([label, value]) => <span key={label}><small>{label}</small><strong>{value}</strong></span>)}
           </div>
+        </div>
+        <button type="button" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+function PlayerAttributesModal({ name, derived, onClose }: {
+  name: string;
+  derived: ReturnType<typeof getDerivedStats>;
+  onClose: () => void;
+}) {
+  return (
+    <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${name} attributes`} onClick={onClose}>
+      <div className="inspect-info-card player-attributes-card" onClick={(event) => event.stopPropagation()}>
+        <p className="eyebrow">Character Attributes</p>
+        <h2>{name}</h2>
+        <div className="player-attributes-grid">
+          {STAT_LABELS.map((stat) => (
+            <span key={stat.key}>
+              <StatIcon stat={stat.key} />
+              <span><small>{stat.label}</small><em>{ATTRIBUTE_SUMMARIES[stat.key]}</em></span>
+              <strong>{formatStat(derived[stat.key])}</strong>
+            </span>
+          ))}
         </div>
         <button type="button" onClick={onClose}>Close</button>
       </div>

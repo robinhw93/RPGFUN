@@ -30,7 +30,7 @@ The adventure screen also offers a separate endless testing route for developing
 
 ## Character creation and starting state
 
-Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card.
+Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a clipped circular frame; clicking the player's portrait opens the character's five current Attributes, while clicking an enemy portrait opens that enemy's combat information.
 
 Every new character starts with:
 
