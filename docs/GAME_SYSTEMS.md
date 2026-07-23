@@ -45,7 +45,7 @@ Every new character starts with:
 
 ## Attributes
 
-Attributes are whole numbers. Equipment and talent bonuses are added to base attributes, and the result is rounded before derived stats are calculated.
+Attributes are whole numbers. Equipment and flat talent bonuses are added to base attributes, percentage attribute bonuses are then combined additively and applied, and the result is rounded before derived stats are calculated.
 
 | Attribute | Current effects |
 | --- | --- |
@@ -66,8 +66,8 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 | Max Health | `20 + Vitality × 10 + flat bonuses` |
 | Max Energy | `10 + flat bonuses` |
 | Energy Regeneration | `2 + flat bonuses` at the start of the player's turn. |
-| Physical Power | `Strength + Agility × 0.3 + gear/talent Physical Power` |
-| Magical Power | `Intelligence + gear/talent Magical Power` |
+| Physical Power | `(Strength + Agility × 0.3 + gear/talent Physical Power) × (100% + Physical Power bonuses)` |
+| Magical Power | `(Intelligence + gear/talent Magical Power) × (100% + Magical Power bonuses)` |
 | Armor | Sum of equipped item, set, and talent Armor. Shatter can halve the effective value. |
 | Magic Resistance | Sum of equipped item, set, and talent Magic Resistance. |
 | Critical Strike Chance | `5% + Luck × 0.75% + bonuses` |
@@ -213,9 +213,9 @@ Firestorm simultaneously deals 25% Magical Power as Fire damage to every enemy a
 
 The extended Arcanist tree adds Arcane Wound consumption and Barrier interactions, Slowed-and-Exhausted frost combinations, Electrified charge chains, and Elemental Fury. Mana Fracture, Focused Blast, Absolute Zero, Blizzard, Ride the Lightning, Charge, Rapid Fire, and Elemental Fury are all Ranged. Rapid Fire deals Fire damage. Their mechanics resolve at beam or field impact while their VFX remain non-blocking. Queue projection includes their status-stack requirements, consumed statuses, conditional applications, Energy restoration, and cooldown changes.
 
-The extended Brute section adds twenty-four active abilities across Fire, Bleed, Armor/Guard, and holy paths. Bash is granted by the Brute class node. Divine Smite and Consecrated Ground are Ranged target-bound holy effects; the other Brute abilities are Melee or self-targeted and use distinct, non-blocking VFX. Its reusable mechanics include Armor from Strength and percentage Armor, Burn-driven permanent Initiative, combat-start statuses and absorption, Health-restoration and Guard triggers, Guard-derived damage, buff removal, Burn detonation and transfer, Bleed-damage healing, conditional hit counts, guaranteed and chance-based companion status applications, Guard derived from Armor, Physical Power, Magical Power, Max Health, and consumed status stacks, conditional Stun while Guarded, debuff cleansing, critical-strike status applications, immediate Burn/Bleed damage, and random multi-hit attacks.
+The extended Brute section adds twenty-four active abilities across Fire, Bleed, Armor/Guard, and holy paths. Bash is granted by the Brute class node. Divine Smite, Consecrated Ground, and Beacon of Light are Ranged target-bound holy effects; the other Brute abilities are Melee or self-targeted and use distinct, non-blocking VFX. Its reusable mechanics include Armor from Strength and percentage Armor, Burn-driven permanent Initiative, combat-start statuses and absorption, Health-restoration and Guard triggers, Guard-derived damage, buff removal, Burn detonation and transfer, Bleed-damage healing, conditional hit counts, guaranteed and chance-based companion status applications, Guard derived from Armor, Physical Power, Magical Power, Max Health, and consumed status stacks, conditional Stun while Guarded, debuff cleansing, critical-strike status applications, immediate Burn/Bleed damage, and random multi-hit attacks.
 
-The latest Brute paths extend beyond Furnace Breaker, Bloodbath, Shield Charge, and Divine Smite. Super Critical Burns makes every player-applied Burn also apply Charred. Word Above can apply Smite on critical strikes, Shatter Armor follows player-applied Stuns with Shatter, and Molten Metal applies Burn whenever the player deals direct or status damage while Guarded. Berserk grants Fierce after an enemy Critical Strike, Cannibal can heal from player-applied Bleed damage, and Renewal can reduce a random active cooldown whenever Health is actually restored. The newest paths add Burn-reactive Barrier and Energy, combat-start Fierce, Guard, Barrier, Burn, and Martyrdom, Armor-scaling retaliation, Poison from Bleed, and the Guard, Vampirism, Fire Eater, and Beacon of Light abilities. Time to Breathe can trigger only once per combat when Health first crosses below 40%.
+The latest Brute paths extend beyond Furnace Breaker, Bloodbath, Shield Charge, and Divine Smite. Super Critical Burns makes every player-applied Burn also apply Charred. Word Above can apply Smite on critical strikes, Shatter Armor follows player-applied Stuns with Shatter, and Molten Metal applies Burn whenever the player deals direct or status damage while Guarded. Berserk grants Fierce after an enemy Critical Strike, Cannibal can heal from player-applied Bleed damage, and Renewal can reduce a random active cooldown whenever Health is actually restored. Further paths add Burn-reactive Barrier and Energy, combat-start Fierce, Guard, Barrier, Burn, and Martyrdom, Armor-scaling retaliation, Poison from Bleed, and the Guard, Vampirism, Fire Eater, and Beacon of Light abilities. Oath and Emberfused now extend the magical and hybrid Power routes beyond Divine Smite and Furnace Breaker. Time to Breathe can trigger only once per combat when Health first crosses below 40%.
 
 Smite is a three-turn debuff. Whenever the player actually restores Health, including through Phoenix Heart or Panic, every living enemy with Smite takes Magic damage based on 50% of that restored amount at the same presentation event. Overhealing does not increase Smite damage.
 
@@ -392,7 +392,7 @@ Attribute points can be assigned one at a time to any of the five base attribute
 
 ## Talents and ability loadout
 
-The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 239 nodes: Shadow, Arcanist, and Brute each have 79 including their class node, and Cultist has 1. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, and Arcane paths. Brute extends through Fire, Bleed, Armor/Guard, and holy-vigor paths ending in Flameborn, Perfected Wounding Strike, Imbued Weapon, Divine Blade, Fire Eater, and Beacon of Light.
+The talent tree is classless. Wayfarer's Spark begins at the center, and the first four directions are Brute, Shadow, Arcanist, and Cultist. The live tree currently has 263 nodes: Shadow, Arcanist, and Brute each have 87 including their class node, and Cultist has 1. Shadow is the first complete branch. Arcanist extends from Arcane Mind into Fire, Frost, Lightning, Arcane, Magical Power, Intelligence, Hit Chance, and Critical Strike paths. Brute extends through Fire, Bleed, Armor/Guard, holy-vigor, Magical Power, and hybrid Power paths. Shadow also includes new Physical Power, Agility, Intelligence, and Magical Power routes.
 
 ### Unlock rules
 

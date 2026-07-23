@@ -216,7 +216,7 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, guaranteed or chance-based status companions, preserved detonations, starting statuses, starting Max-Health-scaled Guard/Barrier, full-Health combat-start self damage, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, reusable death prevention, status-consuming death prevention, and guaranteed-hit status-stack thresholds. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, guaranteed or chance-based status companions, preserved detonations, starting statuses, starting Max-Health-scaled Guard/Barrier, full-Health combat-start self damage, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, reusable death prevention, status-consuming death prevention, and guaranteed-hit status-stack thresholds. Flat bonuses are aggregated first; additive `statMultipliers`, `physicalPowerMultiplier`, and `magicalPowerMultiplier` values then scale their respective final totals. Derived stats aggregate every active source.
 
 Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the source's current statuses. Matching bonuses add together before they multiply the normal status-damage result; this keeps conditional enemy Burn bonuses separate from self-inflicted Burn.
 
@@ -283,7 +283,7 @@ The editor supports:
 - Creating, deleting, selecting, and dragging nodes.
 - Live Shadow, Arcanist, Brute, and Cultist node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
-- Multiple direct passive bonuses.
+- Multiple flat and percentage passive bonuses, including attributes, Physical Power, and Magical Power.
 - Ability-ID references, Energy cost, cooldown turns, Melee/Ranged selection, and free-form effect/proc notes.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
@@ -302,7 +302,7 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 - Push to GitHub.
 - Synchronize to another browser or computer.
 
-**Copy for Codex** copies the full export JSON. **Export JSON** downloads `emberfall-talents.json`. Those exports describe layout, connections, basic passive bonuses, ability IDs, Energy costs, cooldowns, and design notes; they still require review and integration into source code.
+**Copy for Codex** copies the full export JSON. **Export JSON** downloads `emberfall-talents.json`. Those exports describe layout, connections, flat and percentage passive bonuses, ability IDs, Energy costs, cooldowns, and design notes; they still require review and integration into source code.
 
 ### Editor limitations
 

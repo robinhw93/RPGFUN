@@ -89,7 +89,8 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     stats[stat as keyof Stats] += amount;
   });
   Object.keys(stats).forEach((stat) => {
-    stats[stat as keyof Stats] = Math.round(stats[stat as keyof Stats]);
+    const statName = stat as keyof Stats;
+    stats[statName] = Math.round(stats[statName] * (1 + features.passive.statMultipliers[statName]));
   });
   armor += features.passive.armor + Math.ceil(stats.strength * features.passive.armorFromStrengthRatio);
   armor *= 1 + features.passive.armorMultiplier;
@@ -103,8 +104,8 @@ export function getDerivedStats(character: CharacterState): DerivedStats {
     ...stats,
     armor: Math.round(armor),
     magicResistance: Math.round(magicResistance),
-    physicalPower: Math.round(stats.strength + stats.agility * 0.3 + gearPhysicalPower),
-    magicalPower: Math.round(stats.intelligence + gearMagicalPower),
+    physicalPower: Math.round((stats.strength + stats.agility * 0.3 + gearPhysicalPower) * (1 + features.passive.physicalPowerMultiplier)),
+    magicalPower: Math.round((stats.intelligence + gearMagicalPower) * (1 + features.passive.magicalPowerMultiplier)),
     maxHp: Math.round(20 + stats.vitality * 10 + features.passive.maxHp),
     maxEnergy: Math.round(maxEnergy),
     energyRegen: Math.round(energyRegen),

@@ -25,8 +25,9 @@ const CANVAS_ZOOM_STEP = 0.1;
 
 type TalentNodeKind = "class" | "passive" | "ability";
 type TalentNodeShape = "circle" | "square";
-type PassiveBonus = StatName | "armor" | "magicResistance" | "physicalPower" | "magicalPower" | "maxHp" | "maxEnergy" | "energyRegen" | "critChance" | "hitChance" | "dodgeChance" | "initiative";
-type DirectPassiveBonus = Exclude<PassiveBonus, StatName>;
+type PercentagePassiveBonus = "strengthPercent" | "agilityPercent" | "intelligencePercent" | "vitalityPercent" | "luckPercent" | "physicalPowerPercent" | "magicalPowerPercent";
+type PassiveBonus = StatName | PercentagePassiveBonus | "armor" | "magicResistance" | "physicalPower" | "magicalPower" | "maxHp" | "maxEnergy" | "energyRegen" | "critChance" | "hitChance" | "dodgeChance" | "initiative";
+type DirectPassiveBonus = Exclude<PassiveBonus, StatName | PercentagePassiveBonus>;
 
 interface TalentPassiveBonus {
   id: string;
@@ -98,12 +99,21 @@ const PASSIVE_OPTIONS: Array<{ id: PassiveBonus; label: string }> = [
   { id: "hitChance", label: "Hit Chance" },
   { id: "dodgeChance", label: "Dodge Chance" },
   { id: "initiative", label: "Initiative" },
+  { id: "strengthPercent", label: "Strength (%)" },
+  { id: "agilityPercent", label: "Agility (%)" },
+  { id: "intelligencePercent", label: "Intelligence (%)" },
+  { id: "vitalityPercent", label: "Vitality (%)" },
+  { id: "luckPercent", label: "Luck (%)" },
+  { id: "physicalPowerPercent", label: "Physical Power (%)" },
+  { id: "magicalPowerPercent", label: "Magical Power (%)" },
 ];
 
 const DIRECT_PASSIVE_BONUSES: DirectPassiveBonus[] = [
   "armor", "magicResistance", "physicalPower", "magicalPower", "maxHp", "maxEnergy", "energyRegen", "critChance", "hitChance", "dodgeChance", "initiative",
 ];
-const PERCENT_PASSIVE_BONUSES = new Set<PassiveBonus>(["critChance", "hitChance", "dodgeChance"]);
+const PERCENT_PASSIVE_BONUSES = new Set<PassiveBonus>([
+  "critChance", "hitChance", "dodgeChance", "strengthPercent", "agilityPercent", "intelligencePercent", "vitalityPercent", "luckPercent", "physicalPowerPercent", "magicalPowerPercent",
+]);
 
 const STATUS_LIBRARY = Object.values(STATUS_EFFECTS).sort((left, right) => left.name.localeCompare(right.name));
 
@@ -118,10 +128,15 @@ function passiveBonusesFromTalent(talent: (typeof TALENTS)[number]): TalentPassi
   }
   const passive = talent.combat?.passive;
   if (passive) {
+    Object.entries(passive.statMultipliers ?? {}).forEach(([stat, amount]) => {
+      if (amount !== undefined) bonuses.push({ id: `${talent.id}-${stat}Percent`, bonus: `${stat}Percent` as PercentagePassiveBonus, amount: Number(amount) * 100 });
+    });
     DIRECT_PASSIVE_BONUSES.forEach((bonus) => {
       const amount = passive[bonus];
       if (amount !== undefined) bonuses.push({ id: `${talent.id}-${bonus}`, bonus, amount: Number(amount) * (PERCENT_PASSIVE_BONUSES.has(bonus) ? 100 : 1) });
     });
+    if (passive.physicalPowerMultiplier !== undefined) bonuses.push({ id: `${talent.id}-physicalPowerPercent`, bonus: "physicalPowerPercent", amount: passive.physicalPowerMultiplier * 100 });
+    if (passive.magicalPowerMultiplier !== undefined) bonuses.push({ id: `${talent.id}-magicalPowerPercent`, bonus: "magicalPowerPercent", amount: passive.magicalPowerMultiplier * 100 });
   }
   return bonuses;
 }

@@ -80,6 +80,8 @@ export type CombatEffectTarget = "self" | "target" | "all_enemies" | "random_ene
 
 export interface PassiveBonuses {
   stats?: Partial<Stats>;
+  /** Additive percentage multipliers applied to final attributes after flat bonuses. */
+  statMultipliers?: Partial<Stats>;
   armor?: number;
   /** Additive multiplier applied after all flat and Strength-derived Armor. */
   armorMultiplier?: number;
@@ -87,7 +89,11 @@ export interface PassiveBonuses {
   armorFromStrengthRatio?: number;
   magicResistance?: number;
   physicalPower?: number;
+  /** Additive multiplier applied to final Physical Power after flat bonuses. */
+  physicalPowerMultiplier?: number;
   magicalPower?: number;
+  /** Additive multiplier applied to final Magical Power after flat bonuses. */
+  magicalPowerMultiplier?: number;
   /** Legacy generic power. Prefer physicalPower or magicalPower for new content. */
   power?: number;
   maxHp?: number;

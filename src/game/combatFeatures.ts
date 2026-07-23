@@ -70,8 +70,9 @@ export interface CombatTriggerContext {
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusApplicationCompanionChances" | "startingAbsorptionMaxHpRatios" | "statusDurationBonuses" | "deathPreventionConsumeStatusForHealing" | "guaranteedHitAgainstStatusStacks">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statMultipliers" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusApplicationCompanionChances" | "startingAbsorptionMaxHpRatios" | "statusDurationBonuses" | "deathPreventionConsumeStatusForHealing" | "guaranteedHitAgainstStatusStacks">> & {
     stats: Stats;
+    statMultipliers: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
     startingStatuses: StatusEffect[];
@@ -93,12 +94,15 @@ export interface CharacterCombatFeatures {
 
 const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   stats: { strength: 0, agility: 0, intelligence: 0, vitality: 0, luck: 0 },
+  statMultipliers: { strength: 0, agility: 0, intelligence: 0, vitality: 0, luck: 0 },
   armor: 0,
   armorMultiplier: 0,
   armorFromStrengthRatio: 0,
   magicResistance: 0,
   physicalPower: 0,
+  physicalPowerMultiplier: 0,
   magicalPower: 0,
+  magicalPowerMultiplier: 0,
   power: 0,
   maxHp: 0,
   maxEnergy: 0,
@@ -137,12 +141,17 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
   Object.entries(passive.stats ?? {}).forEach(([stat, amount]) => {
     target.stats[stat as keyof Stats] += amount ?? 0;
   });
+  Object.entries(passive.statMultipliers ?? {}).forEach(([stat, amount]) => {
+    target.statMultipliers[stat as keyof Stats] += amount ?? 0;
+  });
   target.armor += passive.armor ?? 0;
   target.armorMultiplier += passive.armorMultiplier ?? 0;
   target.armorFromStrengthRatio += passive.armorFromStrengthRatio ?? 0;
   target.magicResistance += passive.magicResistance ?? 0;
   target.physicalPower += passive.physicalPower ?? 0;
+  target.physicalPowerMultiplier += passive.physicalPowerMultiplier ?? 0;
   target.magicalPower += passive.magicalPower ?? 0;
+  target.magicalPowerMultiplier += passive.magicalPowerMultiplier ?? 0;
   target.power += passive.power ?? 0;
   target.maxHp += passive.maxHp ?? 0;
   target.maxEnergy += passive.maxEnergy ?? 0;

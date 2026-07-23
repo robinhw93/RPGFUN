@@ -6,7 +6,7 @@ This is a snapshot of content currently defined in `src/game/data.ts` and `src/g
 
 Cooldowns are measured in player turns. **None** means the ability can be repeated in the same turn as long as Energy and targeting requirements allow it.
 
-Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, Divine Smite, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other obtainable Brute, Core, and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
+Every ability is classified as **Melee** or **Ranged**. The current obtainable Ranged abilities are Poison Cloud, Contagion, Neurotoxin, Toxic Explosion, Venomborn, Pandemic, Cull the Weak, Epidemic, Divine Smite, Consecrated Ground, Beacon of Light, and every Arcanist ability from Arcane Bolt through Elemental Fury. All other obtainable Brute, Core, and Shadow abilities are Melee. Of the definitions outside the live tree, Essence Siphon is Ranged; Crushing Blow, Ground Slam, Sever, and Venom Edge are Melee. Ranged attacks never use the normal melee lunge. Bolts and launched spells travel to the target, beams connect caster and target, while detonations, weather, freezes, and other target-bound effects resolve in place.
 
 ### Core and currently obtainable abilities
 
@@ -61,13 +61,13 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Furnace Breaker | 4 | 3 | Enemy | Deals 100% Physical Power as Physical damage and immediately triggers the target's Burn damage once without removing Burn. |
 | Divine Smite | 5 | 5 | Enemy | A target-bound Ranged strike dealing 100% Magical Power as Magic damage and applying Smite for 3 turns. |
 | Blood Frenzy | 5 | 3 | Enemy | Strikes four times for 35% Physical Power and applies 1 Bleed per hit. Fierce increases the cast to six hits. |
-| Crushing Impact | 0 | None | Enemy | Deals Physical damage based on the player's current Guard and removes every buff from the target. |
+| Crushing Impact | 4 | 3 | Enemy | Deals Physical damage based on the player's current Guard and removes every buff from the target. |
 | Explosive Strike | 4 | 2 | Enemy | Deals 50% Physical Power as Physical damage, increased by 5% per Burn on the target, then consumes that Burn and deals its remaining damage to every other enemy. |
 | Consecrated Ground | 6 | 4 | All enemies | A target-bound Ranged field that simultaneously deals 80% Magical Power as Magic damage. Each enemy independently has a 20% chance to gain Smite, and the player gains Regenerate. |
 | Guard (Brute) | 1 | None | Self | Grants Guard equal to 5% of Armor. |
 | Vampirism | 2 | None | Enemy | Deals 10% Physical Power as Physical damage and restores 2 Health per Bleed on the target. |
 | Fire Eater | 4 | 4 | Burning self and enemy | Consumes all Burn on the player, restores Health equal to its remaining damage, and transfers the consumed Burn to the selected enemy. |
-| Beacon of Light | 6 | 6 | All enemies and self | Applies Smite to every enemy simultaneously and grants Regenerate to the player for 3 turns. |
+| Beacon of Light | 6 | 6 | All enemies and self | A target-bound Ranged effect that applies Smite to every enemy simultaneously and grants Regenerate to the player for 3 turns. |
 | Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
 | Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
 | Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
@@ -107,7 +107,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 239 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 78 later Brute nodes. Branch counts are Shadow 79, Arcanist 79, Brute 79, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 263 nodes: the origin, four first-direction class nodes, 86 later Shadow nodes, 86 later Arcanist nodes, and 86 later Brute nodes. Branch counts are Shadow 87, Arcanist 87, Brute 87, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
@@ -157,8 +157,8 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_37 | Focus | Ability | Toxic Explosion or Ambush | Any | Unlocks Focus. |
 | talent_38 | Contagion | Ability | Poison Stab | Any | Unlocks Contagion. |
 | talent_39 | Sharpened Blade | Ability | Twin Strike | Any | Unlocks Sharpened Blade. |
-| talent_40 | Resistance | Passive | Venomborn | Any | Makes the player immune to Poison. |
-| talent_41 | Thunderstruck | Passive | Lightning Strike | Any | Makes the player immune to Electrified. |
+| talent_40 | Resistance | Passive | Venomborn | Any | Makes the player immune to Poison and grants +10 Magical Power. |
+| talent_41 | Thunderstruck | Passive | Lightning Strike | Any | Makes the player immune to Electrified and grants +20 Magical Power. |
 | talent_42 | Perfected Formula | Passive | Focus | Any | Player-applied Poison gains 1 additional stack. |
 | talent_43 | Distraction | Passive | Focus | Any | Kills grant Stealth until the end of the next player turn and make the next ability cost 0 Energy. |
 | talent_44 | Extra Dose | Passive | Poison Coating | Any | Critical strikes apply 2 Poison. |
@@ -254,7 +254,7 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_133 | Resonance | Passive | Arcane Reservoir | Any | Reapplying Arcane Wound restores 1% Max Health. |
 | talent_134 | Mana Fracture | Ability | Arcane Reservoir | Any | Unlocks Mana Fracture. |
 | talent_135 | Rapid Fire | Ability | Pyromania | Any | Unlocks Rapid Fire. |
-| talent_136 | Arcane Shell | Passive | Resonance | Any | Consumed or expired Arcane Wounds grant Barrier equal to 2% Magical Power. |
+| talent_136 | Arcane Shell | Passive | Resonance | Any | Consumed or expired Arcane Wounds grant Barrier equal to 10% Magical Power. |
 | talent_137 | Arcane Retaliation | Passive | Arcane Shell | Any | A destroyed Barrier applies 2 Arcane Wounds to its attacker. |
 | talent_138 | Focused Blast | Ability | Arcane Retaliation | Any | Unlocks Focused Blast. |
 | talent_139 | Treacherous Ground | Passive | Brittle | Any | While Frozen Path is active, enemies that miss become Slowed. |
@@ -309,11 +309,11 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_188 | Thick Blood | Passive | Blood Barrier | Any | Blood Barrier no longer consumes Bleed. |
 | talent_189 | Counter | Passive | Unbreakable | Any | Unbreakable grants +2 Energy regeneration next turn. |
 | talent_190 | Magical Fires | Passive | Burning Guard | Any | Burning Guard also gains Guard equal to 50% Magical Power. |
-| talent_191 | Cleansing Hands | Passive | Lay on Hands | Any | Lay on Hands removes every debuff from the player. |
+| talent_191 | Cleansing Hands | Passive | Lay on Hands | Any | Lay on Hands removes every debuff from the player and grants +10% Magical Power. |
 | talent_192 | Fortified | Passive | Unbreakable | Any | Grants 10% more Armor after flat and Strength-derived Armor. |
 | talent_193 | Eye for an Eye | Passive | Blood Barrier | Any | Whenever an enemy applies Bleed to the player, applies 1 Bleed to that enemy. |
 | talent_194 | Critical Judgement | Passive | Cleansing Hands | Any | Critical strikes apply Vulnerable. |
-| talent_195 | Scorched Wounds | Passive | Magical Fires | Any | Critical strikes apply 1 Burn. |
+| talent_195 | Scorched Wounds | Passive | Magical Fires | Any | Applies 1 Burn on critical strikes and grants +10 Magical Power. |
 | talent_196 | Shield Charge | Ability | Fortified | Any | Unlocks Shield Charge. |
 | talent_197 | Bloodbath | Ability | Eye for an Eye | Any | Unlocks Bloodbath. |
 | talent_198 | Furnace Breaker | Ability | Scorched Wounds | Any | Unlocks Furnace Breaker. |
@@ -349,10 +349,34 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_228 | Time to Breathe | Passive | Swift Blade | Any | The first drop below 40% Health each combat grants Regenerate. |
 | talent_229 | Guard | Ability | Prepared | Any | Unlocks the Brute Guard ability. |
 | talent_230 | Defensive Maneuvers | Passive | Quick Guard | Any | Gaining Guard deals 50% Armor as Physical damage to a random enemy. |
-| talent_231 | Infected Wounds | Passive | Pristine Weapon | Any | Applying Bleed has a 20% chance to also apply Poison. |
+| talent_231 | Infected Wounds | Passive | Hemorrhage | Any | Applying Bleed has a 20% chance to also apply Poison. |
 | talent_232 | Vampirism | Ability | Anger | Any | Unlocks Vampirism. |
 | talent_233 | Fire Eater | Ability | Flameheart | Any | Unlocks Fire Eater. |
 | talent_234 | Beacon of Light | Ability | Heavenly Protection | Any | Unlocks Beacon of Light. |
+| talent_235 | Oath 1 | Passive | Divine Smite | Any | +5% Magical Power. |
+| talent_236 | Oath 2 | Passive | Oath 1 | Any | +5% Magical Power. |
+| talent_237 | Oath 3 | Passive | Oath 2 | Any | +10% Magical Power. |
+| talent_238 | Oath 4 | Passive | Oath 3 | Any | +15% Magical Power. |
+| talent_239 | Emberfused 1 | Passive | Furnace Breaker | Any | +5 Magical Power and +2% Physical Power. |
+| talent_240 | Emberfused 2 | Passive | Emberfused 1 | Any | +5 Magical Power and +2% Physical Power. |
+| talent_241 | Emberfused 3 | Passive | Emberfused 2 | Any | +10 Magical Power and +4% Physical Power. |
+| talent_242 | Emberfused 4 | Passive | Emberfused 3 | Any | +15 Magical Power and +5% Physical Power. |
+| talent_243 | Mystic Power 1 | Passive | Arcane Blast or Frostbolt | Any | +5 Magical Power. |
+| talent_244 | Mystic Power 2 | Passive | Mystic Power 1 | Any | +5 Magical Power. |
+| talent_245 | Mystic Power 3 | Passive | Mystic Power 2 | Any | +5 Magical Power. |
+| talent_246 | Mystic Power 4 | Passive | Mystic Power 3, Lower Temperature, or Arcane Knowledge | Any | +10% Magical Power. |
+| talent_247 | Sharpened Intellect 1 | Passive | Greater Pyromania | Any | +5 Intelligence. |
+| talent_248 | Sharpened Intellect 2 | Passive | Sharpened Intellect 1 | Any | +10% Intelligence. |
+| talent_249 | Spellslinger 1 | Passive | Chain Reaction | Any | +3% Hit Chance. |
+| talent_250 | Spellslinger 2 | Passive | Spellslinger 1 | Any | +3% Hit Chance and +3% Critical Strike Chance. |
+| talent_251 | Powerful 1 | Passive | Recuperate | Any | +5 Physical Power. |
+| talent_252 | Powerful 2 | Passive | Powerful 1 | Any | +5 Physical Power. |
+| talent_253 | Powerful 3 | Passive | Powerful 2 | Any | +10% Physical Power. |
+| talent_254 | Nimble 1 | Passive | Immaculate Timing | Any | +2 Initiative and +2 Agility. |
+| talent_255 | Nimble 2 | Passive | Nimble 1 | Any | +2 Initiative and +2 Agility. |
+| talent_256 | Nimble 3 | Passive | Nimble 2 | Any | +2 Initiative and +10% Agility. |
+| talent_257 | Spellblade | Passive | Thunderstruck | Any | +20% Magical Power. |
+| talent_258 | Study | Passive | Resistance | Any | +10% Magical Power and +5 Intelligence. |
 
 The three Brute Armor nodes intentionally share the player-facing name Armored. Internal IDs remain stable for save compatibility.
 
