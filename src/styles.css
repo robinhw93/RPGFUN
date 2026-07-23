@@ -497,11 +497,10 @@ main { min-height: calc(100vh - 68px); }
 .enemy-combatant { width: 100%; max-width: 470px; display: block; text-align: left; border-right: 2px solid var(--enemy-accent); cursor: pointer; transition: border-color .2s, background .2s, transform .2s, opacity .2s; }
 .enemy-combatant:hover:not(.dead) { border-color: var(--enemy-accent); background: color-mix(in srgb, var(--enemy-accent) 7%, #141816); }
 .enemy-combatant.untargetable { opacity: .58; cursor: not-allowed; }.enemy-combatant.untargetable:hover { background: #141816; }
-.enemy-combatant.selected { border-color: var(--enemy-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--enemy-accent) 35%, transparent), 0 0 20px color-mix(in srgb, var(--enemy-accent) 8%, transparent); }
+.enemy-combatant.selected { border-color: var(--enemy-accent); outline: 1px solid color-mix(in srgb, var(--enemy-accent) 72%, #e8ebd3); outline-offset: -2px; background: color-mix(in srgb, var(--enemy-accent) 9%, #141816); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--enemy-accent) 38%, transparent), 0 0 22px color-mix(in srgb, var(--enemy-accent) 14%, transparent); }
 .enemy-combatant.is-stunned:not(.dead), .enemy-combatant.is-stunned:hover:not(.dead) { border-color: #d8b84d; background: linear-gradient(145deg, #453b18, #241f10 58%, #17170f); box-shadow: inset 0 0 0 1px rgba(255,226,113,.28), inset 0 0 34px rgba(224,189,77,.18), 0 0 18px rgba(224,189,77,.12); }
 .enemy-combatant.is-stunned.selected:not(.dead) { box-shadow: inset 0 0 0 1px rgba(255,232,139,.55), inset 0 0 38px rgba(224,189,77,.24), 0 0 24px rgba(224,189,77,.2); }
 .compact-combatant.is-frozen:not(.dead) { border-color: #9fe8f7; background: linear-gradient(145deg, rgba(51,112,135,.52), rgba(18,43,55,.68) 58%, #11181b); box-shadow: inset 0 0 38px rgba(143,229,248,.25), 0 0 21px rgba(102,206,234,.18); }
-.compact-target { position: absolute; right: 4.2rem; top: .7rem; display: none; color: var(--enemy-accent); }.enemy-combatant.selected .compact-target { display: block; }
 .compact-resource-label { display: flex; justify-content: space-between; margin-bottom: .3rem; color: var(--dim); font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; }.compact-resource-label b { color: #c6c3bb; font-weight: 600; }
 .compact-status-row { min-height: 24px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; margin-top: .55rem; padding-bottom: 5px; overflow: visible; }
 .compact-status-row .status-badge { margin: 0; padding: .22rem .36rem; }
@@ -1117,7 +1116,6 @@ main { min-height: calc(100vh - 68px); }
   .compact-combatant { padding: .6rem; }
   .compact-combatant h2 { margin: 0 0 .55rem; padding-right: 3rem; font-size: .86rem; }
   .combatant-portrait { width: 40px; height: 40px; top: .42rem; right: .42rem; }
-  .compact-target { right: 3.25rem; top: .5rem; }
   .player-combatant { align-self: center; border-left-width: 2px; }
   .compact-enemy-stack { gap: 5px; }
   .enemy-combatant { max-height: none; padding: .52rem; border-right-width: 2px; }
@@ -1145,7 +1143,7 @@ main { min-height: calc(100vh - 68px); }
 
 @media (max-width: 760px) and (max-height: 650px) {
   .combat-page.compact-combat { grid-template-rows: 25px 30px minmax(0, 1fr) 104px 30px; gap: 4px; padding-top: var(--combat-safe-top); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
-  .compact-combatant { padding: .42rem; }.compact-combatant h2 { margin-bottom: .35rem; padding-right: 2.6rem; font-size: .75rem; }.combatant-portrait { width: 34px; height: 34px; top: .3rem; right: .3rem; }.compact-target { right: 2.75rem; top: .38rem; }
+  .compact-combatant { padding: .42rem; }.compact-combatant h2 { margin-bottom: .35rem; padding-right: 2.6rem; font-size: .75rem; }.combatant-portrait { width: 34px; height: 34px; top: .3rem; right: .3rem; }
   .compact-status-row { min-height: 18px; max-height: 34px; margin-top: .28rem; }.energy-label { margin-top: .3rem; }
   .compact-ability { grid-template-columns: 24px minmax(0, 1fr); padding: .25rem; }.compact-ability-icon { width: 24px; height: 24px; }.compact-ability strong { font-size: .59rem; }
   .ability-hold-tooltip { bottom: calc(max(4px, env(safe-area-inset-bottom)) + 8.6rem); }

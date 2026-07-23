@@ -1079,7 +1079,6 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
                 onClick={(event) => { event.stopPropagation(); setInspectedEnemyId(enemy.instanceId); }}
                 onKeyDown={(event) => event.stopPropagation()}
               ><img src={enemy.portraitUrl} alt="" draggable={false} /></button>
-              <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
               <div className="compact-resource-label">
                 <span>Health</span>
