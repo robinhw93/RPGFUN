@@ -948,7 +948,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               tabIndex={targetable ? 0 : -1}
               aria-disabled={!targetable}
               aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stealth") ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
               onKeyDown={(event) => {
@@ -968,6 +968,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
+              {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
+              {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <span className="compact-target"><Target size={11} /></span>
               <h2>{enemy.name}</h2>
@@ -1501,6 +1503,16 @@ function BarrierShimmer({ pulsing }: { pulsing: boolean }) {
 }
 
 function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
+  if (kind.startsWith("enemy_")) {
+    const icon = kind === "enemy_howl" || kind === "enemy_roar" ? <Megaphone />
+      : kind === "enemy_hibernate" ? <Moon />
+      : kind === "enemy_scurry" ? <Footprints />
+      : kind === "enemy_burning_glare" ? <Flame />
+      : kind === "enemy_natures_beam" || kind === "enemy_wisp_blast" || kind === "enemy_shimmer" || kind === "enemy_spirit_heal" ? <Sparkles />
+      : kind === "enemy_fade_out" ? <EyeOff />
+      : <Swords />;
+    return <span className={`ability-impact-effect enemy-ability-impact ${kind.replaceAll("_", "-")}`} aria-hidden="true">{icon}<i /><i /><i /><b /></span>;
+  }
   if (kind === "guard") {
     return <span className="ability-impact-effect guard-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /></span>;
   }
@@ -1685,7 +1697,7 @@ function EpidemicEffect() {
   );
 }
 
-function CombatantPathEffect({ animation, className, children, durationMs }: { animation: Pick<CombatAbilityAnimation, "id" | "sourceTargetId" | "targetId">; className: string; children: ReactNode; durationMs?: number }) {
+function CombatantPathEffect({ animation, className, children, durationMs, delayMs = 0 }: { animation: Pick<CombatAbilityAnimation, "id" | "sourceTargetId" | "targetId">; className: string; children: ReactNode; durationMs?: number; delayMs?: number }) {
   const [path, setPath] = useState<{ left: number; top: number; x: number; y: number } | null>(null);
 
   useLayoutEffect(() => {
@@ -1710,7 +1722,7 @@ function CombatantPathEffect({ animation, className, children, durationMs }: { a
   return (
     <span
       className={`combatant-path-effect ${className}`}
-      style={{ left: path.left, top: path.top, "--path-x": `${path.x}px`, "--path-y": `${path.y}px`, ...(durationMs ? { "--projectile-flight": `${durationMs}ms` } : {}) } as React.CSSProperties}
+      style={{ left: path.left, top: path.top, animationDelay: `${delayMs}ms`, "--path-x": `${path.x}px`, "--path-y": `${path.y}px`, ...(durationMs ? { "--projectile-flight": `${durationMs}ms` } : {}) } as React.CSSProperties}
       aria-hidden="true"
     >
       {children}
@@ -1822,6 +1834,15 @@ function AbilityProjectileEffect({ animation }: { animation: CombatProjectileAni
   const durationMs = COMBAT_TIMING.attackImpactMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
   const beamDurationMs = COMBAT_TIMING.attackDurationMs * Math.max(0.1, animation.durationMultiplier) / Math.max(1, animation.hitCount);
   const kind = animation.vfx;
+  if (kind === "enemy_wisp_blast") {
+    return <>{Array.from({ length: animation.hitCount }, (_, index) => <CombatantPathEffect key={`${animation.id}-${index}`} animation={{ ...animation, id: `${animation.id}-${index}` }} durationMs={durationMs} delayMs={index * durationMs * 0.82} className="ability-projectile-path enemy-wisp-blast-path"><Sparkles /><i /><i /><b /></CombatantPathEffect>)}</>;
+  }
+  if (kind === "enemy_burning_glare") {
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="enemy-burning-glare-beam"><i /><i /><b /><Flame /></CombatantBeamEffect>;
+  }
+  if (kind === "enemy_natures_beam") {
+    return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="enemy-natures-beam"><i /><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
+  }
   if (kind === "frostbolt" || kind === "deep_freeze" || (!kind && animation.damageType === "frost")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
   }

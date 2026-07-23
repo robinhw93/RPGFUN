@@ -25,7 +25,7 @@ import {
 } from "./statusEffects";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getCharacterStatusDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
-import type { Ability, AbilityAttackPresentation, AbilityRange, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
+import type { Ability, AbilityAttackPresentation, AbilityRange, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyAbilityDefinition, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
   const derived = getDerivedStats(character);
@@ -38,6 +38,8 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     maxEnergy: ENEMIES[id].maxEnergy,
     statuses: [],
     stunned: false,
+    abilityCooldowns: {},
+    nextTurnEnergyRegenBonus: 0,
   }));
   const turnOrder = rollTurnOrder(character, enemies);
   const enteringHp = Math.min(carryHp ?? derived.maxHp, derived.maxHp);
@@ -329,12 +331,22 @@ function normalizeStatuses(statuses: StatusEffect[] = []): StatusEffect[] {
 
 function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
   return enemies.map((enemy) => {
-    const template = ENEMIES[enemy.id];
+    const legacyEnemyIds: Record<string, string> = {
+      ashHound: "enemy-mrxiut2a-k4kgv",
+      cinderCultist: "enemy-mrxk609z-n04fq",
+      emberWisp: "enemy-mrxk609z-n04fq",
+      ashenWarden: "enemy-mrxkjqs3-g7g5i",
+      windsongWolf: "enemy-mrxj4o6o-o45ia",
+      groveSprite: "enemy-mrxk609z-n04fq",
+      greybackBoar: "enemy-mrxkjqs3-g7g5i",
+    };
+    const template = ENEMIES[enemy.id] ?? ENEMIES[legacyEnemyIds[enemy.id]] ?? ENEMIES.dummy;
     let statuses = normalizeStatuses(enemy.statuses ?? []);
     if (enemy.stunned && !hasStatus(statuses, "stunned") && canApplyStatusEffect(statuses, "stunned")) statuses = addOrRefreshStatus(statuses, createStatusEffect("stunned"));
     return {
       ...template,
       ...enemy,
+      id: template.id,
       // Migrate active training combats created while DUMMY incorrectly had 1000% Hit Chance.
       hitChance: enemy.id === "dummy" && enemy.hitChance === 10 ? template.hitChance : enemy.hitChance ?? template.hitChance,
       energy: enemy.energy ?? template.maxEnergy,
@@ -344,6 +356,8 @@ function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       physicalPower: enemy.physicalPower ?? template.physicalPower,
       spellPower: enemy.spellPower ?? template.spellPower,
       abilities: template.abilities,
+      abilityCooldowns: enemy.abilityCooldowns ?? {},
+      nextTurnEnergyRegenBonus: enemy.nextTurnEnergyRegenBonus ?? 0,
       statuses,
       stunned: hasStatus(statuses, "stunned"),
     };
@@ -2735,6 +2749,30 @@ export function endPlayerTurn(combat: CombatState, character: CharacterState): C
   };
 }
 
+function getReadyEnemyAbility(enemy: EnemyState): EnemyAbilityDefinition | undefined {
+  const ready = (ability: EnemyAbilityDefinition) => enemy.energy >= ability.energyCost && (enemy.abilityCooldowns[ability.id] ?? 0) <= 0;
+  const byName = (name: string) => enemy.abilities.find((ability) => ability.name === name && ready(ability));
+  if (enemy.behavior === "rabid_rat") {
+    if (!enemy.behaviorPhase) return byName("Bite") ?? byName("Scurry");
+    if (enemy.behaviorPhase === "rabid") return byName("Rabid Bite") ?? byName("Scurry");
+    return byName("Bite") ?? byName("Scurry");
+  }
+  if (enemy.behavior === "brown_bear") {
+    if (!enemy.behaviorPhase) return byName("Roar") ?? byName("Maul") ?? byName("Hibernate");
+    return byName("Maul") ?? (enemy.energy === 0 ? byName("Hibernate") : undefined) ?? byName("Roar");
+  }
+  if (enemy.behavior === "forest_spirit") {
+    if (!hasStatus(enemy.statuses, "stealth")) {
+      const fade = byName("Fade Out");
+      if (fade) return fade;
+    }
+    return enemy.behaviorPhase === "nature"
+      ? byName("Burning Glare") ?? byName("Nature's Beam") ?? byName("Shimmer")
+      : byName("Nature's Beam") ?? byName("Burning Glare") ?? byName("Shimmer");
+  }
+  return enemy.abilities.find(ready);
+}
+
 export function takeEnemyTurn(combat: CombatState, character: CharacterState, expectedActorId?: string): CombatState {
   combat = ensureCombatState(combat, character);
   const activeActor = combat.turnOrder[combat.activeTurnIndex];
@@ -2775,8 +2813,9 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     originalEnemy.magicResistance,
     (derived.statusDamageMultipliers.burn ?? 1) * getCharacterStatusDamageMultiplier(character, "burn", combat.playerStatuses),
   );
-  const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(originalEnemy.energyRegen, enemyStart.statuses));
-  let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false };
+  const abilityCooldowns = Object.fromEntries(Object.entries(originalEnemy.abilityCooldowns ?? {}).map(([id, turns]) => [id, Math.max(0, turns - 1)]));
+  const regeneratedEnergy = Math.min(originalEnemy.maxEnergy, originalEnemy.energy + getEnergyRegeneration(originalEnemy.energyRegen + (originalEnemy.nextTurnEnergyRegenBonus ?? 0), enemyStart.statuses));
+  let enemy = { ...originalEnemy, hp: enemyStart.hp, statuses: enemyStart.statuses, energy: regeneratedEnergy, stunned: false, abilityCooldowns, nextTurnEnergyRegenBonus: 0 };
   enemies[enemyIndex] = enemy;
   const sourceBurn = originalEnemy.statuses.find((status) => status.id === "burn");
   if (enemyStart.burnDamage > 0 && enemyStart.burnEventIndex !== null && sourceBurn?.sourceId === "player") {
@@ -2810,7 +2849,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     enemy = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId) ?? enemy;
   }
   let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns };
-  const enemyAbility = enemy.abilities.find((ability) => enemy.energy >= ability.energyCost);
+  const enemyAbility = getReadyEnemyAbility(enemy);
 
   if (enemy.hp <= 0) {
     logs.push(makeLog(`${enemy.name} falls.`));
@@ -2823,20 +2862,41 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   } else if (!enemyAbility) {
     logs.push(makeLog(`${enemy.name} gathers Energy.`));
     events.push(`${enemy.name} gathers Energy.`);
-  } else if (hasStatus(playerStatuses, "stealth")) {
+  } else if (hasStatus(playerStatuses, "stealth") && (enemyAbility.damageType || (enemyAbility.statusApplications?.length ?? 0) > 0)) {
     const stealth = playerStatuses.find((status) => status.id === "stealth")!;
     logs.push(makeLog(`${enemy.name} cannot target you while you are in Stealth.`, statusInfo(stealth)));
     events.push(`${enemy.name} cannot find you through Stealth.`);
   } else {
+    const barrageHits = enemy.behavior === "wisp_barrage" && enemyAbility.energyCost > 0
+      ? Math.min(enemy.maxActionsPerTurn, Math.floor(enemy.energy / enemyAbility.energyCost))
+      : enemyAbility.hits ?? 1;
     const enemyAbilityPower = (enemyAbility.baseDamage ?? 0)
       + enemy.physicalPower * (enemyAbility.physicalPowerScaling ?? 0)
       + enemy.spellPower * (enemyAbility.spellPowerScaling ?? 0);
     const enemyAttackInfo: InspectableInfo = { title: enemyAbility.name, description: enemyAbility.description, category: "ability" };
-    events.push(`${enemy.name} uses ${enemyAbility.name}.`);
+    const abilityEventIndex = events.length;
+    events.push(`${enemy.name} uses ${enemyAbility.name}${barrageHits > 1 && enemy.behavior === "wisp_barrage" ? ` ${barrageHits} times` : ""}.`);
     const playerDodgeChance = getEffectiveDodgeChance(derived.dodgeChance, getDodgeChanceBonus(playerStatuses));
-    if (!rollHit(enemy.hitChance * getHitChanceMultiplier(enemy.statuses), playerDodgeChance)) {
+    const successfulHits = enemyAbility.damageType
+      ? Array.from({ length: barrageHits }, () => rollHit(enemy.hitChance * getHitChanceMultiplier(enemy.statuses), playerDodgeChance)).filter(Boolean).length
+      : 0;
+    if (!enemyAbility.damageType) {
+      (enemyAbility.statusApplications ?? []).forEach((application) => {
+        if (derived.statusImmunities.includes(application.status) || Math.random() >= (application.chance ?? 1)) return;
+        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+        playerStatuses = addOrRefreshStatus(playerStatuses, status);
+        logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
+        queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status, application.status === "stunned", abilityEventIndex);
+      });
+      (enemyAbility.selfStatusApplications ?? []).forEach((application) => {
+        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+        enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
+        queueStatus(events, pendingEffects, `${enemy.name} gains ${status.name}.`, enemy.instanceId, status, application.status === "stunned", abilityEventIndex);
+      });
+      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, enemyAbility.selfStatusApplications?.length ? enemy.instanceId : "player", enemy.instanceId);
+    } else if (successfulHits === 0) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
-      queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, missed: true });
+      queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: barrageHits, missed: true });
       const missedTriggers = runPlayerTriggerEvent(
         "enemy_missed",
         { abilityId: enemyAbility.id, damageType: enemyAbility.damageType, damage: 0, sourceKind: "enemy", targetStatusIds: enemy.statuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
@@ -2857,8 +2917,15 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       playerEnergy = missedTriggers.state.energy;
     } else {
       const defense = getDefense(derived.armor, derived.magicResistance, playerStatuses, enemyAbility.damageType);
-      const critical = Math.random() < enemy.critChance + getCriticalChanceBonus(enemy.statuses);
-      const baseIncoming = Math.max(1, Math.round((enemyAbilityPower - Math.floor(defense * 0.35)) * (critical ? 1.6 : 1)));
+      const criticalChance = enemy.critChance + getCriticalChanceBonus(enemy.statuses);
+      let criticalHits = 0;
+      let baseIncoming = 0;
+      for (let hit = 0; hit < successfulHits; hit += 1) {
+        const hitCritical = Math.random() < criticalChance;
+        if (hitCritical) criticalHits += 1;
+        baseIncoming += Math.max(1, Math.round((enemyAbilityPower - Math.floor(defense * 0.35)) * (hitCritical ? 1.6 : 1)));
+      }
+      const critical = criticalHits > 0;
       const incoming = Math.max(0, Math.round(getModifiedDamage(baseIncoming, enemy.statuses, playerStatuses, enemyAbility.damageType) * getEnergyDefenseMultiplier(derived, playerEnergy, playerStatuses)));
       const absorptionStatusSources = new Map(playerStatuses
         .filter((status) => status.id === "guard" || status.id === "barrier")
@@ -2870,21 +2937,25 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       playerHp = Math.max(0, playerHp - damage);
       playerStatuses = wakeFromDamage(absorption.statuses, damage);
       logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name} for ${damage}${critical ? " critical" : ""}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
-      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, { attackerId: enemy.instanceId });
+      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: barrageHits });
+      queueAbilityVfx(pendingEffects, damageEventIndex, enemyAbility.vfx, "player", enemy.instanceId);
       queueAbsorptionChanges(pendingEffects, damageEventIndex, "player", absorption);
-      let enemyAppliedBleed = false;
-      if (damage > 0 && enemyAbility.onHitEffect === "bleed" && !derived.statusImmunities.includes("bleed")) {
-        const bleed = createStatusEffect("bleed", { sourcePower: enemyAbilityPower, sourceId: enemy.instanceId });
-        playerStatuses = addOrRefreshStatus(playerStatuses, bleed);
-        enemyAppliedBleed = true;
-        logs.push(makeLog("You gain Bleed.", statusInfo(bleed)));
-        events[damageEventIndex] = `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""} and applies Bleed.`;
-        queueStatus(events, pendingEffects, "You are Bleeding.", "player", bleed, false, damageEventIndex);
-      }
-      if (enemyAppliedBleed) {
+      const appliedStatusIds: StatusEffectId[] = [];
+      if (damage > 0) (enemyAbility.statusApplications ?? []).forEach((application) => {
+        if (derived.statusImmunities.includes(application.status)) return;
+        let applications = 0;
+        for (let hit = 0; hit < successfulHits; hit += 1) if (Math.random() < (application.chance ?? 1)) applications += application.stacks ?? 1;
+        if (applications <= 0) return;
+        const status = createStatusEffect(application.status, { stacks: applications, duration: application.duration, sourcePower: enemyAbilityPower, sourceId: enemy.instanceId });
+        playerStatuses = addOrRefreshStatus(playerStatuses, status);
+        appliedStatusIds.push(application.status);
+        logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
+        queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status, application.status === "stunned", damageEventIndex);
+      });
+      if (appliedStatusIds.length > 0) {
         const statusApplied = runPlayerTriggerEvent(
           "status_applied",
-          { appliedStatusIds: ["bleed"], sourceKind: "enemy", targetStatusIds: enemy.statuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
+          { appliedStatusIds, sourceKind: "enemy", targetStatusIds: enemy.statuses.map((status) => status.id), selfStatusIds: playerStatuses.map((status) => status.id) },
           enemy.instanceId, character, combat, derived,
           { enemies, playerStatuses, playerHp, energy: playerEnergy }, procUsage, logs, events, pendingEffects, damageEventIndex,
         );
@@ -2929,10 +3000,20 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         queueAbsorptionChanges(pendingEffects, recoilEventIndex, enemy.instanceId, recoilAbsorption);
       }
     }
+    enemy.nextTurnEnergyRegenBonus = enemyAbility.restoreFullEnergyNextTurn ? enemy.maxEnergy : enemy.nextTurnEnergyRegenBonus + (enemyAbility.nextTurnEnergyRegen ?? 0);
+    enemy.abilityCooldowns = { ...enemy.abilityCooldowns, [enemyAbility.id]: enemyAbility.cooldownTurns };
+    if (enemy.behavior === "rabid_rat") {
+      if (enemyAbility.name === "Bite") enemy.behaviorPhase = "rabid";
+      if (enemyAbility.name === "Rabid Bite") enemy.behaviorPhase = "bite";
+    } else if (enemy.behavior === "brown_bear") enemy.behaviorPhase = "active";
+    else if (enemy.behavior === "forest_spirit") {
+      if (enemyAbility.name === "Nature's Beam") enemy.behaviorPhase = "nature";
+      if (enemyAbility.name === "Burning Glare") enemy.behaviorPhase = "burning";
+    }
     const bleedResult = applyBleedAfterAbility(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, 1, enemy.armor);
     enemy = { ...enemy, hp: bleedResult.hp, statuses: bleedResult.statuses };
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId
-      ? { ...candidate, ...enemy, energy: Math.max(0, enemy.energy - enemyAbility.energyCost) }
+      ? { ...candidate, ...enemy, energy: Math.max(0, enemy.energy - enemyAbility.energyCost * (enemy.behavior === "wisp_barrage" ? barrageHits : 1)) }
       : candidate);
     if (bleedResult.damage > 0 && bleedResult.eventIndex !== null && bleedResult.sourceId === "player") {
       const bleedTriggers = runPlayerTriggerEvents(
@@ -3203,6 +3284,19 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     if (effect.damage > 0) damagedTargets.push(effect.targetId);
   });
 
+  const newlyDefeated = combat.enemies.filter((before) => before.hp > 0 && (enemies.find((enemy) => enemy.instanceId === before.instanceId)?.hp ?? 0) <= 0);
+  newlyDefeated.forEach((defeated) => {
+    enemies = enemies.map((enemy) => {
+      const reaction = enemy.healOnAllyDeath;
+      if (enemy.hp <= 0 || !reaction || reaction.allyId !== defeated.id) return enemy;
+      const amount = Math.min(enemy.maxHp - enemy.hp, Math.max(1, Math.round(enemy.maxHp * reaction.maxHpRatio)));
+      if (amount <= 0) return enemy;
+      abilityAnimations.push({ id: `ally-death-vfx-${eventId}-${eventIndex}-${defeated.instanceId}`, kind: reaction.vfx, targetId: enemy.instanceId, sourceTargetId: defeated.instanceId });
+      passiveAnimations.push({ id: `ally-death-heal-${eventId}-${eventIndex}-${defeated.instanceId}`, targetId: enemy.instanceId, text: `+${amount} Health`, lane: eventIndex % 3 });
+      return { ...enemy, hp: enemy.hp + amount };
+    });
+  });
+
   enemies = enemies.map((enemy) => enemy.hp <= 0 && enemy.statuses.length > 0
     ? { ...enemy, statuses: [] }
     : enemy);
@@ -3237,7 +3331,7 @@ export function primeCombatAttack(combat: CombatState, eventId: number, eventInd
   const animationHitCount = Math.max(1, attackEffect.animationHitCount ?? 1);
   const animationDurationMultiplier = Math.max(0.1, attackEffect.animationDurationMultiplier ?? 1);
   const attackPresentation = attackEffect.attackPresentation ?? (attackEffect.attackRange === "ranged" ? "projectile" : "melee");
-  const usesProjectile = attackPresentation === "projectile" && attackEffect.attackerId === "player" && attackEffect.targetId !== "player";
+  const usesProjectile = attackPresentation === "projectile" && attackEffect.attackerId !== attackEffect.targetId;
   const usesLunge = attackPresentation === "melee";
   return {
     ...combat,

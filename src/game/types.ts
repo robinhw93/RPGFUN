@@ -381,7 +381,22 @@ export type CombatAbilityVfxKind =
   | "fire_eater"
   | "fire_eater_transfer"
   | "beacon_of_light"
-  | "martyrdom";
+  | "martyrdom"
+  | "enemy_training_strike"
+  | "enemy_bite"
+  | "enemy_scurry"
+  | "enemy_rabid_bite"
+  | "enemy_howl"
+  | "enemy_bite_claw"
+  | "enemy_wisp_blast"
+  | "enemy_maul"
+  | "enemy_hibernate"
+  | "enemy_roar"
+  | "enemy_fade_out"
+  | "enemy_burning_glare"
+  | "enemy_natures_beam"
+  | "enemy_shimmer"
+  | "enemy_spirit_heal";
 
 export type AbilityRange = "melee" | "ranged";
 export type AbilityAttackPresentation = "melee" | "projectile" | "target";
@@ -604,12 +619,23 @@ export interface EnemyAbilityDefinition {
   name: string;
   description: string;
   energyCost: number;
-  damageType: DamageType;
+  cooldownTurns: number;
+  range: AbilityRange;
+  /** Ranged attacks may resolve immediately on the target rather than travelling as a projectile. */
+  rangedPresentation?: "projectile" | "target";
+  damageType?: DamageType;
   baseDamage?: number;
   physicalPowerScaling?: number;
   spellPowerScaling?: number;
-  onHitEffect?: "bleed";
+  hits?: number;
+  statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number }>;
+  selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
+  nextTurnEnergyRegen?: number;
+  restoreFullEnergyNextTurn?: boolean;
+  vfx: CombatAbilityVfxKind;
 }
+
+export type EnemyBehaviorKind = "single" | "rabid_rat" | "priority" | "wisp_barrage" | "brown_bear" | "forest_spirit";
 
 export interface EnemyTemplate {
   id: string;
@@ -629,6 +655,9 @@ export interface EnemyTemplate {
   abilities: EnemyAbilityDefinition[];
   /** Free-form design notes describing intended ability priorities and conditions. */
   behaviorNotes: string;
+  behavior: EnemyBehaviorKind;
+  maxActionsPerTurn: number;
+  healOnAllyDeath?: { allyId: string; maxHpRatio: number; vfx: CombatAbilityVfxKind };
   accent: string;
 }
 
@@ -639,6 +668,9 @@ export interface EnemyState extends EnemyTemplate {
   maxEnergy: number;
   statuses: StatusEffect[];
   stunned: boolean;
+  abilityCooldowns: Record<string, number>;
+  nextTurnEnergyRegenBonus: number;
+  behaviorPhase?: string;
 }
 
 export interface TurnOrderEntry {

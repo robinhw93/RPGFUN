@@ -435,16 +435,16 @@ The duration is the default duration created by the status library. Ability or t
 
 Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Attacks are implemented as explicit abilities rather than an implicit default attack.
 
-| Enemy | Health | Physical Power | Spell Power | Armor | Magic Resistance | Hit | Dodge | Crit | Regen / Max | Cost | Ability |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| DUMMY | 100 | 1 | 0 | 0 | 0 | 95% | 0% | 0% | 1 / 10 | 1 | Training Strike; 100% Physical Power as Physical damage. |
-| Ash Hound | 28 | 7 | 0 | 1 | 0 | 95% | 8% | 0% | 1 / 10 | 3 | Raking Claws; 100% Physical Power as Physical damage and applies Bleed after Health damage. |
-| Cinder Cultist | 34 | 0 | 9 | 2 | 2 | 96% | 3% | 0% | 1 / 10 | 4 | Searing Brand; 100% Spell Power as Arcane damage. |
-| Ember Wisp | 22 | 0 | 6 | 0 | 3 | 98% | 12% | 0% | 1 / 10 | 3 | Scorch; 100% Spell Power as Arcane damage. |
-| The Ashen Warden | 92 | 12 | 0 | 4 | 4 | 100% | 5% | 0% | 1 / 10 | 5 | Cinder Cleave; 100% Physical Power as Physical damage. |
-| Windsong Wolf | 30 | 7 | 0 | 1 | 0 | 94% | 10% | 5% | 1 / 10 | 3 | Rending Bite; 100% Physical Power as Physical damage and applies Bleed after Health damage. |
-| Grove Sprite | 24 | 0 | 7 | 0 | 4 | 97% | 14% | 8% | 2 / 12 | 4 | Pollen Spark; 100% Spell Power as Arcane damage. |
-| Greyback Boar | 82 | 11 | 0 | 5 | 2 | 93% | 3% | 10% | 1 / 10 | 5 | Stone-Tusk Charge; 100% Physical Power as Physical damage. |
+| Enemy | Health | Physical / Spell Power | Armor / Magic Resistance | Hit / Dodge / Crit | Regen / Max | Abilities |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| DUMMY | 100 | 1 / 0 | 0 / 0 | 95% / 0% / 0% | 1 / 10 | Training Strike (1 Energy, Melee): 1 base Physical damage. |
+| Rabid Rat | 10 | 5 / 0 | 0 / 0 | 95% / 5% / 10% | 1 / 3 | Bite (2, Melee): 100% Physical Power. Scurry (0, self): +1 Energy next turn. Rabid Bite (3, Melee): 100% Physical Power and 1 Poison. |
+| Windsong Wolf | 30 | 7 / 0 | 3 / 0 | 95% / 10% / 10% | 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
+| Forest Wisp | 10 | 0 / 10 | 0 / 3 | 95% / 40% / 5% | 2 / 5 | Wisp Blast (1, Ranged): 50% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent. |
+| Brown Bear | 50 | 10 / 0 | 5 / 0 | 85% / 5% / 5% | 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
+| The Forest Spirit | 80 | 0 / 10 | 0 / 5 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
+
+The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
 
 ## Adventure: Windsong Forest
 
@@ -452,12 +452,12 @@ Stage possibilities use relative percentage weights and each stage totals 100% i
 
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
-| 1 | Tracks in the Clover | 70% | Two Windsong Wolves | 55 XP, 9 gold, loot roll. |
+| 1 | Rustling in the Clover | 70% | Two Rabid Rats | 55 XP, 9 gold, loot roll. |
 | 1 | The Broken Footbridge | 30% | Three attribute-roll choices. | Choice outcome. |
-| 2 | Restless Understory | 55% | Windsong Wolf and Grove Sprite | 75 XP, 14 gold, loot roll. |
+| 2 | Restless Understory | 55% | Windsong Wolf and Forest Wisp | 75 XP, 14 gold, loot roll. |
 | 2 | The Singing Grove | 45% | Two attribute-roll choices. | Choice outcome. |
-| 3 | A Ring of Sparks | 100% | Three Grove Sprites | 90 XP, 18 gold, loot roll. |
-| 4 | The Ancient Greyback | 100% | Greyback Boar | 130 XP, 32 gold, Greyback Tusk Charm. |
+| 3 | The Sleeping Giant | 100% | Brown Bear | 90 XP, 18 gold, loot roll. |
+| 4 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 130 XP, 32 gold, Forest Spirit Charm. |
 
 ## Testing adventure: Shadow Proving Grounds
 
@@ -485,7 +485,7 @@ New characters begin with no equipped gear and an empty inventory. The items bel
 | Garnet Signet | Ring | Rare | +1 Strength, +2 Luck | — |
 | Moonlit Coil | Ring | Epic | +1 Agility, +2 Intelligence, +1 Luck | — |
 | Warden's Broken Crown | Plate Head | Epic | +4 Armor, +2 Strength, +3 Vitality | Ashborn Warplate |
-| Greyback Tusk Charm | Ring | Epic | +2 Armor, +3 Vitality, +2 Luck | — |
+| Forest Spirit Charm | Ring | Epic | +2 Armor, +3 Vitality, +2 Luck | — |
 | Cowl of Quiet Sparks | Cloth Head | Uncommon | +2 Magic Resistance, +2 Intelligence | — |
 | Nightstitch Vest | Leather Chest | Uncommon | +3 Armor, +2 Agility, +1 Vitality | — |
 | Emberweave Robe | Cloth Chest | Rare | +1 Armor, +4 Magic Resistance, +3 Intelligence | — |

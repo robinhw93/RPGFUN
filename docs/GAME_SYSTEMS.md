@@ -10,7 +10,7 @@ This document describes the rules currently implemented in Emberfall Chronicles.
 4. Resolve its weighted combat and event stages while carrying remaining Health between stages.
 5. After each victory, receive experience, gold, and potentially loot on the score screen.
 6. Equip loot or adjust the build between fights.
-7. Defeat the Ancient Greyback to complete the current adventure.
+7. Defeat the Forest Spirit and its two Wisps to complete the current adventure.
 
 Death is permanent. When combat reaches defeat, the browser save is deleted. The defeat screen returns the player to character creation, and the previous character, equipment, talents, and adventure progress cannot be recovered through the game UI.
 
@@ -147,7 +147,7 @@ ability damage + enemy Physical Power × physical scaling + enemy Spell Power ×
   - floor(player defense × 0.35)
 ```
 
-The result has a minimum of 1 before critical and status modifiers. Guard then absorbs damage before Health is lost.
+The result has a minimum of 1 before critical and status modifiers. Guard then absorbs damage before Health is lost. Every enemy ability also declares whether it is Melee or Ranged. Melee attacks use the combat lunge; Ranged attacks use a flavor-specific projectile, beam, or target effect.
 
 ## Combat flow
 
@@ -482,7 +482,7 @@ Regular encounters currently roll from the seven-item reward pool with base rari
 | Rare | 13 |
 | Epic | 4 |
 
-Luck's loot-rarity bonus increases Uncommon, Rare, and Epic weights by their rarity tier while leaving Common's weight unchanged. Windsong Forest's final boss awards the Greyback Tusk Charm directly.
+Luck's loot-rarity bonus increases Uncommon, Rare, and Epic weights by their rarity tier while leaving Common's weight unchanged. Windsong Forest's final boss awards the Forest Spirit Charm directly.
 
 Gold is stored on the character and displayed in the top bar and reward screens. There is no shop or gold-spending system yet.
 

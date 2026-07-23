@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Copy, Download, LockKeyhole, Plus, Save, Skull, Trash2, Wrench, X } from "lucide-react";
 import { ADVENTURES, ADVENTURE_EVENTS, ENEMIES } from "../game/data";
-import type { AdventureDefinition, AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureStageEntry, StatName } from "../game/types";
+import type { AbilityRange, AdventureDefinition, AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureStageEntry, StatName } from "../game/types";
 
 export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool";
 
@@ -34,10 +34,11 @@ interface EnemyAbilityDraft {
   name: string;
   energyCost: number;
   cooldownTurns: number;
+  range: AbilityRange;
   effect: string;
 }
 
-interface EnemyExchange { format: "emberfall-enemies"; version: 2; enemies: EnemyDraft[] }
+interface EnemyExchange { format: "emberfall-enemies"; version: 3; enemies: EnemyDraft[] }
 interface EventExchange { format: "emberfall-events"; version: 1; events: AdventureEventDefinition[] }
 interface AdventureExchange { format: "emberfall-adventures"; version: 1; adventures: AdventureDefinition[] }
 
@@ -153,7 +154,7 @@ function TextField({ label, value, onChange, textarea = false }: { label: string
 function canonicalEnemyExchange(): EnemyExchange {
   return {
     format: "emberfall-enemies",
-    version: 2,
+    version: 3,
     enemies: Object.values(ENEMIES).map((enemy) => ({
       id: enemy.id,
       name: enemy.name,
@@ -172,7 +173,8 @@ function canonicalEnemyExchange(): EnemyExchange {
         id: ability.id,
         name: ability.name,
         energyCost: ability.energyCost,
-        cooldownTurns: 0,
+        cooldownTurns: ability.cooldownTurns,
+        range: ability.range,
         effect: ability.description,
       })),
       behaviorNotes: enemy.behaviorNotes,
@@ -185,7 +187,7 @@ function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
   const fallbackById = ENEMIES;
   return {
     format: "emberfall-enemies",
-    version: 2,
+    version: 3,
     enemies: (Array.isArray(exchange?.enemies) ? exchange.enemies : []).map((enemy) => {
       const legacy = enemy as Partial<EnemyDraft> & { power?: number; damageType?: string; energyCost?: number; intentText?: string; attackDescription?: string; abilitiesNotes?: string };
       const fallback = legacy.id ? fallbackById[legacy.id] : undefined;
@@ -194,17 +196,20 @@ function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
         id: ability.id,
         name: ability.name,
         energyCost: ability.energyCost,
-        cooldownTurns: 0,
+        cooldownTurns: ability.cooldownTurns,
+        range: ability.range,
         effect: ability.description,
       }));
       const rawAbilities: Array<Partial<EnemyAbilityDraft> & { description?: string }> = Array.isArray(legacy.abilities) ? legacy.abilities : fallbackAbilities;
       const abilities = rawAbilities.map((ability, index) => {
         const raw = ability as Partial<EnemyAbilityDraft> & { description?: string };
+        const fallbackAbility = fallbackAbilities.find((candidate) => candidate.id === raw.id);
         return {
           id: raw.id ?? makeId("enemy-ability"),
           name: raw.name ?? `Ability ${index + 1}`,
           energyCost: finiteNumber(raw.energyCost, 0),
           cooldownTurns: finiteNumber(raw.cooldownTurns, 0),
+          range: (raw.range === "ranged" ? "ranged" : raw.range === "melee" ? "melee" : fallbackAbility?.range ?? "melee") as AbilityRange,
           effect: raw.effect ?? raw.description ?? "",
         };
       });
@@ -215,6 +220,7 @@ function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
         name: legacy.intentText?.split(" · ")[0] || "New Ability",
         energyCost: finiteNumber(legacy.energyCost, 0),
         cooldownTurns: 0,
+        range: "melee",
         effect: legacyEffect,
       });
       return {
@@ -245,7 +251,7 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
   const selected = store.draft.enemies.find((enemy) => enemy.id === selectedId) ?? store.draft.enemies[0];
   const update = (change: Partial<EnemyDraft>) => store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.map((enemy) => enemy.id === selected?.id ? { ...enemy, ...change } : enemy) }));
   const updateAbility = (abilityId: string, change: Partial<EnemyAbilityDraft>) => update({ abilities: selected.abilities.map((ability) => ability.id === abilityId ? { ...ability, ...change } : ability) });
-  const addAbility = () => update({ abilities: [...selected.abilities, { id: makeId("enemy-ability"), name: "New Ability", energyCost: 0, cooldownTurns: 0, effect: "" }] });
+  const addAbility = () => update({ abilities: [...selected.abilities, { id: makeId("enemy-ability"), name: "New Ability", energyCost: 0, cooldownTurns: 0, range: "melee", effect: "" }] });
   const add = () => {
     const id = makeId("enemy");
     const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, physicalPower: 6, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, abilities: [], behaviorNotes: "", accent: "#79a86d" };
@@ -262,7 +268,7 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
         <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => update({ maxEnergy })} />
         <div className="enemy-ability-editor-list wide-field"><div className="enemy-ability-editor-heading"><div><span>Abilities</span><small>Add every ability this enemy can use.</small></div><button type="button" className="secondary-editor-button" onClick={addAbility}><Plus size={14} /> Add ability</button></div>
           {selected.abilities.length === 0 && <p className="empty-editor-copy">No abilities added yet.</p>}
-          {selected.abilities.map((ability, index) => <article className="enemy-ability-editor" key={ability.id}><header><strong>Ability {index + 1}</strong><button type="button" onClick={() => update({ abilities: selected.abilities.filter((item) => item.id !== ability.id) })}><Trash2 size={14} /> Remove</button></header><div className="content-form-grid"><TextField label="Name" value={ability.name} onChange={(name) => updateAbility(ability.id, { name })} /><NumberField label="Energy Cost" value={ability.energyCost} min={0} onChange={(energyCost) => updateAbility(ability.id, { energyCost })} /><NumberField label="Cooldown" value={ability.cooldownTurns} min={0} onChange={(cooldownTurns) => updateAbility(ability.id, { cooldownTurns })} /><TextField label="Effect" value={ability.effect} onChange={(effect) => updateAbility(ability.id, { effect })} textarea /></div></article>)}
+          {selected.abilities.map((ability, index) => <article className="enemy-ability-editor" key={ability.id}><header><strong>Ability {index + 1}</strong><button type="button" onClick={() => update({ abilities: selected.abilities.filter((item) => item.id !== ability.id) })}><Trash2 size={14} /> Remove</button></header><div className="content-form-grid"><TextField label="Name" value={ability.name} onChange={(name) => updateAbility(ability.id, { name })} /><NumberField label="Energy Cost" value={ability.energyCost} min={0} onChange={(energyCost) => updateAbility(ability.id, { energyCost })} /><NumberField label="Cooldown" value={ability.cooldownTurns} min={0} onChange={(cooldownTurns) => updateAbility(ability.id, { cooldownTurns })} /><label><span>Attack Type</span><select value={ability.range} onChange={(event) => updateAbility(ability.id, { range: event.target.value as AbilityRange })}><option value="melee">Melee</option><option value="ranged">Ranged</option></select></label><TextField label="Effect" value={ability.effect} onChange={(effect) => updateAbility(ability.id, { effect })} textarea /></div></article>)}
         </div>
         <TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
       </div></section>}
