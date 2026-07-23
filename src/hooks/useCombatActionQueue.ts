@@ -16,6 +16,8 @@ export interface CombatActionQueueProjection {
   cooldownAbilityIds: Set<string>;
   targetStatusIds: Map<string, Set<StatusEffectId>>;
   targetStatusStacks: Map<string, Map<StatusEffectId, number>>;
+  playerStatusIds: Set<StatusEffectId>;
+  playerStatusStacks: Map<StatusEffectId, number>;
   nextAbilityIsFree: boolean;
   closed: boolean;
 }
@@ -27,6 +29,8 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
   const projectedCooldowns = new Map(Object.entries(combat.abilityCooldowns ?? {}).filter(([, turns]) => turns > 0));
   const targetStatusIds = new Map(combat.enemies.map((enemy) => [enemy.instanceId, new Set(enemy.statuses.map((status) => status.id))]));
   const targetStatusStacks = new Map(combat.enemies.map((enemy) => [enemy.instanceId, new Map(enemy.statuses.map((status) => [status.id, status.stacks]))]));
+  const playerStatusIds = new Set(combat.playerStatuses.map((status) => status.id));
+  const playerStatusStacks = new Map(combat.playerStatuses.map((status) => [status.id, status.stacks]));
   let closed = false;
 
   actions.forEach((action) => {
@@ -100,6 +104,20 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
         targetStatusStacks.get(action.targetId)?.delete(statusId);
       });
     }
+    if (ability.transferSelfStatusToTargetForHealing) {
+      const statusId = ability.transferSelfStatusToTargetForHealing.status;
+      const transferredStacks = playerStatusStacks.get(statusId) ?? 0;
+      playerStatusIds.delete(statusId);
+      playerStatusStacks.delete(statusId);
+      if (transferredStacks > 0) {
+        targetStatuses.add(statusId);
+        targetStatusStacks.get(action.targetId)?.set(statusId, (targetStatusStacks.get(action.targetId)?.get(statusId) ?? 0) + transferredStacks);
+      }
+    }
+    (ability.selfStatusApplications ?? []).forEach((application) => {
+      playerStatusIds.add(application.status);
+      playerStatusStacks.set(application.status, (playerStatusStacks.get(application.status) ?? 0) + (application.stacks ?? 1));
+    });
     if (ability.detonateStatus) {
       targetStatuses.delete(ability.detonateStatus);
       if (ability.detonateStatus === "stunned") targetStatuses.add("diminishingReturns");
@@ -130,7 +148,7 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     }
   });
 
-  return { energy, cooldownAbilityIds: new Set(projectedCooldowns.keys()), targetStatusIds, targetStatusStacks, nextAbilityIsFree, closed };
+  return { energy, cooldownAbilityIds: new Set(projectedCooldowns.keys()), targetStatusIds, targetStatusStacks, playerStatusIds, playerStatusStacks, nextAbilityIsFree, closed };
 }
 
 export function useCombatActionQueue(
@@ -155,10 +173,13 @@ export function useCombatActionQueue(
       if (combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return current;
       const projection = projectCombatActionQueue(combat, currentGame.character, current);
       const targetStatuses = projection.targetStatusIds.get(combat.selectedEnemyId) ?? [];
+      const selfRequirementMet = !ability.requiredSelfStatus
+        || projection.playerStatusIds.has(ability.requiredSelfStatus)
+        || getCharacterAbilityModifiers(currentGame.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
       const energyCost = projection.nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(currentGame.character, ability, targetStatuses);
       const requiredMinimum = getCharacterAbilityModifiers(currentGame.character, ability.id).find((modifier) => modifier.requiredTargetStatusStacksMinimum !== undefined)?.requiredTargetStatusStacksMinimum ?? ability.requiredTargetStatusStacks?.minimum;
       const targetStackRequirementMet = !ability.requiredTargetStatusStacks || (projection.targetStatusStacks.get(combat.selectedEnemyId)?.get(ability.requiredTargetStatusStacks.status) ?? 0) >= (requiredMinimum ?? 0);
-      if (projection.closed || projection.cooldownAbilityIds.has(abilityId) || energyCost > projection.energy || !targetStackRequirementMet) return current;
+      if (projection.closed || projection.cooldownAbilityIds.has(abilityId) || energyCost > projection.energy || !targetStackRequirementMet || !selfRequirementMet) return current;
       nextActionId.current += 1;
       return [...current, { id: nextActionId.current, type: "ability", abilityId, targetId: combat.selectedEnemyId }];
     });

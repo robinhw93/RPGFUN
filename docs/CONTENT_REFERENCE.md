@@ -44,7 +44,8 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power plus 25% Magical Power. Both components gain 20% damage per unique debuff on the target. |
 | Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Magical Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
-| Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. |
+| Bash | 1 | 1 | Enemy | Deals 60% Physical Power as Physical damage and has a 30% chance to grant +1 Energy regeneration next turn. Granted by the Brute class node. |
+| Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. Imbued Weapon changes the scaling to Magical Power, lowers the cost to 2, lowers the cooldown to 1, and applies 2 Burn. |
 | Wounding Strike | 2 | 2 | Enemy | Deals 40% Physical Power as Physical damage and applies 1 Bleed. |
 | Swift Blade | 0 | 2 | Enemy | Deals 40% Physical Power as Physical damage and grants +1 Energy regeneration next turn; Light Metal increases this to +2. |
 | Flame Cleave | 4 | 3 | All enemies | Simultaneously deals 60% Physical Power as Physical damage and applies 1 Burn. Scorching Sweep applies 2 Burn to targets already Burning; Wildfire Cleave adds 20% damage per living Burning enemy. |
@@ -63,6 +64,10 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Crushing Impact | 0 | None | Enemy | Deals Physical damage based on the player's current Guard and removes every buff from the target. |
 | Explosive Strike | 4 | 2 | Enemy | Deals 50% Physical Power as Physical damage, increased by 5% per Burn on the target, then consumes that Burn and deals its remaining damage to every other enemy. |
 | Consecrated Ground | 6 | 4 | All enemies | A target-bound Ranged field that simultaneously deals 80% Magical Power as Magic damage. Each enemy independently has a 20% chance to gain Smite, and the player gains Regenerate. |
+| Guard (Brute) | 1 | None | Self | Grants Guard equal to 5% of Armor. |
+| Vampirism | 2 | None | Enemy | Deals 10% Physical Power as Physical damage and restores 2 Health per Bleed on the target. |
+| Fire Eater | 4 | 4 | Burning self and enemy | Consumes all Burn on the player, restores Health equal to its remaining damage, and transfers the consumed Burn to the selected enemy. |
+| Beacon of Light | 6 | 6 | All enemies and self | Applies Smite to every enemy simultaneously and grants Regenerate to the player for 3 turns. |
 | Arcane Bolt | 1 | 1 | Enemy | Deals 75% Magical Power as Arcane damage. Granted by the Arcanist class node. |
 | Frostbolt | 3 | 1 | Enemy | Deals 50% Magical Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
 | Arcane Blast | 1 | None | Enemy | Deals 20% Magical Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
@@ -102,14 +107,14 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 217 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 56 later Brute nodes. Branch counts are Shadow 79, Arcanist 79, Brute 57, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 239 nodes: the origin, four first-direction class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 78 later Brute nodes. Branch counts are Shadow 79, Arcanist 79, Brute 79, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 
 | ID | Talent | Type | Declared connection(s) | Rule | Effect |
 | --- | --- | --- | --- | --- | --- |
 | origin | Wayfarer's Spark | Class | None | — | Starting node; unlocks Strike and Guard. |
-| brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength. |
+| brute_1 | Brute | Class | Wayfarer's Spark | Any | +2 Strength and unlocks Bash. |
 | shadow_1 | Shadow | Class | Wayfarer's Spark | Any | +2 Agility and unlocks Quick Slash. |
 | arcanist_1 | Arcanist | Class | Wayfarer's Spark | Any | +2 Intelligence and unlocks Arcane Bolt. |
 | cultist_1 | Cultist | Class | Wayfarer's Spark | Any | Unlocks the Cultist path. |
@@ -326,6 +331,28 @@ Connections are bidirectional: unlocking either end can make the node at the oth
 | talent_210 | Explosive Strike | Ability | Critical Burns | Any | Unlocks Explosive Strike. |
 | talent_211 | Consecrated Ground | Ability | Guided | Any | Unlocks Consecrated Ground. |
 | talent_212 | Renewal | Passive | Consecrated Ground | Any | Restoring Health has a 50% chance to reduce one random ability cooldown by 1 turn. |
+| talent_213 | Flameborn | Passive | Explosive Strike | Any | Burn damage grants Barrier equal to 50% of the damage taken. |
+| talent_214 | Swift Wounding Strike | Passive | Berserk | Any | Wounding Strike no longer has a cooldown. |
+| talent_215 | Stronger Shield | Passive | Shatter Armor | Any | Shield Bash gains damage equal to 10% of Armor. |
+| talent_216 | Stronger Bash | Passive | Stronger Shield | Any | Shield Bash gains 20% additional Physical Power scaling. |
+| talent_217 | Perfected Wounding Strike | Passive | Swift Wounding Strike or Stronger Bash | Any | Wounding Strike applies 2 Bleed. |
+| talent_218 | Imbued Weapon | Passive | Super Critical Burns | Any | Searing Strike scales with Magical Power, costs 2 Energy, has a 1-turn cooldown, and applies 2 Burn. |
+| talent_219 | Divine Blade | Passive | Word Above | Any | Swift Blade gains +20% Critical Strike Chance and a 20% chance to apply Smite. |
+| talent_220 | Anger | Passive | Swift Wounding Strike | Any | Starts combat with Fierce. |
+| talent_221 | Prepared | Passive | Stronger Shield | Any | Starts combat with Guard equal to 3% Max Health. |
+| talent_222 | Flameheart | Passive | Furnace Breaker | Any | +2 Max Energy. |
+| talent_223 | Heavenly Protection | Passive | Divine Smite | Any | Starts combat with Barrier equal to 3% Max Health. |
+| talent_224 | Recklessness | Passive | Armored (`talent_162`) | Any | -5 Max Energy and +3 Energy regeneration. |
+| talent_225 | Martyrdom | Passive | Heavenly Protection | Any | Starting combat at full Health sacrifices 20% Max Health, ignoring Guard and Barrier. |
+| talent_226 | Fire Within | Passive | Flameheart | Any | Starts combat with 1 Burn on the player. |
+| talent_227 | Light the Fuse | Passive | Searing Strike | Any | Burn damage to the player restores 1 Energy. |
+| talent_228 | Time to Breathe | Passive | Swift Blade | Any | The first drop below 40% Health each combat grants Regenerate. |
+| talent_229 | Guard | Ability | Prepared | Any | Unlocks the Brute Guard ability. |
+| talent_230 | Defensive Maneuvers | Passive | Quick Guard | Any | Gaining Guard deals 50% Armor as Physical damage to a random enemy. |
+| talent_231 | Infected Wounds | Passive | Pristine Weapon | Any | Applying Bleed has a 20% chance to also apply Poison. |
+| talent_232 | Vampirism | Ability | Anger | Any | Unlocks Vampirism. |
+| talent_233 | Fire Eater | Ability | Flameheart | Any | Unlocks Fire Eater. |
+| talent_234 | Beacon of Light | Ability | Heavenly Protection | Any | Unlocks Beacon of Light. |
 
 The three Brute Armor nodes intentionally share the player-facing name Armored. Internal IDs remain stable for save compatibility.
 

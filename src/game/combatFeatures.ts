@@ -70,7 +70,7 @@ export interface CombatTriggerContext {
 }
 
 export interface CharacterCombatFeatures {
-  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusDurationBonuses" | "deathPreventionConsumeStatusForHealing" | "guaranteedHitAgainstStatusStacks">> & {
+  passive: Required<Omit<PassiveBonuses, "stats" | "statusDamage" | "preserveStatusOnDetonation" | "startingStatuses" | "statusImmunities" | "statusApplicationStacks" | "statusDamageLeech" | "statusApplicationCompanions" | "statusApplicationCompanionChances" | "startingAbsorptionMaxHpRatios" | "statusDurationBonuses" | "deathPreventionConsumeStatusForHealing" | "guaranteedHitAgainstStatusStacks">> & {
     stats: Stats;
     statusDamage: Partial<Record<StatusEffect["id"], number>>;
     preserveStatusOnDetonation: StatusEffect["id"][];
@@ -79,6 +79,8 @@ export interface CharacterCombatFeatures {
     statusApplicationStacks: Partial<Record<StatusEffect["id"], number>>;
     statusDamageLeech: Partial<Record<StatusEffect["id"], number>>;
     statusApplicationCompanions: Partial<Record<StatusEffect["id"], StatusEffect["id"][]>>;
+    statusApplicationCompanionChances: Partial<Record<StatusEffect["id"], Array<{ status: StatusEffect["id"]; chance: number }>>>;
+    startingAbsorptionMaxHpRatios: Partial<Record<"guard" | "barrier", number>>;
     statusDurationBonuses: Partial<Record<StatusEffect["id"], number>>;
     deathPreventionConsumeStatusForHealing?: StatusEffect["id"];
     guaranteedHitAgainstStatusStacks: Partial<Record<StatusEffect["id"], number>>;
@@ -122,6 +124,9 @@ const EMPTY_PASSIVE: CharacterCombatFeatures["passive"] = {
   statusApplicationStacks: {},
   statusDamageLeech: {},
   statusApplicationCompanions: {},
+  statusApplicationCompanionChances: {},
+  startingAbsorptionMaxHpRatios: {},
+  fullHealthCombatStartSelfDamageMaxHpRatio: 0,
   statusDurationBonuses: {},
   deathPreventionConsumeStatusForHealing: undefined,
   guaranteedHitAgainstStatusStacks: {},
@@ -181,6 +186,15 @@ function addPassive(target: CharacterCombatFeatures["passive"], passive?: Passiv
     const existing = target.statusApplicationCompanions[id] ?? [];
     target.statusApplicationCompanions[id] = [...new Set([...existing, ...(companions ?? [])])];
   });
+  Object.entries(passive.statusApplicationCompanionChances ?? {}).forEach(([statusId, companions]) => {
+    const id = statusId as StatusEffect["id"];
+    target.statusApplicationCompanionChances[id] = [...(target.statusApplicationCompanionChances[id] ?? []), ...(companions ?? []).map((companion) => ({ ...companion }))];
+  });
+  Object.entries(passive.startingAbsorptionMaxHpRatios ?? {}).forEach(([statusId, ratio]) => {
+    const id = statusId as "guard" | "barrier";
+    target.startingAbsorptionMaxHpRatios[id] = (target.startingAbsorptionMaxHpRatios[id] ?? 0) + (ratio ?? 0);
+  });
+  target.fullHealthCombatStartSelfDamageMaxHpRatio += passive.fullHealthCombatStartSelfDamageMaxHpRatio ?? 0;
   Object.entries(passive.statusDurationBonuses ?? {}).forEach(([statusId, amount]) => {
     const id = statusId as StatusEffect["id"];
     target.statusDurationBonuses[id] = (target.statusDurationBonuses[id] ?? 0) + (amount ?? 0);
@@ -240,6 +254,8 @@ export function getCharacterCombatFeatures(character: CharacterState): Character
       statusApplicationStacks: { ...EMPTY_PASSIVE.statusApplicationStacks },
       statusDamageLeech: { ...EMPTY_PASSIVE.statusDamageLeech },
       statusApplicationCompanions: Object.fromEntries(Object.entries(EMPTY_PASSIVE.statusApplicationCompanions).map(([id, companions]) => [id, [...(companions ?? [])]])),
+      statusApplicationCompanionChances: Object.fromEntries(Object.entries(EMPTY_PASSIVE.statusApplicationCompanionChances).map(([id, companions]) => [id, (companions ?? []).map((companion) => ({ ...companion }))])),
+      startingAbsorptionMaxHpRatios: { ...EMPTY_PASSIVE.startingAbsorptionMaxHpRatios },
       statusDurationBonuses: { ...EMPTY_PASSIVE.statusDurationBonuses },
       guaranteedHitAgainstStatusStacks: { ...EMPTY_PASSIVE.guaranteedHitAgainstStatusStacks },
     },
@@ -356,11 +372,28 @@ export function getCharacterAbilityDescription(character: CharacterState, abilit
     (description, modifier) => modifier.descriptionOverride ?? description,
     ability.description,
   );
+  const primaryComponent = ability.damageComponents?.[0];
+  const powerScaling = (primaryComponent?.powerScaling ?? ability.powerScaling ?? 1)
+    + modifiers.reduce((total, modifier) => total + (modifier.powerScalingBonus ?? 0), 0);
+  const armorScaling = (primaryComponent?.armorScaling ?? 0)
+    + modifiers.reduce((total, modifier) => total + (modifier.armorScalingBonus ?? 0), 0);
+  const powerSource = [...modifiers].reverse().find((modifier) => modifier.powerSourceOverride)?.powerSourceOverride
+    ?? primaryComponent?.powerSource
+    ?? ((primaryComponent?.damageType ?? ability.damageType) === "physical" ? "physical" : "magical");
+  const primaryStatusStacks = [...modifiers].reverse().find((modifier) => modifier.statusStacks !== undefined)?.statusStacks
+    ?? ability.statusStacks
+    ?? ability.statusApplications?.[0]?.stacks
+    ?? 1;
+  const resolvedDescription = description
+    .replaceAll("{powerScalingPercent}", String(Math.round(powerScaling * 100)))
+    .replaceAll("{powerSourceLabel}", powerSource === "magical" ? "Magical Power" : "Physical Power")
+    .replaceAll("{armorScalingClause}", armorScaling > 0 ? ` plus ${Math.round(armorScaling * 100)}% of your Armor` : "")
+    .replaceAll("{primaryStatusStacks}", String(primaryStatusStacks));
   const followUp = modifiers.find((modifier) => modifier.applyStatusAfterConsume)?.applyStatusAfterConsume;
-  if (!followUp) return description;
+  if (!followUp) return resolvedDescription;
   const followUpLabel = `${followUp.stacks ?? 1} ${followUp.status.charAt(0).toUpperCase()}${followUp.status.slice(1)}`;
-  if (description.toLocaleLowerCase().includes(`apply ${followUpLabel.toLocaleLowerCase()}`)) return description;
-  return `${description.replace(/\.$/, "")}, then apply ${followUpLabel}.`;
+  if (resolvedDescription.toLocaleLowerCase().includes(`apply ${followUpLabel.toLocaleLowerCase()}`)) return resolvedDescription;
+  return `${resolvedDescription.replace(/\.$/, "")}, then apply ${followUpLabel}.`;
 }
 
 function conditionsMatch(trigger: ResolvedCombatTrigger, context: CombatTriggerContext): boolean {
@@ -409,6 +442,7 @@ export function resolveCharacterTriggers(
       if (eventCount % trigger.everyNthPerTurn !== 0) return false;
     }
     if (trigger.oncePerTurn && previousTurn === combat.turn) return false;
+    if (trigger.oncePerCombat && previousTurn !== undefined) return false;
     if (trigger.cooldownTurns && previousTurn !== undefined && combat.turn - previousTurn < trigger.cooldownTurns) return false;
     const bonus = trigger.chance === undefined ? 0 : chanceEffectBonus;
     const chance = Math.max(0, Math.min(1, (trigger.chance ?? 1) + bonus));

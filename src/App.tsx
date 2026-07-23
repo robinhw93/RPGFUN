@@ -828,6 +828,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const blizzardAnimation = abilityAnimations.find((animation) => animation.kind === "blizzard");
   const chargeReturnAnimations = abilityAnimations.filter((animation) => animation.kind === "charge" && animation.targetId && animation.sourceTargetId);
   const bloodBarrierAnimations = abilityAnimations.filter((animation) => animation.kind === "blood_barrier" && animation.targetId && animation.sourceTargetId);
+  const vampirismDrainAnimations = abilityAnimations.filter((animation) => animation.kind === "vampirism_drain" && animation.targetId && animation.sourceTargetId);
+  const fireEaterTransferAnimations = abilityAnimations.filter((animation) => animation.kind === "fire_eater_transfer" && animation.targetId && animation.sourceTargetId);
   const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
@@ -942,6 +944,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       <LingeringChargeSiphonEffects animations={abilityAnimations} />
       {chargeReturnAnimations.map((animation) => <CombatantBeamEffect key={animation.id} animation={animation} durationMs={COMBAT_TIMING.attackDurationMs} className="charge-lightning-path charge-return-path"><i /><i /><i /><b /></CombatantBeamEffect>)}
       {bloodBarrierAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="blood-barrier-path"><Droplets /><i /><i /><i /></CombatantPathEffect>)}
+      {vampirismDrainAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="vampirism-drain-path"><Droplets /><Heart /><i /><i /><i /></CombatantPathEffect>)}
+      {fireEaterTransferAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="fire-eater-transfer-path"><Flame /><i /><i /><i /><b /></CombatantPathEffect>)}
       {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
@@ -961,7 +965,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
             && !enemy.statuses.some((status) => status.id === "stealth")
           ));
           const selfRequirementMet = !ability.requiredSelfStatus
-            || combat.playerStatuses.some((status) => status.id === ability.requiredSelfStatus)
+            || queueProjection.playerStatusIds.has(ability.requiredSelfStatus)
             || getCharacterAbilityModifiers(game.character, ability.id).some((modifier) => modifier.allowWithoutRequiredSelfStatus);
           const modifiedEnergyCost = getCharacterAbilityEnergyCostForTarget(game.character, ability, projectedTargetStatuses);
           const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : modifiedEnergyCost;
@@ -1590,6 +1594,27 @@ function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   }
   if (kind === "consecrated_ground") {
     return <span className="ability-impact-effect consecrated-ground-impact" aria-hidden="true"><Sun /><Sparkles />{Array.from({ length: 8 }).map((_, index) => <i key={index} style={{ "--consecrated-angle": `${index * 45}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "bash") {
+    return <span className="ability-impact-effect bash-impact" aria-hidden="true"><ShieldOff /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "brute_guard") {
+    return <span className="ability-impact-effect brute-guard-impact" aria-hidden="true"><ShieldCheck /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "defensive_maneuvers") {
+    return <span className="ability-impact-effect defensive-maneuvers-impact" aria-hidden="true"><Shield /><Swords /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "vampirism" || kind === "vampirism_drain") {
+    return <span className={`ability-impact-effect vampirism-impact ${kind}`} aria-hidden="true"><Droplets /><Heart /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "fire_eater" || kind === "fire_eater_transfer") {
+    return <span className={`ability-impact-effect fire-eater-impact ${kind}`} aria-hidden="true"><Flame /><i /><i /><i /><i /><b /></span>;
+  }
+  if (kind === "beacon_of_light") {
+    return <span className="ability-impact-effect beacon-of-light-impact" aria-hidden="true"><Sun /><Sparkles />{Array.from({ length: 8 }).map((_, index) => <i key={index} style={{ "--beacon-angle": `${index * 45}deg` } as React.CSSProperties} />)}<b /></span>;
+  }
+  if (kind === "martyrdom") {
+    return <span className="ability-impact-effect martyrdom-impact" aria-hidden="true"><Heart /><Flame /><i /><i /><i /><b /></span>;
   }
   return null;
 }

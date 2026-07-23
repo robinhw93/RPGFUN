@@ -137,8 +137,8 @@ Passives aggregate additively into:
 - Per-status damage bonuses.
 - Conditional per-status damage bonuses based on the source's current statuses.
 - Status-preservation behavior.
-- Status immunities, companion applications, and additional applied stacks.
-- Starting combat statuses.
+- Status immunities, guaranteed and chance-based companion applications, and additional applied stacks.
+- Starting combat statuses, Max-Health-scaled Guard/Barrier, and full-Health combat-start self damage that bypasses absorption.
 - Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, reusable first-lethal-hit prevention, status-consuming death prevention, and guaranteed hits above configured status-stack thresholds.
 - Percentage Armor bonuses, applied after flat and Strength-derived Armor.
 
@@ -154,17 +154,17 @@ on_kill | damage_dealt | status_applied | status_removed | status_damage | healt
 guard_gained | damage_taken | enemy_missed | enemy_stunned | turn_end
 ```
 
-Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, source kind, target status, newly applied or removed status, removal reason, damage absorbed by Guard/Barrier, the source ability of a depleted absorption status, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, and cooldown constraints.
+Conditions can filter by ability ID, ability branch, damage type, critical result, minimum damage, source kind, target status, newly applied or removed status, removal reason, damage absorbed by Guard/Barrier, the source ability of a depleted absorption status, or crossing a target-Health threshold. A trigger can have chance, once-per-turn, once-per-combat, and cooldown constraints.
 
 Effect definitions support:
 
-- Flat damage, Physical/Magical Power-scaled damage, trigger-damage ratios, or damage based specifically on Guard/Barrier absorption, targeting self, target, all enemies, or a random enemy.
+- Flat damage, Physical/Magical Power/Armor-scaled damage, trigger-damage ratios, or damage based specifically on Guard/Barrier absorption, targeting self, target, all enemies, or a random enemy.
 - Current-Health-percentage damage.
 - Status application to those target modes.
 - Flat, trigger-damage-ratio, or Max-Health-percentage self healing.
 - Self Energy gain.
 - Temporary next-turn Energy regeneration.
-- Self Guard gain.
+- Self Guard or Barrier gain, including trigger-damage-ratio scaling.
 
 Luck's chance-effect bonus is added only to triggers with an explicit `chance` field. Final trigger chance is clamped from 0 to 1. Guaranteed triggers remain guaranteed.
 

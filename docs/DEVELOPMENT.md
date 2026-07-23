@@ -159,9 +159,10 @@ Important fields:
 - `consumeStatusFromAllEnemies` combines with per-affected-enemy Energy and cooldown fields for area status consumers. Queue projection mirrors those rewards and removals before accepting later queued actions.
 - `freeAgainstTargetStatus` makes a cast free only against the marked target and consumes that marker. Both the engine and queued-action projection must use the target-aware Energy helper.
 - `consumeTargetStatusForDamage` scales a damage component and optional follow-up status from the consumed stack count. `spreadDetonatedStatusOnKillRatio` and `spreadOnKillVfx` support lethal detonation spread without checking an ability ID in the engine.
+- `selfHealPerTargetStatusStack` heals from a target's stack snapshot after a successful hit. `transferSelfStatusToTargetForHealing` consumes a self affliction, heals from its remaining damage, transfers it to the selected target, and must also be mirrored by action-queue status projection.
 - `damageModifiers` applies conditional multipliers owned by the ability.
-- `vfx` emits presentation metadata at the exact event where the ability resolves and supplies the preferred Ranged treatment. `vfxDirection: "to_player"` reverses a resolved transfer from the struck target to the player. `consumeStatusFromAllEnemiesVfx` emits one source-enemy-to-player transfer at the shared removal event before later damage impacts. Add matching `CombatAbilityVfxKind` renderers without putting animation timing into combat rules.
-- Consume-based modifiers may retain the target status while still calculating benefits from its stacks. Self-ability modifiers may add Magical Power Guard scaling or remove every self debuff; each must provide a complete `descriptionOverride`.
+- `vfx` emits presentation metadata at the exact event where the ability resolves and supplies the preferred Ranged treatment. `areaVfxPerTarget` gives grouped, non-damaging area abilities one simultaneous local impact per target. `vfxDirection: "to_player"` reverses a resolved transfer from the struck target to the player. `consumeStatusFromAllEnemiesVfx` emits one source-enemy-to-player transfer at the shared removal event before later damage impacts. Add matching `CombatAbilityVfxKind` renderers without putting animation timing into combat rules.
+- Consume-based modifiers may retain the target status while still calculating benefits from its stacks. Self-ability modifiers may add Magical Power Guard scaling or remove every self debuff; each must provide a complete `descriptionOverride`. Additive Power/Armor scaling, Power-source changes, and primary status-stack overrides may use the shared description tokens so every unlocked modifier combination resolves accurate player-facing text.
 - Trigger damage can scale from Physical/Magical Power or from damage absorbed by a named defensive status. Reflective Barrier therefore reflects only the amount consumed from Barrier, even when Guard also absorbs the hit.
 
 Adding an ability definition does not make it obtainable. A talent must reference its exact `abilityId`, or another loadout-granting system must be added.
@@ -215,7 +216,7 @@ Gear items, gear-set thresholds, and unlocked talents can all supply a `CombatFe
 
 ### Passive bonuses
 
-Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, status companions, preserved detonations, starting statuses, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, reusable death prevention, status-consuming death prevention, and guaranteed-hit status-stack thresholds. Derived stats aggregate every active source.
+Use `combat.passive` for attributes, Armor, Magic Resistance, powers, resources, chances, initiative, Guard/healing modifiers, unconditional status damage, status leech, guaranteed or chance-based status companions, preserved detonations, starting statuses, starting Max-Health-scaled Guard/Barrier, full-Health combat-start self damage, status immunities, additional applied-status stacks, Energy-based incoming-damage reduction, reusable death prevention, status-consuming death prevention, and guaranteed-hit status-stack thresholds. Derived stats aggregate every active source.
 
 Use `combat.statusDamageModifiers` when a damage-over-time bonus depends on the source's current statuses. Matching bonuses add together before they multiply the normal status-damage result; this keeps conditional enemy Burn bonuses separate from self-inflicted Burn.
 
@@ -225,8 +226,8 @@ A `CombatTriggerDefinition` contains:
 
 - An event: `combat_start`, `turn_start`, `before_ability`, `on_hit`, `on_crit`, `on_kill`, `damage_dealt`, `status_applied`, `status_removed`, `status_damage`, `health_restored`, `guard_gained`, `damage_taken`, `enemy_missed`, `enemy_stunned`, or `turn_end`.
 - Optional ability-ID, ability-branch, damage-type, critical, minimum-damage, source-kind, target-status, applied/removed-status, removal-reason, absorbed-status, or Health-threshold conditions.
-- Optional chance, once-per-turn rule, or cooldown.
-- One or more data-driven effects: flat/Power-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat, trigger-damage-ratio, or Max-Health-based healing, Energy, next-turn Energy regeneration, cooldown reduction, or Guard.
+- Optional chance, once-per-turn rule, once-per-combat rule, or cooldown.
+- One or more data-driven effects: flat/Power/Armor-scaled damage, trigger-damage or absorbed-status ratios, current-Health-percentage damage, status application, flat, trigger-damage-ratio, or Max-Health-based healing, Energy, next-turn Energy regeneration, cooldown reduction, Guard, or Barrier.
 
 Triggered passives do not add central presentation events. Their damage, healing, status, and `passive_text` pending effects attach to the existing action event, so they resolve at the triggering action without extending the sequence. Proc names are grouped per affected target and appended to `combat.passiveAnimations`; the combatant-local CSS animation runs independently of the sequencer. Separate combat-log entries preserve inspectable trigger and result details.
 

@@ -117,6 +117,12 @@ export interface PassiveBonuses {
   statusDamageLeech?: Partial<Record<StatusEffectId, number>>;
   /** Extra statuses applied alongside a matching player-applied status. */
   statusApplicationCompanions?: Partial<Record<StatusEffectId, StatusEffectId[]>>;
+  /** Chance-based extra statuses applied alongside a matching player-applied status. */
+  statusApplicationCompanionChances?: Partial<Record<StatusEffectId, Array<{ status: StatusEffectId; chance: number }>>>;
+  /** Guard or Barrier granted at combat start as a fraction of maximum Health. */
+  startingAbsorptionMaxHpRatios?: Partial<Record<"guard" | "barrier", number>>;
+  /** Unabsorbable self damage taken at combat start when entering at full Health. */
+  fullHealthCombatStartSelfDamageMaxHpRatio?: number;
   /** Additional duration applied whenever the character creates a matching status. */
   statusDurationBonuses?: Partial<Record<StatusEffectId, number>>;
   /** Incoming damage reduction per point of currently unspent Energy. */
@@ -158,7 +164,7 @@ export interface CombatTriggerCondition {
 }
 
 export type CombatEffectDefinition =
-  | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scalingPower?: "physical" | "magical"; scaling?: number; triggerDamageRatio?: number; triggerAbsorbedStatus?: "guard" | "barrier" }
+  | { type: "damage"; amount: number; target?: CombatEffectTarget; damageType?: DamageType; scalingStat?: StatName; scalingPower?: "physical" | "magical"; scaling?: number; armorScaling?: number; triggerDamageRatio?: number; triggerAbsorbedStatus?: "guard" | "barrier"; vfx?: CombatAbilityVfxKind }
   | { type: "damage_percent_current_hp"; ratio: number; target?: CombatEffectTarget; damageType?: DamageType }
   | { type: "apply_status"; status: StatusEffect; target?: CombatEffectTarget }
   | { type: "heal"; amount: number; triggerDamageRatio?: number; target?: "self" }
@@ -168,7 +174,7 @@ export type CombatEffectDefinition =
   | { type: "reduce_random_cooldown"; amount: number; target?: "self" }
   | { type: "build_status_charge"; status: StatusEffectId; amount: number; threshold: number; thresholdEnergy: number; target?: "self" }
   | { type: "gain_guard"; amount: number; duration?: number; target?: "self" }
-  | { type: "gain_absorption"; status: "guard" | "barrier"; amount?: number; scalingPower?: "physical" | "magical"; scaling?: number; duration?: number; target?: "self" };
+  | { type: "gain_absorption"; status: "guard" | "barrier"; amount?: number; scalingPower?: "physical" | "magical"; scaling?: number; triggerDamageRatio?: number; duration?: number; target?: "self" };
 
 export interface CombatTriggerDefinition {
   id: string;
@@ -179,6 +185,7 @@ export interface CombatTriggerDefinition {
   conditions?: CombatTriggerCondition;
   effects: CombatEffectDefinition[];
   oncePerTurn?: boolean;
+  oncePerCombat?: boolean;
   /** Fires on every matching Nth event during one player turn. */
   everyNthPerTurn?: number;
   cooldownTurns?: number;
@@ -224,6 +231,16 @@ export interface AbilityModifierDefinition {
   descriptionOverride?: string;
   allowWithoutRequiredSelfStatus?: boolean;
   powerScalingWhenRequirementMissing?: number;
+  /** Adds to the primary direct-damage component's Power scaling. */
+  powerScalingBonus?: number;
+  /** Adds to the primary direct-damage component's Armor scaling. */
+  armorScalingBonus?: number;
+  /** Changes which derived Power scales the primary component without changing its damage type. */
+  powerSourceOverride?: "physical" | "magical";
+  /** Adds Critical Strike Chance for the modified ability. */
+  critChanceBonus?: number;
+  /** Overrides the base stack count of the ability's primary status effect. */
+  statusStacks?: number;
   statusDuration?: number;
   statusMagnitude?: number;
   statusExpiresAtTurnStart?: boolean;
@@ -350,7 +367,16 @@ export type CombatAbilityVfxKind =
   | "crushing_impact"
   | "explosive_strike"
   | "explosive_strike_blast"
-  | "consecrated_ground";
+  | "consecrated_ground"
+  | "bash"
+  | "brute_guard"
+  | "defensive_maneuvers"
+  | "vampirism"
+  | "vampirism_drain"
+  | "fire_eater"
+  | "fire_eater_transfer"
+  | "beacon_of_light"
+  | "martyrdom";
 
 export type AbilityRange = "melee" | "ranged";
 export type AbilityAttackPresentation = "melee" | "projectile" | "target";
@@ -370,7 +396,7 @@ export interface Ability {
   /** Reverses the resolved VFX from the struck target back to the player. */
   vfxDirection?: "to_target" | "to_player";
   damageType?: DamageType;
-  damageComponents?: Array<{ damageType: DamageType; power?: number; powerScaling?: number; armorScaling?: number }>;
+  damageComponents?: Array<{ damageType: DamageType; power?: number; powerScaling?: number; armorScaling?: number; powerSource?: "physical" | "magical" }>;
   power?: number;
   /** Multiplier applied to Physical or Magical Power. Defaults to 1. */
   powerScaling?: number;
@@ -382,6 +408,8 @@ export interface Ability {
   randomTargetPerHit?: boolean;
   /** All targets of an area attack resolve damage, statuses, and VFX on one shared impact event. */
   simultaneousAreaImpact?: boolean;
+  /** Emits the ability VFX on every grouped area target instead of once as an arena-wide field. */
+  areaVfxPerTarget?: boolean;
   /** False applies the ability's effect without dealing direct damage. */
   dealsDamage?: boolean;
   /** Number of stacks applied when effect is a status. Defaults to 1. */
@@ -446,6 +474,8 @@ export interface Ability {
   }>;
   /** Restores a fraction of maximum Health after a successful hit. */
   selfHealPercentMaxHp?: number;
+  /** Restores flat Health per stack of a target status after a successful hit. */
+  selfHealPerTargetStatusStack?: { status: StatusEffectId; multiplier: number; vfx?: CombatAbilityVfxKind };
   /** Grants Guard equal to this fraction of current Armor after a successful hit. */
   selfGuardFromArmorRatio?: number;
   /** Grants Guard from one or more derived values when the ability resolves. */
@@ -476,6 +506,8 @@ export interface Ability {
   consumeTargetStatusForOtherEnemiesDamage?: { status: StatusEffectId; damageType: DamageType; vfx?: CombatAbilityVfxKind };
   /** Removes every buff from the struck target at the same impact event. */
   removeAllTargetBuffs?: boolean;
+  /** Consumes a self status, heals for its remaining damage, then transfers it to the selected target. */
+  transferSelfStatusToTargetForHealing?: { status: StatusEffectId; selfVfx?: CombatAbilityVfxKind; transferVfx?: CombatAbilityVfxKind };
   /** Removes a status from every living enemy before resolving the ability's rewards. */
   consumeStatusFromAllEnemies?: StatusEffectId;
   /** Travels from every enemy whose status was consumed back to the player at removal time. */
