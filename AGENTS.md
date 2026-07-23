@@ -190,7 +190,7 @@ A change is complete only when the applicable items are true:
 
 At the time of this handoff:
 
-- Windsong Forest is the four-stage story adventure with weighted combat/event possibilities and a dedicated bright-forest combat theme.
+- Windsong Forest is the six-stage story adventure with fixed combat encounters and a dedicated bright-forest combat theme.
 - Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
 - Shadow is the first complete talent branch.
 - Arcanist is implemented through `talent_156`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, and Elemental Fury with active-ability VFX.

@@ -7,7 +7,7 @@ This document describes the rules currently implemented in Arkenfall. Percentage
 1. Create and name a character, then choose one of ten appearances.
 2. Review equipment, allocate earned attribute points, choose talents, and prepare up to six active abilities.
 3. Begin **Windsong Forest**.
-4. Resolve its weighted combat and event stages while carrying remaining Health between stages.
+4. Fight through its six combat stages while carrying remaining Health between stages.
 5. After each victory, receive experience and gold on the score screen.
 6. Adjust the build between fights.
 7. Defeat the Forest Spirit and its two Wisps to complete the current adventure.

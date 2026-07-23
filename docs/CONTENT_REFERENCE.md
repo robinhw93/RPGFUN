@@ -448,16 +448,16 @@ The Forest Spirit always enters with two Forest Wisps and restores 25% of maximu
 
 ## Adventure: Windsong Forest
 
-Stage possibilities use relative percentage weights and each stage totals 100% in the live definition.
+Windsong Forest currently follows six fixed combat stages. Each stage has one 100% encounter.
 
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
-| 1 | Rustling in the Clover | 70% | Two Rabid Rats | 55 XP, 9 gold. |
-| 1 | The Broken Footbridge | 30% | Three attribute-roll choices. | Choice outcome. |
-| 2 | Restless Understory | 55% | Windsong Wolf and Forest Wisp | 75 XP, 14 gold. |
-| 2 | The Singing Grove | 45% | Two attribute-roll choices. | Choice outcome. |
-| 3 | The Sleeping Giant | 100% | Brown Bear | 90 XP, 18 gold. |
-| 4 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 130 XP, 32 gold. |
+| 1 | Rustling in the Clover | 100% | Two Rabid Rats | 50 XP, 3 gold. |
+| 2 | Prowling Ambush | 100% | Windsong Wolf and Forest Wisp | 53 XP, 8 gold. |
+| 3 | Skittering Rats | 100% | Three Rabid Rats | 73 XP, 6 gold. |
+| 4 | Unwelcome Guest | 100% | Forest Wisp | 36 XP, 5 gold. |
+| 5 | They see you | 100% | Three Forest Wisps | 68 XP, 10 gold. |
+| 6 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 100 XP, 28 gold. |
 
 ## Testing adventure: Shadow Proving Grounds
 

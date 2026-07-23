@@ -1211,18 +1211,22 @@ export const ADVENTURES: AdventureDefinition[] = [{
   completionDescription: "The Forest Spirit fades into green-gold light. Wind returns to the bright canopy, carrying birdsong deeper into Arkenfall.",
   stages: [
     { id: "forest-edge", name: "Forest Edge", entries: [
-      { id: "rat-pack", type: "combat", chance: 70, eyebrow: "Forest Encounter", title: "Rustling in the Clover", description: "Two rabid rats burst from the sunlit undergrowth and close around the path.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 55, gold: 9 } },
-      { id: "broken-bridge", type: "event", chance: 30, eyebrow: "Forest Event", title: "The Broken Footbridge", description: ADVENTURE_EVENTS.brokenFootbridge.description, eventId: "brokenFootbridge" },
+      { id: "rat-pack", type: "combat", chance: 100, eyebrow: "Forest Encounter", title: "Rustling in the Clover", description: "Two rabid rats burst from the sunlit undergrowth and close around the path.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 50, gold: 3 } },
     ] },
-    { id: "green-hollows", name: "Green Hollows", entries: [
-      { id: "restless-grove", type: "combat", chance: 55, eyebrow: "Forest Encounter", title: "Restless Understory", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["enemy-mrxj4o6o-o45ia", "enemy-mrxk609z-n04fq"], reward: { experience: 75, gold: 14 } },
-      { id: "singing-grove", type: "event", chance: 45, eyebrow: "Forest Event", title: "The Singing Grove", description: ADVENTURE_EVENTS.singingGrove.description, eventId: "singingGrove" },
+    { id: "green-hollows", name: "Wayfarer’s Trail", entries: [
+      { id: "restless-grove", type: "combat", chance: 100, eyebrow: "Encounter", title: "Prowling Ambush", description: "A wolf prowls beneath a hovering spark of green-gold light.", enemyIds: ["enemy-mrxj4o6o-o45ia", "enemy-mrxk609z-n04fq"], reward: { experience: 53, gold: 8 } },
     ] },
-    { id: "grey-stones", name: "Grey Stones", entries: [
-      { id: "sleeping-bear", type: "combat", chance: 100, eyebrow: "Forest Encounter", title: "The Sleeping Giant", description: "A great brown bear rises between the grey stones, shaking moss from its shoulders.", enemyIds: ["enemy-mrxkar5z-g9o5d"], reward: { experience: 90, gold: 18 } },
+    { id: "grey-stones", name: "Mossy Cliffs", entries: [
+      { id: "skittering-rats", type: "combat", chance: 100, eyebrow: "Encounter", title: "Skittering Rats", description: "The ground skitters with Rabid Rats.", enemyIds: ["enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv", "enemy-mrxiut2a-k4kgv"], reward: { experience: 73, gold: 6 } },
     ] },
-    { id: "heartwood", name: "Heartwood", entries: [
-      { id: "forest-spirit", type: "boss", chance: 100, eyebrow: "Boss Encounter", title: "The Forest Spirit", description: "An ancient spirit takes shape between two green-gold wisps, its burning gaze fixed upon you.", enemyIds: ["enemy-mrxkjqs3-g7g5i", "enemy-mrxk609z-n04fq", "enemy-mrxk609z-n04fq"], reward: { experience: 130, gold: 32 } },
+    { id: "heartwood", name: "Forest Depths", entries: [
+      { id: "unwelcome-guest", type: "combat", chance: 100, eyebrow: "Encounter", title: "Unwelcome Guest", description: "The spirit does not welcome you here.", enemyIds: ["enemy-mrxk609z-n04fq"], reward: { experience: 36, gold: 5 } },
+    ] },
+    { id: "stage-mrxmqkyi-ydjnl", name: "Dark Forest", entries: [
+      { id: "entry-mrxmqmcg-ppgfa", type: "combat", chance: 100, eyebrow: "Encounter", title: "They see you", description: "Three Wisps silently glide down from the treetops.", enemyIds: ["enemy-mrxk609z-n04fq", "enemy-mrxk609z-n04fq", "enemy-mrxk609z-n04fq"], reward: { experience: 68, gold: 10 } },
+    ] },
+    { id: "stage-mrxmt15g-yejb8", name: "The Clearing", entries: [
+      { id: "entry-mrxmt2e5-ktr16", type: "boss", chance: 100, eyebrow: "Boss Encounter", title: "The Forest Spirit", description: "Before you, it rises—the thing that enrages the woodland animals: the Forest Spirit.", enemyIds: ["enemy-mrxkjqs3-g7g5i", "enemy-mrxk609z-n04fq", "enemy-mrxk609z-n04fq"], reward: { experience: 100, gold: 28 } },
     ] },
   ],
 }];
