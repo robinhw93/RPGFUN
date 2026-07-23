@@ -289,6 +289,7 @@ function App() {
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
   const [playerTurnReadyEventId, setPlayerTurnReadyEventId] = useState<number | null>(null);
   const travelTimers = useRef<number[]>([]);
+  const presentedRewardIds = useRef(new Set<string>());
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatSequencer = useCombatEventSequencer(game, setGame);
   const combatActionQueue = useCombatActionQueue(game, setGame, playerTurnReadyEventId);
@@ -342,6 +343,10 @@ function App() {
     setView(tool);
     window.scrollTo({ top: 0 });
   };
+
+  const markRewardPresented = useCallback((rewardId: string) => {
+    presentedRewardIds.current.add(rewardId);
+  }, []);
 
   const playTravelTransition = (mode: AdventureMode, message: string, onComplete: () => void) => {
     if (travelTransition) return;
@@ -698,6 +703,8 @@ function App() {
             onPermadeath={returnToCharacterCreation}
             onTalents={() => openCharacterSection("talents")}
             onCharacter={() => openCharacterSection("overview")}
+            rewardPresentationPlayed={Boolean(game.adventure.pendingReward && presentedRewardIds.current.has(game.adventure.pendingReward.id))}
+            onRewardPresentationStart={markRewardPresented}
           />
         )}
         {view === "character" && (
@@ -811,7 +818,7 @@ function CharacterCreation({ onCreate }: { onCreate: (name: string, avatarId: Ch
   );
 }
 
-function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter }: {
+function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
@@ -830,6 +837,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   onPermadeath: () => void;
   onTalents: () => void;
   onCharacter: () => void;
+  rewardPresentationPlayed: boolean;
+  onRewardPresentationStart: (rewardId: string) => void;
 }) {
   const adventure = game.adventure;
   const [logOpen, setLogOpen] = useState(false);
@@ -1173,6 +1182,9 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           onLeaveTraining={onLeaveTraining}
           finalEncounter={adventure.mode === "story" && adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
           endless={adventure.mode === "endless"}
+          presentationPlayed={rewardPresentationPlayed}
+          hasUnspentCharacterPoints={game.character.unspentStatPoints > 0 || game.character.talentPoints > 0}
+          onPresentationStart={onRewardPresentationStart}
         />
       )}
       {combat.outcome === "defeat" && !sequencePending && (
@@ -1190,7 +1202,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   );
 }
 
-function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, onLeaveTraining, finalEncounter, endless }: {
+function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, onLeaveTraining, finalEncounter, endless, presentationPlayed, hasUnspentCharacterPoints, onPresentationStart }: {
   reward: CombatReward;
   encounterTitle: string;
   onCharacter: () => void;
@@ -1198,13 +1210,23 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, o
   onLeaveTraining: () => void;
   finalEncounter: boolean;
   endless: boolean;
+  presentationPlayed: boolean;
+  hasUnspentCharacterPoints: boolean;
+  onPresentationStart: (rewardId: string) => void;
 }) {
-  const [displayedExperience, setDisplayedExperience] = useState(0);
+  const [displayedExperience, setDisplayedExperience] = useState(() => presentationPlayed ? reward.experience : 0);
   const displayedProgress = experienceProgressAfterGain(reward.levelBefore, reward.xpBefore, displayedExperience);
   const reachedMaxLevel = displayedProgress.level >= MAX_LEVEL;
   const leveledUp = reward.levelsGained > 0;
+  const levelUpPending = leveledUp && hasUnspentCharacterPoints;
 
   useEffect(() => {
+    if (presentationPlayed) {
+      setDisplayedExperience(reward.experience);
+      return;
+    }
+
+    onPresentationStart(reward.id);
     setDisplayedExperience(0);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reducedMotion) {
@@ -1228,7 +1250,7 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, o
       window.clearTimeout(delay);
       window.cancelAnimationFrame(frame);
     };
-  }, [reward.id, reward.experience]);
+  }, [onPresentationStart, presentationPlayed, reward.id, reward.experience]);
 
   return (
     <div className="victory-score-screen" role="dialog" aria-modal="true" aria-label="Combat rewards">
@@ -1259,7 +1281,7 @@ function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, o
         )}
 
         <div className="victory-score-actions">
-          <button className={`score-character-button ${leveledUp ? "level-up" : ""}`} onClick={onCharacter}>{leveledUp ? <Sparkles size={16} /> : <UserRound size={16} />} {leveledUp ? "Level up!" : "View Character"}</button>
+          <button className={`score-character-button ${levelUpPending ? "level-up" : ""}`} onClick={onCharacter}>{levelUpPending ? <Sparkles size={16} /> : <UserRound size={16} />} {levelUpPending ? "Level up!" : "View Character"}</button>
           <button className="primary-button" onClick={onContinue}>{endless ? "Continue Training" : finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
         {endless && <button className="text-button score-leave-training" onClick={onLeaveTraining}>Leave Training</button>}

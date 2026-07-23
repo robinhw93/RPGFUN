@@ -305,7 +305,7 @@ This sequencing guarantees that:
 ### Victory and defeat
 
 - Victory grants the current node's reward once and opens the score screen after all queued combat presentation is complete.
-- The score screen animates experience, shows gold, and allows access to the Character screen before continuing. When the reward grants at least one level, **View Character** changes to a continuously highlighted **Level up!** button; the awarded-point summary is not duplicated in a separate panel.
+- The score screen animates experience once, shows gold, and allows access to the Character screen before continuing. Returning from the Character screen shows the completed experience result immediately instead of replaying it. When the reward grants at least one level and Attribute or Talent Points remain unspent, **View Character** changes to a continuously highlighted **Level up!** button; after those points are spent, it returns to its normal label and presentation. The awarded-point summary is not duplicated in a separate panel.
 - Panic prevents the first defeat in each combat: lethal damage is shown first, then the queued Panic event restores 20% of Max Health and grants Stealth for 2 turns. Later lethal damage in the same combat causes defeat normally.
 - Defeat clears the save immediately and presents the permadeath screen.
 
