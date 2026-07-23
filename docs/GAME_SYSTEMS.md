@@ -30,7 +30,7 @@ The adventure screen also offers a separate endless testing route for developing
 
 ## Character creation and starting state
 
-Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a clipped square image with a thin frame; clicking the player's portrait opens the character's five current Attributes, while clicking an enemy portrait opens that enemy's combat information.
+Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a clipped square image with a thin frame; clicking the player's portrait opens the character's five current Attributes plus derived combat stats such as Spell Power, Hit Chance, defenses, Initiative, and Energy, while clicking an enemy portrait opens that enemy's combat information.
 
 Every new character starts with:
 
@@ -400,7 +400,7 @@ Excess experience carries into later levels, and one reward can grant multiple l
 
 Level 50 is the maximum level. Characters at level 50 no longer accumulate experience, and older saves above the cap are normalized to level 50 when loaded.
 
-Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Positive unspent Attribute Point and Talent Point counters pulse with a slow gold text glow and a separately faded aura on their respective screens; the score-screen **Level up!** treatment uses the same continuous rhythm without scaling, brightness jumps, or discrete shadow changes. The talent tree and active-ability loadout are opened through the **Talents & Abilities** submenu inside the Character hub rather than through a separate primary navigation item. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
+Attribute points can be assigned one at a time to any of the five base attributes from the Character screen. Positive unspent Attribute Point and Talent Point counters pulse with a slow gold text glow and a separately faded aura on their respective screens; the score-screen **Level up!** treatment uses the same continuous rhythm without scaling, brightness jumps, or discrete shadow changes. The Character hub has separate **Character**, **Equipment and Inventory**, and **Talents & Abilities** submenus. Attribute allocation, talent changes, ability loadout changes, and equipment changes are locked during active combat.
 
 ## Talents and ability loadout
 
@@ -425,11 +425,13 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 - Weight of Frost uses the shared passive-stat pipeline to add 5% of current Armor, rounded up, as flat damage to each direct hit.
 - Talent nodes show only name and type on the map; selecting a node opens its full information and unlock controls.
 - Circular passive nodes are 25% smaller than square class/ability nodes. Unlocked nodes receive a gold outer outline, and the connection layer is masked beneath every node so lines cannot show through transparent locked nodes.
-- The player can pan, zoom, and fit the talent tree on desktop and mobile.
+- The tree itself is the unframed background of the Talents page, with the available Talent Point counter overlaid on it. Desktop wheel input zooms around the pointer; left-drag or middle-button drag pans. On touch screens, one-finger drag pans and a two-finger pinch zooms. A drag may begin on a node without selecting it, while a stationary click or tap opens that node.
 
 The complete current tree is listed in [Content reference](CONTENT_REFERENCE.md#talent-tree).
 
 ## Equipment and inventory
+
+Equipment and inventory share their own **Equipment and Inventory** submenu inside the Character hub. The Character submenu is reserved for Attributes and derived combat stats.
 
 ### Slots
 

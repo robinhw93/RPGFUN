@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   BatteryLow, BookOpen, Brain, ChevronRight, CircleDot, Crosshair, Droplets, Dumbbell,
-  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Maximize2, Megaphone, Minus, Moon, Plus, RotateCcw, Shield,
+  EyeOff, Flame, FlaskConical, Footprints, Gem, Hand, Heart, HeartPulse, Home, Hourglass, Megaphone, Moon, RotateCcw, Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull, Snail, Snowflake, Sparkles, Sun, Swords, Target, TrendingDown, Trophy,
   UserRound, Waves, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
@@ -32,7 +32,7 @@ import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
 
 type View = "adventure" | "character" | DevtoolKind;
-type CharacterSection = "overview" | "talents";
+type CharacterSection = "overview" | "equipment" | "talents";
 
 const SLOT_LABELS: Record<GearSlot, string> = {
   head: "Head", chest: "Chest", pants: "Pants", boots: "Boots",
@@ -717,11 +717,12 @@ function App() {
           <>
             <nav className="character-submenu" aria-label="Character sections">
               <button type="button" className={characterSection === "overview" ? "active" : ""} aria-current={characterSection === "overview" ? "page" : undefined} onClick={() => openCharacterSection("overview")}><UserRound size={16} /> Character</button>
+              <button type="button" className={characterSection === "equipment" ? "active" : ""} aria-current={characterSection === "equipment" ? "page" : undefined} onClick={() => openCharacterSection("equipment")}><Shield size={16} /> Equipment and Inventory</button>
               <button type="button" className={characterSection === "talents" ? "active" : ""} aria-current={characterSection === "talents" ? "page" : undefined} onClick={() => openCharacterSection("talents")}><CircleDot size={16} /> Talents &amp; Abilities</button>
             </nav>
-            {characterSection === "overview" ? (
+            {characterSection !== "talents" ? (
               <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
-                <CharacterView character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
               </CharacterAssetBoundary>
             ) : (
               <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
@@ -1022,7 +1023,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {playerStealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
           {playerStealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
           <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === "player")} />
-          <button type="button" className="combatant-portrait player-combatant-portrait" aria-label="View your attributes" onClick={() => setPlayerAttributesOpen(true)}><img src={combatAvatar.portraitUrl} alt="" draggable={false} /></button>
+          <button type="button" className="combatant-portrait player-combatant-portrait" aria-label="View your character stats" onClick={() => setPlayerAttributesOpen(true)}><img src={combatAvatar.portraitUrl} alt="" draggable={false} /></button>
           <h2>{game.character.name}</h2>
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
@@ -2358,16 +2359,27 @@ function PlayerAttributesModal({ name, derived, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${name} attributes`} onClick={onClose}>
+    <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${name} character stats`} onClick={onClose}>
       <div className="inspect-info-card player-attributes-card" onClick={(event) => event.stopPropagation()}>
-        <p className="eyebrow">Character Attributes</p>
+        <p className="eyebrow">Character Stats</p>
         <h2>{name}</h2>
+        <h3 className="player-stats-section-title">Attributes</h3>
         <div className="player-attributes-grid">
           {STAT_LABELS.map((stat) => (
             <span key={stat.key}>
               <StatIcon stat={stat.key} />
               <span><small>{stat.label}</small><em>{ATTRIBUTE_SUMMARIES[stat.key]}</em></span>
               <strong>{formatStat(derived[stat.key])}</strong>
+            </span>
+          ))}
+        </div>
+        <h3 className="player-stats-section-title">Combat Stats</h3>
+        <div className="player-derived-stats-grid">
+          {getDerivedStatRows(derived).map((stat) => (
+            <span key={stat.label}>
+              <StatIcon stat={stat.icon} />
+              <small>{stat.label}</small>
+              <strong>{stat.value}</strong>
             </span>
           ))}
         </div>
@@ -2503,7 +2515,8 @@ function CharacterAssetBoundary({ preloaded, assetKey, children }: {
   );
 }
 
-function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }: {
+function CharacterView({ mode, character, locked, onEquip, onUnequip, onAllocateStat }: {
+  mode: Exclude<CharacterSection, "talents">;
   character: CharacterState;
   locked: boolean;
   onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
@@ -2557,27 +2570,22 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
   const activeInventoryFilter = INVENTORY_GEAR_FILTERS.find((filter) => filter.id === inventoryFilter)!;
   return (
     <section className="page character-page">
-      <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{reachedMaxLevel ? "Max Level" : `${character.xp} / ${requiredExperience} XP`}</small></div></div></div>
-      <div className="character-layout">
+      {mode === "overview" ? <>
+        <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{reachedMaxLevel ? "Max Level" : `${character.xp} / ${requiredExperience} XP`}</small></div></div></div>
+        <div className="character-layout character-overview-layout">
         <div className="paper-panel">
           <div className="panel-title"><span><UserRound size={17} /> Attributes</span>{character.unspentStatPoints > 0 && <strong className="stat-points-available unspent-points-indicator">{character.unspentStatPoints} Points Available</strong>}</div>
           <div className="stats-list">
             {STAT_LABELS.map((stat) => <div key={stat.key} data-game-tooltip={ATTRIBUTE_TOOLTIPS[stat.key]}><span className="stat-rune"><StatIcon stat={stat.key} /></span><span><strong>{stat.label}</strong><small>{ATTRIBUTE_SUMMARIES[stat.key]}</small></span><span className="stat-value-actions"><b>{formatStat(derived[stat.key])}</b>{character.unspentStatPoints > 0 && <button type="button" className="allocate-stat-button" disabled={locked} onClick={() => onAllocateStat(stat.key)} aria-label={`Add one point to ${stat.label}`}>+</button>}</span></div>)}
           </div>
           <div className="derived-grid">
-            <span data-game-tooltip="Determines the damage dealt by your physical and shadow abilities."><StatIcon stat="physicalPower" /> <small>Physical Power</small><strong>{formatStat(derived.physicalPower)}</strong></span>
-            <span data-game-tooltip="Determines the damage dealt by your arcane abilities."><StatIcon stat="magicalPower" /> <small>Spell Power</small><strong>{formatStat(derived.magicalPower)}</strong></span>
-            <span data-game-tooltip="Determines how likely your attacks are to hit."><StatIcon stat="hitChance" /> <small>Hit Chance</small><strong>{formatPercent(derived.hitChance)}</strong></span>
-            <span data-game-tooltip="Determines how likely you are to avoid enemy attacks."><StatIcon stat="dodgeChance" /> <small>Dodge Chance</small><strong>{formatPercent(derived.dodgeChance)}</strong></span>
-            <span data-game-tooltip="Determines how likely your attacks are to critically strike."><StatIcon stat="critChance" /> <small>Critical Chance</small><strong>{formatPercent(derived.critChance)}</strong></span>
-            <span data-game-tooltip="Determines how much damage you can take before falling."><StatIcon stat="maxHp" /> <small>Max Health</small><strong>{formatStat(derived.maxHp)}</strong></span>
-            <span data-game-tooltip="Reduces damage you take from physical attacks."><StatIcon stat="armor" /> <small>Armor</small><strong>{formatStat(derived.armor)}</strong></span>
-            <span data-game-tooltip="Reduces damage you take from magical attacks."><StatIcon stat="magicResistance" /> <small>Magic Resistance</small><strong>{formatStat(derived.magicResistance)}</strong></span>
-            <span data-game-tooltip="Determines how early you act when combat begins."><StatIcon stat="initiativeBonus" /> <small>Initiative</small><strong>+{formatStat(derived.initiativeBonus)}</strong></span>
-            <span data-game-tooltip="Determines how much Energy you can hold at once."><StatIcon stat="maxEnergy" /> <small>Max Energy</small><strong>{formatStat(derived.maxEnergy)}</strong></span>
+            {getDerivedStatRows(derived).map((stat) => <span key={stat.label} data-game-tooltip={stat.tooltip}><StatIcon stat={stat.icon} /> <small>{stat.label}</small><strong>{stat.value}</strong></span>)}
           </div>
         </div>
-
+        </div>
+      </> : <>
+      <div className="page-title"><div><p className="eyebrow">Character Loadout</p><h1>Equipment and Inventory</h1><p>Prepare your gear and organize the items gathered on your journey.</p></div></div>
+      <div className="character-layout equipment-layout">
         <div className="paper-panel equipment-panel">
           <div className="panel-title"><span><Shield size={17} /> Equipment</span></div>
           <div className="equipment-paper-doll">
@@ -2623,6 +2631,7 @@ function CharacterView({ character, locked, onEquip, onUnequip, onAllocateStat }
       <div className="inventory-grid">
         {visibleInventory.length ? visibleInventory.map((item, index) => <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
       </div>
+      </>}
       {selectedGearSlot && (
         <GearSlotPickerModal
           slot={selectedGearSlot}
@@ -2836,8 +2845,35 @@ function formatStat(value: number): string {
 
 const RUNTIME_TALENT_MIN_ZOOM = 0.2;
 const RUNTIME_TALENT_MAX_ZOOM = 1.6;
-const RUNTIME_TALENT_ZOOM_STEP = 0.1;
 const RUNTIME_TALENT_DEFAULT_ZOOM = 0.65;
+
+type RuntimeTalentPointer = { clientX: number; clientY: number };
+type RuntimeTalentGesture = {
+  primaryPointerId: number;
+  startX: number;
+  startY: number;
+  scrollLeft: number;
+  scrollTop: number;
+  candidateTalentId: string | null;
+  moved: boolean;
+  pinchDistance: number | null;
+};
+
+function getDerivedStatRows(derived: ReturnType<typeof getDerivedStats>): Array<{ icon: DerivedStatIconName; label: string; value: string; tooltip: string }> {
+  return [
+    { icon: "physicalPower", label: "Physical Power", value: formatStat(derived.physicalPower), tooltip: "Determines the damage dealt by your physical and shadow abilities." },
+    { icon: "magicalPower", label: "Spell Power", value: formatStat(derived.magicalPower), tooltip: "Determines the damage dealt by your magical abilities." },
+    { icon: "hitChance", label: "Hit Chance", value: formatPercent(derived.hitChance), tooltip: "Determines how likely your attacks are to hit." },
+    { icon: "dodgeChance", label: "Dodge Chance", value: formatPercent(derived.dodgeChance), tooltip: "Determines how likely you are to avoid enemy attacks." },
+    { icon: "critChance", label: "Critical Chance", value: formatPercent(derived.critChance), tooltip: "Determines how likely your attacks are to critically strike." },
+    { icon: "maxHp", label: "Max Health", value: formatStat(derived.maxHp), tooltip: "Determines how much damage you can take before falling." },
+    { icon: "armor", label: "Armor", value: formatStat(derived.armor), tooltip: "Reduces damage you take from physical attacks." },
+    { icon: "magicResistance", label: "Magic Resistance", value: formatStat(derived.magicResistance), tooltip: "Reduces damage you take from magical attacks." },
+    { icon: "initiativeBonus", label: "Initiative", value: `+${formatStat(derived.initiativeBonus)}`, tooltip: "Determines how early you act when combat begins." },
+    { icon: "maxEnergy", label: "Energy Regeneration", value: formatStat(derived.energyRegen), tooltip: "Restores this much Energy at the start of your turn." },
+    { icon: "maxEnergy", label: "Max Energy", value: formatStat(derived.maxEnergy), tooltip: "Determines how much Energy you can hold at once." },
+  ];
+}
 
 function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, onUnlock, onToggleAbility }: {
   talent: (typeof TALENTS)[number];
@@ -3081,7 +3117,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   const treeScrollRef = useRef<HTMLDivElement>(null);
   const treeCanvasRef = useRef<HTMLDivElement>(null);
   const treeZoomRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
-  const treePanRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
+  const treePointersRef = useRef(new Map<number, RuntimeTalentPointer>());
+  const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
   const closeTalentDetails = useCallback(() => setSelectedTalentId(null), []);
   const closeAbilityLoadout = useCallback(() => setAbilityLoadoutOpen(false), []);
   const padding = 86;
@@ -3102,7 +3139,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   const zoomTreeTo = (requestedZoom: number, anchorClientX?: number, anchorClientY?: number) => {
     const scroller = treeScrollRef.current;
     const canvas = treeCanvasRef.current;
-    const nextZoom = Math.max(RUNTIME_TALENT_MIN_ZOOM, Math.min(RUNTIME_TALENT_MAX_ZOOM, Math.round(requestedZoom * 100) / 100));
+    const nextZoom = Math.max(RUNTIME_TALENT_MIN_ZOOM, Math.min(RUNTIME_TALENT_MAX_ZOOM, Math.round(requestedZoom * 1000) / 1000));
     if (!scroller || !canvas || nextZoom === treeZoomRef.current) return;
     const scrollRect = scroller.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
@@ -3120,18 +3157,6 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     });
   };
 
-  const fitTalentTree = () => {
-    const scroller = treeScrollRef.current;
-    if (!scroller) return;
-    const nextZoom = Math.max(RUNTIME_TALENT_MIN_ZOOM, Math.min(RUNTIME_TALENT_MAX_ZOOM, Math.min((scroller.clientWidth - 20) / treeWidth, (scroller.clientHeight - 20) / treeHeight)));
-    treeZoomRef.current = nextZoom;
-    setTreeZoom(nextZoom);
-    window.requestAnimationFrame(() => {
-      scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
-      scroller.scrollTop = Math.max(0, (scroller.scrollHeight - scroller.clientHeight) / 2);
-    });
-  };
-
   useEffect(() => {
     const scroller = treeScrollRef.current;
     const origin = nodePositions.get("origin");
@@ -3143,34 +3168,106 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     return () => window.cancelAnimationFrame(frame);
   }, [treeHeight, treeWidth]);
 
-  const beginTreePan = (event: React.PointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest(".runtime-talent-node") || (event.pointerType === "mouse" && event.button !== 0 && event.button !== 1)) return;
+  const beginTreeGesture = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0 && event.button !== 1) return;
     const scroller = treeScrollRef.current;
     if (!scroller) return;
     event.preventDefault();
-    treeCanvasRef.current?.setPointerCapture(event.pointerId);
-    treePanRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, scrollLeft: scroller.scrollLeft, scrollTop: scroller.scrollTop };
-    setIsPanning(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    treePointersRef.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+
+    if (!treeGestureRef.current) {
+      const candidateNode = event.button === 0
+        ? (event.target as HTMLElement).closest<HTMLElement>("[data-talent-id]")
+        : null;
+      treeGestureRef.current = {
+        primaryPointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        scrollLeft: scroller.scrollLeft,
+        scrollTop: scroller.scrollTop,
+        candidateTalentId: candidateNode?.dataset.talentId ?? null,
+        moved: event.button === 1,
+        pinchDistance: null,
+      };
+      if (event.button === 1) setIsPanning(true);
+    }
+
+    if (treePointersRef.current.size >= 2) {
+      const [first, second] = [...treePointersRef.current.values()];
+      const gesture = treeGestureRef.current;
+      gesture.moved = true;
+      gesture.candidateTalentId = null;
+      gesture.pinchDistance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+      setIsPanning(true);
+    }
   };
 
-  const moveTreePan = (event: React.PointerEvent<HTMLDivElement>) => {
-    const pan = treePanRef.current;
+  const moveTreeGesture = (event: React.PointerEvent<HTMLDivElement>) => {
+    const gesture = treeGestureRef.current;
     const scroller = treeScrollRef.current;
-    if (!pan || pan.pointerId !== event.pointerId || !scroller) return;
+    if (!gesture || !treePointersRef.current.has(event.pointerId) || !scroller) return;
     event.preventDefault();
-    scroller.scrollLeft = pan.scrollLeft - (event.clientX - pan.x);
-    scroller.scrollTop = pan.scrollTop - (event.clientY - pan.y);
+    treePointersRef.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+
+    if (treePointersRef.current.size >= 2) {
+      const [first, second] = [...treePointersRef.current.values()];
+      const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+      const midpointX = (first.clientX + second.clientX) / 2;
+      const midpointY = (first.clientY + second.clientY) / 2;
+      if (gesture.pinchDistance && gesture.pinchDistance > 0) {
+        zoomTreeTo(treeZoomRef.current * distance / gesture.pinchDistance, midpointX, midpointY);
+      }
+      gesture.pinchDistance = distance;
+      gesture.moved = true;
+      setIsPanning(true);
+      return;
+    }
+
+    if (event.pointerId !== gesture.primaryPointerId) return;
+    const deltaX = event.clientX - gesture.startX;
+    const deltaY = event.clientY - gesture.startY;
+    if (!gesture.moved && Math.hypot(deltaX, deltaY) >= 6) {
+      gesture.moved = true;
+      gesture.candidateTalentId = null;
+      setIsPanning(true);
+    }
+    if (!gesture.moved) return;
+    scroller.scrollLeft = gesture.scrollLeft - deltaX;
+    scroller.scrollTop = gesture.scrollTop - deltaY;
   };
 
-  const endTreePan = (pointerId: number) => {
-    if (treePanRef.current?.pointerId !== pointerId) return;
-    treePanRef.current = null;
-    setIsPanning(false);
+  const endTreeGesture = (event: React.PointerEvent<HTMLDivElement>, cancelled = false) => {
+    const gesture = treeGestureRef.current;
+    if (!gesture || !treePointersRef.current.has(event.pointerId)) return;
+    if (cancelled) gesture.moved = true;
+    treePointersRef.current.delete(event.pointerId);
+
+    if (treePointersRef.current.size === 0) {
+      const selectedId = !gesture.moved && event.pointerId === gesture.primaryPointerId ? gesture.candidateTalentId : null;
+      treeGestureRef.current = null;
+      setIsPanning(false);
+      if (selectedId) setSelectedTalentId(selectedId);
+      return;
+    }
+
+    const [remainingId, remainingPointer] = [...treePointersRef.current.entries()][0];
+    const scroller = treeScrollRef.current;
+    treeGestureRef.current = {
+      primaryPointerId: remainingId,
+      startX: remainingPointer.clientX,
+      startY: remainingPointer.clientY,
+      scrollLeft: scroller?.scrollLeft ?? 0,
+      scrollTop: scroller?.scrollTop ?? 0,
+      candidateTalentId: null,
+      moved: true,
+      pinchDistance: null,
+    };
   };
 
   return (
     <section className="page talents-page">
-      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div><div className={`talent-points ${character.talentPoints > 0 ? "unspent-points-indicator" : ""}`}><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div></div>
+      <div className="page-title"><div><p className="eyebrow">Classless Progression</p><h1>Talent Tree</h1><p>Begin at the center, then grow outward into any discipline.</p></div></div>
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="talent-loadout-actions">
@@ -3181,22 +3278,15 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
           <ChevronRight size={17} />
         </button>
       </div>
-      <div className="runtime-talent-toolbar">
-        <span><Hand size={14} /> Drag empty space to pan</span>
-        <div className="runtime-talent-zoom" aria-label="Talent tree zoom controls">
-          <button type="button" aria-label="Zoom out" onClick={() => zoomTreeTo(treeZoom - RUNTIME_TALENT_ZOOM_STEP)}><Minus size={15} /></button>
-          <output aria-label="Current zoom">{Math.round(treeZoom * 100)}%</output>
-          <button type="button" aria-label="Zoom in" onClick={() => zoomTreeTo(treeZoom + RUNTIME_TALENT_ZOOM_STEP)}><Plus size={15} /></button>
-          <button type="button" aria-label="Fit talent tree to view" onClick={fitTalentTree}><Maximize2 size={14} /><span>Fit</span></button>
-        </div>
-      </div>
-      <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree" onWheel={(event) => {
-        if (!event.ctrlKey && !event.metaKey) return;
-        event.preventDefault();
-        zoomTreeTo(treeZoom - Math.sign(event.deltaY) * RUNTIME_TALENT_ZOOM_STEP, event.clientX, event.clientY);
-      }}>
+      <div className="runtime-talent-stage">
+        <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree" onWheel={(event) => {
+          event.preventDefault();
+          const scroller = treeScrollRef.current;
+          const normalizedDelta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * (scroller?.clientHeight ?? 600) : event.deltaY;
+          zoomTreeTo(treeZoomRef.current * Math.exp(-normalizedDelta * 0.0015), event.clientX, event.clientY);
+        }}>
         <div className="runtime-talent-zoom-surface" style={{ width: treeWidth * treeZoom, height: treeHeight * treeZoom }}>
-          <div ref={treeCanvasRef} className={`talent-map runtime-talent-map ${isPanning ? "panning" : ""}`} style={{ width: treeWidth, height: treeHeight, transform: `scale(${treeZoom})` }} onPointerDown={beginTreePan} onPointerMove={moveTreePan} onPointerUp={(event) => endTreePan(event.pointerId)} onPointerCancel={(event) => endTreePan(event.pointerId)} onLostPointerCapture={(event) => endTreePan(event.pointerId)}>
+          <div ref={treeCanvasRef} className={`talent-map runtime-talent-map ${isPanning ? "panning" : ""}`} style={{ width: treeWidth, height: treeHeight, transform: `scale(${treeZoom})` }} onPointerDown={beginTreeGesture} onPointerMove={moveTreeGesture} onPointerUp={(event) => endTreeGesture(event)} onPointerCancel={(event) => endTreeGesture(event, true)} onLostPointerCapture={(event) => endTreeGesture(event, true)}>
             <svg className="runtime-talent-connections" viewBox={`0 0 ${treeWidth} ${treeHeight}`} aria-hidden="true">
               <defs>
                 <mask id="runtime-talent-connection-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width={treeWidth} height={treeHeight}>
@@ -3226,7 +3316,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
               const position = nodePositions.get(talent.id)!;
               const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";
               return (
-                <button type="button" aria-label={`${talent.name}, ${typeLabel}, ${state}`} className={`runtime-talent-node ${talent.branch} ${talent.shape} ${state}`} key={talent.id} style={{ left: position.x, top: position.y }} onClick={() => setSelectedTalentId(talent.id)}>
+                <button type="button" data-talent-id={talent.id} aria-label={`${talent.name}, ${typeLabel}, ${state}`} className={`runtime-talent-node ${talent.branch} ${talent.shape} ${state}`} key={talent.id} style={{ left: position.x, top: position.y }} onClick={(event) => { if (event.detail === 0) setSelectedTalentId(talent.id); }}>
                   <small>{typeLabel}</small>
                   <strong>{talent.name}</strong>
                 </button>
@@ -3234,6 +3324,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
             })}
           </div>
         </div>
+        </div>
+        <div className={`talent-points talent-points-overlay ${character.talentPoints > 0 ? "unspent-points-indicator" : ""}`}><Sparkles /><span><small>Available</small><strong>{character.talentPoints} Points</strong></span></div>
       </div>
       {selectedTalent && <TalentDetailModal
         talent={selectedTalent}

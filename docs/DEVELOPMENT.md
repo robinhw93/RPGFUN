@@ -358,7 +358,7 @@ Current migration behavior:
 - Tap uses an ability; long-press shows its explanation without firing it.
 - Combat ability cards show their content icon, Energy cost, and base cooldown; do not reintroduce keyboard-slot numbers into the card corner.
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
-- Combat portraits use a thin square border and clipped image surface. Hover/focus may add a restrained gold glow but must not scale or flash white on press. Enemy-card hover uses an accent overlay with an opacity transition, while pointer focus has an explicit game-owned outline from its first frame; do not transition between incompatible solid and gradient backgrounds or expose the browser's default focus ring. The player portrait opens current Attributes, while enemy portraits open enemy information.
+- Combat portraits use a thin square border and clipped image surface. Hover/focus may add a restrained gold glow but must not scale or flash white on press. Enemy-card hover uses an accent overlay with an opacity transition, while pointer focus has an explicit game-owned outline from its first frame; do not transition between incompatible solid and gradient backgrounds or expose the browser's default focus ring. The player portrait opens current Attributes and derived combat stats, while enemy portraits open enemy information.
 - Combat resource values stay centered over the full Health/Energy bar width at every viewport size; do not offset them toward the portrait or pair them directly beside the left-aligned resource label.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
@@ -422,7 +422,7 @@ For talent changes, also verify:
 - Prerequisite state from either side of every bidirectional connection.
 - Unlock cost and automatic loadout behavior.
 - Ability/passive detail modal content.
-- Pan, zoom, fit, and large-tree bounds.
+- Wheel zoom, left/middle mouse pan, touch pan, pinch zoom, node-drag suppression, stationary node selection, and large-tree bounds.
 - Save/load of newly unlocked IDs.
 
 For gear changes, verify:
