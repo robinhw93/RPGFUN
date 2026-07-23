@@ -611,13 +611,28 @@ function App() {
   const allocateStat = (stat: StatName) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active" || current.character.unspentStatPoints <= 0) return current;
+      const previousMaxHp = getDerivedStats(current.character).maxHp;
+      const character: CharacterState = {
+        ...current.character,
+        unspentStatPoints: current.character.unspentStatPoints - 1,
+        baseStats: { ...current.character.baseStats, [stat]: current.character.baseStats[stat] + 1 },
+      };
+      const nextMaxHp = getDerivedStats(character).maxHp;
+      const healthIncrease = stat === "vitality" ? Math.max(0, nextMaxHp - previousMaxHp) : 0;
+      const combat = current.adventure.combat && healthIncrease > 0
+        ? {
+          ...current.adventure.combat,
+          playerHp: Math.min(nextMaxHp, current.adventure.combat.playerHp + healthIncrease),
+          playerMaxHp: nextMaxHp,
+        }
+        : current.adventure.combat;
+      const carryHp = current.adventure.carryHp !== null && healthIncrease > 0
+        ? Math.min(nextMaxHp, current.adventure.carryHp + healthIncrease)
+        : current.adventure.carryHp;
       return {
         ...current,
-        character: {
-          ...current.character,
-          unspentStatPoints: current.character.unspentStatPoints - 1,
-          baseStats: { ...current.character.baseStats, [stat]: current.character.baseStats[stat] + 1 },
-        },
+        character,
+        adventure: { ...current.adventure, carryHp, combat },
       };
     });
   };

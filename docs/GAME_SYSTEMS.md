@@ -55,6 +55,8 @@ Attributes are whole numbers. Equipment and flat talent bonuses are added to bas
 | Vitality | +10 Max Health and +0.5% healing received per point. |
 | Luck | +0.75% Critical Strike Chance, +1% loot-rarity bonus, and +0.25% to explicitly chance-based combat triggers per point. |
 
+Spending an Attribute Point on Vitality also restores Health equal to the Max Health gained. The character therefore keeps the same amount of missing Health instead of gaining an empty section of the Health bar.
+
 Luck does not turn guaranteed effects into random effects. Its special-effect bonus is only added to triggers that already define a chance.
 
 ## Derived stats
