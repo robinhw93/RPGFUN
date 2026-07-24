@@ -1356,6 +1356,9 @@ main { min-height: calc(100vh - 68px); }
 .runtime-talent-tree { width: 100%; height: 100%; position: relative; overflow: auto; overflow-anchor: none; overscroll-behavior: none; touch-action: none; border: 0; background: transparent; scrollbar-width: none; }
 .runtime-talent-tree::-webkit-scrollbar { display: none; }
 .talent-points-overlay { position: absolute; z-index: 5; top: .8rem; right: .8rem; pointer-events: none; box-shadow: 0 8px 28px rgba(0,0,0,.42); }
+.mobile-talent-zoom-controls { position: absolute; z-index: 6; right: .55rem; bottom: .55rem; display: none; gap: .4rem; }
+.mobile-talent-zoom-controls button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; color: var(--gold-bright); border: 1px solid #5a4c31; background: rgba(15,18,16,.94); box-shadow: 0 7px 22px rgba(0,0,0,.42); cursor: pointer; }
+.mobile-talent-zoom-controls button:active { color: #fff0bb; border-color: var(--gold); background: #222018; transform: scale(.96); }
 .runtime-talent-zoom-surface { position: relative; flex: 0 0 auto; margin: auto; overflow: hidden; }
 .talent-tree .runtime-talent-map { min-height: 0; position: absolute; left: 0; top: 0; display: block; margin: 0; padding: 0; touch-action: none; user-select: none; transform-origin: left top; cursor: grab; }
 .talent-tree .runtime-talent-map.panning { cursor: grabbing; }
@@ -1439,10 +1442,15 @@ main { min-height: calc(100vh - 68px); }
 @media (max-width: 600px) {
   .runtime-talent-stage { height: min(66vh, 610px); margin-inline: -.5rem; }
   .talent-points-overlay { top: .55rem; right: .55rem; }
+  .mobile-talent-zoom-controls { display: flex; }
   .runtime-talent-node { width: 104px; min-height: 104px; padding: .42rem; }.runtime-talent-node.circle { width: 78px; min-height: 78px; padding: .32rem; }.runtime-talent-node > strong { font-size: .8rem; }.runtime-talent-node.circle > strong { font-size: .66rem; }
   .talent-detail-card { padding: 1rem; }.talent-detail-actions { grid-template-columns: 1fr; }
   .talent-loadout-trigger { width: 100%; }.ability-loadout-dialog { align-items: end; padding: .5rem; }.ability-loadout-card { padding: .9rem; }.ability-loadout-slots { grid-template-columns: repeat(3, 1fr); gap: .4rem; }.ability-loadout-slots button { min-height: 74px; }
   .ability-slot-picker { padding-inline: .55rem; }.ability-slot-picker-card { max-height: calc(100dvh - 1rem); padding: .8rem; }.ability-slot-picker-option { grid-template-columns: 36px minmax(0, 1fr); min-height: 66px; gap: .55rem; padding: .5rem; }.ability-slot-picker-icon { width: 36px; height: 36px; }.ability-slot-picker-metrics { grid-column: 2; grid-template-columns: auto 1fr; justify-items: start; gap: .2rem .45rem; }.ability-slot-picker-metrics > :nth-child(even) { justify-self: end; }.ability-slot-picker-metrics em { justify-self: end; margin: 0; }.ability-slot-picker-info small { white-space: normal; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .mobile-talent-zoom-controls { display: flex; }
 }
 
 @media (prefers-reduced-motion: reduce) {
