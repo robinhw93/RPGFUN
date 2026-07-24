@@ -428,7 +428,7 @@ For talent changes, also verify:
 - Prerequisite state from either side of every bidirectional connection.
 - Unlock cost and automatic loadout behavior.
 - Ability/passive detail modal content.
-- Wheel zoom, left/middle mouse pan, touch pan, pinch zoom, node-drag suppression, stationary node selection, and large-tree bounds.
+- Desktop wheel zoom, left/middle mouse pan, touch pan, mobile zoom buttons, intentional pinch-zoom suppression, node-drag suppression, stationary node selection, and large-tree bounds.
 - Save/load of newly unlocked IDs.
 
 For gear changes, verify:

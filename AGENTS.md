@@ -44,7 +44,7 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/App.tsx`: application orchestration and rendering, not duplicated rule formulas.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
 - `src/components/TalentDevtool.tsx`: isolated talent draft/export UI plus restricted local source sync for existing talent/ability tooltips and direct-damage Power totals.
-- `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Existing-enemy numeric stat fields use the local Vite source-sync route; ability rules, new enemies, events, adventures, and each editor's explicit Save action remain browser-local drafts.
+- `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Existing-enemy numeric stat fields use the local Vite source-sync route. Event Manager and Adventure Editor Save validate and replace their complete canonical catalogs while local Vite is running; ability rules and new enemies remain draft/export input.
 
 See `ARCHITECTURE.md` for the complete map.
 
@@ -122,13 +122,13 @@ Status refreshes must restart their application effect, so key transient overlay
 
 ## Talent-tree workflow
 
-The current live tree has 204 nodes: origin, four class nodes, 78 later Shadow nodes, 78 later Arcanist nodes, and 43 later Brute nodes. Shadow and Arcanist each have 79 nodes including their class nodes; Brute has 44; Cultist currently has one class node. Verify these counts against `TALENTS` after every import.
+The current live tree has 263 nodes: origin, four class nodes, and 86 later nodes for each of Shadow, Arcanist, and Brute. Shadow, Arcanist, and Brute each have 87 nodes including their class nodes; Cultist currently has one class node. Verify these counts against `TALENTS` after every import.
 
 - Talent IDs are save contracts. Preserve them unless a migration is intentionally implemented.
 - All requirements use ANY. There is no ALL mode.
 - Connections are bidirectional at runtime. Store each edge once; do not duplicate both directions in `requires`.
 - Unlocking either connected end may make the other end available.
-- The runtime tree and Talent Editor must support pan, zoom, fit-to-view, fixed world-grid alignment, and canvas growth in every direction.
+- The runtime tree and Talent Editor must support pan, zoom, fixed world-grid alignment, and canvas growth in every direction. Fit-to-view belongs to the Talent Editor; the player-facing runtime tree uses desktop wheel zoom or mobile zoom buttons and intentionally has no Fit control.
 - Talent nodes display name and Ability/Passive/Class on the map; full rules belong in the selected-node modal.
 - Class-node details show the granted ability before the Passive Bonus.
 - Circular passive nodes are 25% smaller than square ability/class nodes. Unlocked nodes have a gold outline, and connection lines must be masked beneath nodes.
@@ -192,9 +192,9 @@ At the time of this handoff:
 
 - Windsong Forest is the six-stage story adventure with fixed combat encounters and a dedicated bright-forest combat theme.
 - Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
-- Shadow is the first complete talent branch.
-- Arcanist is implemented through `talent_156`, including Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, and Elemental Fury with active-ability VFX.
-- Brute is implemented through `talent_199`, with Fire, Bleed, Armor/Guard, holy-vigor, and Smite paths. Cultist currently has only its class node.
+- Shadow, Arcanist, and Brute each have 87 live nodes including their class node. Shadow's latest extensions add Physical Power, Agility, Intelligence, and Spell Power routes.
+- Arcanist includes Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, Elemental Fury, and later Spell Power, Intelligence, Hit Chance, and Critical Strike routes.
+- Brute includes Fire, Bleed, Armor/Guard, holy-vigor, Smite, Spell Power, and hybrid Power paths. Cultist currently has only its class node.
 - The newest status in the catalog is Diminishing Returns, a three-turn buff granted when Stunned ends that prevents further Stunned applications.
 
 Use `docs/CONTENT_REFERENCE.md` rather than this summary for exact live values and the full catalog.
