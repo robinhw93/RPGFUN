@@ -2851,6 +2851,21 @@ const RUNTIME_TALENT_MAX_ZOOM = 1.6;
 const RUNTIME_TALENT_DEFAULT_ZOOM = 0.65;
 
 type RuntimeTalentPointer = { clientX: number; clientY: number };
+type RuntimeTalentPinch = {
+  startDistance: number;
+  startZoom: number;
+  worldX: number;
+  worldY: number;
+  viewportLeft: number;
+  viewportTop: number;
+};
+type RuntimeTalentPinchTarget = {
+  zoom: number;
+  anchorX: number;
+  anchorY: number;
+  worldX: number;
+  worldY: number;
+};
 type RuntimeTalentGesture = {
   primaryPointerId: number;
   startX: number;
@@ -2859,7 +2874,7 @@ type RuntimeTalentGesture = {
   scrollTop: number;
   candidateTalentId: string | null;
   moved: boolean;
-  pinchDistance: number | null;
+  pinch: RuntimeTalentPinch | null;
 };
 
 function getDerivedStatRows(derived: ReturnType<typeof getDerivedStats>): Array<{ icon: DerivedStatIconName; label: string; value: string; tooltip: string }> {
@@ -3128,6 +3143,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   const treeZoomTargetRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treeZoomFrameRef = useRef<number | null>(null);
   const treeZoomAnchorRef = useRef({ clientX: 0, clientY: 0 });
+  const treePinchTargetRef = useRef<RuntimeTalentPinchTarget | null>(null);
+  const treePinchFrameRef = useRef<number | null>(null);
   const treeDimensionsRef = useRef({ width: 0, height: 0 });
   const treePointersRef = useRef(new Map<number, RuntimeTalentPointer>());
   const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
@@ -3186,6 +3203,41 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     treeZoomFrameRef.current = window.requestAnimationFrame(step);
   }, [zoomTreeTo]);
 
+  const applyPendingPinchZoom = useCallback(() => {
+    const scroller = treeScrollRef.current;
+    const canvas = treeCanvasRef.current;
+    const target = treePinchTargetRef.current;
+    if (!scroller || !canvas || !target) return;
+    treePinchTargetRef.current = null;
+    const nextZoom = Math.max(RUNTIME_TALENT_MIN_ZOOM, Math.min(RUNTIME_TALENT_MAX_ZOOM, target.zoom));
+    treeZoomRef.current = nextZoom;
+    treeZoomTargetRef.current = nextZoom;
+    canvas.style.transform = `scale(${nextZoom})`;
+    scroller.scrollLeft = target.worldX * nextZoom - target.anchorX;
+    scroller.scrollTop = target.worldY * nextZoom - target.anchorY;
+  }, []);
+
+  const schedulePinchZoom = useCallback(() => {
+    if (treePinchFrameRef.current !== null) return;
+    treePinchFrameRef.current = window.requestAnimationFrame(() => {
+      treePinchFrameRef.current = null;
+      applyPendingPinchZoom();
+    });
+  }, [applyPendingPinchZoom]);
+
+  const finishPinchZoom = useCallback(() => {
+    const surface = treeSurfaceRef.current;
+    if (treePinchFrameRef.current !== null) {
+      window.cancelAnimationFrame(treePinchFrameRef.current);
+      treePinchFrameRef.current = null;
+    }
+    applyPendingPinchZoom();
+    if (surface) {
+      surface.style.width = `${treeDimensionsRef.current.width * treeZoomRef.current}px`;
+      surface.style.height = `${treeDimensionsRef.current.height * treeZoomRef.current}px`;
+    }
+  }, [applyPendingPinchZoom]);
+
   useEffect(() => {
     const scroller = treeScrollRef.current;
     if (!scroller) return;
@@ -3207,6 +3259,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       scroller.removeEventListener("wheel", handleWheel);
       if (treeZoomFrameRef.current !== null) window.cancelAnimationFrame(treeZoomFrameRef.current);
       treeZoomFrameRef.current = null;
+      if (treePinchFrameRef.current !== null) window.cancelAnimationFrame(treePinchFrameRef.current);
+      treePinchFrameRef.current = null;
     };
   }, [animateTreeZoom]);
 
@@ -3241,7 +3295,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
         scrollTop: scroller.scrollTop,
         candidateTalentId: candidateNode?.dataset.talentId ?? null,
         moved: event.button === 1,
-        pinchDistance: null,
+        pinch: null,
       };
       if (event.button === 1) setIsPanning(true);
     }
@@ -3249,9 +3303,29 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     if (treePointersRef.current.size >= 2) {
       const [first, second] = [...treePointersRef.current.values()];
       const gesture = treeGestureRef.current;
+      const surface = treeSurfaceRef.current;
+      const scrollRect = scroller.getBoundingClientRect();
+      const midpointX = (first.clientX + second.clientX) / 2;
+      const midpointY = (first.clientY + second.clientY) / 2;
+      const anchorX = midpointX - scrollRect.left;
+      const anchorY = midpointY - scrollRect.top;
+      if (treeZoomFrameRef.current !== null) window.cancelAnimationFrame(treeZoomFrameRef.current);
+      treeZoomFrameRef.current = null;
+      treeZoomTargetRef.current = treeZoomRef.current;
+      if (surface) {
+        surface.style.width = `${treeDimensionsRef.current.width * RUNTIME_TALENT_MAX_ZOOM}px`;
+        surface.style.height = `${treeDimensionsRef.current.height * RUNTIME_TALENT_MAX_ZOOM}px`;
+      }
       gesture.moved = true;
       gesture.candidateTalentId = null;
-      gesture.pinchDistance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+      gesture.pinch = {
+        startDistance: Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY),
+        startZoom: treeZoomRef.current,
+        worldX: (scroller.scrollLeft + anchorX) / treeZoomRef.current,
+        worldY: (scroller.scrollTop + anchorY) / treeZoomRef.current,
+        viewportLeft: scrollRect.left,
+        viewportTop: scrollRect.top,
+      };
       setIsPanning(true);
     }
   };
@@ -3268,18 +3342,20 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
       const midpointX = (first.clientX + second.clientX) / 2;
       const midpointY = (first.clientY + second.clientY) / 2;
-      if (gesture.pinchDistance && gesture.pinchDistance > 0) {
-        const requestedZoom = Math.max(
-          RUNTIME_TALENT_MIN_ZOOM,
-          Math.min(RUNTIME_TALENT_MAX_ZOOM, treeZoomTargetRef.current * distance / gesture.pinchDistance),
-        );
-        treeZoomTargetRef.current = requestedZoom;
-        treeZoomAnchorRef.current = { clientX: midpointX, clientY: midpointY };
-        animateTreeZoom();
+      if (gesture.pinch && gesture.pinch.startDistance > 0) {
+        treePinchTargetRef.current = {
+          zoom: Math.max(
+            RUNTIME_TALENT_MIN_ZOOM,
+            Math.min(RUNTIME_TALENT_MAX_ZOOM, gesture.pinch.startZoom * distance / gesture.pinch.startDistance),
+          ),
+          anchorX: midpointX - gesture.pinch.viewportLeft,
+          anchorY: midpointY - gesture.pinch.viewportTop,
+          worldX: gesture.pinch.worldX,
+          worldY: gesture.pinch.worldY,
+        };
+        schedulePinchZoom();
       }
-      gesture.pinchDistance = distance;
       gesture.moved = true;
-      setIsPanning(true);
       return;
     }
 
@@ -3301,6 +3377,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     if (!gesture || !treePointersRef.current.has(event.pointerId)) return;
     if (cancelled) gesture.moved = true;
     treePointersRef.current.delete(event.pointerId);
+    if (gesture.pinch && treePointersRef.current.size < 2) finishPinchZoom();
 
     if (treePointersRef.current.size === 0) {
       const selectedId = !gesture.moved && event.pointerId === gesture.primaryPointerId ? gesture.candidateTalentId : null;
@@ -3320,7 +3397,7 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       scrollTop: scroller?.scrollTop ?? 0,
       candidateTalentId: null,
       moved: true,
-      pinchDistance: null,
+      pinch: null,
     };
   };
 
