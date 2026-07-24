@@ -229,6 +229,15 @@ function queueStatusReconciliation(
     }
   });
   resolvedStatuses.filter((resolvedStatus) => !displayedStatuses.some((status) => status.id === resolvedStatus.id)).forEach((resolvedStatus) => {
+    const wasAppliedEarlierInSequence = pendingEffects.some((effect) => (
+      effect.type === "status"
+      && effect.targetId === targetId
+      && effect.status.id === resolvedStatus.id
+    ));
+    if (wasAppliedEarlierInSequence) {
+      queueStatusSet(pendingEffects, eventIndex, targetId, resolvedStatus);
+      return;
+    }
     combatEffectSequence += 1;
     pendingEffects.push({
       id: `combat-effect-${Date.now()}-${combatEffectSequence}`,
