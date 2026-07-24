@@ -3127,7 +3127,6 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
   const treeZoomRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treeZoomTargetRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treeZoomFrameRef = useRef<number | null>(null);
-  const treeZoomAnchorRef = useRef({ clientX: 0, clientY: 0 });
   const treeDimensionsRef = useRef({ width: 0, height: 0 });
   const treePointersRef = useRef(new Map<number, RuntimeTalentPointer>());
   const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
@@ -3176,11 +3175,11 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     const step = () => {
       const difference = treeZoomTargetRef.current - treeZoomRef.current;
       if (Math.abs(difference) < 0.001) {
-        zoomTreeTo(treeZoomTargetRef.current, treeZoomAnchorRef.current.clientX, treeZoomAnchorRef.current.clientY);
+        zoomTreeTo(treeZoomTargetRef.current);
         treeZoomFrameRef.current = null;
         return;
       }
-      zoomTreeTo(treeZoomRef.current + difference * 0.24, treeZoomAnchorRef.current.clientX, treeZoomAnchorRef.current.clientY);
+      zoomTreeTo(treeZoomRef.current + difference * 0.24);
       treeZoomFrameRef.current = window.requestAnimationFrame(step);
     };
     treeZoomFrameRef.current = window.requestAnimationFrame(step);
@@ -3207,7 +3206,6 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       const normalizedDelta = event.deltaMode === 1
         ? event.deltaY * 16
         : event.deltaMode === 2 ? event.deltaY * scroller.clientHeight : event.deltaY;
-      treeZoomAnchorRef.current = { clientX: event.clientX, clientY: event.clientY };
       treeZoomTargetRef.current = Math.max(
         RUNTIME_TALENT_MIN_ZOOM,
         Math.min(RUNTIME_TALENT_MAX_ZOOM, treeZoomTargetRef.current * Math.exp(-normalizedDelta * 0.0013)),
