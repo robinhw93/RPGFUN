@@ -65,10 +65,12 @@ Git LFS warnings after `git pull` mean Git LFS is not installed in that environm
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start Vite development mode on port 5173. |
+| `npm test` | Bundle and run focused regression checks against the live game modules. |
+| `npm run docs:check` | Verify that documented talent counts match the canonical catalog. |
 | `npm run build` | Run `tsc -b`, then create the production bundle in `dist/`. |
 | `npm run preview` | Serve the existing production bundle for local review. |
 
-There is currently no automated unit-test command. `npm run build` is the required baseline check, followed by focused browser testing for affected game systems.
+Run `npm test`, `npm run docs:check`, and `npm run build` as the baseline checks. Follow them with focused browser testing for affected game systems.
 
 ## Mobile testing
 
@@ -92,6 +94,8 @@ Before deployment:
 
 ```bash
 npm ci
+npm test
+npm run docs:check
 npm run build
 ```
 
@@ -101,12 +105,23 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 
 | Path | Responsibility |
 | --- | --- |
-| `src/App.tsx` | Top-level stateful UI, navigation, adventure screens, character/inventory UI, runtime talent tree, modals, and player actions. |
+| `src/App.tsx` | Top-level state, navigation, application orchestration, high-level actions, and lazy-loaded screen boundaries. |
+| `src/components/character/` | Character creation plus Character and Equipment/Inventory screens. |
+| `src/components/adventure/` | Adventure selection, event/score presentation, and combat-screen composition. |
+| `src/components/combat/` | Combat HUD, initiative presentation, and transient combat/VFX renderers. |
+| `src/components/talents/` | Runtime talent tree, talent details, and ability-loadout dialogs. |
+| `src/ui/gameUi.tsx` | Shared display helpers, stat/ability icons, encounter wording, and asset preloading. |
 | `src/styles.css` | Responsive layout, game-owned tooltips, modals, combat animations, paper-doll layout, talent maps, and mobile rules. |
 | `src/game/types.ts` | Shared domain types and data contracts. |
-| `src/game/data.ts` | Canonical abilities, talent nodes/canvas, enemies, events, items, gear-set bonuses, and staged adventures. |
+| `src/game/data.ts` | Stable public facade for the split canonical content catalogs. |
+| `src/game/content/abilities.ts` | Canonical player abilities and ability-type normalization. |
+| `src/game/content/talents.ts` | Canonical talent nodes and runtime tree canvas. |
+| `src/game/content/enemies.ts` | Canonical enemy templates and executable enemy abilities. |
+| `src/game/content/gear.ts` | Canonical items and gear-set thresholds. |
+| `src/game/content/adventures.ts` | Canonical events, story adventures, and endless adventure definition. |
 | `src/game/character.ts` | New-character state and derived-stat calculation. |
-| `src/game/engine.ts` | Combat transitions, initiative, abilities, targeting, status timing, enemy turns, and pending visible effects. |
+| `src/game/engine.ts` | Stable public facade for combat transitions. |
+| `src/game/combat/` | State creation, event queues, damage, turn flow/triggers, player actions, enemy actions, and presentation resolution. |
 | `src/game/combatMath.ts` | Hit-versus-Dodge bounds and rolls. |
 | `src/game/statusEffects.ts` | Status library, stacking, duration, damage/healing, and status multipliers. |
 | `src/game/combatFeatures.ts` | Resolves gear, set, and talent passives, triggers, damage modifiers, and ability modifiers. |
@@ -123,9 +138,13 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/initiativeLayout.ts` | Pure FLIP geometry for initiative-card transitions. |
 | `src/game/avatars.ts` | Appearance catalog and saved-avatar normalization. |
 | `src/components/TalentDevtool.tsx` | Standalone Talent Editor draft/export UI plus restricted existing talent/ability tooltip and Power-scaling source sync. |
-| `src/components/ContentDevtools.tsx` | Developer-tool launcher plus Enemy, Event, and Adventure drafts/exports; Event and Adventure Save write complete validated live catalogs, while existing-enemy numeric stats use the narrow source-sync route. |
+| `src/components/ContentDevtools.tsx` | Compatibility facade for the split content editors. |
+| `src/components/devtools/` | Shared devtool contracts/launcher plus separate Enemy, Event, and Adventure editors. |
 | `src/components/PortraitDevtool.tsx` | Enemy/player artwork selection and normalized square combat-portrait crop drafts. |
-| `vite.config.ts` | Vite setup plus development-only field routes and validated Event/Adventure catalog source sync. |
+| `vite.config.ts` | Small Vite composition and server configuration. |
+| `tools/vite/localSourceSync.ts` | Development-only field routes, validation, and canonical source synchronization. |
+| `scripts/regression-tests.ts` | Focused rules/content regression checks run by `npm test`. |
+| `scripts/verify-docs.mjs` | Live-versus-documented talent-count verification. |
 | `src/components/FloatingCombatText.tsx` | Timed floating-message presentation. |
 | `src/components/GameConfirmDialog.tsx` | Game-owned destructive-action confirmation. |
 | `src/components/GearSlotIcon.tsx` | Resolves equipment-category image assets. |
@@ -137,7 +156,7 @@ See [Architecture](../ARCHITECTURE.md) for ownership and sequencing rules.
 
 ### Abilities
 
-Add or edit `Ability` entries in `src/game/data.ts`.
+Add or edit `Ability` entries in `src/game/content/abilities.ts`.
 
 Important fields:
 
@@ -174,7 +193,7 @@ Adding an ability definition does not make it obtainable. A talent must referenc
 
 ### Talents
 
-The runtime tree reads `TALENTS` and `TALENT_TREE_CANVAS` from `src/game/data.ts`.
+The runtime tree reads `TALENTS` and `TALENT_TREE_CANVAS` from `src/game/content/talents.ts` through the stable `src/game/data.ts` facade.
 
 Each talent defines:
 
@@ -193,7 +212,7 @@ The runtime loadout remains a compact `equippedAbilities` array. The slot picker
 
 ### Enemies, items, sets, and adventures
 
-All live definitions are in `src/game/data.ts`:
+Live definitions are separated under `src/game/content/` and re-exported by `src/game/data.ts`:
 
 - Enemy IDs referenced by an adventure must exist in `ENEMIES`.
 - Enemy templates own separate Physical Power and Spell Power, executable abilities, Critical Strike Chance, Energy Regeneration, and Max Energy as well as Health, Armor, Magic Resistance, Hit, and Dodge values.
@@ -208,7 +227,7 @@ All live definitions are in `src/game/data.ts`:
 
 Add status IDs to `StatusEffectId` in `src/game/types.ts`, then add the definition to `STATUS_EFFECTS` in `src/game/statusEffects.ts`. Also update:
 
-- Status icon mapping in `src/App.tsx`.
+- Status icon mapping in `src/ui/gameUi.tsx`.
 - Any outgoing/incoming multiplier or timing logic.
 - Damage/healing formulas when the status ticks.
 - Combat-engine application/removal behavior if it is not covered by the generic path.
@@ -305,11 +324,11 @@ The editor supports:
 
 ### What Save does
 
-Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/data.ts` through the local Vite server. If the talent references an existing canonical ability, leaving its **Ability tooltip for players** or either Power-percentage field writes the ability description or both scaling totals directly as well. These restricted field writes are independent of the Save button.
+Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/content/talents.ts` through the local Vite server. If the talent references an existing canonical ability, leaving its **Ability tooltip for players** or either Power-percentage field writes the ability description or both scaling totals directly to `src/game/content/abilities.ts`. These restricted field writes are independent of the Save button.
 
 The **Save** button itself does not:
 
-- Apply other draft fields to `src/game/data.ts`.
+- Apply other draft fields to the matching module under `src/game/content/`.
 - Update the live player talent tree.
 - Push to GitHub.
 - Synchronize to another browser or computer.
@@ -328,12 +347,12 @@ The **Save** button itself does not:
 
 The developer-tool launcher also opens four isolated content editors:
 
-- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Changing any of those numeric fields for an existing enemy writes that single field directly to its canonical `src/game/data.ts` definition through the local Vite development server. Sending only the changed field prevents older browser drafts from overwriting unrelated live stats. New enemies remain drafts until implemented. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, Melee/Ranged attack type, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
+- **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Changing any of those numeric fields for an existing enemy writes that single field directly to its canonical `src/game/content/enemies.ts` definition through the local Vite development server. Sending only the changed field prevents older browser drafts from overwriting unrelated live stats. New enemies remain drafts until implemented. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, Melee/Ranged attack type, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute and threshold plus narrative positive/negative outcomes. An outcome can combine multiple typed effects: Health, gold, experience, Talent Points, Attribute Points, an item, a player/enemy status for the next combat, or an immediate enemy encounter with an XP/gold reward. Legacy signed-number outcomes are normalized into the version-2 effect list when their existing browser draft is opened.
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy pickers display readable names while preserving stable enemy IDs in saved/exported data. Enemy counts support repeated templates in one encounter, and combat entries configure only XP and gold; loot is reserved for future enemy-owned loot tables. Legacy editor drafts that still contain an adventure-level `loot` flag are normalized without it. Its **XP Guide** lists the experience needed from the previous level and the cumulative total for every level through the level-50 cap; the table is derived from the live progression formula.
 - **Portrait Editor** switches between enemies and player avatars, selects from the generated full-art library, and positions/resizes a square crop directly over the source image. It shows the exact square combat preview and exports normalized percentage coordinates, so the crop is independent of the editor's screen size.
 
-They auto-save and expose Save, Copy for Codex, and Export JSON. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Event exports use version 2. Local drafts can reference one another. Event Manager and Adventure Editor Save post their complete draft to the local Vite server, which validates IDs, shapes, references, and effect/status polarity before replacing only the matching catalog initializer in `src/game/data.ts`. The write is unavailable in a production deployment. Existing-enemy stats and Talent Editor tooltip/Power fields retain their narrow direct-write behavior; advanced enemy abilities, portraits, and other new mechanics remain draft-only until implemented.
+They auto-save and expose Save, Copy for Codex, and Export JSON. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Event exports use version 2. Local drafts can reference one another. Event Manager and Adventure Editor Save post their complete draft to the local Vite server, which validates IDs, shapes, references, and effect/status polarity before replacing only the matching catalog initializer in `src/game/content/adventures.ts`. The write is unavailable in a production deployment. Existing-enemy stats and Talent Editor tooltip/Power fields retain their narrow direct-write behavior; advanced enemy abilities, portraits, and other new mechanics remain draft-only until implemented.
 
 ## Save compatibility
 
@@ -402,10 +421,12 @@ Do not copy full content tables into several files. Keep exact catalogs in `CONT
 Always run:
 
 ```bash
+npm test
+npm run docs:check
 npm run build
 ```
 
-There is no dedicated unit-test runner yet. For rule-heavy changes, add a focused temporary TypeScript smoke script when useful, bundle it against the real modules with `esbuild`, run it, and remove the temporary source and output before committing. UI layout, touch behavior, animation, and VFX still require browser verification. If a managed Codex sandbox blocks Vite/esbuild process spawning with `EPERM`, rerun the same build with the appropriate approved escalation rather than changing project configuration to work around the sandbox.
+`npm test` bundles the focused TypeScript regression suite against the real modules with `esbuild`; extend it when a rule change has a stable, high-value invariant. `npm run docs:check` guards the live talent count. UI layout, touch behavior, animation, and VFX still require browser verification. If a managed Codex sandbox blocks Vite/esbuild process spawning with `EPERM`, rerun the same command with the appropriate approved escalation rather than changing project configuration to work around the sandbox.
 
 Then test the changed system in a browser. For combat changes, verify at minimum:
 

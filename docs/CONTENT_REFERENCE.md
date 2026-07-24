@@ -1,6 +1,6 @@
 # Content reference
 
-This is a snapshot of content currently defined in `src/game/data.ts` and `src/game/statusEffects.ts`. It distinguishes playable content from definitions that exist for future expansion.
+This is a snapshot of content currently defined under `src/game/content/` and in `src/game/statusEffects.ts`. The stable `src/game/data.ts` facade re-exports those catalogs. This document distinguishes playable content from definitions that exist for future expansion.
 
 ## Abilities
 
@@ -12,7 +12,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 
 | Ability | Energy | Cooldown | Target | Effect |
 | --- | ---: | ---: | --- | --- |
-| Quick Slash | 1 | None | Enemy | Deals 50% Physical Power as Physical damage. |
+| Quick Slash | 1 | None | Enemy | Deals 15% Physical Power as Physical damage. |
 | Twin Strike | 2 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
 | Poison Cloud | 3 | 2 | All enemies | Applies 2 Poison to every target simultaneously without direct damage. |
@@ -438,11 +438,11 @@ Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical
 | Enemy | Health | Physical / Spell Power | Armor / Magic Resistance | Hit / Dodge / Crit | Regen / Max | Abilities |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | DUMMY | 100 | 1 / 0 | 0 / 0 | 95% / 0% / 0% | 1 / 10 | Training Strike (1 Energy, Melee): 1 base Physical damage. |
-| Rabid Rat | 8 | 1 / 0 | 0 / 0 | 95% / 5% / 10% | 1 / 3 | Bite (2, Melee): 100% Physical Power. Scurry (0, self): +1 Energy next turn. Rabid Bite (3, Melee): 100% Physical Power and 1 Poison. |
-| Windsong Wolf | 17 | 3 / 0 | 1 / 0 | 95% / 10% / 10% | 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
-| Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 40% / 5% | 2 / 5 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
-| Brown Bear | 30 | 5 / 0 | 5 / 0 | 85% / 5% / 5% | 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
-| The Forest Spirit | 40 | 0 / 10 | 0 / 2 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth until the end of its next turn and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
+| Rabid Rat | 11 | 1 / 0 | 0 / 0 | 95% / 5% / 10% | 1 / 3 | Bite (2, Melee): 100% Physical Power. Scurry (0, self): +1 Energy next turn. Rabid Bite (3, Melee): 100% Physical Power and 1 Poison. |
+| Windsong Wolf | 20 | 2 / 0 | 0 / 0 | 95% / 10% / 10% | 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
+| Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 5% / 5% | 2 / 4 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
+| Brown Bear | 30 | 3 / 0 | 5 / 0 | 85% / 5% / 5% | 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
+| The Forest Spirit | 40 | 0 / 8 | 1 / 1 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth until the end of its next turn and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
 
 The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
 

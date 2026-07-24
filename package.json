@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node scripts/run-tests.mjs",
+    "docs:check": "node scripts/verify-docs.mjs"
   },
   "dependencies": {
     "lucide-react": "1.25.0",

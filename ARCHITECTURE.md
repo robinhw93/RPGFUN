@@ -15,16 +15,16 @@ Primary rules:
 ## Runtime layers
 
 ```text
-React UI and interaction (App.tsx, components)
+React UI and interaction (App.tsx, screen components)
                 |
                 v
 Application actions and event sequencer
                 |
                 v
-Pure-ish game transitions (engine, gear, rewards, progression)
+Pure-ish game transitions (combat modules, gear, rewards, progression)
                 |
                 v
-Content and rules (data, statuses, combat features, math)
+Content and rules (content catalogs, statuses, combat features, math)
                 |
                 v
 Browser localStorage and static assets
@@ -36,28 +36,33 @@ There is no server authority. React owns the current `GameState`, and every non-
 
 ### Application and UI
 
-- `src/App.tsx` owns top-level React state, navigation, character creation, adventure progression, event choices, reward presentation, runtime talent interaction, character/inventory interaction, and the high-level commands sent to game modules.
+- `src/App.tsx` owns top-level React state, navigation, application orchestration, and the high-level commands sent to game modules. It lazy-loads the talent screen and developer tools so those large editing surfaces are absent from the initial bundle.
+- `src/components/character/` owns character creation plus the Character and Equipment/Inventory screens.
+- `src/components/adventure/` owns adventure selection, combat-screen composition, event presentation, and score screens.
+- `src/components/combat/` owns the combat HUD, initiative presentation, and transient combat/VFX renderers.
+- `src/components/talents/` owns the runtime talent tree, talent details, and ability-loadout dialogs.
+- `src/ui/gameUi.tsx` owns shared presentation helpers such as stat/ability icons, encounter wording, asset preloading, and display-only derived-stat rows.
 - `src/hooks/useCombatActionQueue.ts` owns the transient player-input queue, reserves Energy and cooldowns for queued abilities, captures targets, and dispatches one action whenever the presentation sequencer is ready.
 - `src/hooks/useCombatEventSequencer.ts` schedules visible combat events and applies their pending state effects at the correct message/impact time.
 - `src/components/FloatingCombatText.tsx` presents the event queue and reports when each entry appears and when the sequence completes.
 - `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
 - `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
 - `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow. Existing talent tooltips plus referenced live-ability tooltips and Physical/Spell Power scaling totals call the restricted local source-sync route when their fields lose focus.
-- `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher. Existing-enemy numeric stat edits call the restricted local source-sync route. Event and Adventure Save validate and replace their complete live catalogs while the local Vite server is running; enemy abilities and behavior remain draft/export input.
+- `src/components/ContentDevtools.tsx` is the compatibility facade for `src/components/devtools/`. The submodules separately own the launcher/shared draft contracts, Enemy Editor, Event Manager, and Adventure Editor. Existing-enemy numeric stat edits call the restricted local source-sync route. Event and Adventure Save validate and replace their complete live catalogs while the local Vite server is running; enemy abilities and behavior remain draft/export input.
 - `src/components/PortraitDevtool.tsx` owns the isolated enemy/player artwork selection and normalized square portrait-crop workflow.
 - `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
-- `vite.config.ts` owns the development-only source-sync routes. Narrow routes accept known numeric enemy fields or known tooltip/Power-scaling fields for existing canonical talent/ability pairs. The catalog route validates complete Event or Adventure exchanges, including live enemy, event, item, and status references, before replacing only the matching initializer in `src/game/data.ts`. All source mutations share a queue so rapid edits cannot overwrite one another.
+- `vite.config.ts` contains only Vite composition and server settings. `tools/vite/localSourceSync.ts` owns the development-only source-sync plugin. Narrow routes accept known numeric enemy fields or known tooltip/Power-scaling fields for existing canonical talent/ability pairs. Catalog routes validate complete Event or Adventure exchanges, including live enemy, event, item, and status references, before replacing only the matching initializer in its canonical content module. All source mutations share a queue so rapid edits cannot overwrite one another.
 
 ### Domain and content
 
 - `src/game/types.ts` is the shared domain schema.
-- `src/game/data.ts` is the canonical static catalog for abilities, talents, tree canvas, enemies, events, items, set thresholds, and staged adventures.
+- `src/game/data.ts` is the stable public content facade. Canonical definitions live in responsibility-specific modules under `src/game/content/`: abilities, talents/tree canvas, enemies, gear/set thresholds, and adventures/events.
 - `src/game/statusEffects.ts` is the canonical status catalog and owns generic status stacking, duration, multipliers, ticking damage, and healing formulas.
 - `src/game/avatars.ts` owns the appearance catalog, full-figure and combat-portrait asset mapping, and normalization.
 
 ### Rules and transitions
 
-- `src/game/engine.ts` owns combat creation, initiative, turn movement, targeting, abilities, enemy behavior, status timing, procs, pending effects, and outcomes.
+- `src/game/engine.ts` is the stable public combat facade. `src/game/combat/` separates state creation/normalization, event queues, damage, turn flow and triggers, player actions, enemy actions, and presentation-time resolution. Callers continue importing the public transitions from `engine.ts`.
 - `src/game/character.ts` is the only module that converts base attributes plus equipment/set/talent passives into `DerivedStats`.
 - `src/game/combatMath.ts` owns opposed Hit/Dodge rules and caps.
 - `src/game/combatFeatures.ts` aggregates data-driven gear, set, and talent combat features.
@@ -268,7 +273,7 @@ React keeps player inputs in a transient FIFO queue that is deliberately exclude
 
 `takeEnemyTurn` runs start statuses and Energy regeneration once, then resolves at most one enemy ability per presentation sequence. `enemyActionsTaken` keeps the active actor in place when its template permits another ready ability, so repeated attacks receive separate text, hit rolls, impact VFX, Energy costs, and Bleed triggers. Poison and duration reconciliation run only when the enemy's final action ends, after which `moveToNextActor` resets the counter. Visible enemy statuses are snapshotted and reconciled at the matching event, preventing duration changes or removals from appearing early. Enemy-to-enemy and player-to-enemy turn transitions reuse the preceding sequence's final event instead of adding a standalone enemy-turn message.
 
-Enemy templates contain separate Physical Power and Spell Power plus an ordered list of executable abilities. Ability damage can use fixed Physical/Spell scaling or a reusable randomly rolled Power-scaling range. Energy-depletion self statuses attach to the ability impact, then participate in normal end-of-turn duration and Diminishing Returns handling. `takeEnemyTurn` uses the first affordable implemented ability. The Enemy Editor writes changed numeric stats for existing enemies directly to `src/game/data.ts` through a development-only Vite route, one edited field at a time so stale browser drafts cannot overwrite unrelated values. It still exports structured ability drafts with name, Energy cost, cooldown, and effect text. Those effects and the separate behavior text remain design input; bespoke mechanics, cooldown handling, and selection priorities are implemented in source after export.
+Enemy templates contain separate Physical Power and Spell Power plus an ordered list of executable abilities. Ability damage can use fixed Physical/Spell scaling or a reusable randomly rolled Power-scaling range. Energy-depletion self statuses attach to the ability impact, then participate in normal end-of-turn duration and Diminishing Returns handling. `takeEnemyTurn` uses the first affordable implemented ability. The Enemy Editor writes changed numeric stats for existing enemies directly to `src/game/content/enemies.ts` through a development-only Vite route, one edited field at a time so stale browser drafts cannot overwrite unrelated values. It still exports structured ability drafts with name, Energy cost, cooldown, and effect text. Those effects and the separate behavior text remain design input; bespoke mechanics, cooldown handling, and selection priorities are implemented in source after export.
 
 ## Combat timing contract
 
@@ -408,7 +413,13 @@ Canvas positions are percentages, but grid spacing is stored as fixed world unit
 
 An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions. The exception is the restricted local-development sync: leaving the talent-tooltip field updates an existing talent, while leaving the ability-tooltip or Power-percentage fields updates the ability already referenced by that live talent. New/reassigned abilities and all other fields remain draft-only.
 
-Enemy, Event, and Adventure editors retain the legacy storage keys `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`, and every change still auto-saves its browser-local draft. New files and exchange-format labels use the Arkenfall name. Event Manager uses exchange version 2 with a list of typed effects per outcome. While local Vite is running, Event and Adventure Save validate and write their complete catalogs into `src/game/data.ts`; invalid or unsaved enemy, event, item, and status references are rejected without changing the file. Enemy ability mechanics still require source implementation.
+Enemy, Event, and Adventure editors retain the legacy storage keys `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`, and every change still auto-saves its browser-local draft. New files and exchange-format labels use the Arkenfall name. Event Manager uses exchange version 2 with a list of typed effects per outcome. While local Vite is running, Event and Adventure Save validate and write their complete catalogs into `src/game/content/adventures.ts`; invalid or unsaved enemy, event, item, and status references are rejected without changing the file. Enemy ability mechanics still require source implementation.
+
+## Regression protection
+
+- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references, talent graph integrity, Stealth and Stun/Diminishing Returns behavior, a representative player ability, and structured event outcomes.
+- `npm run docs:check` verifies that the documented talent count matches the live talent catalog.
+- `npm run build` remains the full type-check and production-bundle gate. UI, touch, animation, and VFX behavior still require browser verification at desktop and mobile widths.
 
 ## Save boundary and migration
 

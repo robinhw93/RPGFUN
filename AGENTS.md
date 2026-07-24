@@ -29,9 +29,9 @@ Do not infer current rules from an old conversation alone. This game changes fre
 
 Use the existing module boundaries rather than putting more rules into `App.tsx`:
 
-- `src/game/data.ts`: canonical abilities, talents, canvas, enemies, gear, sets, and adventures.
+- `src/game/data.ts`: stable public content facade. Canonical catalogs are split across `src/game/content/abilities.ts`, `talents.ts`, `enemies.ts`, `gear.ts`, and `adventures.ts`.
 - `src/game/types.ts`: shared domain contracts.
-- `src/game/engine.ts`: combat transitions, turns, targeting, abilities, triggers, statuses, pending effects, and outcomes.
+- `src/game/engine.ts`: stable public combat facade. Implementations are split across `src/game/combat/` by state, event queue, damage, flow/triggers, player actions, enemy actions, and presentation.
 - `src/game/character.ts`: the only derived-stat pipeline.
 - `src/game/combatMath.ts`: Hit/Dodge rules and caps.
 - `src/game/statusEffects.ts`: status definitions, stacking, durations, ticking formulas, and generic multipliers.
@@ -41,10 +41,11 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/hooks/useCombatEventSequencer.ts`: presentation-time event resolution.
 - `src/game/timing.ts`: shared presentation durations.
 - `src/game/save.ts`: load, save, and migrations.
-- `src/App.tsx`: application orchestration and rendering, not duplicated rule formulas.
+- `src/App.tsx`: application orchestration and high-level state only. Screen rendering belongs under `src/components/character/`, `adventure/`, `combat/`, and `talents/`; shared display helpers belong in `src/ui/gameUi.tsx`.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
 - `src/components/TalentDevtool.tsx`: isolated talent draft/export UI plus restricted local source sync for existing talent/ability tooltips and direct-damage Power totals.
-- `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Existing-enemy numeric stat fields use the local Vite source-sync route. Event Manager and Adventure Editor Save validate and replace their complete canonical catalogs while local Vite is running; ability rules and new enemies remain draft/export input.
+- `src/components/ContentDevtools.tsx`: compatibility facade for the separate editor modules under `src/components/devtools/`. Existing-enemy numeric stat fields use the local Vite source-sync route. Event Manager and Adventure Editor Save validate and replace their complete canonical catalogs while local Vite is running; ability rules and new enemies remain draft/export input.
+- `tools/vite/localSourceSync.ts`: development-only validation and source writes for supported editor fields and catalogs. `vite.config.ts` only composes the plugin and server settings.
 
 See `ARCHITECTURE.md` for the complete map.
 
@@ -143,7 +144,7 @@ When the owner supplies Talent Editor JSON:
 6. Keep existing ability definitions, talent combat bundles, editor metadata, and all documentation synchronized.
 7. Verify every ability talent points to a real ability and every connection points to a real node.
 
-The Talent Editor's **Save** button only writes its browser-local draft. It does not edit `src/game/data.ts`, update the runtime tree, or push Git changes. Separately, leaving the supported tooltip and Physical/Spell Power percentage fields for an existing canonical talent/ability pair writes those specific fields through the restricted local Vite source-sync route.
+The Talent Editor's **Save** button only writes its browser-local draft. It does not edit the canonical modules under `src/game/content/`, update the runtime tree, or push Git changes. Separately, leaving the supported tooltip and Physical/Spell Power percentage fields for an existing canonical talent/ability pair writes those specific fields through the restricted local Vite source-sync route.
 
 ## Saves and compatibility
 
@@ -164,7 +165,7 @@ The live save key remains the legacy compatibility key `emberfall-save-v1`. Exis
 - Prefer shared helpers and typed contracts over local conditionals.
 - Keep player-visible mechanics and their text synchronized in the same change.
 - Update documentation as part of the implementation, using the ownership table in `docs/DEVELOPMENT.md`.
-- Run `npm run build` after source changes. Add focused temporary smoke checks for rule-heavy mechanics when useful, then remove all temporary artifacts.
+- Run `npm test`, `npm run docs:check`, and `npm run build` after source changes. Add focused regression coverage for rule-heavy mechanics when useful.
 - Verify touch/layout/VFX changes in a browser at a narrow mobile viewport as well as desktop.
 - Review `git diff` and `git status --short` before committing.
 - The established project workflow is to commit coherent completed work and push `main` after verification unless the owner says otherwise.
@@ -181,7 +182,7 @@ A change is complete only when the applicable items are true:
 - Reusable mechanics use the shared feature architecture.
 - Effective ability descriptions/costs/cooldowns reflect unlocked modifiers.
 - Relevant docs and content counts are updated.
-- `npm run build` passes.
+- `npm test`, `npm run docs:check`, and `npm run build` pass.
 - Focused browser or smoke verification covers the risky behavior.
 - No generated build output, temporary files, or unrelated edits are included.
 - The verified change is committed and pushed when requested by the established workflow.

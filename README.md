@@ -36,10 +36,12 @@ npm run dev -- --host 0.0.0.0
 ## Production build
 
 ```bash
+npm test
+npm run docs:check
 npm run build
 ```
 
-The command runs the TypeScript project build and then creates the production bundle in `dist/`.
+The checks run focused gameplay regressions, verify documentation against the live talent catalog, type-check the project, and create the production bundle in `dist/`.
 
 ## Current playable scope
 
