@@ -2850,6 +2850,7 @@ const RUNTIME_TALENT_MIN_ZOOM = 0.2;
 const RUNTIME_TALENT_MAX_ZOOM = 1.6;
 const RUNTIME_TALENT_DEFAULT_ZOOM = 0.65;
 const RUNTIME_TALENT_MOBILE_ZOOM_STEP = 0.2;
+const RUNTIME_TALENT_SCREEN_GUTTER = 80;
 
 type RuntimeTalentPointer = { clientX: number; clientY: number };
 type RuntimeTalentGesture = {
@@ -3164,10 +3165,10 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     const worldY = (clientY - canvasRect.top) / treeZoomRef.current;
     treeZoomRef.current = nextZoom;
     canvas.style.transform = `scale(${nextZoom})`;
-    surface.style.width = `${treeDimensionsRef.current.width * nextZoom}px`;
-    surface.style.height = `${treeDimensionsRef.current.height * nextZoom}px`;
-    scroller.scrollLeft = worldX * nextZoom - anchorX;
-    scroller.scrollTop = worldY * nextZoom - anchorY;
+    surface.style.width = `${treeDimensionsRef.current.width * nextZoom + RUNTIME_TALENT_SCREEN_GUTTER * 2}px`;
+    surface.style.height = `${treeDimensionsRef.current.height * nextZoom + RUNTIME_TALENT_SCREEN_GUTTER * 2}px`;
+    scroller.scrollLeft = RUNTIME_TALENT_SCREEN_GUTTER + worldX * nextZoom - anchorX;
+    scroller.scrollTop = RUNTIME_TALENT_SCREEN_GUTTER + worldY * nextZoom - anchorY;
   }, []);
 
   const animateTreeZoom = useCallback(() => {
@@ -3225,8 +3226,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
     const origin = nodePositions.get("origin");
     if (!scroller || !origin) return;
     const frame = window.requestAnimationFrame(() => {
-      scroller.scrollLeft = Math.max(0, origin.x * treeZoomRef.current - scroller.clientWidth / 2);
-      scroller.scrollTop = Math.max(0, origin.y * treeZoomRef.current - scroller.clientHeight / 2);
+      scroller.scrollLeft = Math.max(0, RUNTIME_TALENT_SCREEN_GUTTER + origin.x * treeZoomRef.current - scroller.clientWidth / 2);
+      scroller.scrollTop = Math.max(0, RUNTIME_TALENT_SCREEN_GUTTER + origin.y * treeZoomRef.current - scroller.clientHeight / 2);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [treeHeight, treeWidth]);
@@ -3329,8 +3330,8 @@ function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility
       {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="runtime-talent-stage">
         <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree">
-        <div ref={treeSurfaceRef} className="runtime-talent-zoom-surface" style={{ width: treeWidth * RUNTIME_TALENT_DEFAULT_ZOOM, height: treeHeight * RUNTIME_TALENT_DEFAULT_ZOOM }}>
-          <div ref={treeCanvasRef} className={`talent-map runtime-talent-map ${isPanning ? "panning" : ""}`} style={{ width: treeWidth, height: treeHeight, transform: `scale(${RUNTIME_TALENT_DEFAULT_ZOOM})` }} onPointerDown={beginTreeGesture} onPointerMove={moveTreeGesture} onPointerUp={(event) => endTreeGesture(event)} onPointerCancel={(event) => endTreeGesture(event, true)} onLostPointerCapture={(event) => endTreeGesture(event, true)}>
+        <div ref={treeSurfaceRef} className="runtime-talent-zoom-surface" style={{ width: treeWidth * RUNTIME_TALENT_DEFAULT_ZOOM + RUNTIME_TALENT_SCREEN_GUTTER * 2, height: treeHeight * RUNTIME_TALENT_DEFAULT_ZOOM + RUNTIME_TALENT_SCREEN_GUTTER * 2 }}>
+          <div ref={treeCanvasRef} className={`talent-map runtime-talent-map ${isPanning ? "panning" : ""}`} style={{ width: treeWidth, height: treeHeight, left: RUNTIME_TALENT_SCREEN_GUTTER, top: RUNTIME_TALENT_SCREEN_GUTTER, transform: `scale(${RUNTIME_TALENT_DEFAULT_ZOOM})` }} onPointerDown={beginTreeGesture} onPointerMove={moveTreeGesture} onPointerUp={(event) => endTreeGesture(event)} onPointerCancel={(event) => endTreeGesture(event, true)} onLostPointerCapture={(event) => endTreeGesture(event, true)}>
             <svg className="runtime-talent-connections" viewBox={`0 0 ${treeWidth} ${treeHeight}`} aria-hidden="true">
               <defs>
                 <mask id="runtime-talent-connection-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width={treeWidth} height={treeHeight}>
