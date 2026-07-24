@@ -131,6 +131,8 @@ Every resolved trigger/modifier carries source ID, source name, source kind, and
 
 Direct-damage abilities may store editor-owned total `physicalPowerScaling` and `spellPowerScaling` values. When present, combat distributes each total proportionally across that Power type's existing damage components, preserving hybrid and multi-element damage schools. A newly added Power type uses Physical or generic Spell Damage. Dynamic stack-derived damage keeps its dedicated scaling path.
 
+Status-stack scaling has two distinct reusable forms. `damagePerTargetStatusStack.multiplier` increases the completed direct-damage result per stack, while `damagePerTargetStatusStack.powerScaling` adds that many percentage points of the primary damage component's relevant Power scaling per stack. Ability modifiers can add to either value independently, so player-facing wording such as “10% more damage” and “an additional 10% of Spell Power” remain mechanically distinct.
+
 ### Passive bonuses
 
 Passives aggregate additively into:

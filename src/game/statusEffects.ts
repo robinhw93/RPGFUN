@@ -44,7 +44,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   electrified: { id: "electrified", name: "Electrified", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Has a 10% chance to become Stunned at the start of each turn." },
   cold: { id: "cold", name: "Cold", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 50% more Frost Damage and 50% less Lightning Damage." },
   charred: { id: "charred", name: "Charred", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 50% more Fire Damage and 50% less Frost Damage." },
-  arcaneWound: { id: "arcaneWound", name: "Arcane Wound", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Each stack increases Arcane Blast damage against this target by 10%." },
+  arcaneWound: { id: "arcaneWound", name: "Arcane Wound", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Each stack adds 10% of the caster's Spell Power to Arcane Blast against this target." },
   arcaneCharge: { id: "arcaneCharge", name: "Arcane Charge", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "For 3 turns, your next Arcane Blast against this target costs 0 Energy and consumes Arcane Charge." },
   staticCharge: { id: "staticCharge", name: "Static Charge", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, description: "At 5 charges, remove them and restore 2 Energy." },
   chargedUp: { id: "chargedUp", name: "Charged Up", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 2, description: "Each stack grants +2 Initiative until combat ends." },

@@ -68,7 +68,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Beacon of Light | 6 | 6 | All enemies and self | A target-bound Ranged effect that applies Smite to every enemy simultaneously and grants Regenerate to the player for 3 turns. |
 | Arcane Bolt | 1 | 1 | Enemy | Deals 75% Spell Power as Arcane damage. Granted by the Arcanist class node. |
 | Frostbolt | 3 | 1 | Enemy | Deals 50% Spell Power as Frost damage and has a 50% base chance, plus Luck's chance-effect bonus, to apply Slowed. |
-| Arcane Blast | 1 | None | Enemy | Deals 20% Spell Power as Arcane damage and then applies 1 Arcane Wound. Each existing stack increases Arcane Blast's direct damage by 10%. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
+| Arcane Blast | 1 | None | Enemy | Deals 20% Spell Power as Arcane damage plus an additional 10% Spell Power per existing Arcane Wound, then applies 1 Arcane Wound. Arcane Knowledge raises the per-stack scaling to 15% Spell Power. Costs 0 Energy against a target marked by Arcane Charge, then consumes that marker. |
 | Fireball | 4 | 2 | Enemy | Deals 100% Spell Power as Fire damage and applies 2 Burn. |
 | Lightning Beam | 3 | 2 | Random enemies | Hits four times for 20% Spell Power as Lightning damage. Every hit independently selects a valid random enemy and has a 20% base chance, plus Luck's chance-effect bonus, to apply Electrified. |
 | Thunderstorm | 5 | 3 | Random enemies | Hits six times for 30% Spell Power as Lightning damage. Each hit independently chooses a living enemy and deals 50% more damage if that enemy is Electrified. |
@@ -224,7 +224,7 @@ Unlocking the first non-origin class node locks the other class nodes until leve
 | talent_103 | Combustion | Ability | Fire Within | Any | Unlocks Combustion. |
 | talent_104 | Arcane Combustion | Ability | Fire Within or Invigorate | Any | Unlocks Arcane Combustion. |
 | talent_105 | Thundersnow | Ability | Increased Voltage or Comparative Momentum | Any | Unlocks Thundersnow. |
-| talent_106 | Arcane Knowledge | Passive | Arcane Overload | Any | +2 Intelligence; Arcane Wounds grant Arcane Blast 15% damage per stack. |
+| talent_106 | Arcane Knowledge | Passive | Arcane Overload | Any | +2 Intelligence; each Arcane Wound adds 15% Spell Power to Arcane Blast instead of 10%. |
 | talent_107 | Lower Temperature | Passive | Deep Freeze | Any | Frostbolt has a 50% base chance to apply Exhausted. |
 | talent_108 | Rain | Passive | Thundersnow | Any | Thundersnow applies Wet to every enemy instead of Slowed. |
 | talent_109 | Intense Beam | Passive | Thunderstorm | Any | All four Lightning Beam hits strike the selected target. |
@@ -426,7 +426,7 @@ The duration is the default duration created by the status library. Ability or t
 | Charred | 3 turns | No | Takes 50% more Fire damage and 50% less Frost damage. |
 | Frozen | 1 turn | No | Cannot act and skips the next turn; ends immediately when damage is taken. |
 | Blind | 3 turns | No | Raw Hit Chance is reduced by 75% before the target's Dodge Chance and the global 20% minimum final Hit Chance are applied. |
-| Arcane Wound | 3 turns | Yes | Each stack increases Arcane Blast damage against the afflicted target by 10%. |
+| Arcane Wound | 3 turns | Yes | Each existing stack adds 10% of the caster's Spell Power to Arcane Blast against the afflicted target; Arcane Knowledge raises this to 15%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Smite | 3 turns | No | Whenever the player restores Health, takes Magic damage equal to 50% of the Health actually restored. |
 | Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |

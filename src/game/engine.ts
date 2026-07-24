@@ -1367,6 +1367,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const statusApplicationReplacements = abilityModifiers.flatMap((modifier) => modifier.replaceStatusApplication ? [modifier.replaceStatusApplication] : []);
   const effectiveRandomTargetPerHit = [...abilityModifiers].reverse().find((modifier) => modifier.randomTargetPerHit !== undefined)?.randomTargetPerHit ?? ability.randomTargetPerHit;
   const targetStatusStackMultiplierBonus = abilityModifiers.reduce((total, modifier) => total + (modifier.damagePerTargetStatusStackMultiplierDelta ?? 0), 0);
+  const targetStatusStackPowerScalingBonus = abilityModifiers.reduce((total, modifier) => total + (modifier.damagePerTargetStatusStackPowerScalingDelta ?? 0), 0);
   const preHealSelfStatusId = abilityModifiers.find((modifier) => modifier.preHealSelfStatusRemainingDamage)?.preHealSelfStatusRemainingDamage;
   const abilityNextTurnEnergyRegenBonus = abilityModifiers.reduce((total, modifier) => total + (modifier.nextTurnEnergyRegenBonus ?? 0), 0);
   const nextTurnEnergyRegenOnHit = Math.max(0, (ability.nextTurnEnergyRegenOnHit ?? 0) + abilityModifiers.reduce((total, modifier) => total + (modifier.nextTurnEnergyRegenOnHitBonus ?? 0), 0));
@@ -2043,14 +2044,22 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const editorScaledDamageComponents = usesDynamicDamageScaling || (selfRequirementMissing && baseEffectivePowerScaling !== ability.powerScaling)
         ? baseDamageComponents
         : applyAbilityPowerScalingTotals(ability, baseDamageComponents);
+      const targetStatusStackCount = ability.damagePerTargetStatusStack
+        ? target.statuses.find((status) => status.id === ability.damagePerTargetStatusStack!.status)?.stacks ?? 0
+        : 0;
+      const targetStatusStackPowerScaling = ability.damagePerTargetStatusStack
+        ? targetStatusStackCount * ((ability.damagePerTargetStatusStack.powerScaling ?? 0) + targetStatusStackPowerScalingBonus)
+        : 0;
       const damageComponents = editorScaledDamageComponents.map((component, componentIndex) => componentIndex === 0 ? {
         ...component,
-        powerScaling: powerScalingBonus !== 0 && !usesDynamicDamageScaling ? (component.powerScaling ?? 1) + powerScalingBonus : component.powerScaling,
+        powerScaling: (powerScalingBonus !== 0 && !usesDynamicDamageScaling) || targetStatusStackPowerScaling !== 0
+          ? (component.powerScaling ?? 1) + (usesDynamicDamageScaling ? 0 : powerScalingBonus) + targetStatusStackPowerScaling
+          : component.powerScaling,
         armorScaling: (component.armorScaling ?? 0) + primaryArmorScalingBonus,
         powerSource: primaryPowerSourceOverride ?? component.powerSource,
       } : component);
       const targetStatusStackMultiplier = ability.damagePerTargetStatusStack
-        ? 1 + (target.statuses.find((status) => status.id === ability.damagePerTargetStatusStack!.status)?.stacks ?? 0) * (ability.damagePerTargetStatusStack.multiplier + targetStatusStackMultiplierBonus)
+        ? 1 + targetStatusStackCount * ((ability.damagePerTargetStatusStack.multiplier ?? 0) + targetStatusStackMultiplierBonus)
         : 1;
       const baseIncomingDamage = damageComponents.reduce((total, component) => {
         const offensivePower = component.powerSource === "magical" ? derived.magicalPower

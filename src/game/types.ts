@@ -255,6 +255,8 @@ export interface AbilityModifierDefinition {
   additionalStatusApplicationsWhenTargetHas?: { targetStatus: StatusEffectId; applications: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number; chancePerArmor?: number; onlyOnCritical?: boolean }> };
   randomTargetPerHit?: boolean;
   damagePerTargetStatusStackMultiplierDelta?: number;
+  /** Adds Power scaling per matching target-status stack to the ability's primary damage component. */
+  damagePerTargetStatusStackPowerScalingDelta?: number;
   /** Extra direct-damage multiplier per living enemy carrying the configured status. */
   damageMultiplierPerLivingEnemyWithStatus?: { status: StatusEffectId; multiplier: number };
   preHealSelfStatusRemainingDamage?: StatusEffectId;
@@ -524,8 +526,8 @@ export interface Ability {
   grantsNextCritical?: boolean;
   /** Direct damage gains this multiplier for every unique target debuff. */
   damagePerTargetDebuff?: number;
-  /** Direct damage gains this additive multiplier for every stack of one target status. */
-  damagePerTargetStatusStack?: { status: StatusEffectId; multiplier: number };
+  /** Direct damage gains a multiplier and/or primary-component Power scaling for every stack of one target status. */
+  damagePerTargetStatusStack?: { status: StatusEffectId; multiplier?: number; powerScaling?: number };
   /** Adds direct damage equal to a multiple of a self-status stack count. */
   damageFromSelfStatusStacks?: { status: StatusEffectId; multiplier: number; damageType: DamageType };
   /** Consumes one target status after impact and deals its remaining damage to every other living enemy. */
