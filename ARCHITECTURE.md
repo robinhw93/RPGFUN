@@ -43,10 +43,10 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
 - `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
 - `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow. Existing talent tooltips plus referenced live-ability tooltips and Physical/Spell Power scaling totals call the restricted local source-sync route when their fields lose focus.
-- `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher. Existing-enemy numeric stat edits call the restricted local source-sync route; ability mechanics and other content remain draft/export input.
+- `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher. Existing-enemy numeric stat edits call the restricted local source-sync route. Event and Adventure Save validate and replace their complete live catalogs while the local Vite server is running; enemy abilities and behavior remain draft/export input.
 - `src/components/PortraitDevtool.tsx` owns the isolated enemy/player artwork selection and normalized square portrait-crop workflow.
 - `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
-- `vite.config.ts` owns the development-only source-sync routes. They accept only known numeric enemy fields or known tooltip/Power-scaling fields for existing canonical talent/ability pairs and write only those matching fields in `src/game/data.ts`. Source mutations share a queue so rapid edits cannot overwrite one another.
+- `vite.config.ts` owns the development-only source-sync routes. Narrow routes accept known numeric enemy fields or known tooltip/Power-scaling fields for existing canonical talent/ability pairs. The catalog route validates complete Event or Adventure exchanges, including live enemy, event, item, and status references, before replacing only the matching initializer in `src/game/data.ts`. All source mutations share a queue so rapid edits cannot overwrite one another.
 
 ### Domain and content
 
@@ -65,6 +65,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, and item category normalization.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` applies a combat reward exactly once and stores the immutable score-screen snapshot.
+- `src/game/eventOutcomes.ts` normalizes legacy event outcomes and applies Health, currency, progression, inventory, next-combat status, and immediate-encounter effects.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
 - `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
 - `src/game/timing.ts` is the source of truth for combat/initiative presentation durations.
@@ -348,7 +349,7 @@ The initiative grid receives the live combatant count through a CSS variable. Tw
 
 ## Adventure and reward flow
 
-`AdventureProgress` stores the active adventure ID, selected stage-entry ID, mode, carried Health, event-roll result, and combat independently. Story adventures use finite weighted stage definitions; `stageEntryId` locks in a randomly selected possibility so refreshing cannot reroll it. `endless` uses the dynamic Shadow Proving Grounds encounter.
+`AdventureProgress` stores the active adventure ID, selected stage-entry ID, mode, carried Health, event-roll result, queued next-combat statuses, a possible immediate event encounter, and combat independently. Story adventures use finite weighted stage definitions; `stageEntryId` locks in a randomly selected possibility so refreshing cannot reroll it. `endless` uses the dynamic Shadow Proving Grounds encounter.
 
 Starting an adventure uses the same travel-transition contract as advancing a stage: footsteps render first, the selected encounter copy is shown second, and only then is combat created so initiative cannot cover the introduction.
 
@@ -357,7 +358,7 @@ Starting an adventure uses the same travel-transition contract as advancing a st
 - Reward identity plus node index prevents duplicate application.
 - The score screen reads `pendingReward`, which records before/after level and XP values even though the character has already received the reward.
 - Continuing carries final Health into the next combat or event.
-- Events roll `d100 + the selected derived attribute` against their configured threshold, then apply the structured success or failure outcome.
+- Events roll `d100 + the selected derived attribute` against their configured threshold, then apply every effect in the structured success or failure outcome. Outcomes can heal or remove Health, add or remove currency/XP, grant points/items, queue player or enemy statuses for the next combat, or launch an immediate rewarded encounter. Queued statuses persist across non-combat stages and are consumed exactly once when combat is created.
 - Completing the final stage clears active combat, records the adventure ID on the character, and marks the adventure completed.
 
 The endless route generates two or three `dummy` enemy IDs before each travel transition, then reuses that exact group when creating combat so the encounter message and battlefield agree. It increments `nodeIndex` as an unbounded fight counter, restores the character to current Max Health, and never marks the adventure completed. `grantCombatReward` calculates the exact XP needed to cross two complete level thresholds from the character's current level and XP; normal story rewards still come from the node definition. The `unlockTalent` state boundary also treats `endless` as a test-only free-unlock mode: it enforces connections and the combat lock but skips both the point check and point deduction.
@@ -407,7 +408,7 @@ Canvas positions are percentages, but grid spacing is stored as fixed world unit
 
 An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions. The exception is the restricted local-development sync: leaving the talent-tooltip field updates an existing talent, while leaving the ability-tooltip or Power-percentage fields updates the ability already referenced by that live talent. New/reassigned abilities and all other fields remain draft-only.
 
-Enemy, Event, and Adventure editors follow the same isolation contract. They retain the legacy storage keys `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`; Save and automatic writes only update those local drafts. New files and exchange-format labels use the Arkenfall name. Adventure entries can reference locally drafted enemy/event IDs, but exported content does not become live until it is integrated into typed source data.
+Enemy, Event, and Adventure editors retain the legacy storage keys `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`, and every change still auto-saves its browser-local draft. New files and exchange-format labels use the Arkenfall name. Event Manager uses exchange version 2 with a list of typed effects per outcome. While local Vite is running, Event and Adventure Save validate and write their complete catalogs into `src/game/data.ts`; invalid or unsaved enemy, event, item, and status references are rejected without changing the file. Enemy ability mechanics still require source implementation.
 
 ## Save boundary and migration
 

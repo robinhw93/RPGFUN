@@ -1,4 +1,4 @@
-import { ADVENTURES, ADVENTURE_EVENTS, ENDLESS_ADVENTURE } from "./data";
+import { ADVENTURES, ADVENTURE_EVENTS, ENDLESS_ADVENTURE, ENEMIES } from "./data";
 import type { AdventureDefinition, AdventureNode, AdventureProgress, AdventureStageEntry } from "./types";
 
 export const DEFAULT_ADVENTURE_ID = "windsong-forest";
@@ -43,6 +43,18 @@ export function getAdventureEntry(progress: AdventureProgress): AdventureStageEn
 
 export function getAdventureNode(progress: AdventureProgress): AdventureNode {
   if (progress.mode === "endless") return { ...ENDLESS_ADVENTURE, eyebrow: `Training Fight ${progress.nodeIndex + 1}` };
+  if (progress.combat && progress.eventEncounter) {
+    const enemyNames = progress.eventEncounter.enemyIds.map((id) => ENEMIES[id]?.name ?? "Unknown Enemy");
+    return {
+      id: `event-encounter-${progress.nodeIndex}`,
+      type: "combat",
+      eyebrow: "Immediate Encounter",
+      title: "An Unexpected Fight",
+      description: enemyNames.length > 0 ? `${enemyNames.join(", ")} block your path.` : "Enemies block your path.",
+      enemies: progress.eventEncounter.enemyIds,
+      reward: progress.eventEncounter.reward,
+    };
+  }
   const entry = getAdventureEntry(progress);
   return entry ? entryToNode(entry) : {
     id: "missing-stage",

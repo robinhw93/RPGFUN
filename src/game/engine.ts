@@ -22,25 +22,46 @@ import {
   hasStatus,
   isMagicalDamage,
   isStatusEffectId,
+  STATUS_EFFECTS,
 } from "./statusEffects";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterCombatFeatures, getCharacterDamageMultiplier, getCharacterStatusDamageMultiplier, getDamageModifierMultiplier, resolveCharacterTriggers } from "./combatFeatures";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "./combatFeatures";
-import type { Ability, AbilityAttackPresentation, AbilityRange, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyAbilityDefinition, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
+import type { Ability, AbilityAttackPresentation, AbilityRange, AdventureCombatStartStatus, CharacterState, CombatAbilityVfxKind, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, DamageType, EnemyAbilityDefinition, EnemyState, InspectableInfo, StatusEffect, StatusEffectId, TurnOrderEntry } from "./types";
 
-export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number): CombatState {
+export interface CombatStartEffects {
+  playerStatuses?: AdventureCombatStartStatus[];
+  enemyStatuses?: AdventureCombatStartStatus[];
+}
+
+function createEventStartStatus(effect: AdventureCombatStartStatus): StatusEffect | null {
+  if (!isStatusEffectId(effect.status)) return null;
+  return createStatusEffect(effect.status, {
+    stacks: Math.max(1, Math.round(effect.stacks)),
+    sourcePower: 0,
+    sourceId: "event",
+  });
+}
+
+export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number, startEffects: CombatStartEffects = {}): CombatState {
   const derived = getDerivedStats(character);
   const features = getCharacterCombatFeatures(character);
-  const enemies: EnemyState[] = enemyIds.map((id, index) => ({
-    ...ENEMIES[id],
-    instanceId: `${id}-${index}`,
-    hp: ENEMIES[id].maxHp,
-    energy: ENEMIES[id].maxEnergy,
-    maxEnergy: ENEMIES[id].maxEnergy,
-    statuses: [],
-    stunned: false,
-    abilityCooldowns: {},
-    nextTurnEnergyRegenBonus: 0,
-  }));
+  const enemies: EnemyState[] = enemyIds.map((id, index) => {
+    const statuses = (startEffects.enemyStatuses ?? []).reduce<StatusEffect[]>((current, effect) => {
+      const status = createEventStartStatus(effect);
+      return status ? addOrRefreshStatus(current, status) : current;
+    }, []);
+    return {
+      ...ENEMIES[id],
+      instanceId: `${id}-${index}`,
+      hp: ENEMIES[id].maxHp,
+      energy: ENEMIES[id].maxEnergy,
+      maxEnergy: ENEMIES[id].maxEnergy,
+      statuses,
+      stunned: statuses.some((status) => status.id === "stunned"),
+      abilityCooldowns: {},
+      nextTurnEnergyRegenBonus: 0,
+    };
+  });
   const turnOrder = rollTurnOrder(character, enemies);
   const enteringHp = Math.min(carryHp ?? derived.maxHp, derived.maxHp);
   const martyrdomRatio = enteringHp === derived.maxHp ? features.passive.fullHealthCombatStartSelfDamageMaxHpRatio : 0;
@@ -48,6 +69,11 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
   let startingStatuses = features.passive.startingStatuses
     .filter((status) => !derived.statusImmunities.includes(status.id))
     .map((status) => ({ ...status }));
+  startingStatuses = (startEffects.playerStatuses ?? []).reduce((current, effect) => {
+    const status = createEventStartStatus(effect);
+    if (!status || derived.statusImmunities.includes(status.id) || STATUS_EFFECTS[status.id].kind !== status.kind) return current;
+    return addOrRefreshStatus(current, status);
+  }, startingStatuses);
   (["guard", "barrier"] as const).forEach((statusId) => {
     const ratio = features.passive.startingAbsorptionMaxHpRatios[statusId] ?? 0;
     if (ratio <= 0) return;

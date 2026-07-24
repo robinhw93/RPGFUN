@@ -384,7 +384,7 @@ Remaining Health carries from one stage to the next. Starting an adventure and m
 
 Events contain two or three choices. Every choice specifies an attribute and success threshold. Choosing it rolls `d100 + selected derived attribute`. A total equal to or above the threshold applies the configured success outcome; a lower total applies the configured failure outcome. The result panel shows the die, attribute bonus, total, threshold, and narrative result.
 
-Event outcomes can change carried Health, gold, experience, talent points, and unspent attribute points. Health remains between 1 and Max Health, and spendable currencies cannot fall below zero.
+Event outcomes contain any number of typed effects. Positive outcomes can restore Health, grant gold, items, experience, Talent Points, or Attribute Points, give the player a buff in the next combat, or begin the next combat with enemies debuffed. Negative outcomes can remove Health, gold, or current-level experience, give the player a debuff in the next combat, begin it with enemies buffed, or launch an immediate encounter with its own XP and gold reward. Health remains between 1 and Max Health, gold and current-level experience cannot fall below zero, and losing experience never removes a completed level. Queued statuses persist through intervening events and are consumed when the next combat is created; an immediate event encounter counts as that combat.
 
 ## Experience and levels
 
@@ -495,4 +495,4 @@ Gold is stored on the character and displayed in the top bar and reward screens.
 - Defeat deletes the save without retaining a recoverable character.
 - Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, and reward state where possible.
 
-Developer Talent, Enemy, Event, Adventure, and Portrait Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset. While the local Vite server is running, restricted fields for existing enemies and existing talent/ability pairs can also update canonical source data directly; new content and advanced mechanics remain drafts. Portrait crops use source-image percentage coordinates so the same selection renders consistently across desktop and mobile editor sizes.
+Developer Talent, Enemy, Event, Adventure, and Portrait Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset. While the local Vite server is running, Event Manager and Adventure Editor Save validate and replace their complete canonical live catalogs. Restricted fields for existing enemies and existing talent/ability pairs use narrower direct writes; enemy ability mechanics still require implementation. Portrait crops use source-image percentage coordinates so the same selection renders consistently across desktop and mobile editor sizes.

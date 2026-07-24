@@ -15,18 +15,19 @@ import { CHARACTER_AVATARS, DEFAULT_CHARACTER_AVATAR_ID, getCharacterAvatar } fr
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SET_BONUSES, TALENTS, TALENT_TREE_CANVAS } from "./game/data";
 import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, selectStageEntry } from "./game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
+import { resolveAdventureEventChoice } from "./game/eventOutcomes";
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "./game/combatSequence";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "./game/combatFeatures";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "./game/initiativeLayout";
 import { canEquipItemInSlot, equipGearItem, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem, unequipGearItem } from "./game/gear";
-import { addExperience, experienceProgressAfterGain, experienceToNextLevel, MAX_LEVEL } from "./game/progression";
+import { experienceProgressAfterGain, experienceToNextLevel, MAX_LEVEL } from "./game/progression";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "./game/statusEffects";
 import { areTalentRequirementsMet, getTalentConnectionIds, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "./game/timing";
-import type { Ability, AdventureEventOutcome, AdventureMode, AdventureStageDefinition, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
+import type { Ability, AdventureMode, AdventureStageDefinition, CharacterState, CombatAbilityAnimation, CombatAbilityVfxKind, CombatLogEntry, CombatPassiveAnimation, CombatProjectileAnimation, CombatReward, CombatState, CombatStatusAnimation, DamageType, EnemyState, GameState, GearItem, GearSlot, InspectableInfo, StatName, StatusEffect, StatusEffectId } from "./game/types";
 import type { CharacterAvatarId } from "./game/avatars";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { projectCombatActionQueue, useCombatActionQueue, type QueuedCombatAction } from "./hooks/useCombatActionQueue";
@@ -389,7 +390,7 @@ function App() {
         const combat = enemyIds?.length ? createCombat(current.character, enemyIds, maxHp) : null;
         return {
           ...current,
-          adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, latestLoot: null, pendingReward: null, completed: false },
+          adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, latestLoot: null, pendingReward: null, completed: false },
         };
       });
     });
@@ -443,6 +444,9 @@ function App() {
             combat,
             eventResolved: false,
             eventRollResult: null,
+            nextCombatPlayerStatuses: [],
+            nextCombatEnemyStatuses: [],
+            eventEncounter: null,
             stageEntryId: null,
             latestLoot: null,
             pendingReward: null,
@@ -455,24 +459,59 @@ function App() {
         return {
           ...current,
           character: { ...character, completedAdventureIds: [...new Set([...character.completedAdventureIds, definition.id])] },
-          adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null },
+          adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null, eventEncounter: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
         };
       }
 
       const nextIndex = adventure.nodeIndex + 1;
       const stage = definition.stages[nextIndex];
       const entry = stage.entries.find((candidate) => candidate.id === nextStoryEntryId) ?? selectStageEntry(definition, nextIndex);
-      const combat = entry.enemyIds?.length ? createCombat(character, entry.enemyIds, carryHp) : null;
+      const combat = entry.enemyIds?.length ? createCombat(character, entry.enemyIds, carryHp, {
+        playerStatuses: adventure.nextCombatPlayerStatuses,
+        enemyStatuses: adventure.nextCombatEnemyStatuses,
+      }) : null;
       return {
         ...current,
         character,
-        adventure: { ...adventure, nodeIndex: nextIndex, stageEntryId: entry.id, carryHp, combat, eventResolved: false, eventRollResult: null, latestLoot: wonCombat ? latestLoot : null, pendingReward: null },
+        adventure: {
+          ...adventure,
+          nodeIndex: nextIndex,
+          stageEntryId: entry.id,
+          carryHp,
+          combat,
+          eventResolved: false,
+          eventRollResult: null,
+          nextCombatPlayerStatuses: combat ? [] : adventure.nextCombatPlayerStatuses,
+          nextCombatEnemyStatuses: combat ? [] : adventure.nextCombatEnemyStatuses,
+          eventEncounter: null,
+          latestLoot: wonCombat ? latestLoot : null,
+          pendingReward: null,
+        },
       };
     });
   };
 
   const continueJourney = () => {
     if (travelTransition) return;
+    if (game.adventure.eventResolved && game.adventure.eventEncounter && !game.adventure.combat) {
+      const encounter = game.adventure.eventEncounter;
+      playTravelTransition(game.adventure.mode, describeEnemyEncounter(encounter.enemyIds), () => {
+        setGame((current) => {
+          const pendingEncounter = current.adventure.eventEncounter;
+          if (!pendingEncounter || current.adventure.combat) return current;
+          const carryHp = current.adventure.carryHp ?? getDerivedStats(current.character).maxHp;
+          const combat = createCombat(current.character, pendingEncounter.enemyIds, carryHp, {
+            playerStatuses: current.adventure.nextCombatPlayerStatuses,
+            enemyStatuses: current.adventure.nextCombatEnemyStatuses,
+          });
+          return {
+            ...current,
+            adventure: { ...current.adventure, combat, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
+          };
+        });
+      });
+      return;
+    }
     const definition = getAdventureDefinition(game.adventure.adventureId);
     if (game.adventure.mode === "story" && game.adventure.nodeIndex >= definition.stages.length - 1) {
       advanceJourney();
@@ -506,6 +545,9 @@ function App() {
           combat: null,
           eventResolved: false,
           eventRollResult: null,
+          nextCombatPlayerStatuses: [],
+          nextCombatEnemyStatuses: [],
+          eventEncounter: null,
           latestLoot: null,
           pendingReward: null,
           completed: false,
@@ -521,29 +563,7 @@ function App() {
       const definition = node.eventId ? ADVENTURE_EVENTS[node.eventId] : undefined;
       const choice = definition?.choices.find((candidate) => candidate.id === choiceId);
       if (!choice) return current;
-      const statBonus = getDerivedStats(current.character)[choice.stat];
-      const dieRoll = Math.floor(Math.random() * 100) + 1;
-      const total = dieRoll + statBonus;
-      const success = total >= choice.threshold;
-      const outcome: AdventureEventOutcome = success ? choice.success : choice.failure;
-      const maxHp = getDerivedStats(current.character).maxHp;
-      const carryHp = current.adventure.carryHp ?? maxHp;
-      const experience = outcome.experience > 0 ? addExperience(current.character, outcome.experience).character : current.character;
-      return {
-        ...current,
-        character: {
-          ...experience,
-          gold: Math.max(0, experience.gold + outcome.gold),
-          talentPoints: Math.max(0, experience.talentPoints + outcome.talentPoints),
-          unspentStatPoints: Math.max(0, experience.unspentStatPoints + outcome.attributePoints),
-        },
-        adventure: {
-          ...current.adventure,
-          carryHp: Math.min(maxHp, Math.max(1, carryHp + outcome.health)),
-          eventResolved: true,
-          eventRollResult: { choiceId, dieRoll, stat: choice.stat, statBonus, total, threshold: choice.threshold, success, outcomeText: outcome.text },
-        },
-      };
+      return resolveAdventureEventChoice(current, choice);
     });
   };
 
@@ -948,7 +968,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
         {!adventure.eventResolved ? (
           <div className="event-choices">{eventDefinition?.choices.map((choice) => <button className="choice-card" key={choice.id} onClick={() => onEvent(choice.id)}><Sparkles /><span><strong>{choice.label}</strong><small>{choice.description}</small><em>d100 + {choice.stat} · {choice.threshold} to succeed</em></span><ChevronRight /></button>)}</div>
         ) : (
-          <div className={`outcome-panel event-roll-outcome ${rollResult?.success ? "success" : "failure"}`}><strong>{rollResult?.success ? "Success" : "Failure"}</strong><div className="event-roll-math"><span>d100 <b>{rollResult?.dieRoll}</b></span><span>{rollResult?.stat} <b>+{rollResult?.statBonus}</b></span><span>Total <b>{rollResult?.total}</b> / {rollResult?.threshold}</span></div><p>{rollResult?.outcomeText}</p><button className="primary-button" onClick={onContinue}>Continue Journey <ChevronRight size={17} /></button></div>
+          <div className={`outcome-panel event-roll-outcome ${rollResult?.success ? "success" : "failure"}`}><strong>{rollResult?.success ? "Success" : "Failure"}</strong><div className="event-roll-math"><span>d100 <b>{rollResult?.dieRoll}</b></span><span>{rollResult?.stat} <b>+{rollResult?.statBonus}</b></span><span>Total <b>{rollResult?.total}</b> / {rollResult?.threshold}</span></div><p>{rollResult?.outcomeText}</p><button className="primary-button" onClick={onContinue}>{adventure.eventEncounter ? "Face Encounter" : "Continue Journey"} <ChevronRight size={17} /></button></div>
         )}
       </section>
     );

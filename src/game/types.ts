@@ -823,12 +823,43 @@ export interface AdventureNode {
 
 export interface AdventureEventOutcome {
   text: string;
-  health: number;
-  gold: number;
-  experience: number;
-  talentPoints: number;
-  attributePoints: number;
+  effects: AdventureEventOutcomeEffect[];
+  /** Legacy signed outcome values, normalized into effects when older drafts or saves are loaded. */
+  health?: number;
+  gold?: number;
+  experience?: number;
+  talentPoints?: number;
+  attributePoints?: number;
 }
+
+export interface AdventureCombatStartStatus {
+  status: StatusEffectId;
+  stacks: number;
+}
+
+export interface AdventureEventEncounter {
+  enemyIds: string[];
+  reward: {
+    experience: number;
+    gold: number;
+  };
+}
+
+export type AdventureEventOutcomeEffect =
+  | { type: "heal"; amount: number }
+  | { type: "loseHealth"; amount: number }
+  | { type: "gainGold"; amount: number }
+  | { type: "loseGold"; amount: number }
+  | { type: "gainExperience"; amount: number }
+  | { type: "loseExperience"; amount: number }
+  | { type: "gainTalentPoints"; amount: number }
+  | { type: "gainAttributePoints"; amount: number }
+  | { type: "gainItem"; itemId: string }
+  | { type: "playerNextCombatBuff"; status: StatusEffectId; stacks: number }
+  | { type: "playerNextCombatDebuff"; status: StatusEffectId; stacks: number }
+  | { type: "enemiesNextCombatBuff"; status: StatusEffectId; stacks: number }
+  | { type: "enemiesNextCombatDebuff"; status: StatusEffectId; stacks: number }
+  | { type: "immediateEncounter"; enemyId: string; count: number; experience: number; gold: number };
 
 export interface AdventureEventChoice {
   id: string;
@@ -914,6 +945,9 @@ export interface AdventureProgress {
   combat: CombatState | null;
   eventResolved: boolean;
   eventRollResult: AdventureEventRollResult | null;
+  nextCombatPlayerStatuses: AdventureCombatStartStatus[];
+  nextCombatEnemyStatuses: AdventureCombatStartStatus[];
+  eventEncounter: AdventureEventEncounter | null;
   latestLoot: GearItem | null;
   pendingReward: CombatReward | null;
   completed: boolean;

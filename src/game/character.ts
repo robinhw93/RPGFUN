@@ -22,7 +22,7 @@ export const INITIAL_CHARACTER: CharacterState = {
 export const INITIAL_GAME: GameState = {
   characterCreated: false,
   character: INITIAL_CHARACTER,
-  adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, latestLoot: null, pendingReward: null, completed: false },
+  adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, latestLoot: null, pendingReward: null, completed: false },
 };
 
 export interface DerivedStats extends Stats {

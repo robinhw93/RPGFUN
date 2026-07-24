@@ -459,6 +459,8 @@ Windsong Forest currently follows six fixed combat stages. Each stage has one 10
 | 5 | They see you | 100% | Three Forest Wisps | 68 XP, 10 gold. |
 | 6 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 100 XP, 28 gold. |
 
+Event definitions support two or three attribute-check choices. Each positive or negative result contains an ordered effect list that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, and an immediate rewarded encounter. The two canonical forest event definitions remain available to the Adventure Editor even though the current fixed Windsong Forest route does not reference them.
+
 ## Testing adventure: Shadow Proving Grounds
 
 | Property | Rule |
