@@ -853,6 +853,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
   const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
   const [playerAttributesOpen, setPlayerAttributesOpen] = useState(false);
+  const [targetFeedback, setTargetFeedback] = useState<{ id: number; text: string } | null>(null);
+  const nextTargetFeedbackId = useRef(0);
   const inspectedEnemy = adventure.combat?.enemies.find((enemy) => enemy.instanceId === inspectedEnemyId) ?? null;
   const enemyVisualKey = adventure.combat?.enemies.map((enemy) => enemy.id).join("|") ?? "";
   const combatEventId = adventure.combat?.eventId ?? 0;
@@ -865,6 +867,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
     setInspectedInfo(null);
     setInspectedEnemyId(null);
     setPlayerAttributesOpen(false);
+    setTargetFeedback(null);
   }, [adventure.nodeIndex]);
   useEffect(() => {
     if (!enemyVisualKey) return;
@@ -997,6 +1000,10 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
     if (eventRevealsPlayerTurn(combat, eventIndex)) onPlayerTurnReady(eventId);
     onCombatEvent(eventId, eventIndex);
   };
+  const showStealthTargetFeedback = () => {
+    nextTargetFeedbackId.current += 1;
+    setTargetFeedback({ id: nextTargetFeedbackId.current, text: "You cannot target enemies with stealth." });
+  };
   const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
@@ -1005,6 +1012,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
       <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onComplete={onInitiativeComplete} />}
+      {targetFeedback && <div key={targetFeedback.id} className="combat-target-feedback" role="status" aria-live="polite">{targetFeedback.text}</div>}
       <div className="compact-arena">
         <article
           key="player"
@@ -1030,7 +1038,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           <div className="compact-resource-label"><span>Health</span><b>{combat.playerHp}/{combat.playerMaxHp}</b></div>
           <HealthBar value={combat.playerHp} max={combat.playerMaxHp} damageAmount={combat.damageAmounts?.player} damageSource={combat.damageSourceLabels?.player} missed={missedTargets.includes("player")} />
           <div className="compact-status-row">
-            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+            {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} owner="player" onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
           <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen + (combat.nextTurnEnergyRegenBonus ?? 0)} showGain />
@@ -1043,7 +1051,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
           {rideTheLightningAnimations.map((animation) => <span key={animation.id} className="ride-lightning-field" aria-hidden="true"><Zap /><i /><i /><i /><i /><i /></span>)}
           {blizzardAnimation && <BlizzardFieldEffect key={blizzardAnimation.id} />}
           {combat.enemies.map((enemy) => {
-            const targetable = enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && (!forcedTargetId || forcedTargetId === enemy.instanceId);
+            const stealthed = enemy.statuses.some((status) => status.id === "stealth");
+            const targetable = enemy.hp > 0 && !stealthed && (!forcedTargetId || forcedTargetId === enemy.instanceId);
             const neurotoxinEffects = neurotoxinAnimations.filter((animation) => animation.targetId === enemy.instanceId);
             const toxicExplosionEffects = toxicExplosionAnimations.filter((animation) => animation.targetId === enemy.instanceId);
             const utilityCastShake = abilityAnimations.some((animation) => animation.shakeSource && animation.sourceTargetId === enemy.instanceId);
@@ -1052,16 +1061,20 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               key={enemy.instanceId}
               data-combatant-id={enemy.instanceId}
               role="button"
-              tabIndex={targetable ? 0 : -1}
-              aria-disabled={!targetable}
-              aria-label={`Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${enemy.statuses.some((status) => status.id === "stealth") ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${utilityCastShake ? `utility-cast-shake cast-cycle-${combat.eventId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
+              tabIndex={enemy.hp > 0 ? 0 : -1}
+              aria-disabled={!targetable && !stealthed}
+              aria-label={stealthed ? `${enemy.name} cannot be targeted while in stealth` : `Target ${enemy.name}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${stealthed ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${utilityCastShake ? `utility-cast-shake cast-cycle-${combat.eventId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
-              onClick={() => targetable && onSelectEnemy(enemy.instanceId)}
+              onClick={() => {
+                if (stealthed && enemy.hp > 0) showStealthTargetFeedback();
+                else if (targetable) onSelectEnemy(enemy.instanceId);
+              }}
               onKeyDown={(event) => {
-                if (event.target === event.currentTarget && targetable && (event.key === "Enter" || event.key === " ")) {
+                if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
                   event.preventDefault();
-                  onSelectEnemy(enemy.instanceId);
+                  if (stealthed && enemy.hp > 0) showStealthTargetFeedback();
+                  else if (targetable) onSelectEnemy(enemy.instanceId);
                 }
               }}
             >
@@ -1075,8 +1088,8 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
-              {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
-              {enemy.statuses.some((status) => status.id === "stealth") && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
+              {stealthed && <span className="stealth-smoke stealth-smoke-one" aria-hidden="true" />}
+              {stealthed && <span className="stealth-smoke stealth-smoke-two" aria-hidden="true" />}
               <PassiveProcFloats animations={passiveAnimations.filter((animation) => animation.targetId === enemy.instanceId)} />
               <button
                 type="button"
@@ -1093,7 +1106,7 @@ function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, o
               <HealthBar value={enemy.hp} max={enemy.maxHp} damageAmount={combat.damageAmounts?.[enemy.instanceId]} damageSource={combat.damageSourceLabels?.[enemy.instanceId]} missed={missedTargets.includes(enemy.instanceId)} />
               <div className="compact-status-row">
                 {enemy.hp <= 0 ? <span className="no-status">Defeated</span> : enemy.statuses.length === 0 && <span className="no-status">No effects</span>}
-                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
+                {enemy.statuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} owner="enemy" onInspect={() => setInspectedInfo({ title: status.name, description: status.id === "stealth" ? "Cannot be targeted until the end of their next turn." : status.description, category: "status" })} />)}
               </div>
               <div className="compact-resource-label energy-label"><span>Energy</span><b>{enemy.energy}/{enemy.maxEnergy}</b></div>
               <EnergySegments value={enemy.energy} max={enemy.maxEnergy} regen={enemy.energyRegen} />
@@ -2236,7 +2249,7 @@ function EnergySegments({ value, max, regen, showGain = false }: { value: number
   );
 }
 
-function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onInspect }: { id: StatusEffectId; name: string; stacks: number; duration: number; permanent?: boolean; kind: StatusEffect["kind"]; onInspect?: () => void }) {
+function StatusBadge({ id, name, stacks, duration, permanent = false, kind, owner, onInspect }: { id: StatusEffectId; name: string; stacks: number; duration: number; permanent?: boolean; kind: StatusEffect["kind"]; owner: "player" | "enemy"; onInspect?: () => void }) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const holdTimer = useRef<number | null>(null);
   const longPressed = useRef(false);
@@ -2248,7 +2261,9 @@ function StatusBadge({ id, name, stacks, duration, permanent = false, kind, onIn
       : STATUS_EFFECTS[id].stackable
         ? `${stacks} ${stacks === 1 ? "stack" : "stacks"}`
         : null,
-    permanent ? null : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`,
+    id === "stealth"
+      ? `Until the end of ${owner === "enemy" ? "their" : "your"} next turn`
+      : permanent ? null : `${duration} ${duration === 1 ? "turn" : "turns"} remaining`,
   ].filter(Boolean).join(", ");
   const remainingSegments = Math.max(0, Math.min(STATUS_DURATION_SEGMENTS, Math.floor(duration)));
   const gap = 6;

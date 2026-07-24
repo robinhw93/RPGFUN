@@ -255,7 +255,7 @@ Bleed resolves after the enemy uses its attack. Poison resolves at the end of th
 
 - Dead enemies remain visible but cannot be targeted.
 - Dead enemies immediately lose all displayed status effects.
-- Stealthed enemies cannot be targeted.
+- Stealthed enemies cannot be targeted. Their combat card uses a crosshair cursor, and clicking, tapping, or keyboard-activating it gives immediate local feedback without adding time to the combat sequence.
 - A living, visible enemy with Taunt forces all single-target attacks to that enemy.
 - The selected enemy retains the combat card's hover highlight and has a highlighted frame around the card. Its initiative entry also has a highlighted frame and target icon.
 - Area abilities target all living enemies that are not Stealthed.
@@ -345,7 +345,7 @@ Applying a status that is already present:
 - Keeps the greater source power.
 - Refreshes the source ID to the latest applier when provided.
 - Non-stackable statuses, including Stealth, always retain exactly one stack when reapplied.
-- Stealth always expires at the end of its holder's next turn. Its shared creation, refresh, and turn-end normalization rejects longer explicit or legacy durations, so player and enemy Stealth can never last three turns. Ending a turn reconciles duration changes even when no damage or status message was queued, preventing buffs from retaining their old duration in visible combat state.
+- Stealth always expires at the end of its holder's next turn. Its status tooltip states that endpoint directly using “your” for the player and “their” for an enemy instead of showing the internal turn counter. Its shared creation, refresh, and turn-end normalization rejects longer explicit or legacy durations, so player and enemy Stealth can never last three turns. Ending a turn reconciles duration changes even when no damage or status message was queued, preventing buffs from retaining their old duration in visible combat state.
 
 Detailed status definitions and formulas are in [Content reference](CONTENT_REFERENCE.md#status-effects).
 
