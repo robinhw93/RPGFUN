@@ -802,6 +802,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         animationHitCount: totalHits,
         animationDurationMultiplier: ability.attackSequenceDurationMultiplier,
         attachedEventIndex: ability.simultaneousAreaImpact ? simultaneousAreaEventIndex : undefined,
+        sourceLabel: critical ? "Crit" : undefined,
         ...getAbilityAttackPresentation(ability),
       });
       if (ability.simultaneousAreaImpact) simultaneousAreaEventIndex ??= damageEventIndex;

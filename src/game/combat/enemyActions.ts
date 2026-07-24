@@ -231,7 +231,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       playerHp = Math.max(0, playerHp - damage);
       playerStatuses = wakeFromDamage(absorption.statuses, damage);
       logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name} for ${damage}${critical ? " critical" : ""}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
-      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits });
+      const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, sourceLabel: critical ? "Crit" : undefined });
       queueAbilityVfx(pendingEffects, damageEventIndex, enemyAbility.vfx, "player", enemy.instanceId);
       queueAbsorptionChanges(pendingEffects, damageEventIndex, "player", absorption);
       const appliedStatusIds: StatusEffectId[] = [];

@@ -39,11 +39,13 @@ function testBasicPlayerAbility() {
   assert.ok(playerEntry, "Combat must contain the player in initiative.");
   const combat = { ...created, turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")], activeTurnIndex: 0, initiativeRevealed: true };
   const originalRandom = Math.random;
-  Math.random = () => 0.5;
+  Math.random = () => 0;
   try {
     const result = useAbility(combat, character, "quickSlash");
     assert.equal(result.energy, created.energy - 1, "Quick Slash must spend one Energy.");
-    assert.ok(result.pendingEffects.some((effect) => "damage" in effect && effect.targetId === created.enemies[0].instanceId), "Quick Slash must queue damage against the selected target.");
+    const damageEffect = result.pendingEffects.find((effect) => "damage" in effect && effect.targetId === created.enemies[0].instanceId);
+    assert.ok(damageEffect && "damage" in damageEffect, "Quick Slash must queue damage against the selected target.");
+    assert.equal(damageEffect.sourceLabel, "Crit", "Critical damage must carry the floating-number Crit label.");
   } finally {
     Math.random = originalRandom;
   }
