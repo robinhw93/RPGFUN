@@ -43,7 +43,7 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/game/save.ts`: load, save, and migrations.
 - `src/App.tsx`: application orchestration and rendering, not duplicated rule formulas.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
-- `src/components/TalentDevtool.tsx`: isolated talent draft/export UI.
+- `src/components/TalentDevtool.tsx`: isolated talent draft/export UI plus restricted local source sync for existing talent/ability tooltips and direct-damage Power totals.
 - `src/components/ContentDevtools.tsx`: isolated enemy, event, and adventure draft/export UI. Existing-enemy numeric stat fields use the local Vite source-sync route; ability rules, new enemies, events, adventures, and each editor's explicit Save action remain browser-local drafts.
 
 See `ARCHITECTURE.md` for the complete map.
@@ -143,7 +143,7 @@ When the owner supplies Talent Editor JSON:
 6. Keep existing ability definitions, talent combat bundles, editor metadata, and all documentation synchronized.
 7. Verify every ability talent points to a real ability and every connection points to a real node.
 
-The Talent Editor's **Save** button only writes its browser-local draft. It does not edit `src/game/data.ts`, update the runtime tree, or push Git changes.
+The Talent Editor's **Save** button only writes its browser-local draft. It does not edit `src/game/data.ts`, update the runtime tree, or push Git changes. Separately, leaving the supported tooltip and Physical/Spell Power percentage fields for an existing canonical talent/ability pair writes those specific fields through the restricted local Vite source-sync route.
 
 ## Saves and compatibility
 

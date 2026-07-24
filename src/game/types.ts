@@ -422,6 +422,10 @@ export interface Ability {
   power?: number;
   /** Multiplier applied to Physical or Spell Power. Defaults to 1. */
   powerScaling?: number;
+  /** Optional editor-owned total Physical Power scaling across all direct-damage components. */
+  physicalPowerScaling?: number;
+  /** Optional editor-owned total Spell Power scaling across all direct-damage components. */
+  spellPowerScaling?: number;
   /** Number of separate attacks performed by one use. Each attack can trigger on-hit effects. */
   hits?: number;
   /** Overrides hits while the player carries the configured status. */

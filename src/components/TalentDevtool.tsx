@@ -3,8 +3,8 @@ import {
   BookOpen, Circle, Copy, Download, Grid3X3, Hand, Link2, LockKeyhole, Maximize2, Minus, Plus, Save, Search, Sparkles, Square, Trash2, Wrench, X,
 } from "lucide-react";
 import { ABILITIES, TALENTS, TALENT_TREE_CANVAS } from "../game/data";
-import { STATUS_EFFECTS } from "../game/statusEffects";
-import type { AbilityRange, StatName, TalentBranch } from "../game/types";
+import { isMagicalDamage, STATUS_EFFECTS } from "../game/statusEffects";
+import type { Ability, AbilityRange, StatName, TalentBranch } from "../game/types";
 
 const TALENT_DRAFT_STORAGE_KEY = "emberfall.talent-devtool.v1";
 const TALENT_SNAP_STORAGE_KEY = "emberfall.talent-devtool.snap-to-grid";
@@ -51,16 +51,22 @@ interface TalentDraftNode {
   abilityEnergyCost: number;
   abilityCooldownTurns: number;
   abilityRange: AbilityRange;
+  abilityDescription: string;
+  abilityPhysicalPowerPercent: number;
+  abilitySpellPowerPercent: number;
   effectNotes: string;
 }
 
-interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns" | "abilityRange"> {
+interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns" | "abilityRange" | "abilityDescription" | "abilityPhysicalPowerPercent" | "abilitySpellPowerPercent"> {
   tier?: number;
   shape?: TalentNodeShape;
   passiveBonuses?: TalentPassiveBonus[];
   abilityEnergyCost?: number;
   abilityCooldownTurns?: number;
   abilityRange?: AbilityRange;
+  abilityDescription?: string;
+  abilityPhysicalPowerPercent?: number;
+  abilitySpellPowerPercent?: number;
   passiveBonus?: PassiveBonus | "";
   passiveAmount?: number;
 }
@@ -150,9 +156,43 @@ function abilityNumbers(abilityId: string, effectNotes: string, energyCost?: num
   };
 }
 
+function roundPowerPercent(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
+function abilityHasDirectDamage(ability?: Ability): boolean {
+  return Boolean(ability && ability.dealsDamage !== false && (
+    ability.damageComponents?.length
+    || ability.damageType !== undefined
+    || ability.power !== undefined
+    || ability.powerScaling !== undefined
+  ));
+}
+
+function abilityPowerPercents(ability?: Ability): { physical: number; spell: number } {
+  if (!abilityHasDirectDamage(ability) || !ability) return { physical: 0, spell: 0 };
+
+  const components = ability.damageComponents ?? [{
+    damageType: ability.damageType ?? "physical",
+    powerScaling: ability.powerScaling ?? 1,
+  }];
+  const inferred = components.reduce((totals, component) => {
+    const usesSpellPower = component.powerSource === "magical"
+      || (component.powerSource !== "physical" && isMagicalDamage(component.damageType));
+    const key = usesSpellPower ? "spell" : "physical";
+    totals[key] += component.powerScaling ?? 1;
+    return totals;
+  }, { physical: 0, spell: 0 });
+  return {
+    physical: roundPowerPercent((ability.physicalPowerScaling ?? inferred.physical) * 100),
+    spell: roundPowerPercent((ability.spellPowerScaling ?? inferred.spell) * 100),
+  };
+}
+
 function createGameDataNodes(): TalentDraftNode[] {
   return TALENTS.map((talent) => {
     const ability = talent.abilityId ? ABILITIES[talent.abilityId] : undefined;
+    const powerPercents = abilityPowerPercents(ability);
     return {
       id: talent.id,
       name: talent.name,
@@ -169,6 +209,9 @@ function createGameDataNodes(): TalentDraftNode[] {
       abilityEnergyCost: talent.abilityEnergyCost ?? ability?.energyCost ?? 0,
       abilityCooldownTurns: talent.abilityCooldownTurns ?? ability?.cooldownTurns ?? 0,
       abilityRange: talent.abilityRange ?? ability?.range ?? "melee",
+      abilityDescription: ability?.description ?? "",
+      abilityPhysicalPowerPercent: powerPercents.physical,
+      abilitySpellPowerPercent: powerPercents.spell,
       effectNotes: talent.effectNotes ?? "",
     };
   });
@@ -187,6 +230,9 @@ function getGameDataSignature(nodes: TalentDraftNode[]): string {
     abilityEnergyCost: node.abilityEnergyCost,
     abilityCooldownTurns: node.abilityCooldownTurns,
     abilityRange: node.abilityRange,
+    abilityDescription: node.abilityDescription,
+    abilityPhysicalPowerPercent: node.abilityPhysicalPowerPercent,
+    abilitySpellPowerPercent: node.abilitySpellPowerPercent,
     effectNotes: node.effectNotes,
   })));
   let hash = 2166136261;
@@ -251,6 +297,8 @@ function normalizeDraft(draft: { version: 1; sourceSignature?: string; layoutSig
     grid: { x: SNAP_GRID_X, y: SNAP_GRID_Y },
     nodes: draft.nodes.map((node) => {
       const numbers = abilityNumbers(node.abilityId ?? "", node.effectNotes ?? "", node.abilityEnergyCost, node.abilityCooldownTurns);
+      const ability = ABILITIES[node.abilityId ?? ""];
+      const powerPercents = abilityPowerPercents(ability);
       const migratedBonus = node.passiveBonus
         ? [{ id: `${node.id}-${node.passiveBonus}`, bonus: node.passiveBonus, amount: Number(node.passiveAmount ?? 0) }]
         : [];
@@ -273,6 +321,9 @@ function normalizeDraft(draft: { version: 1; sourceSignature?: string; layoutSig
         abilityEnergyCost: numbers.energyCost,
         abilityCooldownTurns: numbers.cooldownTurns,
         abilityRange: node.abilityRange === "ranged" || node.abilityRange === "melee" ? node.abilityRange : ABILITIES[node.abilityId ?? ""]?.range ?? "melee",
+        abilityDescription: node.abilityDescription ?? ability?.description ?? "",
+        abilityPhysicalPowerPercent: Number.isFinite(node.abilityPhysicalPowerPercent) ? Number(node.abilityPhysicalPowerPercent) : powerPercents.physical,
+        abilitySpellPowerPercent: Number.isFinite(node.abilitySpellPowerPercent) ? Number(node.abilitySpellPowerPercent) : powerPercents.spell,
         effectNotes: node.effectNotes ?? "",
       };
     }),
@@ -305,6 +356,9 @@ function syncDraftWithGameData(draft: TalentDraft): TalentDraft {
         abilityEnergyCost: gameNode.abilityEnergyCost,
         abilityCooldownTurns: gameNode.abilityCooldownTurns,
         abilityRange: gameNode.abilityRange,
+        abilityDescription: gameNode.abilityDescription,
+        abilityPhysicalPowerPercent: gameNode.abilityPhysicalPowerPercent,
+        abilitySpellPowerPercent: gameNode.abilitySpellPowerPercent,
         effectNotes: gameNode.effectNotes,
       } : {}),
       ...(layoutChanged ? {
@@ -406,6 +460,23 @@ function exportDraft(draft: TalentDraft): string {
   }, null, 2);
 }
 
+interface TalentSourceChanges {
+  talentDescription?: string;
+  abilityDescription?: string;
+  physicalPowerPercent?: number;
+  spellPowerPercent?: number;
+}
+
+async function writeTalentSource(talentId: string, abilityId: string, changes: TalentSourceChanges): Promise<void> {
+  const response = await fetch("/__arkenfall/talent-content", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ talentId, abilityId: abilityId || undefined, changes }),
+  });
+  const result = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+  if (!response.ok || !result?.ok) throw new Error(result?.error ?? "The live source could not be updated.");
+}
+
 function useModalScrollLock(active: boolean) {
   useEffect(() => {
     if (!active) return;
@@ -480,6 +551,9 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
   const zoomRef = useRef(DEFAULT_CANVAS_ZOOM);
   const panRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const selected = draft.nodes.find((node) => node.id === selectedId) ?? draft.nodes[0];
+  const selectedLiveTalent = selected ? TALENTS.find((talent) => talent.id === selected.id) : undefined;
+  const selectedLiveAbility = selected?.abilityId ? ABILITIES[selected.abilityId] : undefined;
+  const abilityDamageEditable = !selectedLiveAbility || abilityHasDirectDamage(selectedLiveAbility);
 
   useEffect(() => {
     window.localStorage.setItem(TALENT_DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -516,6 +590,44 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     setDraft((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === selected.id ? { ...node, ...patch } : node) }));
   };
 
+  const syncSelectedSource = async (node: TalentDraftNode, changes: TalentSourceChanges) => {
+    const liveTalent = TALENTS.find((talent) => talent.id === node.id);
+    if (!liveTalent) {
+      setMessage("New talents remain local drafts until implemented");
+      return;
+    }
+    const changesAbility = changes.abilityDescription !== undefined
+      || changes.physicalPowerPercent !== undefined
+      || changes.spellPowerPercent !== undefined;
+    if (changesAbility && (!node.abilityId || liveTalent.abilityId !== node.abilityId || !ABILITIES[node.abilityId])) {
+      setMessage("New or reassigned abilities remain draft-only until implemented");
+      return;
+    }
+    try {
+      setMessage("Writing live source…");
+      await writeTalentSource(node.id, node.abilityId, changes);
+      setMessage("Saved to live source");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The live source could not be updated");
+    }
+  };
+
+  const changeSelectedAbilityId = (abilityId: string) => {
+    const ability = ABILITIES[abilityId];
+    const powerPercents = abilityPowerPercents(ability);
+    updateSelected({
+      abilityId,
+      ...(ability ? {
+        abilityEnergyCost: ability.energyCost,
+        abilityCooldownTurns: ability.cooldownTurns ?? 0,
+        abilityRange: ability.range,
+        abilityDescription: ability.description,
+        abilityPhysicalPowerPercent: powerPercents.physical,
+        abilitySpellPowerPercent: powerPercents.spell,
+      } : {}),
+    });
+  };
+
   const addNode = () => {
     const nextNumber = Math.max(0, ...draft.nodes.map((node) => Number(node.id.match(/talent_(\d+)/)?.[1] ?? 0))) + 1;
     const id = `talent_${nextNumber}`;
@@ -539,6 +651,9 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       abilityEnergyCost: 0,
       abilityCooldownTurns: 0,
       abilityRange: "melee",
+      abilityDescription: "",
+      abilityPhysicalPowerPercent: 0,
+      abilitySpellPowerPercent: 0,
       effectNotes: "",
     };
     setDraft((current) => ensureCanvasRoom({ ...current, nodes: [...current.nodes, node] }));
@@ -817,7 +932,12 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
               <label><span>Name</span><input value={selected.name} onChange={(event) => updateSelected({ name: event.target.value })} /></label>
               <label><span>Icon</span><input value={selected.icon} maxLength={3} onChange={(event) => updateSelected({ icon: event.target.value })} /></label>
             </div>
-            <label className="talent-form-field"><span>Player-facing description</span><textarea rows={3} value={selected.description} onChange={(event) => updateSelected({ description: event.target.value })} /></label>
+            <label className="talent-form-field"><span>Talent tooltip for players</span><textarea rows={3} value={selected.description} onChange={(event) => updateSelected({ description: event.target.value })} onBlur={(event) => void syncSelectedSource(selected, { talentDescription: event.currentTarget.value })} /></label>
+            <p className="talent-source-sync-note">{selectedLiveTalent
+              ? selected.abilityId
+                ? "Talent tooltip, ability tooltip, and damage fields write to the live source when you leave the field."
+                : "The talent tooltip writes to the live source when you leave the field."
+              : "This new talent is a local draft until it is implemented."}</p>
             <div className="talent-form-grid two-columns">
               <label><span>Branch</span><select value={selected.branch} onChange={(event) => updateSelected({ branch: event.target.value as TalentBranch })}>{BRANCH_OPTIONS.map((branch) => <option key={branch.id} value={branch.id}>{branch.label}</option>)}</select></label>
               <label><span>Talent type</span><select value={selected.kind} onChange={(event) => updateSelected({ kind: event.target.value as TalentNodeKind })}><option value="class">Class node</option><option value="passive">Passive</option><option value="ability">Ability</option></select></label>
@@ -827,14 +947,20 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
 
             <div className="talent-inspector-section">
               <h3><Sparkles size={15} /> Effect</h3>
-              {selected.kind === "ability" ? (
+              {selected.kind === "ability" || Boolean(selected.abilityId) ? (
                 <>
-                  <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => updateSelected({ abilityId: event.target.value })} /></label>
+                  <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => changeSelectedAbilityId(event.target.value)} /></label>
                   <div className="talent-form-grid two-columns">
                     <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => updateSelected({ abilityEnergyCost: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
                     <label><span>Cooldown (turns)</span><input type="number" min={0} step={1} value={selected.abilityCooldownTurns} onChange={(event) => updateSelected({ abilityCooldownTurns: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
                   </div>
                   <label className="talent-form-field"><span>Attack range</span><select value={selected.abilityRange} onChange={(event) => updateSelected({ abilityRange: event.target.value as AbilityRange })}><option value="melee">Melee</option><option value="ranged">Ranged</option></select></label>
+                  <div className="talent-form-grid two-columns">
+                    <label><span>% of Physical Power</span><input type="number" min={0} step="0.1" value={selected.abilityPhysicalPowerPercent} disabled={!abilityDamageEditable} onChange={(event) => updateSelected({ abilityPhysicalPowerPercent: Math.max(0, Number(event.target.value)) })} onBlur={(event) => void syncSelectedSource(selected, { physicalPowerPercent: Math.max(0, Number(event.currentTarget.value)), spellPowerPercent: selected.abilitySpellPowerPercent })} /></label>
+                    <label><span>% of Spell Power</span><input type="number" min={0} step="0.1" value={selected.abilitySpellPowerPercent} disabled={!abilityDamageEditable} onChange={(event) => updateSelected({ abilitySpellPowerPercent: Math.max(0, Number(event.target.value)) })} onBlur={(event) => void syncSelectedSource(selected, { physicalPowerPercent: selected.abilityPhysicalPowerPercent, spellPowerPercent: Math.max(0, Number(event.currentTarget.value)) })} /></label>
+                  </div>
+                  {!abilityDamageEditable && <p className="talent-source-sync-note">This ability does not deal direct damage, so both damage fields remain at 0.</p>}
+                  <label className="talent-form-field"><span>Ability tooltip for players</span><textarea rows={4} value={selected.abilityDescription} onChange={(event) => updateSelected({ abilityDescription: event.target.value })} onBlur={(event) => void syncSelectedSource(selected, { abilityDescription: event.currentTarget.value })} /></label>
                 </>
               ) : null}
               <div className="talent-passive-heading"><span>Passive bonuses</span><button type="button" onClick={addPassiveBonus}><Plus size={13} /> Add bonus</button></div>

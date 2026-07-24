@@ -121,10 +121,10 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/talentRequirements.ts` | Bidirectional ANY talent-connection evaluation. |
 | `src/game/initiativeLayout.ts` | Pure FLIP geometry for initiative-card transitions. |
 | `src/game/avatars.ts` | Appearance catalog and saved-avatar normalization. |
-| `src/components/TalentDevtool.tsx` | Standalone Talent Editor draft UI and export workflow. |
+| `src/components/TalentDevtool.tsx` | Standalone Talent Editor draft/export UI plus restricted existing talent/ability tooltip and Power-scaling source sync. |
 | `src/components/ContentDevtools.tsx` | Developer-tool launcher plus Enemy, Event, and Adventure editor drafts/exports; existing-enemy numeric stats also use the local source-sync route. |
 | `src/components/PortraitDevtool.tsx` | Enemy/player artwork selection and normalized square combat-portrait crop drafts. |
-| `vite.config.ts` | Vite setup plus the development-only, field-restricted enemy-stat source-sync route. |
+| `vite.config.ts` | Vite setup plus development-only, field-restricted enemy-stat and talent/ability source-sync routes. |
 | `src/components/FloatingCombatText.tsx` | Timed floating-message presentation. |
 | `src/components/GameConfirmDialog.tsx` | Game-owned destructive-action confirmation. |
 | `src/components/GearSlotIcon.tsx` | Resolves equipment-category image assets. |
@@ -293,7 +293,7 @@ The editor supports:
 - Live Shadow, Arcanist, Brute, and Cultist node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
 - Multiple flat and percentage passive bonuses, including attributes, Physical Power, and Spell Power.
-- Ability-ID references, Energy cost, cooldown turns, Melee/Ranged selection, and free-form effect/proc notes.
+- Ability-ID references, Energy cost, cooldown turns, Melee/Ranged selection, free-form effect/proc notes, a dedicated live ability tooltip, and total **% of Physical Power** / **% of Spell Power** damage fields. Current values are inferred from the canonical ability, including hybrid and multi-element component totals; non-damaging abilities show 0/0.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
 - Separate content and layout signatures. Canonical content updates preserve local placement, while an intentional canonical layout update migrates the canvas, positions, connections, icons, and shapes in an existing saved draft once.
@@ -304,9 +304,11 @@ The editor supports:
 
 ### What Save does
 
-Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same write immediately and confirms it in the editor UI. It does not:
+Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/data.ts` through the local Vite server. If the talent references an existing canonical ability, leaving its **Ability tooltip for players** or either Power-percentage field writes the ability description or both scaling totals directly as well. These restricted field writes are independent of the Save button.
 
-- Change `src/game/data.ts`.
+The **Save** button itself does not:
+
+- Apply other draft fields to `src/game/data.ts`.
 - Update the live player talent tree.
 - Push to GitHub.
 - Synchronize to another browser or computer.
@@ -318,6 +320,7 @@ Every editor change already auto-saves the draft to browser `localStorage` under
 - Free-form effect notes are documentation for implementation, not executable mechanics.
 - An ability ID must already exist or be implemented alongside the talent.
 - Advanced triggers, damage modifiers, ability modifiers, and new status mechanics must currently be added in TypeScript after export.
+- Direct source sync is available only through the local Vite development server and only when the talent and referenced ability already form the same canonical pair. Reassigned/new abilities stay draft-only.
 - Editor storage belongs to one browser/site origin.
 
 ## Enemy, Event, Adventure, and Portrait editors
@@ -329,7 +332,7 @@ The developer-tool launcher also opens four isolated content editors:
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy pickers display readable names while preserving stable enemy IDs in saved/exported data. Enemy counts support repeated templates in one encounter, and combat entries configure only XP and gold; loot is reserved for future enemy-owned loot tables. Legacy editor drafts that still contain an adventure-level `loot` flag are normalized without it. Its **XP Guide** lists the experience needed from the previous level and the cumulative total for every level through the level-50 cap; the table is derived from the live progression formula.
 - **Portrait Editor** switches between enemies and player avatars, selects from the generated full-art library, and positions/resizes a square crop directly over the source image. It shows the exact square combat preview and exports normalized percentage coordinates, so the crop is independent of the editor's screen size.
 
-They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another. The only direct source mutation is the restricted existing-enemy numeric-stat flow described above; explicit Save buttons, ability rules, events, adventures, portraits, and new enemies remain browser-local until implemented.
+They auto-save and expose the same explicit Save, Copy for Codex, and Export JSON flow as the Talent Editor. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Local drafts can reference one another. Direct source mutation is restricted to existing-enemy numeric stats and the existing Talent Editor tooltip/Power fields described above; explicit Save buttons, advanced ability rules, events, adventures, portraits, and new content remain browser-local until implemented.
 
 ## Save compatibility
 

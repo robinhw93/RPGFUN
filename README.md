@@ -52,7 +52,7 @@ The command runs the TypeScript project build and then creates the production bu
 - Eight equipment slots, weapon-hand rules, rarity, item comparison, inventory filtering/sorting, and the Ashborn Warplate set.
 - Experience and level-ups through the level-50 cap, plus stat points, talent points, and gold rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.
-- Password-gated Talent, Enemy, Event, and Adventure editors with browser-local drafts and Codex-ready JSON exports.
+- Password-gated Talent, Enemy, Event, and Adventure editors with browser-local drafts and Codex-ready JSON exports. Restricted fields on existing talents, abilities, and enemies can also write directly to the local source while Vite is running.
 
 ## Hosting
 

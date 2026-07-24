@@ -455,6 +455,47 @@ function getOffensivePower(derived: ReturnType<typeof getDerivedStats>, damageTy
   return isMagicalDamage(damageType) ? derived.magicalPower : derived.physicalPower;
 }
 
+function applyAbilityPowerScalingTotals(
+  ability: Ability,
+  components: NonNullable<Ability["damageComponents"]>,
+): NonNullable<Ability["damageComponents"]> {
+  if (ability.physicalPowerScaling === undefined && ability.spellPowerScaling === undefined) return components;
+
+  const powerKind = (component: NonNullable<Ability["damageComponents"]>[number]) => (
+    component.powerSource === "magical" || (component.powerSource !== "physical" && isMagicalDamage(component.damageType))
+      ? "magical"
+      : "physical"
+  );
+  const desiredTotals = {
+    physical: ability.physicalPowerScaling,
+    magical: ability.spellPowerScaling,
+  };
+  const currentTotals = components.reduce((totals, component) => ({
+    ...totals,
+    [powerKind(component)]: totals[powerKind(component)] + (component.powerScaling ?? 1),
+  }), { physical: 0, magical: 0 });
+
+  const scaled = components.map((component) => {
+    const kind = powerKind(component);
+    const desired = desiredTotals[kind];
+    if (desired === undefined) return component;
+    const currentTotal = currentTotals[kind];
+    return {
+      ...component,
+      powerScaling: currentTotal > 0 ? (component.powerScaling ?? 1) / currentTotal * desired : 0,
+    };
+  });
+
+  if (ability.physicalPowerScaling !== undefined && ability.physicalPowerScaling > 0 && currentTotals.physical === 0) {
+    scaled.push({ damageType: "physical", powerScaling: ability.physicalPowerScaling, powerSource: "physical" });
+  }
+  if (ability.spellPowerScaling !== undefined && ability.spellPowerScaling > 0 && currentTotals.magical === 0) {
+    const magicalDamageType = ability.types.find((damageType) => isMagicalDamage(damageType)) ?? "spell";
+    scaled.push({ damageType: magicalDamageType, powerScaling: ability.spellPowerScaling, powerSource: "magical" });
+  }
+  return scaled;
+}
+
 function getDefense(armor: number, magicResistance: number, statuses: StatusEffect[], damageType?: DamageType): number {
   return damageType === "physical" ? getEffectiveArmor(armor, statuses) : magicResistance;
 }
@@ -1983,15 +2024,19 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           power: (playerStatuses.find((status) => status.id === ability.damageFromSelfStatusStacks!.status)?.stacks ?? 0) * ability.damageFromSelfStatusStacks.multiplier,
         }]
         : undefined;
+      const usesDynamicDamageScaling = Boolean(ability.consumeTargetStatusForDamage && consumedStatusForDamage) || Boolean(statusBasedDamage);
       const baseDamageComponents = ability.consumeTargetStatusForDamage && consumedStatusForDamage
         ? [{
           damageType: ability.consumeTargetStatusForDamage.damageType,
           powerScaling: ability.consumeTargetStatusForDamage.powerScalingPerStack * consumedStatusForDamage.stacks,
         }]
-        : statusBasedDamage ?? ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: effectivePowerScaling }];
-      const damageComponents = baseDamageComponents.map((component, componentIndex) => componentIndex === 0 ? {
+        : statusBasedDamage ?? ability.damageComponents ?? [{ damageType: ability.damageType ?? "physical", power: ability.power, powerScaling: baseEffectivePowerScaling }];
+      const editorScaledDamageComponents = usesDynamicDamageScaling || (selfRequirementMissing && baseEffectivePowerScaling !== ability.powerScaling)
+        ? baseDamageComponents
+        : applyAbilityPowerScalingTotals(ability, baseDamageComponents);
+      const damageComponents = editorScaledDamageComponents.map((component, componentIndex) => componentIndex === 0 ? {
         ...component,
-        powerScaling: ability.damageComponents && powerScalingBonus !== 0 ? (component.powerScaling ?? 1) + powerScalingBonus : component.powerScaling,
+        powerScaling: powerScalingBonus !== 0 && !usesDynamicDamageScaling ? (component.powerScaling ?? 1) + powerScalingBonus : component.powerScaling,
         armorScaling: (component.armorScaling ?? 0) + primaryArmorScalingBonus,
         powerSource: primaryPowerSourceOverride ?? component.powerSource,
       } : component);

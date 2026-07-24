@@ -42,11 +42,11 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/components/FloatingCombatText.tsx` presents the event queue and reports when each entry appears and when the sequence completes.
 - `src/components/GameConfirmDialog.tsx` owns game-styled confirmation UI.
 - `src/components/GearSlotIcon.tsx` maps item classification to static gear artwork.
-- `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow.
+- `src/components/TalentDevtool.tsx` owns the isolated talent draft model and export workflow. Existing talent tooltips plus referenced live-ability tooltips and Physical/Spell Power scaling totals call the restricted local source-sync route when their fields lose focus.
 - `src/components/ContentDevtools.tsx` owns isolated enemy, event, and adventure drafts plus the shared developer-tool launcher. Existing-enemy numeric stat edits call the restricted local source-sync route; ability mechanics and other content remain draft/export input.
 - `src/components/PortraitDevtool.tsx` owns the isolated enemy/player artwork selection and normalized square portrait-crop workflow.
 - `src/styles.css` owns responsive presentation and animation. Rules must not be implemented through CSS-only state.
-- `vite.config.ts` owns the development-only enemy-stat source-sync route. It accepts only known numeric stat fields for an enemy already present in the canonical catalog and writes only that enemy's matching fields in `src/game/data.ts`.
+- `vite.config.ts` owns the development-only source-sync routes. They accept only known numeric enemy fields or known tooltip/Power-scaling fields for existing canonical talent/ability pairs and write only those matching fields in `src/game/data.ts`. Source mutations share a queue so rapid edits cannot overwrite one another.
 
 ### Domain and content
 
@@ -128,6 +128,8 @@ UI modules display these results but never reproduce their formulas.
 3. Active set-threshold bundles.
 
 Every resolved trigger/modifier carries source ID, source name, source kind, and a stable runtime ID.
+
+Direct-damage abilities may store editor-owned total `physicalPowerScaling` and `spellPowerScaling` values. When present, combat distributes each total proportionally across that Power type's existing damage components, preserving hybrid and multi-element damage schools. A newly added Power type uses Physical or generic Spell Damage. Dynamic stack-derived damage keeps its dedicated scaling path.
 
 ### Passive bonuses
 
@@ -397,11 +399,11 @@ emberfall.talent-devtool.v1
 emberfall.talent-devtool.snap-to-grid
 ```
 
-The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Older drafts are normalized on load: obsolete requirement-mode data is discarded, duplicate reciprocal edges are collapsed, and ability Energy/cooldown fields are inferred from live definitions or older notes when absent. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format without a requirement-mode field.
+The draft is initialized from live content only when no valid stored draft exists. After that, browser-local draft data wins. Older drafts are normalized on load: obsolete requirement-mode data is discarded, duplicate reciprocal edges are collapsed, Energy/cooldown fields are inferred, and ability tooltip plus Physical/Spell Power percentages are populated from live definitions when absent. Save is an explicit repeat of the automatic local write. Copy/Export serialize a versioned JSON exchange format without a requirement-mode field.
 
 Canvas positions are percentages, but grid spacing is stored as fixed world units. When nodes approach an edge, `ensureCanvasRoom` expands that side and recalculates percentages so existing absolute alignment remains stable.
 
-An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions.
+An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions. The exception is the restricted local-development sync: leaving the talent-tooltip field updates an existing talent, while leaving the ability-tooltip or Power-percentage fields updates the ability already referenced by that live talent. New/reassigned abilities and all other fields remain draft-only.
 
 Enemy, Event, and Adventure editors follow the same isolation contract. They retain the legacy storage keys `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, and `emberfall.adventure-devtool.v1`; Save and automatic writes only update those local drafts. New files and exchange-format labels use the Arkenfall name. Adventure entries can reference locally drafted enemy/event IDs, but exported content does not become live until it is integrated into typed source data.
 
