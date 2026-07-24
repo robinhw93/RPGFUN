@@ -1356,7 +1356,7 @@ main { min-height: calc(100vh - 68px); }
 .runtime-talent-tree { width: 100%; height: 100%; position: relative; padding: 0; overflow: auto; overflow-anchor: none; overscroll-behavior: none; touch-action: none; border: 0; background: transparent; scrollbar-width: none; }
 .runtime-talent-tree::-webkit-scrollbar { display: none; }
 .talent-points-overlay { position: absolute; z-index: 5; top: .8rem; right: .8rem; pointer-events: none; box-shadow: 0 8px 28px rgba(0,0,0,.42); }
-.mobile-talent-zoom-controls { position: absolute; z-index: 6; right: .55rem; bottom: .55rem; display: none; gap: .4rem; }
+.mobile-talent-zoom-controls { position: absolute; z-index: 6; top: .55rem; left: .55rem; display: none; gap: .4rem; }
 .mobile-talent-zoom-controls button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; color: var(--gold-bright); border: 1px solid #5a4c31; background: rgba(15,18,16,.94); box-shadow: 0 7px 22px rgba(0,0,0,.42); cursor: pointer; }
 .mobile-talent-zoom-controls button:active { color: #fff0bb; border-color: var(--gold); background: #222018; transform: scale(.96); }
 .runtime-talent-zoom-surface { position: relative; flex: 0 0 auto; margin: auto; overflow: hidden; }
@@ -1439,10 +1439,13 @@ main { min-height: calc(100vh - 68px); }
 .enemy-burning-glare-beam>i,.enemy-natures-beam>i{left:0;top:50%;width:100%;transform-origin:0 50%;animation:arcane-beam-surge var(--beam-duration) ease-out both}.enemy-burning-glare-beam>i:nth-of-type(1){height:18px;margin-top:-9px;background:linear-gradient(90deg,rgba(140,14,4,.1),#e3260d 20%,#ff8a19 70%,#fff4a8);filter:blur(4px);box-shadow:0 0 22px #ef3911}.enemy-burning-glare-beam>i:nth-of-type(2){height:4px;margin-top:-2px;background:linear-gradient(90deg,#e42b11,#ffc027,#fff);box-shadow:0 0 8px #ff7c17}.enemy-burning-glare-beam>b,.enemy-natures-beam>b{right:-13px;top:2px;width:26px;height:26px;border:2px solid #fff0a0;border-radius:50%;box-shadow:0 0 20px #ef5317;animation:arcane-beam-flare var(--beam-duration) ease-out both}.enemy-burning-glare-beam>svg{right:-9px;top:5px;width:20px;color:#fff19d;filter:drop-shadow(0 0 7px #ff5318)}.enemy-natures-beam>i:nth-of-type(1){height:20px;margin-top:-10px;background:linear-gradient(90deg,rgba(30,94,40,.08),#45b85b 18%,#b9eb73 72%,#f7ffbb);filter:blur(5px);box-shadow:0 0 22px #4fd06e}.enemy-natures-beam>i:nth-of-type(2){height:6px;margin-top:-3px;background:linear-gradient(90deg,#267d42,#7ae27d,#f7ffbd);box-shadow:0 0 9px #75df81}.enemy-natures-beam>i:nth-of-type(3){height:2px;margin-top:-1px;background:#fffbd0}.enemy-natures-beam>b{border-color:#e9ff9a;box-shadow:0 0 20px #58d774}.enemy-natures-beam>svg{right:-10px;top:5px;width:21px;color:#f2ffb0;filter:drop-shadow(0 0 8px #60d873)}
 @keyframes enemy-vfx-mark{0%{opacity:0;transform:translate(-50%,-50%) scale(.25) rotate(-24deg)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(4deg)}100%{opacity:0;transform:translate(-50%,-55%) scale(1.7) rotate(20deg)}}@keyframes enemy-vfx-ray{0%{opacity:0;transform:rotate(var(--enemy-vfx-angle)) scaleY(.08)}28%{opacity:1}100%{opacity:0;transform:rotate(var(--enemy-vfx-angle)) scaleY(2.3)}}
 
+@media (max-width: 760px) {
+  .mobile-talent-zoom-controls { display: flex; }
+}
+
 @media (max-width: 600px) {
   .runtime-talent-stage { height: min(66vh, 610px); margin-inline: -.5rem; }
   .talent-points-overlay { top: .55rem; right: .55rem; }
-  .mobile-talent-zoom-controls { display: flex; }
   .runtime-talent-node { width: 104px; min-height: 104px; padding: .42rem; }.runtime-talent-node.circle { width: 78px; min-height: 78px; padding: .32rem; }.runtime-talent-node > strong { font-size: .8rem; }.runtime-talent-node.circle > strong { font-size: .66rem; }
   .talent-detail-card { padding: 1rem; }.talent-detail-actions { grid-template-columns: 1fr; }
   .talent-loadout-trigger { width: 100%; }.ability-loadout-dialog { align-items: end; padding: .5rem; }.ability-loadout-card { padding: .9rem; }.ability-loadout-slots { grid-template-columns: repeat(3, 1fr); gap: .4rem; }.ability-loadout-slots button { min-height: 74px; }
