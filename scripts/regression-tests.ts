@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { moveAdventureStage, normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
+import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconChoices } from "../src/components/GearSlotIcon";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
 import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
@@ -14,7 +17,20 @@ import { ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import { craftTownItem, getItemCraftingRecipe, getTownCraftingCatalog, getTownVendorStock, purchaseTownItem, restAtArkenfallTavern } from "../src/game/town";
-import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
+import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, ItemDropDefinition } from "../src/game/types";
+
+function testGearIconLibrary() {
+  assert.equal(Object.keys(GEAR_ICON_VARIANTS).length, 14, "Every supported gear category needs its own generated icon group.");
+  const generatedUrls = Object.values(GEAR_ICON_VARIANTS).flat();
+  assert.equal(generatedUrls.length, 70, "Every supported gear category needs five generated icon alternatives.");
+  assert.equal(new Set(generatedUrls).size, generatedUrls.length, "Generated gear icon URLs must be unique.");
+  generatedUrls.forEach((url) => assert.ok(existsSync(join(process.cwd(), "public", url)), `Missing generated gear icon ${url}.`));
+  generatedUrls.forEach((url) => assert.ok(GEAR_ICON_URLS.includes(url), `${url} must be part of the preloaded gear icon catalog.`));
+
+  const staff: GearItem = { kind: "gear", id: "test-staff", name: "Test Staff", slot: "mainHand", weaponEquipType: "twoHand", weaponKind: "staff", rarity: "common", description: "", stats: {} };
+  assert.equal(getGearIconCategory(staff), "staff", "Weapon kind must drive the focused gear-art category.");
+  assert.deepEqual(getGearIconChoices(staff).slice(-5), GEAR_ICON_VARIANTS.staff, "The Staff picker must expose all five generated Staff icons.");
+}
 
 function testContentIntegrity() {
   assert.equal(TALENTS.length, 263, "The canonical talent count changed unexpectedly.");
@@ -465,6 +481,7 @@ function testIndependentItemDrops() {
 }
 
 testContentIntegrity();
+testGearIconLibrary();
 testStoryEncounterIntroduction();
 testCompletedAdventureAvailability();
 testStoryReplayRewards();
