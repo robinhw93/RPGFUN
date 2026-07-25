@@ -9,6 +9,7 @@ export type WeaponEquipType = "mainHand" | "oneHand" | "offHand" | "twoHand";
 export type WeaponKind = "sword" | "axe" | "mace" | "dagger" | "wand" | "shield" | "tome" | "staff" | "polearm";
 /** Legacy save value. New items should use weaponEquipType. */
 export type WeaponType = "oneHanded" | "twoHanded";
+export type ItemRarity = "common" | "uncommon" | "rare" | "epic";
 export type DamageType = "physical" | "spell" | "arcane" | "shadow" | "fire" | "frost" | "lightning";
 export type TargetType = "enemy" | "self" | "all_enemies";
 
@@ -296,9 +297,18 @@ export interface GearSetBonusDefinition extends CombatFeatureBundle {
   setName: string;
   requiredPieces: number;
   description: string;
+  specialEffectNotes?: string;
+}
+
+export interface GearSetDefinition {
+  id: string;
+  name: string;
+  pieceCount: number;
+  bonuses: Array<Omit<GearSetBonusDefinition, "setId" | "setName">>;
 }
 
 export type CombatAbilityVfxKind =
+  | "consumable_use"
   | "poison_cloud"
   | "contagion"
   | "neurotoxin"
@@ -598,6 +608,7 @@ export interface Talent {
 }
 
 export interface GearItem {
+  kind?: "gear";
   id: string;
   name: string;
   slot: GearType;
@@ -606,8 +617,9 @@ export interface GearItem {
   weaponKind?: WeaponKind;
   /** Legacy save value. New items should use weaponEquipType. */
   weaponType?: WeaponType;
-  rarity: "common" | "uncommon" | "rare" | "epic";
+  rarity: ItemRarity;
   description: string;
+  iconUrl?: string;
   stats: Partial<Stats>;
   armor?: number;
   magicResistance?: number;
@@ -617,8 +629,31 @@ export interface GearItem {
   power?: number;
   set?: string;
   setName?: string;
+  specialEffectNotes?: string;
   combat?: CombatFeatureBundle;
 }
+
+export type ConsumableTarget = "self" | "target" | "all_enemies";
+
+export type ConsumableEffect =
+  | { type: "heal"; amount: number }
+  | { type: "gain_energy"; amount: number }
+  | { type: "change_next_turn_energy_regen"; amount: number }
+  | { type: "change_energy"; amount: number }
+  | { type: "damage"; target: ConsumableTarget; amount: number }
+  | { type: "apply_status"; target: ConsumableTarget; status: StatusEffectId; stacks: number; duration: number };
+
+export interface ConsumableItem {
+  kind: "consumable";
+  id: string;
+  name: string;
+  rarity: ItemRarity;
+  description: string;
+  effects: ConsumableEffect[];
+  specialEffectNotes?: string;
+}
+
+export type InventoryItem = GearItem | ConsumableItem;
 
 export interface EnemyAbilityDefinition {
   id: string;
@@ -732,6 +767,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
+  | { id: string; eventIndex: number; type: "energy_change"; amount: number }
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
@@ -782,7 +818,7 @@ export interface CombatState {
 export interface InspectableInfo {
   title: string;
   description: string;
-  category: "ability" | "status" | "stat";
+  category: "ability" | "status" | "stat" | "item";
 }
 
 export interface CombatLogEntry {
@@ -802,7 +838,7 @@ export interface CharacterState {
   talentPoints: number;
   unlockedTalents: string[];
   equippedAbilities: string[];
-  inventory: GearItem[];
+  inventory: InventoryItem[];
   equipment: Partial<Record<GearSlot, GearItem>>;
   completedAdventureIds: string[];
 }

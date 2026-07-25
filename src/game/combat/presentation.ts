@@ -53,6 +53,10 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       nextTurnEnergyRegenBonus += effect.amount;
       return;
     }
+    if (effect.type === "energy_change") {
+      energy = Math.max(0, Math.min(combat.maxEnergy, energy + effect.amount));
+      return;
+    }
     if (effect.type === "set_status") {
       if (effect.targetId === "player") {
         if (canApplyStatusEffect(playerStatuses, effect.status.id)) {

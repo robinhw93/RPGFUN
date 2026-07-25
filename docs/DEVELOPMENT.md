@@ -130,6 +130,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/hooks/useCombatActionQueue.ts` | Queues player abilities and End Turn, projects reserved Energy/cooldowns, and dispatches actions between combat sequences. |
 | `src/game/timing.ts` | Combat, initiative, adventure-transition, and event-presentation timings. |
 | `src/game/gear.ts` | Equipping, unequipping, compatibility, hand rules, and material/category normalization. |
+| `src/game/items.ts` / `src/game/consumables.ts` | Item classification and descriptions plus executable combat-consumable transitions. |
 | `src/game/progression.ts` | Experience thresholds and level rewards. |
 | `src/game/rewards.ts` | Grants each combat reward once and captures score-screen data. |
 | `src/game/eventOutcomes.ts` | Normalizes and applies typed event outcomes, queued next-combat statuses, and immediate encounters. |
@@ -140,7 +141,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/avatars.ts` | Appearance catalog and saved-avatar normalization. |
 | `src/components/TalentDevtool.tsx` | Standalone Talent Editor draft/export UI plus restricted existing talent/ability tooltip and Power-scaling source sync. |
 | `src/components/ContentDevtools.tsx` | Compatibility facade for the split content editors. |
-| `src/components/devtools/` | Shared devtool contracts/launcher plus separate Enemy, Event, and Adventure editors. |
+| `src/components/devtools/` | Shared devtool contracts/launcher plus separate Enemy, Event, Adventure, and Item editors. |
 | `src/components/PortraitDevtool.tsx` | Enemy/player artwork selection and normalized square combat-portrait crop drafts. |
 | `vite.config.ts` | Small Vite composition and server configuration. |
 | `tools/vite/localSourceSync.ts` | Development-only field routes, validation, and canonical source synchronization. |
@@ -222,7 +223,8 @@ Live definitions are separated under `src/game/content/` and re-exported by `src
 - Event IDs referenced by an adventure must exist in `ADVENTURE_EVENTS`. Choices contain an attribute, threshold, and structured success/failure outcome. Each outcome contains an ordered list of typed effects; next-combat status effects are stored in adventure progress until combat creation, while an immediate encounter uses its own enemy group and combat reward.
 - Adventure rewards are granted only to combat/boss entries with a reward definition.
 - Gear IDs should remain stable because save hydration looks up current definitions by ID.
-- New set bonuses require both item `set` IDs and matching `GEAR_SET_BONUSES` entries.
+- New set bonuses belong to `GEAR_SETS`; the flat `GEAR_SET_BONUSES` runtime list is derived automatically. Gear `set` IDs must reference one of those definitions.
+- Standard consumables are `ConsumableItem` definitions. Use the shared typed effects and `useConsumable`; do not add item-ID branches for healing, Energy, fixed damage, or ordinary statuses.
 - Two-Hand weapons must use `weaponEquipType: "twoHand"`; legacy `weaponType` exists only for older saves.
 
 ### Status effects
@@ -345,16 +347,17 @@ The **Save** button itself does not:
 - Direct source sync is available only through the local Vite development server and only when the talent and referenced ability already form the same canonical pair. Reassigned/new abilities stay draft-only.
 - Editor storage belongs to one browser/site origin.
 
-## Enemy, Event, Adventure, and Portrait editors
+## Enemy, Event, Adventure, Item, and Portrait editors
 
 The developer-tool launcher also opens four isolated content editors:
 
 - **Create Enemy** edits Physical Power, Spell Power, other combat stats, defenses, Hit/Dodge/Critical chances, and Energy values. Changing any of those numeric fields for an existing enemy writes that single field directly to its canonical `src/game/content/enemies.ts` definition through the local Vite development server. Sending only the changed field prevents older browser drafts from overwriting unrelated live stats. New enemies remain drafts until implemented. Its **Add ability** flow creates any number of structured ability drafts containing a stable generated ID, name, Energy cost, cooldown, Melee/Ranged attack type, and free-form effect. It has no implicit default attack. Ability effects and behavior text are design input for later TypeScript implementation and are not executable on their own.
 - **Event Manager** creates events with two or three choices. Each choice configures its d100 attribute and threshold plus narrative positive/negative outcomes. An outcome can combine multiple typed effects: Health, gold, experience, Talent Points, Attribute Points, an item, a player/enemy status for the next combat, or an immediate enemy encounter with an XP/gold reward. Legacy signed-number outcomes are normalized into the version-2 effect list when their existing browser draft is opened. Event and choice IDs are internal: the editor hides them, preserves valid existing values, and automatically repairs missing, invalid, or duplicate values from the visible names.
 - **Adventure Editor** creates adventures, prerequisites, completion copy, ordered stages, and unlimited weighted combat/event possibilities. Enemy and event pickers display readable names while internal adventure, stage, and possibility IDs stay hidden. Valid existing IDs are preserved; missing, invalid, or duplicate IDs are repaired automatically from the visible names before browser storage, Save, Copy, or Export. Enemy counts support repeated templates in one encounter, and combat entries configure only XP and gold; loot is reserved for future enemy-owned loot tables. Legacy editor drafts that still contain an adventure-level `loot` flag are normalized without it. Its **XP Guide** lists the experience needed from the previous level and the cumulative total for every level through the level-50 cap; the table is derived from the live progression formula.
+- **Item Editor** creates gear, set definitions, and consumables. Gear supports slot/hand classification, existing gear art, rarity, attributes, defenses, both Powers, set membership, and non-executable special notes. Sets support any piece count, any number of thresholds, standard passive stats, and special notes. Consumables compose any number of typed Health, Energy, next-turn regeneration, fixed-damage, and existing-status effects against self, selected target, or all enemies. Save validates and replaces `ITEMS` and `GEAR_SETS` in the canonical gear module; those standard fields therefore work in the live game without a Codex import. Special notes are retained in source/export but require implementation.
 - **Portrait Editor** switches between enemies and player avatars, selects from the generated full-art library, and positions/resizes a square crop directly over the source image. It shows the exact square combat preview and exports normalized percentage coordinates, so the crop is independent of the editor's screen size.
 
-They auto-save and expose Save, Copy for Codex, and Export JSON. Their legacy storage keys remain `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, and `emberfall.portrait-devtool.v1` so existing drafts survive the rename. New exports use the `arkenfall-*` format names and filenames. Portrait exports use `arkenfall-portraits` version 1 with each crop's image URL, horizontal and vertical center, and diameter as source-image percentages. The enemy JSON exchange format is version 3; older ability drafts migrate into the structured Effect field and default to Melee without changing the browser storage key. Event exports use version 2. Local drafts can reference one another. Event Manager and Adventure Editor Save post their complete draft to the local Vite server, which validates IDs, shapes, references, and effect/status polarity before replacing only the matching catalog initializer in `src/game/content/adventures.ts`. The write is unavailable in a production deployment. Existing-enemy stats and Talent Editor tooltip/Power fields retain their narrow direct-write behavior; advanced enemy abilities, portraits, and other new mechanics remain draft-only until implemented.
+They auto-save and expose Save, Copy for Codex, and Export JSON. Their browser keys include `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, `emberfall.item-devtool.v1`, and `emberfall.portrait-devtool.v1`. New exports use `arkenfall-*` format names and filenames. Item exports use version 1 and contain both items and sets; Event exports use version 2. Local drafts can reference one another. Event Manager, Adventure Editor, and Item Editor Save post complete drafts to the local Vite server, which validates shapes and references before replacing only the owned catalog initializers. These writes are unavailable in production. Existing-enemy stats and Talent Editor tooltip/Power fields retain their narrow direct-write behavior; advanced enemy abilities, portraits, and other new mechanics remain draft-only until implemented.
 
 ## Save compatibility
 

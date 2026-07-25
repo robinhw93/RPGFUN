@@ -117,6 +117,9 @@ export function BarrierShimmer({ pulsing }: { pulsing: boolean }) {
 }
 
 export function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
+  if (kind === "consumable_use") {
+    return <span className="ability-impact-effect consumable-use-impact" aria-hidden="true"><FlaskConical /><Sparkles /><i /><i /><i /></span>;
+  }
   if (kind.startsWith("enemy_")) {
     const icon = kind === "enemy_howl" || kind === "enemy_roar" ? <Megaphone />
       : kind === "enemy_hibernate" ? <Moon />

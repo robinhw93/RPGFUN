@@ -21,9 +21,10 @@ import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCh
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "../../game/combatSequence";
 import { ABILITIES, ADVENTURE_EVENTS, ADVENTURES, ENEMIES } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
+import { consumableCount, describeConsumableEffect, isConsumableItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
-import type { AdventureMode, AdventureStageDefinition, CombatLogEntry, CombatReward, GameState, InspectableInfo, StatusEffectId } from "../../game/types";
+import type { AdventureMode, AdventureStageDefinition, CombatLogEntry, CombatReward, ConsumableItem, GameState, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
 import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
@@ -35,13 +36,14 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
   onBegin: (mode: AdventureMode, adventureId?: string) => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
+  onConsumable: (id: string) => void;
   onEndTurn: () => void;
   onEnemyTurn: (actorId: string) => void;
   onCombatEvent: (eventId: number, eventIndex: number) => void;
@@ -63,6 +65,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   const [inspectedInfo, setInspectedInfo] = useState<InspectableInfo | null>(null);
   const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
   const [playerAttributesOpen, setPlayerAttributesOpen] = useState(false);
+  const [combatInventoryOpen, setCombatInventoryOpen] = useState(false);
   const [targetFeedback, setTargetFeedback] = useState<{ id: number; text: string } | null>(null);
   const nextTargetFeedbackId = useRef(0);
   const inspectedEnemy = adventure.combat?.enemies.find((enemy) => enemy.instanceId === inspectedEnemyId) ?? null;
@@ -77,6 +80,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
     setInspectedInfo(null);
     setInspectedEnemyId(null);
     setPlayerAttributesOpen(false);
+    setCombatInventoryOpen(false);
     setTargetFeedback(null);
   }, [adventure.nodeIndex]);
   useEffect(() => {
@@ -89,10 +93,10 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
     });
   }, [enemyVisualKey]);
   useEffect(() => {
-    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || playerAttributesOpen || activeActor?.kind !== "enemy") return;
+    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || playerAttributesOpen || combatInventoryOpen || activeActor?.kind !== "enemy") return;
     const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
     return () => window.clearTimeout(timer);
-  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, playerAttributesOpen, sequencePending]);
+  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, combatInventoryOpen, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, playerAttributesOpen, sequencePending]);
 
   if (adventure.completed) {
     const completedAdventure = getAdventureDefinition(adventure.adventureId);
@@ -368,10 +372,24 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
       </div>
 
       <div className="combat-footer-controls">
+        <button className="combat-inventory-button" disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active"} onClick={() => setCombatInventoryOpen(true)}><FlaskConical size={14} /> Inventory</button>
         <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
       </div>
+
+      {combatInventoryOpen && (
+        <CombatInventoryModal
+          inventory={game.character.inventory.filter(isConsumableItem)}
+          queuedActions={queuedActions}
+          availableCounts={queueProjection.consumableCounts}
+          selectedTargetAvailable={Boolean(queueProjection.targetStatusIds.get(combat.selectedEnemyId) && !queueProjection.targetStatusIds.get(combat.selectedEnemyId)?.has("stealth"))}
+          visibleEnemyAvailable={combat.enemies.some((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth"))}
+          disabled={abilityInputUnavailable || !isPlayerTurn || queueProjection.closed || combat.outcome !== "active"}
+          onUse={(itemId) => { onConsumable(itemId); setCombatInventoryOpen(false); }}
+          onClose={() => setCombatInventoryOpen(false)}
+        />
+      )}
 
       {logOpen && (
         <div className="combat-log-modal" role="dialog" aria-modal="true" aria-label="Combat Log">
@@ -429,6 +447,50 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
         </div>
       )}
     </section>
+  );
+}
+
+function CombatInventoryModal({ inventory, queuedActions, availableCounts, selectedTargetAvailable, visibleEnemyAvailable, disabled, onUse, onClose }: {
+  inventory: ConsumableItem[];
+  queuedActions: QueuedCombatAction[];
+  availableCounts: Map<string, number>;
+  selectedTargetAvailable: boolean;
+  visibleEnemyAvailable: boolean;
+  disabled: boolean;
+  onUse: (itemId: string) => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousOverflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      root.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [onClose]);
+
+  const uniqueItems = [...new Map(inventory.map((item) => [item.id, item])).values()];
+  return (
+    <div className="combat-inventory-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="combat-inventory-dialog" role="dialog" aria-modal="true" aria-labelledby="combat-inventory-title">
+        <header><div><p className="eyebrow">Combat Inventory</p><h2 id="combat-inventory-title">Consumables</h2><p>Using an item does not end your turn. Enemy-targeted effects use your current target.</p></div><button type="button" onClick={onClose} aria-label="Close inventory">×</button></header>
+        <div className="combat-inventory-list">
+          {uniqueItems.length === 0 && <div className="combat-inventory-empty"><FlaskConical /><strong>No consumables</strong><p>Your inventory contains no items that can be used in combat.</p></div>}
+          {uniqueItems.map((item) => {
+            const count = consumableCount(inventory, item.id);
+            const available = availableCounts.get(item.id) ?? count;
+            const queued = queuedActions.filter((action) => action.type === "item" && action.itemId === item.id).length;
+            const targetUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "target") && !selectedTargetAvailable;
+            const groupUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "all_enemies") && !visibleEnemyAvailable;
+            const unavailable = targetUnavailable || groupUnavailable;
+            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><FlaskConical /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{unavailable && <em>No valid enemy target.</em>}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
+          })}
+        </div>
+      </section>
+    </div>
   );
 }
 

@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { ABILITIES } from "../game/data";
+import { ABILITIES, ITEMS } from "../game/data";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "../game/combatFeatures";
-import { endPlayerTurn, selectEnemyTarget, useAbility } from "../game/engine";
+import { endPlayerTurn, selectEnemyTarget, useAbility, useConsumable } from "../game/engine";
+import { consumableCount, isConsumableItem } from "../game/items";
 import { isCombatSequencePending } from "../game/combatSequence";
 import { isStatusEffectId, STATUS_EFFECTS } from "../game/statusEffects";
 import type { CombatState, GameState, StatusEffectId } from "../game/types";
 
 export type QueuedCombatAction =
   | { id: number; type: "ability"; abilityId: string; targetId: string }
+  | { id: number; type: "item"; itemId: string; targetId: string }
   | { id: number; type: "end_turn" };
 
 export interface CombatActionQueueProjection {
@@ -19,6 +21,7 @@ export interface CombatActionQueueProjection {
   playerStatusIds: Set<StatusEffectId>;
   playerStatusStacks: Map<StatusEffectId, number>;
   nextAbilityIsFree: boolean;
+  consumableCounts: Map<string, number>;
   closed: boolean;
 }
 
@@ -31,12 +34,47 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
   const targetStatusStacks = new Map(combat.enemies.map((enemy) => [enemy.instanceId, new Map(enemy.statuses.map((status) => [status.id, status.stacks]))]));
   const playerStatusIds = new Set(combat.playerStatuses.map((status) => status.id));
   const playerStatusStacks = new Map(combat.playerStatuses.map((status) => [status.id, status.stacks]));
+  const consumableCounts = new Map(ITEMS.filter(isConsumableItem).map((item) => [item.id, consumableCount(character.inventory, item.id)]));
   let closed = false;
 
   actions.forEach((action) => {
     if (closed) return;
     if (action.type === "end_turn") {
       closed = true;
+      return;
+    }
+    if (action.type === "item") {
+      const item = ITEMS.find((candidate) => candidate.id === action.itemId);
+      if (!item || !isConsumableItem(item) || (consumableCounts.get(item.id) ?? 0) <= 0) return;
+      consumableCounts.set(item.id, (consumableCounts.get(item.id) ?? 0) - 1);
+      item.effects.forEach((effect) => {
+        if (effect.type === "gain_energy" || effect.type === "change_energy") {
+          const change = effect.type === "gain_energy" ? Math.abs(effect.amount) : effect.amount;
+          energy = Math.max(0, Math.min(combat.maxEnergy, energy + Math.round(change)));
+          return;
+        }
+        if (effect.type !== "apply_status") return;
+        const affectedTargetIds = effect.target === "self"
+          ? ["player"]
+          : effect.target === "all_enemies"
+            ? [...targetStatusIds.entries()]
+              .filter(([, statuses]) => !statuses.has("stealth"))
+              .map(([targetId]) => targetId)
+            : [action.targetId];
+        affectedTargetIds.forEach((targetId) => {
+          if (targetId === "player") {
+            if (effect.status === "stunned" && playerStatusIds.has("diminishingReturns")) return;
+            playerStatusIds.add(effect.status);
+            playerStatusStacks.set(effect.status, (playerStatusStacks.get(effect.status) ?? 0) + effect.stacks);
+            return;
+          }
+          const statuses = targetStatusIds.get(targetId);
+          if (!statuses || (effect.status === "stunned" && statuses.has("diminishingReturns"))) return;
+          statuses.add(effect.status);
+          const stacks = targetStatusStacks.get(targetId);
+          stacks?.set(effect.status, (stacks.get(effect.status) ?? 0) + effect.stacks);
+        });
+      });
       return;
     }
     const ability = ABILITIES[action.abilityId];
@@ -148,7 +186,7 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     }
   });
 
-  return { energy, cooldownAbilityIds: new Set(projectedCooldowns.keys()), targetStatusIds, targetStatusStacks, playerStatusIds, playerStatusStacks, nextAbilityIsFree, closed };
+  return { energy, cooldownAbilityIds: new Set(projectedCooldowns.keys()), targetStatusIds, targetStatusStacks, playerStatusIds, playerStatusStacks, nextAbilityIsFree, consumableCounts, closed };
 }
 
 export function useCombatActionQueue(
@@ -196,13 +234,33 @@ export function useCombatActionQueue(
     });
   }, []);
 
+  const queueConsumable = useCallback((itemId: string) => {
+    setActions((current) => {
+      const currentGame = gameRef.current;
+      const combat = currentGame.adventure.combat;
+      const activeActor = combat?.turnOrder[combat.activeTurnIndex];
+      const item = ITEMS.find((candidate) => candidate.id === itemId);
+      if (!combat || !item || !isConsumableItem(item) || combat.outcome !== "active" || !combat.initiativeRevealed || activeActor?.kind !== "player") return current;
+      const projection = projectCombatActionQueue(combat, currentGame.character, current);
+      if (projection.closed || (projection.consumableCounts.get(item.id) ?? 0) <= 0) return current;
+      if (projection.playerStatusIds.has("stunned") || projection.playerStatusIds.has("sleep") || projection.playerStatusIds.has("frozen")) return current;
+      const needsSelectedTarget = item.effects.some((effect) => "target" in effect && effect.target === "target");
+      const selectedStatuses = projection.targetStatusIds.get(combat.selectedEnemyId);
+      if (needsSelectedTarget && (!selectedStatuses || selectedStatuses.has("stealth"))) return current;
+      const needsVisibleEnemies = item.effects.some((effect) => "target" in effect && effect.target === "all_enemies");
+      if (needsVisibleEnemies && !combat.enemies.some((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth"))) return current;
+      nextActionId.current += 1;
+      return [...current, { id: nextActionId.current, type: "item", itemId, targetId: combat.selectedEnemyId }];
+    });
+  }, []);
+
   useEffect(() => {
     const action = actions[0];
     const combat = game.adventure.combat;
     if (!action || !combat || combat.outcome !== "active" || !combat.initiativeRevealed) return;
     const activeActor = combat.turnOrder[combat.activeTurnIndex];
     if (activeActor?.kind !== "player") return;
-    if (action.type === "ability" && combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
+    if (action.type !== "end_turn" && combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
     const sequencePending = isCombatSequencePending(combat);
     const canInterruptTurnAnnouncement = sequencePending && playerTurnReadyEventId === combat.eventId;
     if ((sequencePending && !canInterruptTurnAnnouncement) || combat.attackingActorId) return;
@@ -218,6 +276,12 @@ export function useCombatActionQueue(
       if (action.type === "ability") {
         const requestedTarget = selectEnemyTarget(nextCombat, action.targetId);
         nextCombat = useAbility(requestedTarget, current.character, action.abilityId);
+      } else if (action.type === "item") {
+        const item = ITEMS.find((candidate) => candidate.id === action.itemId);
+        if (!item || !isConsumableItem(item)) return current;
+        const result = useConsumable(nextCombat, current.character, item, action.targetId);
+        if (result.combat === nextCombat || result.character === current.character) return current;
+        return { ...current, character: result.character, adventure: { ...current.adventure, combat: result.combat } };
       } else {
         nextCombat = endPlayerTurn(nextCombat, current.character);
       }
@@ -237,5 +301,5 @@ export function useCombatActionQueue(
     setActions([]);
   }, [game.adventure.combat?.outcome]);
 
-  return { actions, queueAbility, queueEndTurn };
+  return { actions, queueAbility, queueConsumable, queueEndTurn };
 }

@@ -474,6 +474,10 @@ Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mac
 - Item and equipment modals lock background scrolling.
 - Inventory can be filtered by gear category and sorted by rarity or name.
 
+### Combat consumables
+
+During the player's turn, **Inventory** opens a combat-owned consumable list. Using an item enters the same FIFO action queue as abilities, removes one copy at resolution, plays local VFX, and does not end the turn. Items may restore Health or Energy, change next-turn Energy regeneration, add or remove Energy, deal fixed damage to the player, selected enemy, or every enemy, and apply any existing buff or debuff to those same targets. Selected-enemy effects use the target captured when the item is queued and cannot target Stealthed enemies. Damage, healing, Energy, and statuses become visible together at the item's presentation event.
+
 ### Gear sets
 
 Set items show all thresholds for their own set. Fulfilled thresholds are green; unfulfilled thresholds are gray. Items without a set show no set section. Only equipped pieces count toward active set bonuses.
@@ -495,4 +499,4 @@ Gold is stored on the character and displayed in the top bar and reward screens.
 - Defeat deletes the save without retaining a recoverable character.
 - Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, and reward state where possible.
 
-Developer Talent, Enemy, Event, Adventure, and Portrait Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset. While the local Vite server is running, Event Manager and Adventure Editor Save validate and replace their complete canonical live catalogs. Restricted fields for existing enemies and existing talent/ability pairs use narrower direct writes; enemy ability mechanics still require implementation. Portrait crops use source-image percentage coordinates so the same selection renders consistently across desktop and mobile editor sizes.
+Developer Talent, Enemy, Event, Adventure, Item, and Portrait Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset. While the local Vite server is running, Event Manager, Adventure Editor, and Item Editor Save validate and replace their complete canonical live catalogs. Restricted fields for existing enemies and existing talent/ability pairs use narrower direct writes; enemy ability mechanics still require implementation. Free-form item/set special notes are saved and exported but remain non-executable until implemented. Portrait crops use source-image percentage coordinates so the same selection renders consistently across desktop and mobile editor sizes.

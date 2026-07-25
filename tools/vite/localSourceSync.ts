@@ -243,6 +243,109 @@ function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>
   return exchange.adventures;
 }
 
+const itemRarities = new Set(["common", "uncommon", "rare", "epic"]);
+const gearSlots = new Set(["head", "chest", "pants", "boots", "mainHand", "offHand", "ring"]);
+const armorMaterials = new Set(["plate", "leather", "cloth"]);
+const weaponEquipTypes = new Set(["mainHand", "oneHand", "offHand", "twoHand"]);
+const weaponKinds = new Set(["sword", "axe", "mace", "dagger", "wand", "shield", "tome", "staff", "polearm"]);
+const statNames = ["strength", "agility", "intelligence", "vitality", "luck"];
+
+function optionalCatalogNumber(value: unknown, label: string, minimum?: number) {
+  if (value === undefined) return;
+  if (typeof value !== "number" || !Number.isFinite(value) || (minimum !== undefined && value < minimum)) throw new Error(`${label} is invalid.`);
+}
+
+function catalogFiniteNumber(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${label} must be a number.`);
+  return value;
+}
+
+function validateStats(value: unknown, label: string) {
+  if (value === undefined) return;
+  const stats = catalogObject(value, label);
+  Object.entries(stats).forEach(([name, amount]) => {
+    if (!statNames.includes(name)) throw new Error(`${label} contains an unknown attribute.`);
+    optionalCatalogNumber(amount, `${label} ${name}`);
+  });
+}
+
+function validatePassive(value: unknown, label: string) {
+  if (value === undefined) return;
+  const passive = catalogObject(value, label);
+  validateStats(passive.stats, `${label} attributes`);
+  Object.entries(passive).forEach(([name, amount]) => {
+    if (name === "stats") return;
+    if (typeof amount === "number") optionalCatalogNumber(amount, `${label} ${name}`);
+    else if (amount !== undefined && typeof amount !== "object") throw new Error(`${label} ${name} is invalid.`);
+  });
+}
+
+function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): { items: unknown[]; sets: unknown[] } {
+  const exchange = catalogObject(exchangeValue, "Item exchange");
+  if (exchange.format !== "arkenfall-items" || exchange.version !== 1 || !Array.isArray(exchange.items) || !Array.isArray(exchange.sets)) throw new Error("Unsupported item exchange format.");
+  const itemIds = exchange.items.map((raw: unknown) => catalogId(catalogObject(raw, "Item").id, "Item ID"));
+  const setIds = exchange.sets.map((raw: unknown) => catalogId(catalogObject(raw, "Gear set").id, "Gear set ID"));
+  assertUniqueIds([...itemIds, ...setIds], "Item and set");
+  const knownSets = new Set(setIds);
+
+  exchange.sets.forEach((raw: unknown) => {
+    const set = catalogObject(raw, "Gear set");
+    catalogString(set.name, "Gear set name");
+    const pieceCount = catalogNumber(set.pieceCount, "Gear set piece count", 1);
+    if (!Array.isArray(set.bonuses)) throw new Error(`${set.name} bonuses must be a list.`);
+    set.bonuses.forEach((rawBonus: unknown, index: number) => {
+      const bonus = catalogObject(rawBonus, `${set.name} bonus ${index + 1}`);
+      const required = catalogNumber(bonus.requiredPieces, "Required set pieces", 1);
+      if (required > pieceCount) throw new Error(`${set.name} has a bonus requiring more pieces than the set contains.`);
+      catalogString(bonus.description, "Set bonus description", true);
+      if (bonus.specialEffectNotes !== undefined) catalogString(bonus.specialEffectNotes, "Set special effect notes", true);
+      validatePassive(bonus.passive, "Set passive bonus");
+    });
+  });
+
+  exchange.items.forEach((raw: unknown) => {
+    const item = catalogObject(raw, "Item");
+    catalogString(item.name, "Item name");
+    catalogString(item.description, "Item description", true);
+    if (!itemRarities.has(item.rarity)) throw new Error(`${item.name} has an invalid rarity.`);
+    if (item.kind === "consumable") {
+      if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Consumable special effect notes", true);
+      if (!Array.isArray(item.effects) || item.effects.length === 0) throw new Error(`${item.name} must have at least one effect.`);
+      item.effects.forEach((rawEffect: unknown, index: number) => {
+        const effect = catalogObject(rawEffect, `${item.name} effect ${index + 1}`);
+        const type = catalogString(effect.type, "Consumable effect type");
+        if (!["heal", "gain_energy", "change_next_turn_energy_regen", "change_energy", "damage", "apply_status"].includes(type)) throw new Error(`${type} is not a supported consumable effect.`);
+        if (type !== "apply_status") {
+          const amount = catalogFiniteNumber(effect.amount, `${item.name} effect amount`);
+          if (!["change_energy", "change_next_turn_energy_regen"].includes(type) && amount < 0) throw new Error(`${item.name} effect amount cannot be negative.`);
+        }
+        if (type === "damage" || type === "apply_status") {
+          if (!["self", "target", "all_enemies"].includes(effect.target)) throw new Error(`${item.name} has an invalid effect target.`);
+        }
+        if (type === "apply_status") {
+          const status = catalogId(effect.status, "Consumable status");
+          if (!statusIds.has(status)) throw new Error(`${status} is not a live status effect.`);
+          catalogNumber(effect.stacks, "Consumable status stacks", 1);
+          catalogNumber(effect.duration, "Consumable status duration", 1);
+        }
+      });
+      return;
+    }
+
+    if (!gearSlots.has(item.slot)) throw new Error(`${item.name} has an invalid gear slot.`);
+    if (item.armorMaterial !== undefined && !armorMaterials.has(item.armorMaterial)) throw new Error(`${item.name} has an invalid armor material.`);
+    if (item.weaponEquipType !== undefined && !weaponEquipTypes.has(item.weaponEquipType)) throw new Error(`${item.name} has an invalid weapon grip.`);
+    if (item.weaponKind !== undefined && !weaponKinds.has(item.weaponKind)) throw new Error(`${item.name} has an invalid weapon kind.`);
+    if (item.iconUrl !== undefined && (typeof item.iconUrl !== "string" || !/^\/assets\/gear-icons\/[a-z0-9-]+\.webp$/i.test(item.iconUrl))) throw new Error(`${item.name} has an invalid gear image.`);
+    validateStats(item.stats, `${item.name} attributes`);
+    ["armor", "magicResistance", "physicalPower", "magicalPower"].forEach((field) => optionalCatalogNumber(item[field], `${item.name} ${field}`));
+    if (item.combat !== undefined) validatePassive(catalogObject(item.combat, `${item.name} combat bonuses`).passive, `${item.name} combat passive`);
+    if (item.set !== undefined && !knownSets.has(catalogId(item.set, "Gear set reference"))) throw new Error(`${item.name} references a gear set that does not exist.`);
+    if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Gear special effect notes", true);
+  });
+  return { items: exchange.items, sets: exchange.sets };
+}
+
 export function localSourceSync() {
   let sourceMutationQueue = Promise.resolve();
   const enqueueSourceMutation = (mutation: () => Promise<void>) => {
@@ -417,7 +520,7 @@ export function localSourceSync() {
         request.on("end", async () => {
           try {
             const payload = JSON.parse(body) as { kind?: unknown; exchange?: unknown };
-            if (payload.kind !== "events" && payload.kind !== "adventures") throw new Error("Unknown live content catalog.");
+            if (payload.kind !== "events" && payload.kind !== "adventures" && payload.kind !== "items") throw new Error("Unknown live content catalog.");
 
             await enqueueSourceMutation(async () => {
               const [adventureSource, enemySource, gearSource, statusSource] = await Promise.all([
@@ -445,6 +548,19 @@ export function localSourceSync() {
                 const kind = objectStringProperty(object, "kind");
                 return id && kind ? [[id, kind] as const] : [];
               }));
+
+              if (payload.kind === "items") {
+                const itemCatalog = validateItemExchange(payload.exchange, new Set(statusKinds.keys()));
+                const itemsInitializer = variableInitializer(gearSourceFile, "ITEMS");
+                const setsInitializer = variableInitializer(gearSourceFile, "GEAR_SETS");
+                if (!itemsInitializer || !setsInitializer) throw new Error("The live item catalog could not be located.");
+                const updatedGearSource = applySourceEdits(gearSource, [
+                  { start: itemsInitializer.getStart(gearSourceFile), end: itemsInitializer.getEnd(), text: JSON.stringify(itemCatalog.items, null, 2) },
+                  { start: setsInitializer.getStart(gearSourceFile), end: setsInitializer.getEnd(), text: JSON.stringify(itemCatalog.sets, null, 2) },
+                ]);
+                await writeFile(gearSourcePath, updatedGearSource, "utf8");
+                return;
+              }
 
               const variableName = payload.kind === "events" ? "ADVENTURE_EVENTS" : "ADVENTURES";
               const initializer = variableInitializer(adventureSourceFile, variableName);

@@ -53,7 +53,8 @@ export const GEAR_ICON_URLS = [...new Set([
   "/assets/gear-icons/ring.webp",
 ].filter((url): url is string => Boolean(url)))];
 
-function resolveGearIconUrl(slot: GearSlot | GearType, item?: GearItem): string {
+export function resolveGearIconUrl(slot: GearSlot | GearType, item?: GearItem): string {
+  if (item?.iconUrl) return item.iconUrl;
   const itemSlot = item?.slot ?? slot;
   if (itemSlot === "ring" || itemSlot === "ring1" || itemSlot === "ring2") return "/assets/gear-icons/ring.webp";
   if (itemSlot === "head" || itemSlot === "chest" || itemSlot === "pants" || itemSlot === "boots") {

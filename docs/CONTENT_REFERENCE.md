@@ -509,6 +509,17 @@ New characters begin with no equipped gear and an empty inventory. The items bel
 | Embercaller's Staff | Two-Hand Staff | Epic | +8 Spell Power, +5 Intelligence | — |
 | Cinderwatch Polearm | Two-Hand Polearm | Rare | +7 Physical Power, +2 Strength, +3 Agility | — |
 
+### Consumables
+
+Consumables use one inventory slot per copy and can be queued from the combat Inventory button without ending the player's turn. Their current acquisition sources are unassigned; Event Manager can grant any live item.
+
+| Item | Rarity | Effects |
+| --- | --- | --- |
+| Healing Draught | Common | Restores 15 Health. |
+| Energizing Tonic | Uncommon | Restores 3 Energy. |
+| Hex Flask | Rare | Applies 1 Weaken to the selected enemy for 3 turns. |
+| Volatile Flask | Rare | Deals 6 fixed damage to every enemy simultaneously. |
+
 ### Gear set bonuses
 
 Only equipped pieces count.

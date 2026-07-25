@@ -2,7 +2,9 @@ import type { GameState } from "./types";
 import { ITEMS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
+import { isGearItem } from "./items";
 import { MAX_LEVEL } from "./progression";
+import type { GearItem, InventoryItem } from "./types";
 
 const SAVE_KEY = "emberfall-save-v1";
 const REMOVED_TALENT_COSTS: Record<string, number> = {
@@ -34,20 +36,17 @@ export function loadGame(): GameState | null {
       ? 1
       : state.character.talentPoints;
     const itemDefinitions = new Map(ITEMS.map((item) => [item.id, item]));
-    const hydrateGearMetadata = <T extends GameState["character"]["inventory"][number]>(item: T): T => {
+    const hydrateInventoryItem = (item: InventoryItem): InventoryItem => {
       const definition = itemDefinitions.get(item.id);
-      if (!definition) return item;
-      return {
-        ...item,
-        armorMaterial: item.armorMaterial ?? definition.armorMaterial,
-        weaponEquipType: item.weaponEquipType ?? definition.weaponEquipType,
-        weaponKind: item.weaponKind ?? definition.weaponKind,
-      };
+      return definition ? { ...item, ...structuredClone(definition) } : item;
     };
     const equipment = Object.fromEntries(
-      Object.entries(state.character.equipment).map(([slot, item]) => [slot, item ? hydrateGearMetadata(item) : item]),
+      Object.entries(state.character.equipment).map(([slot, item]) => {
+        const hydrated = item ? hydrateInventoryItem(item) : item;
+        return [slot, hydrated && isGearItem(hydrated) ? hydrated as GearItem : undefined];
+      }),
     ) as GameState["character"]["equipment"];
-    const inventory = state.character.inventory.map(hydrateGearMetadata);
+    const inventory = (state.character.inventory ?? []).map(hydrateInventoryItem);
     if ((equipment.mainHand?.weaponEquipType === "twoHand" || equipment.mainHand?.weaponType === "twoHanded") && equipment.offHand) {
       inventory.push(equipment.offHand);
       delete equipment.offHand;

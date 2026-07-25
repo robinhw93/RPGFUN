@@ -1,14 +1,15 @@
-import { BookOpen, Copy, Download, Image, LockKeyhole, Save, Skull, Wrench, X } from "lucide-react";
+import { BookOpen, Copy, Download, Gem, Image, LockKeyhole, Save, Skull, Wrench, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ENEMIES } from "../../game/data";
-import type { AbilityRange, AdventureDefinition, AdventureEventDefinition, AdventureEventOutcome, StatName } from "../../game/types";
+import type { AbilityRange, AdventureDefinition, AdventureEventDefinition, AdventureEventOutcome, GearSetDefinition, InventoryItem, StatName } from "../../game/types";
 
-export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool" | "portraitDevtool";
+export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool" | "itemDevtool" | "portraitDevtool";
 
 export const DEVTOOL_CODE = "bajs321";
 export const ENEMY_DRAFT_STORAGE_KEY = "emberfall.enemy-devtool.v1";
 export const EVENT_DRAFT_STORAGE_KEY = "emberfall.event-devtool.v1";
 export const ADVENTURE_DRAFT_STORAGE_KEY = "emberfall.adventure-devtool.v1";
+export const ITEM_DRAFT_STORAGE_KEY = "emberfall.item-devtool.v1";
 
 export interface EnemyDraft {
   id: string;
@@ -46,6 +47,7 @@ export type EnemyEditableStats = Pick<EnemyDraft,
 export interface EnemyExchange { format: "arkenfall-enemies"; version: 3; enemies: EnemyDraft[] }
 export interface EventExchange { format: "arkenfall-events"; version: 2; events: AdventureEventDefinition[] }
 export interface AdventureExchange { format: "arkenfall-adventures"; version: 1; adventures: AdventureDefinition[] }
+export interface ItemExchange { format: "arkenfall-items"; version: 1; items: InventoryItem[]; sets: GearSetDefinition[] }
 
 export const EMPTY_OUTCOME: AdventureEventOutcome = { text: "", effects: [] };
 export const STAT_OPTIONS: Array<{ id: StatName; label: string }> = [
@@ -115,7 +117,7 @@ export async function copyJson(value: unknown) {
   await navigator.clipboard.writeText(JSON.stringify(value, null, 2));
 }
 
-export async function saveLiveCatalog(kind: "events" | "adventures", exchange: EventExchange | AdventureExchange) {
+export async function saveLiveCatalog(kind: "events" | "adventures" | "items", exchange: EventExchange | AdventureExchange | ItemExchange) {
   const response = await fetch("/__arkenfall/content-catalog", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -180,6 +182,7 @@ export function DevtoolAccessDialog({ onClose, onOpen }: { onClose: () => void; 
         <button onClick={() => onOpen("enemyDevtool")}><Skull /><span><strong>Create Enemy</strong><small>Stats, abilities and behavior</small></span></button>
         <button onClick={() => onOpen("eventDevtool")}><Copy /><span><strong>Event Manager</strong><small>Scenarios, choices and rolls</small></span></button>
         <button onClick={() => onOpen("adventureDevtool")}><Wrench /><span><strong>Adventure Editor</strong><small>Stages, chances and prerequisites</small></span></button>
+        <button onClick={() => onOpen("itemDevtool")}><Gem /><span><strong>Item Editor</strong><small>Gear, sets and consumables</small></span></button>
         <button onClick={() => onOpen("portraitDevtool")}><Image /><span><strong>Portrait Editor</strong><small>Artwork and combat portrait crops</small></span></button>
       </div>}
     </section>

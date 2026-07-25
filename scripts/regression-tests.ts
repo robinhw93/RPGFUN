@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
-import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, TALENTS } from "../src/game/data";
+import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
+import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
 import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
-import { createCombat, useAbility } from "../src/game/engine";
+import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { resolveAdventureEventChoice } from "../src/game/eventOutcomes";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
-import type { AdventureEventChoice, GameState } from "../src/game/types";
+import type { AdventureEventChoice, ConsumableItem, GameState } from "../src/game/types";
 
 function testContentIntegrity() {
   assert.equal(TALENTS.length, 263, "The canonical talent count changed unexpectedly.");
@@ -21,6 +22,7 @@ function testContentIntegrity() {
     assert.ok(ability.range === "melee" || ability.range === "ranged", `${ability.id} needs a valid range.`);
     assert.ok(ability.types.length > 0, `${ability.id} needs at least one presentation type.`);
   });
+  assert.equal(new Set([...ITEMS.map((item) => item.id), ...GEAR_SETS.map((set) => set.id)]).size, ITEMS.length + GEAR_SETS.length, "Item and gear-set IDs must be unique.");
   ADVENTURES.forEach((adventure) => {
     assert.ok(adventure.id, "Every adventure needs an internal ID.");
     assert.equal(new Set(adventure.stages.map((stage) => stage.id)).size, adventure.stages.length, `${adventure.name} stage IDs must be unique.`);
@@ -35,6 +37,21 @@ function testContentIntegrity() {
       });
     });
   });
+}
+
+function testItemEditorRepairsInternalIds() {
+  const exchange = normalizeItemExchange({
+    format: "arkenfall-items",
+    version: 1,
+    sets: [{ id: "", name: "Field Kit", pieceCount: 2, bonuses: [] }],
+    items: [
+      { kind: "gear", id: "", name: "Field Hood", slot: "head", rarity: "common", description: "", stats: {}, set: "field-kit" },
+      { kind: "consumable", id: "", name: "Field Tonic", rarity: "common", description: "", effects: [{ type: "heal", amount: 2 }] },
+    ],
+  });
+  assert.equal(exchange.sets[0].id, "field-kit");
+  assert.equal(exchange.items[0].id, "field-hood");
+  assert.equal(exchange.items[1].id, "field-tonic");
 }
 
 function testStoryEncounterIntroduction() {
@@ -146,11 +163,43 @@ function testStructuredEventOutcome() {
   assert.equal(resolveAdventureEventChoice(result, choice, () => 0), result, "A resolved event must not apply twice.");
 }
 
+function testCombatConsumable() {
+  const item: ConsumableItem = {
+    kind: "consumable",
+    id: "regression-tonic",
+    name: "Regression Tonic",
+    rarity: "rare",
+    description: "Test several standard effects.",
+    effects: [
+      { type: "heal", amount: 12 },
+      { type: "gain_energy", amount: 3 },
+      { type: "change_next_turn_energy_regen", amount: -1 },
+      { type: "apply_status", target: "target", status: "poison", stacks: 2, duration: 3 },
+    ],
+  };
+  const character = { ...structuredClone(INITIAL_GAME.character), name: "Item Tester", inventory: [structuredClone(item), structuredClone(item)] };
+  const created = createCombat(character, ["dummy"]);
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const combat = { ...created, playerHp: 10, energy: 1, turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")], activeTurnIndex: 0, initiativeRevealed: true };
+  const used = useConsumable(combat, character, item);
+  assert.equal(used.character.inventory.length, 1, "Using a consumable must remove exactly one copy.");
+  assert.equal(used.combat.turnOrder[used.combat.activeTurnIndex].kind, "player", "Using a consumable must not end the turn.");
+  const resolved = resolveCombatEvent(used.combat, used.combat.eventId, 0);
+  assert.equal(resolved.playerHp, 22, "Consumable healing must resolve at its presentation event.");
+  assert.equal(resolved.energy, 4, "Consumable Energy must resolve at its presentation event.");
+  assert.equal(resolved.nextTurnEnergyRegenBonus, -1, "Signed next-turn Energy regeneration must be supported.");
+  const poison = resolved.enemies[0].statuses.find((status) => status.id === "poison");
+  assert.equal(poison?.stacks, 2, "Consumable statuses must reach the selected enemy.");
+  assert.equal(poison?.duration, 3, "Consumable status duration must be preserved.");
+}
+
 testContentIntegrity();
 testStoryEncounterIntroduction();
 testAdventureEditorRepairsInternalIds();
 testEventEditorRepairsInternalIds();
+testItemEditorRepairsInternalIds();
 testStatusContracts();
 testBasicPlayerAbility();
 testStructuredEventOutcome();
+testCombatConsumable();
 console.log("Arkenfall regression checks passed.");

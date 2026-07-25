@@ -2,3 +2,4 @@ export { createCombat, ensureCombatState, getCombatInitiative, selectEnemyTarget
 export { useAbility, endPlayerTurn } from "./combat/playerActions";
 export { takeEnemyTurn } from "./combat/enemyActions";
 export { finishCombatAttack, primeCombatAttack, resolveCombatEvent } from "./combat/presentation";
+export { canUseConsumable, useConsumable } from "./consumables";

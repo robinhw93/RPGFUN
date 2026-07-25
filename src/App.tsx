@@ -42,6 +42,7 @@ const TalentDevtool = lazy(() => import("./components/TalentDevtool").then((modu
 const EnemyDevtool = lazy(() => import("./components/devtools/EnemyDevtool").then((module) => ({ default: module.EnemyDevtool })));
 const EventDevtool = lazy(() => import("./components/devtools/EventDevtool").then((module) => ({ default: module.EventDevtool })));
 const AdventureDevtool = lazy(() => import("./components/devtools/AdventureDevtool").then((module) => ({ default: module.AdventureDevtool })));
+const ItemDevtool = lazy(() => import("./components/devtools/ItemDevtool").then((module) => ({ default: module.ItemDevtool })));
 const PortraitDevtool = lazy(() => import("./components/PortraitDevtool").then((module) => ({ default: module.PortraitDevtool })));
 
 function cloneInitial(): GameState {
@@ -524,6 +525,7 @@ function App() {
             onSelectEnemy={selectEnemy}
             queuedActions={combatActionQueue.actions}
             onAbility={combatActionQueue.queueAbility}
+            onConsumable={combatActionQueue.queueConsumable}
             onEndTurn={combatActionQueue.queueEndTurn}
             onEnemyTurn={runEnemyTurn}
             onCombatEvent={combatSequencer.revealEvent}
@@ -564,6 +566,7 @@ function App() {
           {view === "enemyDevtool" && <EnemyDevtool onExit={() => navigate("adventure")} />}
           {view === "eventDevtool" && <EventDevtool onExit={() => navigate("adventure")} />}
           {view === "adventureDevtool" && <AdventureDevtool onExit={() => navigate("adventure")} />}
+          {view === "itemDevtool" && <ItemDevtool onExit={() => navigate("adventure")} />}
           {view === "portraitDevtool" && <PortraitDevtool onExit={() => navigate("adventure")} />}
         </Suspense>
       </main>

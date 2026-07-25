@@ -1,5 +1,6 @@
 import {
   ChevronRight,
+  FlaskConical,
   Gem,
   Shield,
   UserRound
@@ -10,8 +11,9 @@ import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { GEAR_SET_BONUSES } from "../../game/data";
 import { canEquipItemInSlot, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem } from "../../game/gear";
+import { describeConsumableEffect, isConsumableItem, isGearItem } from "../../game/items";
 import { experienceToNextLevel, MAX_LEVEL } from "../../game/progression";
-import type { CharacterState, GearItem, GearSlot, StatName } from "../../game/types";
+import type { CharacterState, ConsumableItem, GearItem, GearSlot, StatName } from "../../game/types";
 
 import { ATTRIBUTE_SUMMARIES, ATTRIBUTE_TOOLTIPS, EQUIPMENT_SLOT_ORDER, formatStat, getDerivedStatRows, INVENTORY_GEAR_FILTERS, itemMatchesInventoryFilter, RARITY_SORT_WEIGHT, SLOT_LABELS, STAT_LABELS, StatIcon, type CharacterSection, type InventoryGearFilter, type InventorySort, type StatIconName } from "../../ui/gameUi";
 
@@ -81,10 +83,11 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
   onAllocateStat: (stat: StatName) => void;
 }) {
   const [inspectedItem, setInspectedItem] = useState<{ item: GearItem; equippedSlot?: GearSlot; preferredSlot?: GearSlot } | null>(null);
+  const [inspectedConsumable, setInspectedConsumable] = useState<ConsumableItem | null>(null);
   const [selectedGearSlot, setSelectedGearSlot] = useState<GearSlot | null>(null);
   const [inventoryFilter, setInventoryFilter] = useState<InventoryGearFilter>("all");
   const [inventorySort, setInventorySort] = useState<InventorySort>("rarity");
-  const modalOpen = Boolean(inspectedItem || selectedGearSlot);
+  const modalOpen = Boolean(inspectedItem || inspectedConsumable || selectedGearSlot);
   useEffect(() => {
     if (!modalOpen) return;
     const scrollY = window.scrollY;
@@ -186,7 +189,9 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
         </div>
       </div>
       <div className="inventory-grid">
-        {visibleInventory.length ? visibleInventory.map((item, index) => <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
+        {visibleInventory.length ? visibleInventory.map((item, index) => isConsumableItem(item)
+          ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedConsumable(item)}><span className="item-glyph"><FlaskConical size={25} /></span><span className="rarity">{item.rarity} · Consumable</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
+          : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
       </div>
       </>}
       {selectedGearSlot && (
@@ -213,7 +218,33 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
           onUnequip={(slot) => { onUnequip(slot); setInspectedItem(null); }}
         />
       )}
+      {inspectedConsumable && <ConsumableDetailModal item={inspectedConsumable} onClose={() => setInspectedConsumable(null)} />}
     </section>
+  );
+}
+
+function ConsumableDetailModal({ item, onClose }: { item: ConsumableItem; onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
+      <article className={`item-detail-card ${item.rarity}`} onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close item details">×</button>
+        <div className="item-detail-heading">
+          <span className="item-detail-glyph"><FlaskConical size={34} /></span>
+          <div><small>{item.rarity} · Consumable</small><h2>{item.name}</h2><p>{item.description}</p></div>
+        </div>
+        <section className="item-stat-section">
+          <h3>Effects</h3>
+          <div className="item-stat-lines">{item.effects.map((effect, index) => <div key={`${effect.type}-${index}`}><span>{describeConsumableEffect(effect)}</span></div>)}</div>
+        </section>
+        <p className="muted">Consumables can be used from Inventory during your turn in combat.</p>
+      </article>
+    </div>
   );
 }
 
@@ -231,7 +262,7 @@ export function GearSlotPickerModal({ slot, character, locked, onClose, onInspec
   }, [onClose]);
 
   const equippedItem = character.equipment[slot];
-  const compatibleItems = character.inventory.filter((item) => canEquipItemInSlot(item, slot));
+  const compatibleItems = character.inventory.filter(isGearItem).filter((item) => canEquipItemInSlot(item, slot));
   const slotLocked = isEquipmentSlotLocked(slot, character.equipment);
 
   const itemRow = (item: GearItem, current = false) => (

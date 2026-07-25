@@ -15,7 +15,8 @@ import { GEAR_ICON_URLS } from "../components/GearSlotIcon";
 import { getDerivedStats } from "../game/character";
 import { ABILITIES, ENEMIES, TALENTS } from "../game/data";
 import { canEquipItemInSlot } from "../game/gear";
-import type { Ability, CharacterState, DamageType, GearItem, GearSlot, StatName, StatusEffectId } from "../game/types";
+import { isConsumableItem } from "../game/items";
+import type { Ability, CharacterState, DamageType, GearItem, GearSlot, InventoryItem, ItemRarity, StatName, StatusEffectId } from "../game/types";
 
 export type CharacterSection = "overview" | "equipment" | "talents";
 
@@ -26,11 +27,12 @@ export const SLOT_LABELS: Record<GearSlot, string> = {
 
 export const EQUIPMENT_SLOT_ORDER: GearSlot[] = ["head", "chest", "pants", "boots", "mainHand", "offHand", "ring1", "ring2"];
 
-export type InventoryGearFilter = "all" | "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring";
+export type InventoryGearFilter = "all" | "consumable" | "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring";
 export type InventorySort = "rarity" | "name";
 
 export const INVENTORY_GEAR_FILTERS: Array<{ id: InventoryGearFilter; label: string }> = [
   { id: "all", label: "All" },
+  { id: "consumable", label: "Consumables" },
   { id: "head", label: "Head" },
   { id: "chest", label: "Chest" },
   { id: "pants", label: "Pants" },
@@ -40,10 +42,12 @@ export const INVENTORY_GEAR_FILTERS: Array<{ id: InventoryGearFilter; label: str
   { id: "ring", label: "Rings" },
 ];
 
-export const RARITY_SORT_WEIGHT: Record<GearItem["rarity"], number> = { common: 0, uncommon: 1, rare: 2, epic: 3 };
+export const RARITY_SORT_WEIGHT: Record<ItemRarity, number> = { common: 0, uncommon: 1, rare: 2, epic: 3 };
 
-export function itemMatchesInventoryFilter(item: GearItem, filter: InventoryGearFilter): boolean {
+export function itemMatchesInventoryFilter(item: InventoryItem, filter: InventoryGearFilter): boolean {
   if (filter === "all") return true;
+  if (filter === "consumable") return isConsumableItem(item);
+  if (isConsumableItem(item)) return false;
   if (filter === "ring") return item.slot === "ring";
   if (filter === "mainHand" || filter === "offHand") return canEquipItemInSlot(item, filter);
   return item.slot === filter;

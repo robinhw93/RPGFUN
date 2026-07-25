@@ -83,6 +83,11 @@ export function queueNextTurnEnergyRegeneration(pendingEffects: CombatPendingEff
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "energy_regen_bonus", amount });
 }
 
+export function queueEnergyChange(pendingEffects: CombatPendingEffect[], eventIndex: number, amount: number): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "energy_change", amount });
+}
+
 export function queuePassiveAnimation(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: "player" | string, text: string): void {
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "passive_text", targetId, text, lane: combatEffectSequence % 3 });
