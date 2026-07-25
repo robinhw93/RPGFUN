@@ -9,6 +9,11 @@ export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefi
 
 export type StoryAdventureAvailability = "available" | "locked" | "completed";
 export const STORY_REPLAY_EXPERIENCE_MULTIPLIER = 0.1;
+export const STORY_REPLAY_GOLD_MULTIPLIER = 0.5;
+
+function isReplayingCompletedStory(progress: Pick<AdventureProgress, "mode" | "adventureId">, completedAdventureIds: string[]): boolean {
+  return progress.mode === "story" && completedAdventureIds.includes(progress.adventureId);
+}
 
 export function getStoryAdventureAvailability(adventure: AdventureDefinition, completedAdventureIds: string[]): StoryAdventureAvailability {
   if (completedAdventureIds.includes(adventure.id)) return "completed";
@@ -22,8 +27,12 @@ export function canStartStoryAdventure(adventure: AdventureDefinition, completed
 
 export function getAdventureExperienceReward(amount: number, progress: Pick<AdventureProgress, "mode" | "adventureId">, completedAdventureIds: string[]): number {
   const experience = Math.max(0, Math.round(Number.isFinite(amount) ? amount : 0));
-  const replayingCompletedStory = progress.mode === "story" && completedAdventureIds.includes(progress.adventureId);
-  return replayingCompletedStory ? Math.floor(experience * STORY_REPLAY_EXPERIENCE_MULTIPLIER) : experience;
+  return isReplayingCompletedStory(progress, completedAdventureIds) ? Math.floor(experience * STORY_REPLAY_EXPERIENCE_MULTIPLIER) : experience;
+}
+
+export function getAdventureGoldReward(amount: number, progress: Pick<AdventureProgress, "mode" | "adventureId">, completedAdventureIds: string[]): number {
+  const gold = Math.max(0, Math.round(Number.isFinite(amount) ? amount : 0));
+  return isReplayingCompletedStory(progress, completedAdventureIds) ? Math.floor(gold * STORY_REPLAY_GOLD_MULTIPLIER) : gold;
 }
 export function selectStageEntry(adventure: AdventureDefinition, stageIndex: number, random = Math.random): AdventureStageEntry {
   const stage = adventure.stages[stageIndex];

@@ -1,4 +1,4 @@
-import { getAdventureDefinition, getAdventureExperienceReward, getAdventureNode } from "./adventures";
+import { getAdventureDefinition, getAdventureExperienceReward, getAdventureGoldReward, getAdventureNode } from "./adventures";
 import { ITEMS } from "./data";
 import { addExperience } from "./progression";
 import type { CombatReward, GameState, InventoryItem, ItemDropDefinition } from "./types";
@@ -42,13 +42,14 @@ export function grantCombatReward(state: GameState, timestamp = Date.now(), rand
   if (!rewardDefinition) return state;
 
   const experienceReward = getAdventureExperienceReward(rewardDefinition.experience, adventure, state.character.completedAdventureIds);
+  const goldReward = getAdventureGoldReward(rewardDefinition.gold, adventure, state.character.completedAdventureIds);
   const experience = addExperience(state.character, experienceReward);
   const loot = rollCombatLoot(state, random);
   const reward: CombatReward = {
     id: `combat-reward-${adventure.nodeIndex}-${timestamp}`,
     nodeIndex: adventure.nodeIndex,
     experience: experienceReward,
-    gold: rewardDefinition.gold,
+    gold: goldReward,
     loot,
     levelBefore: experience.levelBefore,
     xpBefore: experience.xpBefore,
@@ -61,7 +62,7 @@ export function grantCombatReward(state: GameState, timestamp = Date.now(), rand
     ...state,
     character: {
       ...experience.character,
-      gold: experience.character.gold + rewardDefinition.gold,
+      gold: experience.character.gold + goldReward,
       inventory: [...experience.character.inventory, ...loot.map((item) => structuredClone(item))],
     },
     adventure: { ...adventure, latestLoot: loot.length > 0 ? loot : null, pendingReward: reward },

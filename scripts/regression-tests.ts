@@ -103,7 +103,7 @@ function testCompletedAdventureAvailability() {
   assert.equal(getStoryAdventureAvailability(lockedAdventure, ["required-regression-adventure"]), "available", "Completing a prerequisite must unlock the next unfinished adventure.");
 }
 
-function testStoryReplayExperienceRewards() {
+function testStoryReplayRewards() {
   const definition = ADVENTURES[0];
   const entry = definition.stages[0].entries.find((candidate) => candidate.enemyIds?.length && candidate.reward);
   assert.ok(entry?.enemyIds?.length && entry.reward, "Replay reward regression requires a rewarded combat entry.");
@@ -126,8 +126,11 @@ function testStoryReplayExperienceRewards() {
   };
   const replayRewarded = grantCombatReward(replayState, 1, () => 1);
   const expectedReplayXp = Math.floor(entry.reward.experience * 0.1);
+  const expectedReplayGold = Math.floor(entry.reward.gold * 0.5);
   assert.equal(replayRewarded.adventure.pendingReward?.experience, expectedReplayXp, "Replay combat rewards must display 10% of their original experience.");
+  assert.equal(replayRewarded.adventure.pendingReward?.gold, expectedReplayGold, "Replay combat rewards must display 50% of their original gold, rounded down.");
   assert.equal(replayRewarded.character.xp, expectedReplayXp, "Replay combat rewards must grant exactly the reduced experience.");
+  assert.equal(replayRewarded.character.gold, replayCharacter.gold + expectedReplayGold, "Replay combat rewards must grant exactly the reduced gold.");
 
   const firstRunCharacter = structuredClone(INITIAL_GAME.character);
   const firstRunCombat = createCombat(firstRunCharacter, entry.enemyIds);
@@ -137,6 +140,7 @@ function testStoryReplayExperienceRewards() {
     adventure: { ...replayState.adventure, combat: { ...firstRunCombat, outcome: "victory" } },
   }, 2, () => 1);
   assert.equal(firstRunRewarded.adventure.pendingReward?.experience, entry.reward.experience, "A first story completion must retain its full experience reward.");
+  assert.equal(firstRunRewarded.adventure.pendingReward?.gold, entry.reward.gold, "A first story completion must retain its full gold reward.");
 
   const replayEventState: GameState = {
     ...structuredClone(INITIAL_GAME),
@@ -422,7 +426,7 @@ function testIndependentItemDrops() {
 testContentIntegrity();
 testStoryEncounterIntroduction();
 testCompletedAdventureAvailability();
-testStoryReplayExperienceRewards();
+testStoryReplayRewards();
 testOpposedHitAndDodge();
 testStatusAdjustedCombatStats();
 testAdventureEditorRepairsInternalIds();
