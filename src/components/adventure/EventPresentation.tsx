@@ -229,8 +229,7 @@ export function EventPresentation({
                 const cost = getItemGoldCost(item);
                 const purchased = merchantPurchasedItemIds.includes(item.id);
                 const purchasing = purchaseAnimationItemId === item.id;
-                if (purchased && !purchasing) return <div className="event-merchant-sold-out" key={item.id}><strong>Out of Stock</strong></div>;
-                return <MerchantItemCard key={item.id} item={item} meta={item.rarity} buttonLabel={`${cost} Gold`} disabled={gold < cost || Boolean(purchaseAnimationItemId)} purchasing={purchasing} onInspect={isGearItem(item) ? () => setInspectedGear(item) : undefined} onAction={() => purchase(item.id)} />;
+                return <MerchantItemCard key={item.id} item={item} meta={item.rarity} buttonLabel={`${cost} Gold`} disabled={gold < cost || Boolean(purchaseAnimationItemId)} purchasing={purchasing} soldOut={purchased && !purchasing} onInspect={isGearItem(item) ? () => setInspectedGear(item) : undefined} onAction={() => purchase(item.id)} />;
               })}
             </div> : <>
               {inventoryItems.length === 0 && <div className="event-merchant-empty"><FlaskConical /><strong>Your inventory is empty.</strong><p>Return after finding something to sell.</p></div>}
@@ -251,24 +250,26 @@ export function EventPresentation({
   );
 }
 
-function MerchantItemCard({ item, meta, buttonLabel, disabled, purchasing = false, onInspect, onAction }: {
+function MerchantItemCard({ item, meta, buttonLabel, disabled, purchasing = false, soldOut = false, onInspect, onAction }: {
   item: InventoryItem;
   meta: string;
   buttonLabel: string;
   disabled: boolean;
   purchasing?: boolean;
+  soldOut?: boolean;
   onInspect?: () => void;
   onAction: () => void;
 }) {
   return <article
-    className={`event-merchant-item ${item.rarity} ${onInspect ? "inspectable" : ""} ${purchasing ? "purchasing" : ""}`}
-    role={onInspect ? "button" : undefined}
-    tabIndex={onInspect ? 0 : undefined}
-    onClick={onInspect}
-    onKeyDown={onInspect ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onInspect(); } } : undefined}
+    className={`event-merchant-item ${item.rarity} ${onInspect && !soldOut ? "inspectable" : ""} ${purchasing ? "purchasing" : ""} ${soldOut ? "sold-out" : ""}`}
+    role={onInspect && !soldOut ? "button" : undefined}
+    tabIndex={onInspect && !soldOut ? 0 : undefined}
+    onClick={soldOut ? undefined : onInspect}
+    onKeyDown={onInspect && !soldOut ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onInspect(); } } : undefined}
   >
     <span className="event-merchant-icon"><ItemIcon item={item} size={42} /></span>
     <small>{meta}</small><strong>{item.name}</strong><p>{item.description}</p>
-    <button type="button" disabled={disabled} onClick={(event) => { event.stopPropagation(); onAction(); }}><GoldIcon /> {purchasing ? "Purchased!" : buttonLabel}</button>
+    <button type="button" disabled={disabled || soldOut} onClick={(event) => { event.stopPropagation(); onAction(); }}><GoldIcon /> {purchasing ? "Purchased!" : buttonLabel}</button>
+    {soldOut && <span className="event-merchant-sold-out" aria-label={`${item.name} is out of stock`}><strong>Out of Stock</strong></span>}
   </article>;
 }
