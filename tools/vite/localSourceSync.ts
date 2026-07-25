@@ -275,7 +275,7 @@ function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>
   return exchange.adventures;
 }
 
-const itemRarities = new Set(["common", "uncommon", "rare", "epic"]);
+const itemRarities = new Set(["common", "uncommon", "rare", "epic", "legendary"]);
 const gearSlots = new Set(["head", "chest", "pants", "boots", "mainHand", "offHand", "ring"]);
 const armorMaterials = new Set(["plate", "leather", "cloth"]);
 const weaponEquipTypes = new Set(["mainHand", "oneHand", "offHand", "twoHand"]);

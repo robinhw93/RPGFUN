@@ -9,7 +9,7 @@ export type WeaponEquipType = "mainHand" | "oneHand" | "offHand" | "twoHand";
 export type WeaponKind = "sword" | "axe" | "mace" | "dagger" | "wand" | "shield" | "tome" | "staff" | "polearm";
 /** Legacy save value. New items should use weaponEquipType. */
 export type WeaponType = "oneHanded" | "twoHanded";
-export type ItemRarity = "common" | "uncommon" | "rare" | "epic";
+export type ItemRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 export type DamageType = "physical" | "spell" | "arcane" | "shadow" | "fire" | "frost" | "lightning";
 export type TargetType = "enemy" | "self" | "all_enemies";
 

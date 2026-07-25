@@ -1,8 +1,8 @@
 import { STATUS_EFFECTS } from "./statusEffects";
 import type { ConsumableEffect, ConsumableItem, GearItem, InventoryItem, MiscItem } from "./types";
 
-const DEFAULT_GEAR_COSTS = { common: 12, uncommon: 28, rare: 65, epic: 140 } as const;
-const DEFAULT_CONSUMABLE_COSTS = { common: 8, uncommon: 15, rare: 30, epic: 60 } as const;
+const DEFAULT_GEAR_COSTS = { common: 12, uncommon: 28, rare: 65, epic: 140, legendary: 300 } as const;
+const DEFAULT_CONSUMABLE_COSTS = { common: 8, uncommon: 15, rare: 30, epic: 60, legendary: 120 } as const;
 
 export function isConsumableItem(item: InventoryItem): item is ConsumableItem {
   return item.kind === "consumable";

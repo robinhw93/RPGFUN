@@ -482,6 +482,8 @@ Enemy templates and adventure stages may each define item drop tables. Every con
 
 New characters begin with no equipped gear and an empty inventory. Every live item below has dedicated generated artwork that follows it through all runtime item surfaces.
 
+The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No live item currently uses Legendary.
+
 | Item | Slot | Rarity | Gold Cost | Bonuses |
 | --- | --- | --- | ---: | --- |
 | Windsong Staff | Two-Hand weapon | Uncommon | 12 | +1 Intelligence, +1 Vitality, +1 Spell Power. |

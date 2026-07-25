@@ -8,7 +8,7 @@ import { GEAR_ICON_URLS, resolveGearIconUrl } from "../GearSlotIcon";
 import { copyJson, downloadJson, EditorShell, ensureInternalId, ITEM_DRAFT_STORAGE_KEY, makeId, NumberField, saveLiveCatalog, TextField, useLocalDraft, type ItemExchange } from "./shared";
 
 type ItemEditorTab = "gear" | "sets" | "consumables" | "misc";
-const RARITIES: ItemRarity[] = ["common", "uncommon", "rare", "epic"];
+const RARITIES: ItemRarity[] = ["common", "uncommon", "rare", "epic", "legendary"];
 const GEAR_SLOTS: Array<{ id: GearType; label: string }> = [
   { id: "head", label: "Head" }, { id: "chest", label: "Chest" }, { id: "pants", label: "Pants" }, { id: "boots", label: "Boots" },
   { id: "mainHand", label: "Weapon" }, { id: "offHand", label: "Off-hand" }, { id: "ring", label: "Ring" },

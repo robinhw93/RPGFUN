@@ -438,6 +438,8 @@ Equipment and inventory share their own **Equipment and Inventory** submenu insi
 
 Every current live item has its own generated square artwork. The same item image follows it through equipped slots, Inventory cards, item details and comparisons, combat consumables, Wandering Merchants, and score-screen loot. Images are optimized WebP assets and are preloaded with the other Character-screen artwork.
 
+Items use five ordered rarities: **Common**, **Uncommon**, **Rare**, **Epic**, and **Legendary**. Legendary is the highest rarity and uses a warm gold-orange presentation wherever item rarity is shown.
+
 ### Slots
 
 The character has eight equipment slots:

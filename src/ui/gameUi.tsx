@@ -44,7 +44,7 @@ export const INVENTORY_GEAR_FILTERS: Array<{ id: InventoryGearFilter; label: str
   { id: "ring", label: "Rings" },
 ];
 
-export const RARITY_SORT_WEIGHT: Record<ItemRarity, number> = { common: 0, uncommon: 1, rare: 2, epic: 3 };
+export const RARITY_SORT_WEIGHT: Record<ItemRarity, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 
 export function itemMatchesInventoryFilter(item: InventoryItem, filter: InventoryGearFilter): boolean {
   if (filter === "all") return true;

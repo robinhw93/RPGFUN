@@ -64,15 +64,19 @@ function testItemEditorRepairsInternalIds() {
       { kind: "gear", id: "", name: "Field Hood", slot: "head", rarity: "common", description: "", stats: {}, set: "field-kit" },
       { kind: "consumable", id: "", name: "Field Tonic", rarity: "common", description: "", effects: [{ type: "heal", amount: 2 }] },
       { kind: "misc", id: "", name: "Field Token", rarity: "uncommon", description: "A keepsake." },
+      { kind: "gear", id: "", name: "Legendary Crown", slot: "head", rarity: "legendary", description: "A relic.", stats: {} },
     ],
   });
   assert.equal(exchange.sets[0].id, "field-kit");
   assert.equal(exchange.items[0].id, "field-hood");
   assert.equal(exchange.items[1].id, "field-tonic");
   assert.equal(exchange.items[2].id, "field-token");
+  assert.equal(exchange.items[3].id, "legendary-crown");
   assert.equal(exchange.items[0].goldCost, 12, "Old gear drafts must receive a sensible default Gold Cost.");
   assert.equal(exchange.items[1].goldCost, 8, "Old consumable drafts must receive a sensible default Gold Cost.");
   assert.equal(exchange.items[2].goldCost, 0, "Other items without a configured Gold Cost must remain valueless until priced.");
+  assert.equal(exchange.items[3].goldCost, 300, "Legendary gear drafts must receive the highest default Gold Cost.");
+  assert.equal(exchange.items[3].rarity, "legendary", "The Item Editor must preserve Legendary as a live rarity.");
   assert.equal(isMiscItem(exchange.items[2]), true, "Other items must retain their non-usable item type.");
   assert.equal(isGearItem(exchange.items[2]), false, "Other items must never be classified as gear.");
   assert.equal(isConsumableItem(exchange.items[2]), false, "Other items must never be classified as consumables.");
