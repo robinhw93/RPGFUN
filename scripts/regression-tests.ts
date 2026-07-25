@@ -62,8 +62,8 @@ function testItemEditorRepairsInternalIds() {
     sets: [{ id: "", name: "Field Kit", pieceCount: 2, bonuses: [] }],
     items: [
       { kind: "gear", id: "", name: "Field Hood", slot: "head", rarity: "common", description: "", stats: {}, set: "field-kit" },
-      { kind: "consumable", id: "", name: "Field Tonic", rarity: "common", description: "", effects: [{ type: "heal", amount: 2 }] },
-      { kind: "misc", id: "", name: "Field Token", rarity: "uncommon", description: "A keepsake." },
+      { kind: "consumable", id: "", name: "Field Tonic", rarity: "common", description: "", iconUrl: "/assets/items/minor-healing-potion.webp", effects: [{ type: "heal", amount: 2 }] },
+      { kind: "misc", id: "", name: "Field Token", rarity: "uncommon", description: "A keepsake.", iconUrl: "/assets/items/wisp-essence.webp" },
       { kind: "gear", id: "", name: "Legendary Crown", slot: "head", rarity: "legendary", description: "A relic.", stats: {} },
     ],
   });
@@ -77,6 +77,8 @@ function testItemEditorRepairsInternalIds() {
   assert.equal(exchange.items[2].goldCost, 0, "Other items without a configured Gold Cost must remain valueless until priced.");
   assert.equal(exchange.items[3].goldCost, 300, "Legendary gear drafts must receive the highest default Gold Cost.");
   assert.equal(exchange.items[3].rarity, "legendary", "The Item Editor must preserve Legendary as a live rarity.");
+  assert.equal(exchange.items[1].iconUrl, "/assets/items/minor-healing-potion.webp", "Consumable artwork selections must survive Item Editor normalization.");
+  assert.equal(exchange.items[2].iconUrl, "/assets/items/wisp-essence.webp", "Other Item artwork selections must survive Item Editor normalization.");
   assert.equal(isMiscItem(exchange.items[2]), true, "Other items must retain their non-usable item type.");
   assert.equal(isGearItem(exchange.items[2]), false, "Other items must never be classified as gear.");
   assert.equal(isConsumableItem(exchange.items[2]), false, "Other items must never be classified as consumables.");

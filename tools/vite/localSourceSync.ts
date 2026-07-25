@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 // @ts-expect-error Node runtime types are supplied by Vite when this config executes.
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { ITEM_ARTWORK_URLS } from "../../src/game/itemIcons";
 
 const abilitySourcePath = fileURLToPath(new URL("../../src/game/content/abilities.ts", import.meta.url));
 const talentSourcePath = fileURLToPath(new URL("../../src/game/content/talents.ts", import.meta.url));
@@ -276,6 +277,7 @@ function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>
 }
 
 const itemRarities = new Set(["common", "uncommon", "rare", "epic", "legendary"]);
+const itemArtworkUrls = new Set<string>(ITEM_ARTWORK_URLS);
 const gearSlots = new Set(["head", "chest", "pants", "boots", "mainHand", "offHand", "ring"]);
 const armorMaterials = new Set(["plate", "leather", "cloth"]);
 const weaponEquipTypes = new Set(["mainHand", "oneHand", "offHand", "twoHand"]);
@@ -342,6 +344,7 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
     catalogNumber(item.goldCost, `${item.name} gold cost`);
     if (!itemRarities.has(item.rarity)) throw new Error(`${item.name} has an invalid rarity.`);
     if (item.kind === "consumable") {
+      if (item.iconUrl !== undefined && (typeof item.iconUrl !== "string" || !itemArtworkUrls.has(item.iconUrl))) throw new Error(`${item.name} has an invalid item image.`);
       if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Consumable special effect notes", true);
       if (!Array.isArray(item.effects) || item.effects.length === 0) throw new Error(`${item.name} must have at least one effect.`);
       item.effects.forEach((rawEffect: unknown, index: number) => {
@@ -366,6 +369,7 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
     }
 
     if (item.kind === "misc") {
+      if (item.iconUrl !== undefined && (typeof item.iconUrl !== "string" || !itemArtworkUrls.has(item.iconUrl))) throw new Error(`${item.name} has an invalid item image.`);
       if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Item special effect notes", true);
       return;
     }

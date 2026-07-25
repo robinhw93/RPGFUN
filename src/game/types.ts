@@ -651,6 +651,7 @@ export interface ConsumableItem {
   goldCost?: number;
   rarity: ItemRarity;
   description: string;
+  iconUrl?: string;
   effects: ConsumableEffect[];
   specialEffectNotes?: string;
 }
@@ -663,6 +664,7 @@ export interface MiscItem {
   goldCost?: number;
   rarity: ItemRarity;
   description: string;
+  iconUrl?: string;
   specialEffectNotes?: string;
 }
 

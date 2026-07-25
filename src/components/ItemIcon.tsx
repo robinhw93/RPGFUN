@@ -5,7 +5,7 @@ import type { GearSlot, InventoryItem } from "../game/types";
 import { GearSlotIcon } from "./GearSlotIcon";
 
 export function ItemIcon({ item, size = 32, className }: { item: InventoryItem; size?: number; className?: string }) {
-  const iconUrl = getItemIconUrl(item.id);
+  const iconUrl = item.iconUrl?.startsWith("/assets/items/") ? item.iconUrl : getItemIconUrl(item.id);
   if (iconUrl) {
     return <img aria-hidden="true" className={className ? `item-icon ${className}` : "item-icon"} src={iconUrl} alt="" width={size} height={size} draggable={false} decoding="sync" />;
   }

@@ -18,6 +18,8 @@ export const ITEM_ICON_URLS: Record<string, string> = {
   "gear-ms0l8elz-4jlgf": "/assets/items/mystical-ring.webp",
 };
 
+export const ITEM_ARTWORK_URLS = [...new Set(Object.values(ITEM_ICON_URLS))];
+
 export function getItemIconUrl(itemId: string): string | undefined {
   return ITEM_ICON_URLS[itemId];
 }
