@@ -14,7 +14,7 @@ import { applyAbilityFlatDamage } from "../src/game/combat/damage";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
-import { ITEM_ICON_URLS } from "../src/game/itemIcons";
+import { CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import { craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, TAVERN_MEALS } from "../src/game/town";
@@ -32,6 +32,13 @@ function testGearIconLibrary() {
   const staff: GearItem = { kind: "gear", id: "test-staff", name: "Test Staff", slot: "mainHand", weaponEquipType: "twoHand", weaponKind: "staff", rarity: "common", description: "", stats: {} };
   assert.equal(getGearIconCategory(staff), "staff", "Weapon kind must drive the focused gear-art category.");
   assert.deepEqual(getGearIconChoices(staff).slice(-5), GEAR_ICON_VARIANTS.staff, "The Staff picker must expose all five generated Staff icons.");
+}
+
+function testCraftingMaterialArtworkLibrary() {
+  assert.equal(CRAFTING_MATERIAL_ARTWORK_URLS.length, 21, "Metal Scrap and twenty reusable crafting-material icons must be available.");
+  assert.equal(new Set(CRAFTING_MATERIAL_ARTWORK_URLS).size, CRAFTING_MATERIAL_ARTWORK_URLS.length, "Crafting-material icon URLs must be unique.");
+  CRAFTING_MATERIAL_ARTWORK_URLS.forEach((url) => assert.ok(existsSync(join(process.cwd(), "public", url)), `Missing crafting-material icon ${url}.`));
+  assert.equal(ITEM_ICON_URLS["item-ms0ss0dt-z4bke"], "/assets/items/metal-scrap.webp", "Metal Scrap must use its dedicated artwork.");
 }
 
 function testGearCombatStatsArePresented() {
@@ -537,6 +544,7 @@ function testIndependentItemDrops() {
 testAbilityFlatDamage();
 testContentIntegrity();
 testGearIconLibrary();
+testCraftingMaterialArtworkLibrary();
 testGearCombatStatsArePresented();
 testItemNameRarityClasses();
 testStoryEncounterIntroduction();

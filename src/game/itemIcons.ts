@@ -16,9 +16,41 @@ export const ITEM_ICON_URLS: Record<string, string> = {
   "item-ms0jf0sp-z8hcl": "/assets/items/wisp-essence.webp",
   "item-ms0jgblm-ko16i": "/assets/items/bear-claw.webp",
   "gear-ms0l8elz-4jlgf": "/assets/items/mystical-ring.webp",
+  "item-ms0ss0dt-z4bke": "/assets/items/metal-scrap.webp",
+  "gear-ms0svay5-evj17": "/assets/gear-icons/head-01.webp",
+  "gear-ms0sx064-zq3n5": "/assets/gear-icons/chest-01.webp",
+  "gear-ms0syhpj-m13xr": "/assets/gear-icons/boots-01.webp",
+  "gear-ms0t0crb-p4hdm": "/assets/gear-icons/pants-01.webp",
 };
 
-export const ITEM_ARTWORK_URLS = [...new Set(Object.values(ITEM_ICON_URLS))];
+export const CRAFTING_MATERIAL_ARTWORK_URLS = [
+  "/assets/items/metal-scrap.webp",
+  "/assets/items/iron-ore.webp",
+  "/assets/items/copper-ore.webp",
+  "/assets/items/silver-ore.webp",
+  "/assets/items/gold-ore.webp",
+  "/assets/items/coal.webp",
+  "/assets/items/hardwood.webp",
+  "/assets/items/ancient-bark.webp",
+  "/assets/items/tanned-leather.webp",
+  "/assets/items/fine-cloth.webp",
+  "/assets/items/spider-silk.webp",
+  "/assets/items/arcane-crystal.webp",
+  "/assets/items/frost-shard.webp",
+  "/assets/items/ember-core.webp",
+  "/assets/items/storm-essence.webp",
+  "/assets/items/poison-gland.webp",
+  "/assets/items/bone-fragments.webp",
+  "/assets/items/monster-hide.webp",
+  "/assets/items/moonpetal.webp",
+  "/assets/items/glowcap-mushrooms.webp",
+  "/assets/items/empty-alchemy-vial.webp",
+] as const;
+
+export const ITEM_ARTWORK_URLS = [...new Set([
+  ...Object.values(ITEM_ICON_URLS).filter((url) => url.startsWith("/assets/items/")),
+  ...CRAFTING_MATERIAL_ARTWORK_URLS,
+])];
 
 export function getItemIconUrl(itemId: string): string | undefined {
   return ITEM_ICON_URLS[itemId];
