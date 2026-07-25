@@ -14,6 +14,26 @@ type VendorTab = "shop" | "craft";
 
 const ITEM_BY_ID = new Map(ITEMS.map((item) => [item.id, item]));
 
+function useTownToast<T>() {
+  const [toast, setToast] = useState<{ id: number; value: T } | null>(null);
+  const nextToastId = useRef(0);
+  const toastTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+  }, []);
+  const showToast = (value: T) => {
+    const nextToast = { id: nextToastId.current + 1, value };
+    nextToastId.current = nextToast.id;
+    setToast(nextToast);
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => {
+      setToast((current) => current?.id === nextToast.id ? null : current);
+      toastTimer.current = null;
+    }, 1900);
+  };
+  return { toast, showToast };
+}
+
 function itemSubtitle(item: InventoryItem): string {
   if (isGearItem(item)) return getGearCategoryLabel(item);
   if (isConsumableItem(item)) return "Consumable";
@@ -83,27 +103,15 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   const [tab, setTab] = useState<VendorTab>("shop");
   const [inspected, setInspected] = useState<InventoryItem | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [purchaseToast, setPurchaseToast] = useState<{ id: number; item: InventoryItem } | null>(null);
   const [actionItemId, setActionItemId] = useState<string | null>(null);
-  const purchaseToastId = useRef(0);
-  const purchaseToastTimer = useRef<number | null>(null);
+  const { toast: purchaseToast, showToast: showPurchaseToast } = useTownToast<InventoryItem>();
   const stock = useMemo(() => tab === "shop" ? getTownVendorStock(vendor) : getTownCraftingCatalog(vendor), [tab, vendor]);
   const isAlchemist = vendor === "alchemist";
-  useEffect(() => () => {
-    if (purchaseToastTimer.current !== null) window.clearTimeout(purchaseToastTimer.current);
-  }, []);
   const runAction = (item: InventoryItem) => {
     const result = tab === "shop" ? onBuy(vendor, item.id) : onCraft(vendor, item.id);
     if (tab === "shop" && result.success && result.item) {
       setFeedback(null);
-      const toast = { id: purchaseToastId.current + 1, item: result.item };
-      purchaseToastId.current = toast.id;
-      setPurchaseToast(toast);
-      if (purchaseToastTimer.current !== null) window.clearTimeout(purchaseToastTimer.current);
-      purchaseToastTimer.current = window.setTimeout(() => {
-        setPurchaseToast((current) => current?.id === toast.id ? null : current);
-        purchaseToastTimer.current = null;
-      }, 1900);
+      showPurchaseToast(result.item);
     } else {
       setFeedback(result.message);
     }
@@ -115,7 +123,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   return (
     <section className={`town-location town-${vendor}`}>
       <div className="town-ambient-layer" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-      {purchaseToast && <div key={purchaseToast.id} className="town-item-added-toast" role="status" aria-live="polite"><strong className={getItemNameClass(purchaseToast.item)}>{purchaseToast.item.name}</strong> added to inventory.</div>}
+      {purchaseToast && <div key={purchaseToast.id} className="town-action-toast" role="status" aria-live="polite"><strong className={getItemNameClass(purchaseToast.value)}>{purchaseToast.value.name}</strong> added to inventory.</div>}
       <header className="town-location-header">
         <button type="button" className="town-back-button" onClick={onBack}><ArrowLeft /> Arkenfall</button>
         <div><p className="eyebrow">{isAlchemist ? "Alchemist" : "Blacksmith"}</p><h1>{isAlchemist ? "Ray Charlston" : "Brunhilde von Trott"}</h1><p>{isAlchemist ? "“Every remedy begins with the right ingredients.”" : "“Good steel remembers the hands that shaped it.”"}</p></div>
@@ -145,6 +153,7 @@ export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }
 }) {
   const [location, setLocation] = useState<TownLocation>("square");
   const [serviceFeedback, setServiceFeedback] = useState<string | null>(null);
+  const { toast: mealToast, showToast: showMealToast } = useTownToast<string>();
   const currentHp = Math.min(maxHp, game.adventure.carryHp ?? maxHp);
   const restCost = getTavernRestCost(currentHp, maxHp);
   useEffect(() => {
@@ -154,6 +163,7 @@ export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }
   if (location === "tavern") return (
     <section className="town-location town-tavern">
       <div className="town-hearth-glow" aria-hidden="true" />
+      {mealToast && <div key={mealToast.id} className="town-action-toast" role="status" aria-live="polite">{mealToast.value}</div>}
       <header className="town-location-header"><button type="button" className="town-back-button" onClick={() => setLocation("square")}><ArrowLeft /> Arkenfall</button><div><p className="eyebrow">Tavern and Inn</p><h1>The Resting Hart</h1><p>Warm food, clean sheets, and a hearth that never seems to die.</p></div><span className="town-gold"><GoldIcon /> {game.character.gold}</span></header>
       <div className="tavern-services-panel">
         <div className="tavern-services-heading"><Utensils /><div><p className="eyebrow">Food and lodging</p><h2>Tavern Services</h2></div></div>
@@ -163,7 +173,7 @@ export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }
           <section className="tavern-meals" aria-labelledby="tavern-meals-heading"><div className="tavern-meals-heading"><div><p className="eyebrow">Fresh from the kitchen</p><h3 id="tavern-meals-heading">Meals</h3></div><small>Benefits are applied when your next combat begins.</small></div><div className="tavern-meal-grid">{TAVERN_MEALS.map((meal) => {
             const prepared = hasPreparedTavernMeal(game, meal);
             const status = STATUS_EFFECTS[meal.status];
-            return <article className={`tavern-meal-card meal-${meal.status}`} key={meal.id}><span className="tavern-service-icon">{meal.status === "strengthened" ? <Dumbbell /> : meal.status === "fierce" ? <Crosshair /> : <HeartPulse />}</span><div className="tavern-meal-copy"><p className="eyebrow">Grants {status.name}</p><h4>{meal.name}</h4><p>{meal.description}</p><small>{status.description}</small></div><button type="button" className="tavern-service-button" disabled={prepared || game.character.gold < meal.cost} onClick={() => { const result = onMeal(meal.id); setServiceFeedback(result.message); }}>{prepared ? <><Check /> Prepared</> : <><Utensils /> Order <span><GoldIcon /> {meal.cost}</span></>}</button></article>;
+            return <article className={`tavern-meal-card meal-${meal.status}`} key={meal.id}><span className="tavern-service-icon">{meal.status === "strengthened" ? <Dumbbell /> : meal.status === "fierce" ? <Crosshair /> : <HeartPulse />}</span><div className="tavern-meal-copy"><p className="eyebrow">Grants {status.name}</p><h4>{meal.name}</h4><p>{meal.description}</p><small>{status.description}</small></div><button type="button" className="tavern-service-button" disabled={prepared || game.character.gold < meal.cost} onClick={() => { const result = onMeal(meal.id); if (result.success) { setServiceFeedback(null); showMealToast(result.message); } else { setServiceFeedback(result.message); } }}>{prepared ? <><Check /> Prepared</> : <><Utensils /> Order <span><GoldIcon /> {meal.cost}</span></>}</button></article>;
           })}</div></section>
         </div>
       </div>
