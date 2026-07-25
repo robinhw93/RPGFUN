@@ -36,7 +36,7 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onMerchantPurchase, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
@@ -55,6 +55,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   onLeaveTraining: () => void;
   onEvent: (choiceId: string) => void;
   onMerchantPurchase: (itemId: string) => void;
+  onMerchantSell: (itemId: string) => void;
   onPermadeath: () => void;
   onTalents: () => void;
   onCharacter: () => void;
@@ -161,9 +162,11 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
         rollResult={adventure.eventRollResult}
         hasImmediateEncounter={Boolean(adventure.eventEncounter)}
         merchantItemIds={adventure.eventMerchant?.itemIds ?? []}
+        inventory={game.character.inventory}
         gold={game.character.gold}
         onChoose={onEvent}
         onPurchase={onMerchantPurchase}
+        onSell={onMerchantSell}
         onContinue={onContinue}
       />
     );

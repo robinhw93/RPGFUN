@@ -17,6 +17,11 @@ export function getItemGoldCost(item: InventoryItem): number {
   return isConsumableItem(item) ? DEFAULT_CONSUMABLE_COSTS[item.rarity] : DEFAULT_GEAR_COSTS[item.rarity];
 }
 
+export function getItemSellValue(item: InventoryItem): number {
+  const goldCost = getItemGoldCost(item);
+  return goldCost > 0 ? Math.max(1, Math.floor(goldCost * 0.25)) : 0;
+}
+
 export function consumableCount(inventory: InventoryItem[], itemId: string): number {
   return inventory.filter((item) => isConsumableItem(item) && item.id === itemId).length;
 }

@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { GearSlotIcon } from "../GearSlotIcon";
 import { ITEMS } from "../../game/data";
 import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
-import { getItemGoldCost, isConsumableItem } from "../../game/items";
-import type { AdventureEventDefinition, AdventureEventRollResult } from "../../game/types";
+import { getItemGoldCost, getItemSellValue, isConsumableItem } from "../../game/items";
+import type { AdventureEventDefinition, AdventureEventRollResult, InventoryItem } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
 import { GoldIcon } from "../../ui/gameUi";
 
@@ -31,9 +31,11 @@ export function EventPresentation({
   rollResult,
   hasImmediateEncounter,
   merchantItemIds,
+  inventory,
   gold,
   onChoose,
   onPurchase,
+  onSell,
   onContinue,
 }: {
   definition?: AdventureEventDefinition;
@@ -42,14 +44,17 @@ export function EventPresentation({
   rollResult: AdventureEventRollResult | null;
   hasImmediateEncounter: boolean;
   merchantItemIds: string[];
+  inventory: InventoryItem[];
   gold: number;
   onChoose: (choiceId: string) => void;
   onPurchase: (itemId: string) => void;
+  onSell: (itemId: string) => void;
   onContinue: () => void;
 }) {
   const [phase, setPhase] = useState<EventPresentationPhase>(() => getInitialEventPresentationPhase(rollResult, merchantItemIds.length));
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(() => rollResult?.choiceId ?? null);
   const [displayedRoll, setDisplayedRoll] = useState(() => rollResult && rollResult.resolution !== "direct" ? rollResult.dieRoll : randomD100());
+  const [merchantMode, setMerchantMode] = useState<"buy" | "sell">("buy");
   const selectedChoice = useMemo(
     () => definition?.choices.find((choice) => choice.id === (selectedChoiceId ?? rollResult?.choiceId)),
     [definition, rollResult?.choiceId, selectedChoiceId],
@@ -58,6 +63,7 @@ export function EventPresentation({
     const item = ITEMS.find((candidate) => candidate.id === itemId);
     return item ? [item] : [];
   }), [merchantItemIds]);
+  const inventoryItems = useMemo(() => [...new Map(inventory.map((item) => [item.id, item])).values()], [inventory]);
 
   useEffect(() => {
     const previousOverflow = document.documentElement.style.overflow;
@@ -188,21 +194,44 @@ export function EventPresentation({
         {phase === "merchant" && (
           <div className="event-merchant" aria-live="polite">
             {rollResult?.outcomeText && <p className="event-merchant-intro">{rollResult.outcomeText}</p>}
-            <div className="event-merchant-heading"><div><p className="eyebrow">Wandering Merchant</p><h2>Goods for the road</h2></div><span className="event-merchant-gold"><GoldIcon /> {gold}</span></div>
-            <div className="event-merchant-grid">
+            <div className="event-merchant-heading"><div><p className="eyebrow">Wandering Merchant</p><h2>{merchantMode === "buy" ? "Goods for the road" : "Sell from Inventory"}</h2></div><span className="event-merchant-gold"><GoldIcon /> {gold}</span></div>
+            <div className="event-merchant-tabs" role="tablist" aria-label="Merchant actions">
+              <button type="button" role="tab" aria-selected={merchantMode === "buy"} className={merchantMode === "buy" ? "active" : ""} onClick={() => setMerchantMode("buy")}>Buy</button>
+              <button type="button" role="tab" aria-selected={merchantMode === "sell"} className={merchantMode === "sell" ? "active" : ""} onClick={() => setMerchantMode("sell")}>Sell</button>
+            </div>
+            {merchantMode === "buy" ? <div className="event-merchant-grid">
               {merchantItems.map((item) => {
                 const cost = getItemGoldCost(item);
-                return <article className={`event-merchant-item ${item.rarity}`} key={item.id}>
-                  <span className="event-merchant-icon">{isConsumableItem(item) ? <FlaskConical /> : <GearSlotIcon slot={item.slot} item={item} size={30} />}</span>
-                  <small>{item.rarity}</small><strong>{item.name}</strong><p>{item.description}</p>
-                  <button type="button" disabled={gold < cost} onClick={() => onPurchase(item.id)}><GoldIcon /> {cost} Gold</button>
-                </article>;
+                return <MerchantItemCard key={item.id} item={item} meta={item.rarity} buttonLabel={`${cost} Gold`} disabled={gold < cost} onAction={() => onPurchase(item.id)} />;
               })}
-            </div>
+            </div> : <>
+              {inventoryItems.length === 0 && <div className="event-merchant-empty"><FlaskConical /><strong>Your inventory is empty.</strong><p>Return after finding something to sell.</p></div>}
+              {inventoryItems.length > 0 && <div className="event-merchant-grid">
+                {inventoryItems.map((item) => {
+                  const count = inventory.filter((candidate) => candidate.id === item.id).length;
+                  const sellValue = getItemSellValue(item);
+                  return <MerchantItemCard key={item.id} item={item} meta={`${item.rarity} · ${count} owned`} buttonLabel={`Sell · ${sellValue} Gold`} disabled={sellValue <= 0} onAction={() => onSell(item.id)} />;
+                })}
+              </div>}
+            </>}
             <button type="button" className="primary-button event-merchant-leave" onClick={onContinue}>Leave Merchant <ChevronRight size={17} /></button>
           </div>
         )}
       </div>
     </section>
   );
+}
+
+function MerchantItemCard({ item, meta, buttonLabel, disabled, onAction }: {
+  item: InventoryItem;
+  meta: string;
+  buttonLabel: string;
+  disabled: boolean;
+  onAction: () => void;
+}) {
+  return <article className={`event-merchant-item ${item.rarity}`}>
+    <span className="event-merchant-icon">{isConsumableItem(item) ? <FlaskConical /> : <GearSlotIcon slot={item.slot} item={item} size={30} />}</span>
+    <small>{meta}</small><strong>{item.name}</strong><p>{item.description}</p>
+    <button type="button" disabled={disabled} onClick={onAction}><GoldIcon /> {buttonLabel}</button>
+  </article>;
 }

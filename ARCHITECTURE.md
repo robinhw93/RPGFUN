@@ -71,7 +71,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/items.ts` owns inventory-item classification, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` independently rolls every defeated enemy instance's drop table plus the current stage drop table, applies a combat reward exactly once, transfers found items into inventory, and stores the immutable score-screen snapshot.
-- `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists event-merchant stock, and owns atomic merchant purchases.
+- `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists event-merchant stock, and owns atomic merchant purchases and one-copy inventory sales.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
 - `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
 - `src/game/timing.ts` is the source of truth for combat, initiative, and adventure-event presentation durations.
@@ -420,7 +420,7 @@ Enemy, Event, Adventure, and Item editors retain browser-local drafts under lega
 
 ## Regression protection
 
-- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, opposed Hit/Dodge arithmetic and caps, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, merchant purchases, and presentation-timed consumable resolution.
+- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, opposed Hit/Dodge arithmetic and caps, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, merchant purchases and sales, item drops, and presentation-timed consumable resolution.
 - `npm run docs:check` verifies that the documented talent count matches the live talent catalog.
 - `npm run build` remains the full type-check and production-bundle gate. UI, touch, animation, and VFX behavior still require browser verification at desktop and mobile widths.
 

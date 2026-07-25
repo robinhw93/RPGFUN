@@ -1,6 +1,6 @@
 import { getDerivedStats } from "./character";
 import { ENEMIES, ITEMS } from "./data";
-import { getItemGoldCost } from "./items";
+import { getItemGoldCost, getItemSellValue } from "./items";
 import { addExperience } from "./progression";
 import { isStatusEffectId } from "./statusEffects";
 import type {
@@ -158,6 +158,24 @@ export function purchaseEventMerchantItem(state: GameState, itemId: string): Gam
       ...state.character,
       gold: state.character.gold - goldCost,
       inventory: [...state.character.inventory, structuredClone(item)],
+    },
+  };
+}
+
+/** Sells exactly one inventory copy to the active event merchant. */
+export function sellEventMerchantItem(state: GameState, itemId: string): GameState {
+  if (!state.adventure.active || !state.adventure.eventResolved || !state.adventure.eventMerchant) return state;
+  const inventoryIndex = state.character.inventory.findIndex((item) => item.id === itemId);
+  if (inventoryIndex < 0) return state;
+  const item = state.character.inventory[inventoryIndex];
+  const sellValue = getItemSellValue(item);
+  if (sellValue <= 0) return state;
+  return {
+    ...state,
+    character: {
+      ...state.character,
+      gold: state.character.gold + sellValue,
+      inventory: state.character.inventory.filter((_, index) => index !== inventoryIndex),
     },
   };
 }

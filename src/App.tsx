@@ -16,7 +16,7 @@ import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { ADVENTURE_EVENTS, TALENTS } from "./game/data";
 import { createCombat, ensureCombatState, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
-import { purchaseEventMerchantItem, resolveAdventureEventChoice } from "./game/eventOutcomes";
+import { purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "./game/eventOutcomes";
 import { equipGearItem, unequipGearItem } from "./game/gear";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -381,6 +381,10 @@ function App() {
     setGame((current) => purchaseEventMerchantItem(current, itemId));
   };
 
+  const sellMerchantItem = (itemId: string) => {
+    setGame((current) => sellEventMerchantItem(current, itemId));
+  };
+
   const unlockTalent = (talentId: string) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
@@ -544,6 +548,7 @@ function App() {
             onLeaveTraining={leaveTraining}
             onEvent={resolveEvent}
             onMerchantPurchase={buyMerchantItem}
+            onMerchantSell={sellMerchantItem}
             onPermadeath={returnToCharacterCreation}
             onTalents={() => openCharacterSection("talents")}
             onCharacter={() => openCharacterSection("overview")}

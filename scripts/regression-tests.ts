@@ -7,8 +7,8 @@ import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
-import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice } from "../src/game/eventOutcomes";
-import { getItemGoldCost } from "../src/game/items";
+import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
+import { getItemGoldCost, getItemSellValue } from "../src/game/items";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
@@ -227,6 +227,15 @@ function testDirectEventMerchant() {
   assert.equal(purchased.character.gold, 5, "A merchant purchase must deduct the item's live Gold Cost.");
   assert.equal(purchased.character.inventory.at(-1)?.id, item.id, "A purchased item must be added to inventory.");
   assert.equal(purchaseEventMerchantItem(purchased, "not-for-sale"), purchased, "Items outside merchant stock must not be purchasable.");
+  const expectedSellValue = Math.max(1, Math.floor(getItemGoldCost(item) * 0.25));
+  assert.equal(getItemSellValue(item), expectedSellValue, "Merchant sell value must be 25% of Gold Cost, rounded down to whole Gold.");
+  const duplicated = { ...purchased, character: { ...purchased.character, inventory: [...purchased.character.inventory, structuredClone(item)] } };
+  const soldOnce = sellEventMerchantItem(duplicated, item.id);
+  assert.equal(soldOnce.character.gold, 5 + expectedSellValue, "Selling must immediately add the item's sell value.");
+  assert.equal(soldOnce.character.inventory.length, 1, "Selling must remove exactly one inventory copy.");
+  const soldTwice = sellEventMerchantItem(soldOnce, item.id);
+  assert.equal(soldTwice.character.inventory.length, 0, "Duplicate inventory copies must be sellable one at a time.");
+  assert.equal(sellEventMerchantItem(soldTwice, item.id), soldTwice, "An item that is no longer owned cannot be sold again.");
 }
 
 function testResolvedMerchantPresentation() {
