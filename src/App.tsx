@@ -302,6 +302,7 @@ function App() {
 
   const continueJourney = () => {
     if (travelTransition || encounterFlavor) return;
+    if (game.adventure.pendingReward?.levelsGained && (game.character.unspentStatPoints > 0 || game.character.talentPoints > 0)) return;
     if (game.adventure.eventResolved && game.adventure.eventEncounter && !game.adventure.combat) {
       const encounter = game.adventure.eventEncounter;
       playImmediateEncounterIntroduction(describeEnemyEncounter(encounter.enemyIds), () => {
@@ -552,6 +553,7 @@ function App() {
             onPermadeath={returnToCharacterCreation}
             onTalents={() => openCharacterSection("talents")}
             onCharacter={() => openCharacterSection("overview")}
+            onInventory={() => openCharacterSection("equipment")}
             rewardPresentationPlayed={Boolean(game.adventure.pendingReward && presentedRewardIds.current.has(game.adventure.pendingReward.id))}
             onRewardPresentationStart={markRewardPresented}
           />

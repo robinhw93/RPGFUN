@@ -16,6 +16,22 @@ export function isMiscItem(item: InventoryItem): item is MiscItem {
   return item.kind === "misc";
 }
 
+export interface GroupedInventoryItem {
+  item: InventoryItem;
+  count: number;
+}
+
+/** Groups identical catalog items while preserving their first appearance order. */
+export function groupInventoryItems(items: InventoryItem[]): GroupedInventoryItem[] {
+  const grouped = new Map<string, GroupedInventoryItem>();
+  items.forEach((item) => {
+    const existing = grouped.get(item.id);
+    if (existing) existing.count += 1;
+    else grouped.set(item.id, { item, count: 1 });
+  });
+  return [...grouped.values()];
+}
+
 export function getItemGoldCost(item: InventoryItem): number {
   if (typeof item.goldCost === "number" && Number.isFinite(item.goldCost)) return Math.max(0, Math.round(item.goldCost));
   return isConsumableItem(item) ? DEFAULT_CONSUMABLE_COSTS[item.rarity] : isGearItem(item) ? DEFAULT_GEAR_COSTS[item.rarity] : 0;

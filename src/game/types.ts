@@ -995,6 +995,7 @@ export type AdventureEventRollResult = AdventureEventCheckResult | AdventureEven
 
 export interface AdventureEventMerchant {
   itemIds: string[];
+  purchasedItemIds: string[];
 }
 
 export interface CombatReward {

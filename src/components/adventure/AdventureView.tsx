@@ -15,17 +15,19 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { FloatingCombatText } from "../../components/FloatingCombatText";
 import { GearSlotIcon } from "../../components/GearSlotIcon";
+import { ItemDetailModal } from "../../components/character/CharacterView";
 import { getAdventureDefinition, getAdventureNode } from "../../game/adventures";
 import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
+import { getStatusAdjustedCombatStats } from "../../game/combatStats";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "../../game/combatFeatures";
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "../../game/combatSequence";
 import { ABILITIES, ADVENTURE_EVENTS, ADVENTURES, ENEMIES } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
-import { consumableCount, describeConsumableEffect, isConsumableItem, isMiscItem } from "../../game/items";
+import { consumableCount, describeConsumableEffect, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
-import type { AdventureMode, AdventureStageDefinition, CombatLogEntry, CombatReward, ConsumableItem, GameState, InspectableInfo, StatusEffectId } from "../../game/types";
+import type { AdventureMode, AdventureStageDefinition, CharacterState, CombatLogEntry, CombatReward, ConsumableItem, GameState, GearItem, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
 import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
@@ -37,7 +39,7 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
@@ -60,6 +62,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   onPermadeath: () => void;
   onTalents: () => void;
   onCharacter: () => void;
+  onInventory: () => void;
   rewardPresentationPlayed: boolean;
   onRewardPresentationStart: (rewardId: string) => void;
 }) {
@@ -163,17 +166,25 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
         rollResult={adventure.eventRollResult}
         hasImmediateEncounter={Boolean(adventure.eventEncounter)}
         merchantItemIds={adventure.eventMerchant?.itemIds ?? []}
+        merchantPurchasedItemIds={adventure.eventMerchant?.purchasedItemIds ?? []}
+        character={game.character}
         inventory={game.character.inventory}
         gold={game.character.gold}
         onChoose={onEvent}
         onPurchase={onMerchantPurchase}
         onSell={onMerchantSell}
+        onInventory={onInventory}
         onContinue={onContinue}
       />
     );
   }
 
   const combat = adventure.combat!;
+  const displayedPlayerStats = getStatusAdjustedCombatStats({
+    ...derived,
+    maxHp: combat.playerMaxHp,
+    energyRegen: derived.energyRegen + (combat.nextTurnEnergyRegenBonus ?? 0),
+  }, combat.playerStatuses);
   const damagedTargets = combat.damagedTargets ?? [];
   const missedTargets = combat.missedTargets ?? [];
   const passiveAnimations = combat.passiveAnimations ?? [];
@@ -260,7 +271,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
             {combat.playerStatuses.map((status) => <StatusBadge key={status.id} id={status.id} name={status.name} stacks={status.stacks} duration={status.duration} permanent={status.permanent} kind={status.kind} owner="player" onInspect={() => setInspectedInfo({ title: status.name, description: status.description, category: "status" })} />)}
           </div>
           <div className="compact-resource-label energy-label"><span>Energy</span><b>{combat.energy}/{combat.maxEnergy}</b></div>
-          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={derived.energyRegen + (combat.nextTurnEnergyRegenBonus ?? 0)} showGain />
+          <EnergySegments value={combat.energy} max={combat.maxEnergy} regen={displayedPlayerStats.energyRegen} showGain />
         </article>
 
         <div className={`compact-enemy-stack count-${combat.enemies.length}`}>
@@ -428,11 +439,12 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
 
       {inspectedInfo && <InspectInfoModal info={inspectedInfo} onClose={() => setInspectedInfo(null)} />}
       {inspectedEnemy && <EnemyStatsModal enemy={inspectedEnemy} onClose={() => setInspectedEnemyId(null)} />}
-      {playerAttributesOpen && <PlayerAttributesModal name={game.character.name} derived={derived} onClose={() => setPlayerAttributesOpen(false)} />}
+      {playerAttributesOpen && <PlayerAttributesModal name={game.character.name} derived={displayedPlayerStats} onClose={() => setPlayerAttributesOpen(false)} />}
 
       {combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
         <VictoryScoreScreen
           reward={adventure.pendingReward}
+          character={game.character}
           encounterTitle={node.title}
           onCharacter={onCharacter}
           onContinue={onContinue}
@@ -440,7 +452,8 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
           finalEncounter={adventure.mode === "story" && adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
           endless={adventure.mode === "endless"}
           presentationPlayed={rewardPresentationPlayed}
-          hasUnspentCharacterPoints={game.character.unspentStatPoints > 0 || game.character.talentPoints > 0}
+          unspentAttributePoints={game.character.unspentStatPoints}
+          unspentTalentPoints={game.character.talentPoints}
           onPresentationStart={onRewardPresentationStart}
         />
       )}
@@ -504,8 +517,9 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
   );
 }
 
-export function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onContinue, onLeaveTraining, finalEncounter, endless, presentationPlayed, hasUnspentCharacterPoints, onPresentationStart }: {
+export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onContinue, onLeaveTraining, finalEncounter, endless, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart }: {
   reward: CombatReward;
+  character: CharacterState;
   encounterTitle: string;
   onCharacter: () => void;
   onContinue: () => void;
@@ -513,14 +527,21 @@ export function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onCont
   finalEncounter: boolean;
   endless: boolean;
   presentationPlayed: boolean;
-  hasUnspentCharacterPoints: boolean;
+  unspentAttributePoints: number;
+  unspentTalentPoints: number;
   onPresentationStart: (rewardId: string) => void;
 }) {
   const [displayedExperience, setDisplayedExperience] = useState(() => presentationPlayed ? reward.experience : 0);
   const displayedProgress = experienceProgressAfterGain(reward.levelBefore, reward.xpBefore, displayedExperience);
   const reachedMaxLevel = displayedProgress.level >= MAX_LEVEL;
   const leveledUp = reward.levelsGained > 0;
-  const levelUpPending = leveledUp && hasUnspentCharacterPoints;
+  const levelUpPending = leveledUp && (unspentAttributePoints > 0 || unspentTalentPoints > 0);
+  const groupedLoot = groupInventoryItems(reward.loot);
+  const [inspectedGear, setInspectedGear] = useState<GearItem | null>(null);
+  const continueTooltip = [
+    unspentAttributePoints > 0 ? "You have unspent Attribute Points" : "",
+    unspentTalentPoints > 0 ? "You have unspent Talent Points" : "",
+  ].filter(Boolean).join("\n");
 
   useEffect(() => {
     if (presentationPlayed) {
@@ -577,20 +598,24 @@ export function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onCont
 
         {reward.loot.length > 0 && <div className="score-loot-list" aria-label="Items found">
           <p className="eyebrow">Items Found</p>
-          {reward.loot.map((item, index) => (
-            <div className={`score-loot-card ${item.rarity}`} key={`${item.id}-${index}`}>
+          {groupedLoot.map(({ item, count }) => {
+            const content = <>
               <span className="score-loot-glyph">{isConsumableItem(item) ? <FlaskConical size={22} /> : isMiscItem(item) ? <Package size={22} /> : <GearSlotIcon slot={item.slot} item={item} size={24} />}</span>
-              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong>{item.name}</strong><em>{item.description}</em></span>
-            </div>
-          ))}
+              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
+            </>;
+            return isGearItem(item)
+              ? <button type="button" className={`score-loot-card inspectable ${item.rarity}`} key={item.id} onClick={() => setInspectedGear(item)}>{content}</button>
+              : <div className={`score-loot-card ${item.rarity}`} key={item.id}>{content}</div>;
+          })}
         </div>}
 
         <div className="victory-score-actions">
           <button className={`score-character-button ${levelUpPending ? "level-up" : ""}`} onClick={onCharacter}>{levelUpPending ? <Sparkles size={16} /> : <UserRound size={16} />} {levelUpPending ? "Level up!" : "View Character"}</button>
-          <button className="primary-button" onClick={onContinue}>{endless ? "Continue Training" : finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
+          <button className="primary-button score-continue-button" disabled={levelUpPending} data-game-tooltip={levelUpPending ? continueTooltip : undefined} onClick={onContinue}>{endless ? "Continue Training" : finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
         {endless && <button className="text-button score-leave-training" onClick={onLeaveTraining}>Leave Training</button>}
       </section>
+      {inspectedGear && <ItemDetailModal item={inspectedGear} character={character} locked viewOnly onClose={() => setInspectedGear(null)} />}
     </div>
   );
 }

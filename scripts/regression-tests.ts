@@ -6,9 +6,10 @@ import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TAL
 import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
+import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
-import { getItemGoldCost, getItemSellValue, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
+import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
@@ -92,6 +93,30 @@ function testOpposedHitAndDodge() {
   assert.equal(getFinalHitChance(0.1, 0.5), 0.2, "Final Hit Chance must retain its 20% minimum.");
   assert.equal(rollHit(startingHitChance, wolfDodgeChance, () => 0.8749), true, "A roll below final Hit Chance must hit.");
   assert.equal(rollHit(startingHitChance, wolfDodgeChance, () => 0.875), false, "A roll at final Hit Chance must miss.");
+}
+
+function testStatusAdjustedCombatStats() {
+  const adjusted = getStatusAdjustedCombatStats({
+    armor: 10,
+    hitChance: 1,
+    dodgeChance: 0.1,
+    critChance: 0.05,
+    energyRegen: 3,
+    initiativeBonus: 7,
+  }, [
+    createStatusEffect("fierce"),
+    createStatusEffect("evasion"),
+    createStatusEffect("shatter"),
+    createStatusEffect("blind"),
+    createStatusEffect("exhausted"),
+    createStatusEffect("slowed"),
+  ]);
+  assert.equal(adjusted.armor, 5, "Combat stat display must include temporary Armor debuffs.");
+  assert.equal(adjusted.hitChance, 0.25, "Combat stat display must include Blind.");
+  assert.equal(adjusted.dodgeChance, 0.5, "Combat stat display must include temporary Dodge and its cap.");
+  assert.equal(adjusted.critChance, 0.25, "Combat stat display must include Fierce.");
+  assert.equal(adjusted.energyRegen, 1, "Combat stat display must include Exhausted.");
+  assert.equal(adjusted.initiativeBonus, 0, "Combat stat display must include Slowed.");
 }
 
 function testAdventureEditorRepairsInternalIds() {
@@ -232,6 +257,8 @@ function testDirectEventMerchant() {
   const purchased = purchaseEventMerchantItem(result, item.id);
   assert.equal(purchased.character.gold, 5, "A merchant purchase must deduct the item's live Gold Cost.");
   assert.equal(purchased.character.inventory.at(-1)?.id, item.id, "A purchased item must be added to inventory.");
+  assert.deepEqual(purchased.adventure.eventMerchant?.purchasedItemIds, [item.id], "A purchased merchant slot must remain sold out.");
+  assert.equal(purchaseEventMerchantItem(purchased, item.id), purchased, "A sold-out merchant item cannot be purchased twice.");
   assert.equal(purchaseEventMerchantItem(purchased, "not-for-sale"), purchased, "Items outside merchant stock must not be purchasable.");
   const expectedSellValue = Math.max(1, Math.floor(getItemGoldCost(item) * 0.25));
   assert.equal(getItemSellValue(item), expectedSellValue, "Merchant sell value must be 25% of Gold Cost, rounded down to whole Gold.");
@@ -310,11 +337,15 @@ function testIndependentItemDrops() {
   assert.equal(rewarded.adventure.pendingReward?.loot.length, 1, "Rolled loot must be captured by the score-screen reward.");
   assert.equal(rewarded.character.inventory.at(-1)?.id, firstItem.id, "Rolled loot must enter the character inventory immediately.");
   assert.equal(grantCombatReward(rewarded, 2, () => 0).character.inventory.length, 1, "A resolved combat reward must never reroll or duplicate loot.");
+
+  const grouped = groupInventoryItems([firstItem, structuredClone(firstItem), secondItem]);
+  assert.deepEqual(grouped.map(({ item, count }) => [item.id, count]), [[firstItem.id, 2], [secondItem.id, 1]], "Duplicate score-screen loot must group by item without changing order.");
 }
 
 testContentIntegrity();
 testStoryEncounterIntroduction();
 testOpposedHitAndDodge();
+testStatusAdjustedCombatStats();
 testAdventureEditorRepairsInternalIds();
 testAdventureEditorReordersStages();
 testEventEditorRepairsInternalIds();

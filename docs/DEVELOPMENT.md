@@ -106,9 +106,10 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | Path | Responsibility |
 | --- | --- |
 | `src/App.tsx` | Top-level state, navigation, application orchestration, high-level actions, and lazy-loaded screen boundaries. |
-| `src/components/character/` | Character creation plus Character and Equipment/Inventory screens. |
+| `src/components/character/` | Character creation plus Character and Equipment/Inventory screens, including the reusable gear-detail modal. |
 | `src/components/adventure/` | Adventure selection, event/score presentation, and combat-screen composition. |
 | `src/components/combat/` | Combat HUD, initiative presentation, and transient combat/VFX renderers. |
+| `src/game/combatStats.ts` | Shared status-adjusted combat-stat projection for player and enemy inspection. |
 | `src/components/talents/` | Runtime talent tree, talent details, and ability-loadout dialogs. |
 | `src/ui/gameUi.tsx` | Shared display helpers, stat/ability icons, encounter wording, and asset preloading. |
 | `src/styles.css` | Responsive layout, game-owned tooltips, modals, combat animations, paper-doll layout, talent maps, and mobile rules. |
@@ -388,7 +389,7 @@ Current migration behavior:
 - Tap uses an ability; long-press shows its explanation without firing it.
 - Combat ability cards show their content icon, Energy cost, and base cooldown; do not reintroduce keyboard-slot numbers into the card corner.
 - Clicking a status opens its detail modal; hover behavior must not overlap the click modal.
-- Combat portraits use a compact square image surface with enough clearance above the Health bar. The player uses a thin gold frame; every enemy portrait keeps a thin dark-red frame in normal, hover, focus, selected, and defeated states. Hover/focus may add a restrained glow but must not scale or flash white on press. Enemy-card hover uses an accent overlay with an opacity transition, while pointer focus has an explicit game-owned outline from its first frame; do not transition between incompatible solid and gradient backgrounds or expose the browser's default focus ring. The player portrait opens current Attributes and derived combat stats, while enemy portraits open enemy information.
+- Combat portraits use a compact square image surface with enough clearance above the Health bar. The player uses a thin gold frame; every enemy portrait keeps a thin dark-red frame in normal, hover, focus, selected, and defeated states. Hover/focus may add a restrained glow but must not scale or flash white on press. Enemy-card hover uses an accent overlay with an opacity transition, while pointer focus has an explicit game-owned outline from its first frame; do not transition between incompatible solid and gradient backgrounds or expose the browser's default focus ring. Player and enemy portrait dialogs use the shared stat icons and project temporary combat statuses into the displayed values through `combatStats.ts`.
 - Combat resource values stay centered over the full Health/Energy bar width at every viewport size; do not offset them toward the portrait or pair them directly beside the left-aligned resource label.
 - Modal backdrops may blur/dim the game but should not replace it with an opaque black screen unless the screen is intentionally a travel transition.
 - Modal opening must lock document/background scrolling and restore it on close.
@@ -464,3 +465,4 @@ For gear changes, verify:
 - Inventory/equipment transfer without duplication or loss.
 - Rarity colors, alphabetical stats, set thresholds, and comparison differences.
 - Background scroll lock in all item and slot modals.
+- Merchant and score-screen read-only gear inspection, merchant purchase/sold-out animation, grouped duplicate loot, and the event Inventory/Equipment shortcut at mobile and desktop widths.

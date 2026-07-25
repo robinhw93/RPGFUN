@@ -351,15 +351,16 @@ export function getItemComparisonLines(current: GearItem, candidate: GearItem): 
   });
 }
 
-export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked, onClose, onEquip, onUnequip }: {
+export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, locked, viewOnly = false, onClose, onEquip, onUnequip }: {
   item: GearItem;
   equippedSlot?: GearSlot;
   preferredSlot?: GearSlot;
   character: CharacterState;
   locked: boolean;
+  viewOnly?: boolean;
   onClose: () => void;
-  onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
-  onUnequip: (slot: GearSlot) => void;
+  onEquip?: (item: GearItem, preferredSlot?: GearSlot) => void;
+  onUnequip?: (slot: GearSlot) => void;
 }) {
   const [comparisonOpen, setComparisonOpen] = useState(false);
   useEffect(() => {
@@ -404,7 +405,7 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
           </section>
         )}
 
-        {comparisonOpen && comparisonItem && (
+        {!viewOnly && comparisonOpen && comparisonItem && (
           <section className="item-comparison" aria-label={`Compare ${item.name} with ${comparisonItem.name}`}>
             <h3>Item Comparison</h3>
             <div className="comparison-items">
@@ -423,27 +424,27 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
           </section>
         )}
 
-        {locked && <p className="item-action-lock"><Shield size={14} /> Equipment cannot be changed during combat.</p>}
-        <div className="item-detail-actions">
+        {!viewOnly && locked && <p className="item-action-lock"><Shield size={14} /> Equipment cannot be changed during combat.</p>}
+        {!viewOnly && <div className="item-detail-actions">
           {comparisonItem && <button type="button" className="item-compare-button" aria-expanded={comparisonOpen} onClick={() => setComparisonOpen((open) => !open)}>{comparisonOpen ? "Close Comparison" : "Compare"}</button>}
           {equippedSlot ? (
-            <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip(equippedSlot)}>Unequip</button>
+            <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip?.(equippedSlot)}>Unequip</button>
           ) : preferredSlot ? (
-            <button type="button" disabled={actionLocked} onClick={() => onEquip(item, preferredSlot)}>{actionLocked && !locked ? `${SLOT_LABELS[preferredSlot]} Locked` : `Equip in ${SLOT_LABELS[preferredSlot]}`}</button>
+            <button type="button" disabled={actionLocked} onClick={() => onEquip?.(item, preferredSlot)}>{actionLocked && !locked ? `${SLOT_LABELS[preferredSlot]} Locked` : `Equip in ${SLOT_LABELS[preferredSlot]}`}</button>
           ) : equipType === "oneHand" ? (
             <>
-              <button type="button" disabled={locked} onClick={() => onEquip(item, "mainHand")}>Equip Main Hand</button>
-              <button type="button" disabled={locked || offHandLocked} onClick={() => onEquip(item, "offHand")}>{offHandLocked ? "Off Hand Locked" : "Equip Off Hand"}</button>
+              <button type="button" disabled={locked} onClick={() => onEquip?.(item, "mainHand")}>Equip Main Hand</button>
+              <button type="button" disabled={locked || offHandLocked} onClick={() => onEquip?.(item, "offHand")}>{offHandLocked ? "Off Hand Locked" : "Equip Off Hand"}</button>
             </>
           ) : item.slot === "ring" ? (
             <>
-              <button type="button" disabled={locked} onClick={() => onEquip(item, "ring1")}>Equip Ring I</button>
-              <button type="button" disabled={locked} onClick={() => onEquip(item, "ring2")}>Equip Ring II</button>
+              <button type="button" disabled={locked} onClick={() => onEquip?.(item, "ring1")}>Equip Ring I</button>
+              <button type="button" disabled={locked} onClick={() => onEquip?.(item, "ring2")}>Equip Ring II</button>
             </>
           ) : (
-            <button type="button" disabled={actionLocked} onClick={() => onEquip(item)}>{offHandLocked && equipType === "offHand" ? "Off Hand Locked" : "Equip"}</button>
+            <button type="button" disabled={actionLocked} onClick={() => onEquip?.(item)}>{offHandLocked && equipType === "offHand" ? "Off Hand Locked" : "Equip"}</button>
           )}
-        </div>
+        </div>}
       </article>
     </div>
   );

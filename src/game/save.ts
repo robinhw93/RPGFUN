@@ -83,7 +83,10 @@ export function loadGame(): GameState | null {
         nextCombatPlayerStatuses: state.adventure.nextCombatPlayerStatuses ?? [],
         nextCombatEnemyStatuses: state.adventure.nextCombatEnemyStatuses ?? [],
         eventEncounter: state.adventure.eventEncounter ?? null,
-        eventMerchant: state.adventure.eventMerchant ?? null,
+        eventMerchant: state.adventure.eventMerchant ? {
+          itemIds: state.adventure.eventMerchant.itemIds ?? [],
+          purchasedItemIds: state.adventure.eventMerchant.purchasedItemIds ?? [],
+        } : null,
         latestLoot: latestLoot.length > 0 ? latestLoot : null,
         pendingReward: state.adventure.pendingReward
           ? { ...state.adventure.pendingReward, loot: hydrateLoot((state.adventure.pendingReward as unknown as { loot?: unknown }).loot) }

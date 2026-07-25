@@ -103,7 +103,10 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
         break;
       }
       case "openMerchant":
-        eventMerchant = { itemIds: [...new Set(effect.itemIds.filter((itemId) => ITEMS.some((item) => item.id === itemId)))] };
+        eventMerchant = {
+          itemIds: [...new Set(effect.itemIds.filter((itemId) => ITEMS.some((item) => item.id === itemId)))],
+          purchasedItemIds: [],
+        };
         break;
       case "playerNextCombatBuff":
       case "playerNextCombatDebuff":
@@ -144,10 +147,10 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
   };
 }
 
-/** Purchases one copy from the active event merchant. Merchant stock is intentionally unlimited. */
+/** Purchases the merchant's single stocked copy and preserves its sold-out slot. */
 export function purchaseEventMerchantItem(state: GameState, itemId: string): GameState {
   const merchant = state.adventure.eventMerchant;
-  if (!state.adventure.active || !state.adventure.eventResolved || !merchant?.itemIds.includes(itemId)) return state;
+  if (!state.adventure.active || !state.adventure.eventResolved || !merchant?.itemIds.includes(itemId) || merchant.purchasedItemIds.includes(itemId)) return state;
   const item = ITEMS.find((candidate) => candidate.id === itemId);
   if (!item) return state;
   const goldCost = getItemGoldCost(item);
@@ -158,6 +161,13 @@ export function purchaseEventMerchantItem(state: GameState, itemId: string): Gam
       ...state.character,
       gold: state.character.gold - goldCost,
       inventory: [...state.character.inventory, structuredClone(item)],
+    },
+    adventure: {
+      ...state.adventure,
+      eventMerchant: {
+        ...merchant,
+        purchasedItemIds: [...merchant.purchasedItemIds, itemId],
+      },
     },
   };
 }

@@ -1,10 +1,11 @@
-import { ChevronRight, FlaskConical, Package } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Backpack, ChevronRight, FlaskConical, Package } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GearSlotIcon } from "../GearSlotIcon";
+import { ItemDetailModal } from "../character/CharacterView";
 import { ITEMS } from "../../game/data";
 import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
-import { getItemGoldCost, getItemSellValue, isConsumableItem, isMiscItem } from "../../game/items";
-import type { AdventureEventDefinition, AdventureEventRollResult, InventoryItem } from "../../game/types";
+import { getItemGoldCost, getItemSellValue, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
+import type { AdventureEventDefinition, AdventureEventRollResult, CharacterState, GearItem, InventoryItem } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
 import { GoldIcon } from "../../ui/gameUi";
 
@@ -31,11 +32,14 @@ export function EventPresentation({
   rollResult,
   hasImmediateEncounter,
   merchantItemIds,
+  merchantPurchasedItemIds,
+  character,
   inventory,
   gold,
   onChoose,
   onPurchase,
   onSell,
+  onInventory,
   onContinue,
 }: {
   definition?: AdventureEventDefinition;
@@ -44,17 +48,23 @@ export function EventPresentation({
   rollResult: AdventureEventRollResult | null;
   hasImmediateEncounter: boolean;
   merchantItemIds: string[];
+  merchantPurchasedItemIds: string[];
+  character: CharacterState;
   inventory: InventoryItem[];
   gold: number;
   onChoose: (choiceId: string) => void;
   onPurchase: (itemId: string) => void;
   onSell: (itemId: string) => void;
+  onInventory: () => void;
   onContinue: () => void;
 }) {
   const [phase, setPhase] = useState<EventPresentationPhase>(() => getInitialEventPresentationPhase(rollResult, merchantItemIds.length));
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(() => rollResult?.choiceId ?? null);
   const [displayedRoll, setDisplayedRoll] = useState(() => rollResult && rollResult.resolution !== "direct" ? rollResult.dieRoll : randomD100());
   const [merchantMode, setMerchantMode] = useState<"buy" | "sell">("buy");
+  const [inspectedGear, setInspectedGear] = useState<GearItem | null>(null);
+  const [purchaseAnimationItemId, setPurchaseAnimationItemId] = useState<string | null>(null);
+  const purchaseAnimationTimer = useRef<number | null>(null);
   const selectedChoice = useMemo(
     () => definition?.choices.find((choice) => choice.id === (selectedChoiceId ?? rollResult?.choiceId)),
     [definition, rollResult?.choiceId, selectedChoiceId],
@@ -69,6 +79,10 @@ export function EventPresentation({
     const previousOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     return () => { document.documentElement.style.overflow = previousOverflow; };
+  }, []);
+
+  useEffect(() => () => {
+    if (purchaseAnimationTimer.current !== null) window.clearTimeout(purchaseAnimationTimer.current);
   }, []);
 
   useEffect(() => {
@@ -133,6 +147,16 @@ export function EventPresentation({
     setPhase(choiceOpensMerchant(definition, choiceId) ? "merchant" : choice?.resolution === "direct" ? "direct" : "rolling");
     onChoose(choiceId);
   };
+  const purchase = (itemId: string) => {
+    if (purchaseAnimationItemId || merchantPurchasedItemIds.includes(itemId)) return;
+    setPurchaseAnimationItemId(itemId);
+    onPurchase(itemId);
+    if (purchaseAnimationTimer.current !== null) window.clearTimeout(purchaseAnimationTimer.current);
+    purchaseAnimationTimer.current = window.setTimeout(() => {
+      setPurchaseAnimationItemId(null);
+      purchaseAnimationTimer.current = null;
+    }, 720);
+  };
   const introVisible = phase !== "title";
   const rollVisible = phase === "rolling" || phase === "raw" || phase === "bonus" || phase === "outcome";
   const resolutionVisible = phase === "direct" || rollVisible;
@@ -142,6 +166,7 @@ export function EventPresentation({
 
   return (
     <section className={`event-cinematic phase-${phase}`} role="dialog" aria-modal="true" aria-label={title}>
+      <button type="button" className="event-inventory-button" onClick={onInventory}><Backpack size={17} /> Inventory &amp; Gear</button>
       <div className="event-cinematic-stage">
         <h1 className="event-cinematic-title">{title}</h1>
         {introVisible && <p className="event-cinematic-description">{description}</p>}
@@ -202,7 +227,10 @@ export function EventPresentation({
             {merchantMode === "buy" ? <div className="event-merchant-grid">
               {merchantItems.map((item) => {
                 const cost = getItemGoldCost(item);
-                return <MerchantItemCard key={item.id} item={item} meta={item.rarity} buttonLabel={`${cost} Gold`} disabled={gold < cost} onAction={() => onPurchase(item.id)} />;
+                const purchased = merchantPurchasedItemIds.includes(item.id);
+                const purchasing = purchaseAnimationItemId === item.id;
+                if (purchased && !purchasing) return <div className="event-merchant-sold-out" key={item.id}><strong>Out of Stock</strong></div>;
+                return <MerchantItemCard key={item.id} item={item} meta={item.rarity} buttonLabel={`${cost} Gold`} disabled={gold < cost || Boolean(purchaseAnimationItemId)} purchasing={purchasing} onInspect={isGearItem(item) ? () => setInspectedGear(item) : undefined} onAction={() => purchase(item.id)} />;
               })}
             </div> : <>
               {inventoryItems.length === 0 && <div className="event-merchant-empty"><FlaskConical /><strong>Your inventory is empty.</strong><p>Return after finding something to sell.</p></div>}
@@ -210,7 +238,7 @@ export function EventPresentation({
                 {inventoryItems.map((item) => {
                   const count = inventory.filter((candidate) => candidate.id === item.id).length;
                   const sellValue = getItemSellValue(item);
-                  return <MerchantItemCard key={item.id} item={item} meta={`${item.rarity} · ${count} owned`} buttonLabel={`Sell · ${sellValue} Gold`} disabled={sellValue <= 0} onAction={() => onSell(item.id)} />;
+                  return <MerchantItemCard key={item.id} item={item} meta={`${item.rarity} · ${count} owned`} buttonLabel={`Sell · ${sellValue} Gold`} disabled={sellValue <= 0} onInspect={isGearItem(item) ? () => setInspectedGear(item) : undefined} onAction={() => onSell(item.id)} />;
                 })}
               </div>}
             </>}
@@ -218,20 +246,29 @@ export function EventPresentation({
           </div>
         )}
       </div>
+      {inspectedGear && <ItemDetailModal item={inspectedGear} character={character} locked viewOnly onClose={() => setInspectedGear(null)} />}
     </section>
   );
 }
 
-function MerchantItemCard({ item, meta, buttonLabel, disabled, onAction }: {
+function MerchantItemCard({ item, meta, buttonLabel, disabled, purchasing = false, onInspect, onAction }: {
   item: InventoryItem;
   meta: string;
   buttonLabel: string;
   disabled: boolean;
+  purchasing?: boolean;
+  onInspect?: () => void;
   onAction: () => void;
 }) {
-  return <article className={`event-merchant-item ${item.rarity}`}>
+  return <article
+    className={`event-merchant-item ${item.rarity} ${onInspect ? "inspectable" : ""} ${purchasing ? "purchasing" : ""}`}
+    role={onInspect ? "button" : undefined}
+    tabIndex={onInspect ? 0 : undefined}
+    onClick={onInspect}
+    onKeyDown={onInspect ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onInspect(); } } : undefined}
+  >
     <span className="event-merchant-icon">{isConsumableItem(item) ? <FlaskConical /> : isMiscItem(item) ? <Package /> : <GearSlotIcon slot={item.slot} item={item} size={30} />}</span>
     <small>{meta}</small><strong>{item.name}</strong><p>{item.description}</p>
-    <button type="button" disabled={disabled} onClick={onAction}><GoldIcon /> {buttonLabel}</button>
+    <button type="button" disabled={disabled} onClick={(event) => { event.stopPropagation(); onAction(); }}><GoldIcon /> {purchasing ? "Purchased!" : buttonLabel}</button>
   </article>;
 }

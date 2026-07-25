@@ -5,10 +5,11 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getDerivedStats } from "../../game/character";
+import { getStatusAdjustedCombatStats } from "../../game/combatStats";
 import { STATUS_DURATION_SEGMENTS, STATUS_EFFECTS } from "../../game/statusEffects";
 import type { Ability, CombatPassiveAnimation, EnemyState, InspectableInfo, StatusEffect, StatusEffectId } from "../../game/types";
 
-import { AbilityTypeIcon, ATTRIBUTE_SUMMARIES, formatPercent, formatStat, getAbilityTypeLabel, getDerivedStatRows, STAT_LABELS, StatIcon, STATUS_ICONS } from "../../ui/gameUi";
+import { AbilityTypeIcon, ATTRIBUTE_SUMMARIES, formatPercent, formatStat, getAbilityTypeLabel, getDerivedStatRows, STAT_LABELS, StatIcon, STATUS_ICONS, type StatIconName } from "../../ui/gameUi";
 
 export function HealthBar({ value, max, damageAmount, damageSource, missed = false }: { value: number; max: number; damageAmount?: number; damageSource?: string; missed?: boolean }) {
   const previousValue = useRef(value);
@@ -193,18 +194,22 @@ export function StatusBadge({ id, name, stacks, duration, permanent = false, kin
 }
 
 export function EnemyStatsModal({ enemy, onClose }: { enemy: EnemyState; onClose: () => void }) {
+  const effective = getStatusAdjustedCombatStats({
+    ...enemy,
+    energyRegen: enemy.energyRegen + (enemy.nextTurnEnergyRegenBonus ?? 0),
+  }, enemy.statuses);
   const stats = [
-    ["Max Health", enemy.maxHp],
-    ["Physical Power", enemy.physicalPower],
-    ["Spell Power", enemy.spellPower],
-    ["Armor", enemy.armor],
-    ["Magic Resistance", enemy.magicResistance],
-    ["Hit Chance", formatPercent(enemy.hitChance)],
-    ["Dodge Chance", formatPercent(enemy.dodgeChance)],
-    ["Critical Strike Chance", formatPercent(enemy.critChance)],
-    ["Energy Regeneration", enemy.energyRegen],
-    ["Max Energy", enemy.maxEnergy],
-  ] as const;
+    { label: "Max Health", value: enemy.maxHp, icon: "maxHp" },
+    { label: "Physical Power", value: enemy.physicalPower, icon: "physicalPower" },
+    { label: "Spell Power", value: enemy.spellPower, icon: "magicalPower" },
+    { label: "Armor", value: effective.armor, icon: "armor" },
+    { label: "Magic Resistance", value: enemy.magicResistance, icon: "magicResistance" },
+    { label: "Hit Chance", value: formatPercent(effective.hitChance), icon: "hitChance" },
+    { label: "Dodge Chance", value: formatPercent(effective.dodgeChance), icon: "dodgeChance" },
+    { label: "Critical Strike Chance", value: formatPercent(effective.critChance), icon: "critChance" },
+    { label: "Energy Regeneration", value: effective.energyRegen, icon: "maxEnergy" },
+    { label: "Max Energy", value: enemy.maxEnergy, icon: "maxEnergy" },
+  ] satisfies Array<{ label: string; value: string | number; icon: StatIconName }>;
   return (
     <div className="inspect-info-modal" role="dialog" aria-modal="true" aria-label={`${enemy.name} stats`} onClick={onClose}>
       <div className="inspect-info-card enemy-stats-card" onClick={(event) => event.stopPropagation()}>
@@ -214,7 +219,7 @@ export function EnemyStatsModal({ enemy, onClose }: { enemy: EnemyState; onClose
         <div className="enemy-stats-content">
           <figure className="enemy-full-art"><img src={enemy.imageUrl} alt={`${enemy.name}, ${enemy.title}`} draggable={false} /></figure>
           <div className="enemy-stats-grid">
-            {stats.map(([label, value]) => <span key={label}><small>{label}</small><strong>{value}</strong></span>)}
+            {stats.map((stat) => <span key={stat.label}><StatIcon stat={stat.icon} /><small>{stat.label}</small><strong>{stat.value}</strong></span>)}
           </div>
         </div>
         <button type="button" onClick={onClose}>Close</button>

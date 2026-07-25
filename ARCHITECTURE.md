@@ -37,7 +37,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 ### Application and UI
 
 - `src/App.tsx` owns top-level React state, navigation, application orchestration, and the high-level commands sent to game modules. It lazy-loads the talent screen and developer tools so those large editing surfaces are absent from the initial bundle.
-- `src/components/character/` owns character creation plus the Character and Equipment/Inventory screens.
+- `src/components/character/` owns character creation plus the Character and Equipment/Inventory screens. Its gear-detail modal is also reused in read-only form by merchant and score-screen surfaces so item rules remain visually consistent.
 - `src/components/adventure/` owns adventure selection, combat-screen composition, score screens, and the cinematic event sequence. `EventPresentation.tsx` reveals the title, scenario, choices, precomputed d100 result, derived-stat bonus, and outcome in order without recalculating the event rule; direct merchant choices instead reveal their resolved outcome text and stock together.
 - `src/components/combat/` owns the combat HUD, initiative presentation, and transient combat/VFX renderers.
 - `src/components/talents/` owns the runtime talent tree, talent details, and ability-loadout dialogs.
@@ -58,6 +58,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/types.ts` is the shared domain schema.
 - `src/game/data.ts` is the stable public content facade. Canonical definitions live in responsibility-specific modules under `src/game/content/`: abilities, talents/tree canvas, enemies, gear/set thresholds, and adventures/events.
 - `src/game/statusEffects.ts` is the canonical status catalog and owns generic status stacking, duration, multipliers, ticking damage, and healing formulas.
+- `src/game/combatStats.ts` projects the temporary status adjustments used by combat onto player/enemy stat readouts, keeping inspection values aligned with resolution rules.
 - `src/game/avatars.ts` owns the appearance catalog, full-figure and combat-portrait asset mapping, and normalization.
 
 ### Rules and transitions
@@ -68,10 +69,10 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/combatFeatures.ts` aggregates data-driven gear, set, and talent combat features.
 - `src/game/talentRequirements.ts` owns bidirectional ANY-connection evaluation for both UI state and unlock authorization.
 - `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, and item category normalization.
-- `src/game/items.ts` owns the explicit gear, consumable, and ordinary-item classification plus prices, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
+- `src/game/items.ts` owns the explicit gear, consumable, and ordinary-item classification plus prices, inventory grouping, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` independently rolls every defeated enemy instance's drop table plus the current stage drop table, applies a combat reward exactly once, transfers found items into inventory, and stores the immutable score-screen snapshot.
-- `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists event-merchant stock, and owns atomic merchant purchases and one-copy inventory sales.
+- `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists per-item event-merchant sold-out state, and owns atomic single-stock purchases and one-copy inventory sales.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
 - `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
 - `src/game/timing.ts` is the source of truth for combat, initiative, and adventure-event presentation durations.
@@ -362,7 +363,7 @@ Starting an adventure uses the same travel-transition contract as advancing a st
 - `beginAdventure` creates the first combat at Max Health.
 - Victory triggers `grantCombatReward` through a React effect.
 - Reward identity plus node index prevents duplicate application.
-- The score screen reads `pendingReward`, which records before/after level and XP values even though the character has already received the reward.
+- The score screen reads `pendingReward`, which records before/after level and XP values even though the character has already received the reward. It groups identical loot for presentation, permits read-only gear inspection, and blocks further journey progression after a level gain until all awarded Attribute and Talent Points are spent.
 - Continuing carries final Health into the next combat or event.
 - Events roll `d100 + the selected derived attribute` against their configured threshold, then apply every effect in the structured success or failure outcome. The resolved roll remains authoritative while `EventPresentation` first fades in and lifts the title, reveals the scenario and label-only choices, then presents the chosen description alongside the cycling d100, locks the raw die, adds the attribute bonus, and finally reveals the narrative outcome. Outcomes can heal or remove Health, add or remove currency/XP, grant points/items, queue player or enemy statuses for the next combat, or launch an immediate rewarded encounter. Queued statuses persist across non-combat stages and are consumed exactly once when combat is created.
 - Completing the final stage clears active combat, records the adventure ID on the character, and marks the adventure completed.
@@ -420,7 +421,7 @@ Enemy, Event, Adventure, and Item editors retain browser-local drafts under lega
 
 ## Regression protection
 
-- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, opposed Hit/Dodge arithmetic and caps, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, merchant purchases and sales, item drops, and presentation-timed consumable resolution.
+- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, opposed Hit/Dodge arithmetic and caps, temporary combat-stat projection, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, single-stock merchant purchases and sales, grouped item drops, and presentation-timed consumable resolution.
 - `npm run docs:check` verifies that the documented talent count matches the live talent catalog.
 - `npm run build` remains the full type-check and production-bundle gate. UI, touch, animation, and VFX behavior still require browser verification at desktop and mobile widths.
 
