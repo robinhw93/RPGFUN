@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
+import { moveAdventureStage, normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
@@ -92,6 +92,19 @@ function testAdventureEditorRepairsInternalIds() {
   assert.equal(adventure.id, "readable-adventure", "A missing adventure ID should be generated from its name.");
   assert.equal(adventure.stages[0].id, "first-stage", "A missing stage ID should be generated from its name.");
   assert.deepEqual(adventure.stages[0].entries.map((entry) => entry.id), ["repeated-encounter", "repeated-encounter-2"], "Missing or duplicate stage possibility IDs should be repaired without user input.");
+}
+
+function testAdventureEditorReordersStages() {
+  const stages = [
+    { id: "forest-edge", name: "Forest Edge", entries: [] },
+    { id: "green-hollows", name: "Green Hollows", entries: [] },
+    { id: "heartwood", name: "Heartwood", entries: [] },
+  ];
+  const movedDown = moveAdventureStage(stages, "forest-edge", 1);
+  assert.deepEqual(movedDown.map((stage) => stage.id), ["green-hollows", "forest-edge", "heartwood"], "Moving a stage down must update the live adventure order.");
+  assert.deepEqual(stages.map((stage) => stage.id), ["forest-edge", "green-hollows", "heartwood"], "Stage reordering must not mutate the previous draft.");
+  assert.equal(moveAdventureStage(stages, "forest-edge", -1), stages, "A stage already at the top must remain in place.");
+  assert.equal(moveAdventureStage(stages, "missing", 1), stages, "An unknown stage must not change the draft.");
 }
 
 function testEventEditorRepairsInternalIds() {
@@ -227,6 +240,7 @@ function testCombatConsumable() {
 testContentIntegrity();
 testStoryEncounterIntroduction();
 testAdventureEditorRepairsInternalIds();
+testAdventureEditorReordersStages();
 testEventEditorRepairsInternalIds();
 testItemEditorRepairsInternalIds();
 testStatusContracts();
