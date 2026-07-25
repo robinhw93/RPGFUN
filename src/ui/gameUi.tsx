@@ -46,6 +46,10 @@ export const INVENTORY_GEAR_FILTERS: Array<{ id: InventoryGearFilter; label: str
 
 export const RARITY_SORT_WEIGHT: Record<ItemRarity, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
 
+export function getItemNameClass(item: Pick<InventoryItem, "rarity">): string {
+  return `item-name item-name-${item.rarity}`;
+}
+
 export function itemMatchesInventoryFilter(item: InventoryItem, filter: InventoryGearFilter): boolean {
   if (filter === "all") return true;
   if (filter === "consumable") return isConsumableItem(item);

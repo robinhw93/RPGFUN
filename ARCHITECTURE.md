@@ -42,7 +42,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/components/town/` owns the illustrated Arkenfall hub, vendor tabs, recipe/material presentation, purchase/crafting feedback, and tavern-rest screen. It calls shared game transitions and does not mutate Inventory, gold, or carried Health itself.
 - `src/components/combat/` owns the combat HUD, initiative presentation, and transient combat/VFX renderers.
 - `src/components/talents/` owns the runtime talent tree, talent details, and ability-loadout dialogs.
-- `src/ui/gameUi.tsx` owns shared presentation helpers such as stat/ability icons, encounter wording, asset preloading, and display-only derived-stat rows.
+- `src/ui/gameUi.tsx` owns shared presentation helpers such as stat/ability icons, the global rarity-based item-name class, encounter wording, asset preloading, and display-only derived-stat rows.
 - `src/hooks/useCombatActionQueue.ts` owns the transient player-input queue, projects abilities and consumable counts/effects, captures targets, and dispatches one action whenever the presentation sequencer is ready.
 - `src/hooks/useCombatEventSequencer.ts` schedules visible combat events and applies their pending state effects at the correct message/impact time.
 - `src/components/FloatingCombatText.tsx` presents the event queue and reports when each entry appears and when the sequence completes.

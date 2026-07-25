@@ -7,7 +7,7 @@ import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, isGearItem } from "../../game/items";
 import type { AdventureEventDefinition, AdventureEventRollResult, CharacterState, GearItem, InventoryItem } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
-import { GoldIcon } from "../../ui/gameUi";
+import { getItemNameClass, GoldIcon } from "../../ui/gameUi";
 
 type EventPresentationPhase = "title" | "description" | "choices" | "direct" | "rolling" | "raw" | "bonus" | "outcome" | "merchant";
 
@@ -268,7 +268,7 @@ function MerchantItemCard({ item, meta, buttonLabel, disabled, purchasing = fals
     onKeyDown={onInspect && !soldOut ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onInspect(); } } : undefined}
   >
     <span className="event-merchant-icon"><ItemIcon item={item} size={42} /></span>
-    <small>{meta}</small><strong>{item.name}</strong><p>{item.description}</p>
+    <small>{meta}</small><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p>
     <button type="button" disabled={disabled || soldOut} onClick={(event) => { event.stopPropagation(); onAction(); }}><GoldIcon /> {purchasing ? "Purchased!" : buttonLabel}</button>
     {soldOut && <span className="event-merchant-sold-out" aria-label={`${item.name} is out of stock`}><strong>Out of Stock</strong></span>}
   </article>;

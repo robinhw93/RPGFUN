@@ -7,7 +7,7 @@ import { describeConsumableEffect, getItemGoldCost, isConsumableItem, isGearItem
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_MEALS, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, GameState, InventoryItem } from "../../game/types";
-import { formatItemStatValue, getItemStatLines, GoldIcon } from "../../ui/gameUi";
+import { formatItemStatValue, getItemNameClass, getItemStatLines, GoldIcon } from "../../ui/gameUi";
 
 type TownLocation = "square" | "blacksmith" | "alchemist" | "tavern";
 type VendorTab = "shop" | "craft";
@@ -32,7 +32,7 @@ function TownItemDetails({ item, onClose }: { item: InventoryItem; onClose: () =
     <div className="town-item-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <article className={`town-item-modal rarity-${item.rarity}`} role="dialog" aria-modal="true" aria-labelledby="town-item-title">
         <button type="button" className="town-modal-close" onClick={onClose} aria-label="Close item details"><X /></button>
-        <div className="town-item-modal-heading"><ItemIcon item={item} /><div><p className="eyebrow">{item.rarity} {itemSubtitle(item)}</p><h2 id="town-item-title">{item.name}</h2></div></div>
+        <div className="town-item-modal-heading"><ItemIcon item={item} /><div><p className="eyebrow">{item.rarity} {itemSubtitle(item)}</p><h2 className={getItemNameClass(item)} id="town-item-title">{item.name}</h2></div></div>
         <p>{item.description || "No description has been written for this item yet."}</p>
         {isConsumableItem(item) && <ul>{item.effects.map((effect, index) => <li key={index}>{describeConsumableEffect(effect)}</li>)}</ul>}
         {isGearItem(item) && <div className="town-item-stat-list">
@@ -59,11 +59,11 @@ function VendorItemCard({ item, mode, game, station, actionItemId, onInspect, on
   return (
     <article className={`town-item-card rarity-${item.rarity} ${actionItemId === item.id ? "item-acquired" : ""}`}>
       <button type="button" className="town-item-inspect" onClick={onInspect} aria-label={`Inspect ${item.name}`}><ItemIcon item={item} /></button>
-      <div className="town-item-copy"><p className="eyebrow">{item.rarity} · {itemSubtitle(item)}</p><h3>{item.name}</h3><p>{item.description || "A useful item from Arkenfall."}</p></div>
+      <div className="town-item-copy"><p className="eyebrow">{item.rarity} · {itemSubtitle(item)}</p><h3 className={getItemNameClass(item)}>{item.name}</h3><p>{item.description || "A useful item from Arkenfall."}</p></div>
       {mode === "craft" && recipe && <div className="town-recipe-list">{recipe.ingredients.map((ingredient) => {
         const material = ITEM_BY_ID.get(ingredient.itemId);
         const owned = getInventoryItemCount(game.character.inventory, ingredient.itemId);
-        return <span className={owned >= ingredient.quantity ? "ready" : "missing"} key={ingredient.itemId}>{material?.name ?? ingredient.itemId} <strong>{owned}/{ingredient.quantity}</strong></span>;
+        return <span className={owned >= ingredient.quantity ? "ready" : "missing"} key={ingredient.itemId}>{material ? <em className={getItemNameClass(material)}>{material.name}</em> : ingredient.itemId} <strong>{owned}/{ingredient.quantity}</strong></span>;
       })}</div>}
       <button type="button" className="town-item-action" disabled={mode === "shop" ? !affordable : !craftable} onClick={onAction}>
         {mode === "shop" ? <><ShoppingBag /> Buy <span><GoldIcon /> {getItemGoldCost(item)}</span></> : station === "alchemist" ? <><FlaskConical /> Brew</> : <><Hammer /> Craft</>}

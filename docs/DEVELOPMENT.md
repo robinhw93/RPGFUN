@@ -470,5 +470,5 @@ For gear changes, verify:
 - Rarity colors, alphabetical stats, set thresholds, and comparison differences.
 - Background scroll lock in all item and slot modals.
 - Merchant and score-screen read-only gear inspection, merchant purchase/sold-out animation, grouped duplicate loot, and the event Inventory/Equipment shortcut at mobile and desktop widths.
-- Per-item artwork consistency across Inventory, equipment slots, details/comparison, the in-combat Inventory, merchants, and score-screen loot.
+- Per-item artwork consistency and rarity-colored item names across Inventory, equipment slots, details/comparison, the in-combat Inventory, merchants, crafting requirements, and score-screen loot.
 - Completed adventures remain listed with the green Completed treatment and expose a Replay Adventure action. Replay combat and positive event XP pass through the shared 10%-reward rule, while locked prerequisites remain rejected at the application start boundary.

@@ -438,7 +438,7 @@ Every current live item has its own generated square artwork. The same item imag
 
 Consumables and Other Items can select any generated item artwork in the Item Editor. The selected image is part of the canonical item definition and therefore follows the item through every runtime surface after Save.
 
-Items use five ordered rarities: **Common**, **Uncommon**, **Rare**, **Epic**, and **Legendary**. Legendary is the highest rarity and uses a warm gold-orange presentation wherever item rarity is shown.
+Items use five ordered rarities: **Common**, **Uncommon**, **Rare**, **Epic**, and **Legendary**. Every player-facing item name always uses its rarity color: Common white, Uncommon green, Rare blue, Epic purple, and Legendary orange. This is a global presentation rule across score-screen loot, Inventory, equipment, details and comparisons, combat consumables, merchants, and crafting requirements. Legendary is the highest rarity and uses a warm gold-orange presentation wherever item rarity is shown.
 
 ### Slots
 

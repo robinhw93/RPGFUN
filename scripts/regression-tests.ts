@@ -18,7 +18,7 @@ import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import { craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, ItemDropDefinition } from "../src/game/types";
-import { getItemStatLines } from "../src/ui/gameUi";
+import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
 
 function testGearIconLibrary() {
   assert.equal(Object.keys(GEAR_ICON_VARIANTS).length, 14, "Every supported gear category needs its own generated icon group.");
@@ -47,6 +47,12 @@ function testGearCombatStatsArePresented() {
   const lines = getItemStatLines(boots);
   assert.deepEqual(lines.find((line) => line.label === "Initiative"), { label: "Initiative", value: 3, icon: "initiativeBonus", percent: undefined });
   assert.deepEqual(lines.find((line) => line.label === "Dodge Chance"), { label: "Dodge Chance", value: 0.01, icon: "dodgeChance", percent: true });
+}
+
+function testItemNameRarityClasses() {
+  (["common", "uncommon", "rare", "epic", "legendary"] as const).forEach((rarity) => {
+    assert.equal(getItemNameClass({ rarity }), `item-name item-name-${rarity}`, `${rarity} item names must use the global rarity presentation class.`);
+  });
 }
 
 function testContentIntegrity() {
@@ -520,6 +526,7 @@ function testIndependentItemDrops() {
 testContentIntegrity();
 testGearIconLibrary();
 testGearCombatStatsArePresented();
+testItemNameRarityClasses();
 testStoryEncounterIntroduction();
 testCompletedAdventureAvailability();
 testStoryReplayRewards();

@@ -20,6 +20,7 @@ Do not infer current rules from an old conversation alone. This game changes fre
 - All game UI, player-facing descriptions, tooltips, combat text, and content names are English. Communicate with the project owner in Swedish unless they use another language.
 - Write for players. Do not expose internal field names, formulas labelled as developer rules, debug terminology, or implementation notes in the game UI.
 - Never use browser-native `alert`, `confirm`, `prompt`, or `title` tooltips. Use game-owned dialogs, modals, and `data-game-tooltip` behavior.
+- Every player-facing item name uses its rarity color everywhere it appears: Common white, Uncommon green, Rare blue, Epic purple, and Legendary orange.
 - Combat must fit a phone viewport without vertical page scrolling. Respect browser safe areas and test narrow mobile layouts.
 - Tap and long-press are distinct: tap performs an action; long-press explains it without performing it.
 - Modals lock background scrolling. Their backdrop may dim and blur the game, but should not become fully opaque unless the screen is intentionally a travel transition.

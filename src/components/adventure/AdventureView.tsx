@@ -36,7 +36,7 @@ import { ElectrifiedApplicationEffect, EnemyStatsModal, EnergySegments, HealthBa
 
 import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 
-import { GoldIcon, preloadImage } from "../../ui/gameUi";
+import { getItemNameClass, GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
 export function AdventureView({ game, derived, queuedActions, onBegin, onTown, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
@@ -503,7 +503,7 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
             const targetUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "target") && !selectedTargetAvailable;
             const groupUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "all_enemies") && !visibleEnemyAvailable;
             const unavailable = targetUnavailable || groupUnavailable;
-            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><ItemIcon item={item} size={42} /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{unavailable && <em>No valid enemy target.</em>}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
+            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><ItemIcon item={item} size={42} /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{unavailable && <em>No valid enemy target.</em>}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
           })}
         </div>
       </section>
@@ -593,7 +593,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
           {groupedLoot.map(({ item, count }) => {
             const content = <>
               <span className="score-loot-glyph"><ItemIcon item={item} size={40} /></span>
-              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
+              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong className={getItemNameClass(item)}>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
             </>;
             return isGearItem(item)
               ? <button type="button" className={`score-loot-card inspectable ${item.rarity}`} key={item.id} onClick={() => setInspectedGear(item)}>{content}</button>
