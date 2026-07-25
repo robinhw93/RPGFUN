@@ -1,6 +1,6 @@
 import { FlaskConical, Gem, Package, Plus, Shield, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { GEAR_SETS, ITEMS } from "../../game/data";
+import { ADVENTURES, GEAR_SETS, ITEMS } from "../../game/data";
 import { getItemGoldCost, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { getItemIconUrl, ITEM_ARTWORK_URLS } from "../../game/itemIcons";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
@@ -46,12 +46,13 @@ export function normalizeItemExchange(exchange: ItemExchange): ItemExchange {
     const id = ensureInternalId(item.id, idPrefix, used, item.name);
     const itemWithId = { ...item, id } as InventoryItem;
     const arkenfallVendor = getArkenfallVendor(itemWithId);
+    const vendorPrerequisiteAdventureId = arkenfallVendor ? item.vendorPrerequisiteAdventureId ?? null : null;
     const rawRecipe = getItemCraftingRecipe(itemWithId);
-    const craftingRecipe = rawRecipe ? { ...rawRecipe, ingredients: rawRecipe.ingredients.map((ingredient) => ({ ...ingredient, quantity: Math.max(1, Math.round(ingredient.quantity || 1)) })) } : null;
-    if (isConsumableItem(item)) return { ...item, id, goldCost: getItemGoldCost(item), effects: item.effects ?? [], arkenfallVendor, craftingRecipe };
-    if (isMiscItem(item)) return { ...item, kind: "misc" as const, id, goldCost: getItemGoldCost(item), arkenfallVendor, craftingRecipe };
+    const craftingRecipe = rawRecipe ? { ...rawRecipe, prerequisiteAdventureId: rawRecipe.prerequisiteAdventureId ?? null, ingredients: rawRecipe.ingredients.map((ingredient) => ({ ...ingredient, quantity: Math.max(1, Math.round(ingredient.quantity || 1)) })) } : null;
+    if (isConsumableItem(item)) return { ...item, id, goldCost: getItemGoldCost(item), effects: item.effects ?? [], arkenfallVendor, vendorPrerequisiteAdventureId, craftingRecipe };
+    if (isMiscItem(item)) return { ...item, kind: "misc" as const, id, goldCost: getItemGoldCost(item), arkenfallVendor, vendorPrerequisiteAdventureId, craftingRecipe };
     const set = item.set ? setById.get(item.set) : undefined;
-    return { ...item, kind: "gear" as const, id, goldCost: getItemGoldCost(item), stats: item.stats ?? {}, set: set?.id, setName: set?.name, arkenfallVendor, craftingRecipe };
+    return { ...item, kind: "gear" as const, id, goldCost: getItemGoldCost(item), stats: item.stats ?? {}, set: set?.id, setName: set?.name, arkenfallVendor, vendorPrerequisiteAdventureId, craftingRecipe };
   });
   return { format: "arkenfall-items", version: 1, items, sets };
 }
@@ -71,7 +72,7 @@ function blankEffect(type: ConsumableEffect["type"]): ConsumableEffect {
 function ArkenfallAvailabilityFields({ item, allItems, onChange }: {
   item: InventoryItem;
   allItems: InventoryItem[];
-  onChange: (change: { arkenfallVendor?: ArkenfallVendorId | null; craftingRecipe?: ItemCraftingRecipe | null }) => void;
+  onChange: (change: { arkenfallVendor?: ArkenfallVendorId | null; vendorPrerequisiteAdventureId?: string | null; craftingRecipe?: ItemCraftingRecipe | null }) => void;
 }) {
   const vendor = getArkenfallVendor(item);
   const recipe = getItemCraftingRecipe(item);
@@ -86,15 +87,17 @@ function ArkenfallAvailabilityFields({ item, allItems, onChange }: {
       <legend>Arkenfall availability</legend>
       <div className="content-form-grid">
         <label className="content-checkbox-field">
-          <input type="checkbox" checked={vendor !== null} onChange={(event) => onChange({ arkenfallVendor: event.target.checked ? (isConsumableItem(item) ? "alchemist" : "blacksmith") : null })} />
+          <input type="checkbox" checked={vendor !== null} onChange={(event) => onChange({ arkenfallVendor: event.target.checked ? (isConsumableItem(item) ? "alchemist" : "blacksmith") : null, vendorPrerequisiteAdventureId: null })} />
           <span>Sold in Arkenfall</span>
         </label>
         {vendor && <label><span>Vendor</span><select value={vendor} onChange={(event) => onChange({ arkenfallVendor: event.target.value as ArkenfallVendorId })}>{ARKENFALL_VENDORS.map((option) => <option value={option.id} key={option.id}>{option.shop}</option>)}</select></label>}
+        {vendor && <label><span>Shop unlock requirement</span><select value={item.vendorPrerequisiteAdventureId ?? ""} onChange={(event) => onChange({ vendorPrerequisiteAdventureId: event.target.value || null })}><option value="">No completed adventure required</option>{ADVENTURES.map((adventure) => <option value={adventure.id} key={adventure.id}>{adventure.name}</option>)}</select></label>}
         <label className="content-checkbox-field">
-          <input type="checkbox" checked={recipe !== null} disabled={!defaultIngredientId && !recipe} onChange={(event) => onChange({ craftingRecipe: event.target.checked ? { station: isConsumableItem(item) ? "alchemist" : "blacksmith", ingredients: defaultIngredientId ? [{ itemId: defaultIngredientId, quantity: 1 }] : [] } : null })} />
+          <input type="checkbox" checked={recipe !== null} disabled={!defaultIngredientId && !recipe} onChange={(event) => onChange({ craftingRecipe: event.target.checked ? { station: isConsumableItem(item) ? "alchemist" : "blacksmith", ingredients: defaultIngredientId ? [{ itemId: defaultIngredientId, quantity: 1 }] : [], prerequisiteAdventureId: null } : null })} />
           <span>Craftable</span>
         </label>
         {recipe && <label><span>Crafting location</span><select value={recipe.station} onChange={(event) => updateRecipe({ station: event.target.value as ArkenfallVendorId })}>{ARKENFALL_VENDORS.map((option) => <option value={option.id} key={option.id}>{option.crafting}</option>)}</select></label>}
+        {recipe && <label><span>Recipe unlock requirement</span><select value={recipe.prerequisiteAdventureId ?? ""} onChange={(event) => updateRecipe({ prerequisiteAdventureId: event.target.value || null })}><option value="">No completed adventure required</option>{ADVENTURES.map((adventure) => <option value={adventure.id} key={adventure.id}>{adventure.name}</option>)}</select></label>}
       </div>
       {recipe && <div className="crafting-recipe-editor">
         <p>Required items</p>

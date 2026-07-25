@@ -619,11 +619,15 @@ export interface ItemCraftingIngredient {
 export interface ItemCraftingRecipe {
   station: ArkenfallVendorId;
   ingredients: ItemCraftingIngredient[];
+  /** The recipe remains hidden until this story adventure has been completed. */
+  prerequisiteAdventureId?: string | null;
 }
 
 export interface ArkenfallItemAvailability {
   /** Undefined preserves the live legacy defaults; null explicitly removes an item from town vendors. */
   arkenfallVendor?: ArkenfallVendorId | null;
+  /** The vendor item remains hidden until this story adventure has been completed. */
+  vendorPrerequisiteAdventureId?: string | null;
   /** Undefined preserves any live legacy recipe; null explicitly makes the item unavailable for crafting. */
   craftingRecipe?: ItemCraftingRecipe | null;
 }

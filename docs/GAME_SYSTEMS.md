@@ -373,7 +373,7 @@ The result is then multiplied by the target's healing-received multiplier and li
 
 Town vendor stock is repeatable rather than single-stock: unlike a Wandering Merchant, buying an item does not permanently remove its listing. Item names use their rarity color in both permanent and Wandering Merchant shops: Common white, Uncommon green, Rare blue, Epic purple, and Legendary orange. Every transaction is saved through the normal `GameState` autosave. Recipe cards show owned and required material counts, and cannot be used until every requirement is met. Items and materials are ordinary Inventory copies, so equipped gear is not consumed as a crafting ingredient.
 
-Items may independently be sold in Arkenfall, craftable, both, or neither. Item Editor selects the vendor, crafting location, ingredient items, and quantities. Saving through the local Vite server validates every referenced item before replacing the live catalog.
+Items may independently be sold in Arkenfall, craftable, both, or neither. Item Editor selects the vendor, crafting location, ingredient items, and quantities. Shop stock and recipes each have their own optional completed-adventure requirement, selected by adventure name. A gated item is omitted entirely from its Shop or Crafting/Brew list until the character has completed that adventure, and the transaction layer enforces the same requirement. Saving through the local Vite server validates every referenced item and adventure before replacing the live catalog.
 
 ## Adventures and events
 

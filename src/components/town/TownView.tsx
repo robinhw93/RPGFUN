@@ -75,7 +75,7 @@ function VendorItemCard({ item, mode, game, station, actionItemId, onInspect, on
 }) {
   const recipe = getItemCraftingRecipe(item);
   const affordable = game.character.gold >= getItemGoldCost(item);
-  const craftable = canCraftTownItem(game.character.inventory, item, station);
+  const craftable = canCraftTownItem(game.character.inventory, item, station, game.character.completedAdventureIds);
   return (
     <article className={`town-item-card rarity-${item.rarity} ${actionItemId === item.id ? "item-acquired" : ""}`}>
       <button type="button" className="town-item-inspect" onClick={onInspect} aria-label={`Inspect ${item.name}`}><ItemIcon item={item} /></button>
@@ -105,7 +105,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [actionItemId, setActionItemId] = useState<string | null>(null);
   const { toast: purchaseToast, showToast: showPurchaseToast } = useTownToast<InventoryItem>();
-  const stock = useMemo(() => tab === "shop" ? getTownVendorStock(vendor) : getTownCraftingCatalog(vendor), [tab, vendor]);
+  const stock = useMemo(() => tab === "shop" ? getTownVendorStock(vendor, game.character.completedAdventureIds) : getTownCraftingCatalog(vendor, game.character.completedAdventureIds), [game.character.completedAdventureIds, tab, vendor]);
   const isAlchemist = vendor === "alchemist";
   const runAction = (item: InventoryItem) => {
     const result = tab === "shop" ? onBuy(vendor, item.id) : onCraft(vendor, item.id);

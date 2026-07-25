@@ -456,7 +456,7 @@ The town hub is listed above adventures and contains three illustrated destinati
 | Alchemist — Ray Charlston | Repeatable Shop purchases and potion Brewing. | All legacy consumables are sold here. Minor Healing Potion requires 2 Small Bloodberries and 1 Yumberries. |
 | The Resting Hart | Paid full recovery and next-combat meals. | Rest costs 1 Gold per 3 missing Health, rounded up. Ironpot Stew costs 5 Gold and grants Strengthened; Peppercrust Boar costs 8 Gold and grants Fierce; Hartroot Broth costs 10 Gold and grants Regenerate. Each meal benefit is applied when the next combat begins and may be prepared once at a time. |
 
-These legacy defaults keep the original item catalog usable after the hub update. Item Editor writes an explicit vendor or no-vendor value and an explicit recipe or non-craftable value for later edits, so future stock is fully data-driven.
+These legacy defaults keep the original item catalog usable after the hub update. Item Editor writes an explicit vendor or no-vendor value and an explicit recipe or non-craftable value for later edits, so future stock is fully data-driven. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab.
 
 ## Adventure: Windsong Forest
 

@@ -314,7 +314,7 @@ function validatePassive(value: unknown, label: string) {
   });
 }
 
-function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): { items: unknown[]; sets: unknown[] } {
+function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>, adventureIds: Set<string>): { items: unknown[]; sets: unknown[] } {
   const exchange = catalogObject(exchangeValue, "Item exchange");
   if (exchange.format !== "arkenfall-items" || exchange.version !== 1 || !Array.isArray(exchange.items) || !Array.isArray(exchange.sets)) throw new Error("Unsupported item exchange format.");
   const itemIds = exchange.items.map((raw: unknown) => catalogId(catalogObject(raw, "Item").id, "Item ID"));
@@ -323,6 +323,11 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
   const knownSets = new Set(setIds);
   const knownItems = new Set(itemIds);
   const townVendors = new Set(["blacksmith", "alchemist"]);
+  const validateAdventureRequirement = (value: unknown, label: string) => {
+    if (value === undefined || value === null) return;
+    const adventureId = catalogId(value, label);
+    if (!adventureIds.has(adventureId)) throw new Error(`${label} references an adventure that does not exist.`);
+  };
 
   exchange.sets.forEach((raw: unknown) => {
     const set = catalogObject(raw, "Gear set");
@@ -346,9 +351,12 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
     catalogNumber(item.goldCost, `${item.name} gold cost`);
     if (!itemRarities.has(item.rarity)) throw new Error(`${item.name} has an invalid rarity.`);
     if (item.arkenfallVendor !== undefined && item.arkenfallVendor !== null && !townVendors.has(item.arkenfallVendor as string)) throw new Error(`${item.name} has an invalid Arkenfall vendor.`);
+    validateAdventureRequirement(item.vendorPrerequisiteAdventureId, `${item.name} shop unlock requirement`);
+    if (item.arkenfallVendor === null && item.vendorPrerequisiteAdventureId) throw new Error(`${item.name} cannot have a shop unlock requirement without an Arkenfall vendor.`);
     if (item.craftingRecipe !== undefined && item.craftingRecipe !== null) {
       const recipe = catalogObject(item.craftingRecipe, `${item.name} crafting recipe`);
       if (!townVendors.has(recipe.station as string)) throw new Error(`${item.name} has an invalid crafting location.`);
+      validateAdventureRequirement(recipe.prerequisiteAdventureId, `${item.name} recipe unlock requirement`);
       if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) throw new Error(`${item.name} needs at least one crafting ingredient.`);
       const recipeItemIds = new Set<string>();
       recipe.ingredients.forEach((rawIngredient: unknown, index: number) => {
@@ -669,7 +677,8 @@ export function localSourceSync() {
               }));
 
               if (payload.kind === "items") {
-                const itemCatalog = validateItemExchange(payload.exchange, new Set(statusKinds.keys()));
+                const adventureIds = new Set(catalogIdsFromArray(variableInitializer(adventureSourceFile, "ADVENTURES")));
+                const itemCatalog = validateItemExchange(payload.exchange, new Set(statusKinds.keys()), adventureIds);
                 const itemsInitializer = variableInitializer(gearSourceFile, "ITEMS");
                 const setsInitializer = variableInitializer(gearSourceFile, "GEAR_SETS");
                 if (!itemsInitializer || !setsInitializer) throw new Error("The live item catalog could not be located.");

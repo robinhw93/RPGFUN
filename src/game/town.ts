@@ -76,21 +76,33 @@ export function getItemCraftingRecipe(item: InventoryItem): ItemCraftingRecipe |
   return LEGACY_RECIPES[item.id] ?? null;
 }
 
-export function getTownVendorStock(vendor: ArkenfallVendorId): InventoryItem[] {
-  return ITEMS.filter((item) => getArkenfallVendor(item) === vendor);
+function meetsAdventureRequirement(requiredAdventureId: string | null | undefined, completedAdventureIds: string[]): boolean {
+  return !requiredAdventureId || completedAdventureIds.includes(requiredAdventureId);
 }
 
-export function getTownCraftingCatalog(station: ArkenfallVendorId): InventoryItem[] {
-  return ITEMS.filter((item) => getItemCraftingRecipe(item)?.station === station);
+export function isTownVendorItemUnlocked(item: InventoryItem, completedAdventureIds: string[]): boolean {
+  return meetsAdventureRequirement(item.vendorPrerequisiteAdventureId, completedAdventureIds);
+}
+
+export function isTownCraftingRecipeUnlocked(item: InventoryItem, completedAdventureIds: string[]): boolean {
+  return meetsAdventureRequirement(getItemCraftingRecipe(item)?.prerequisiteAdventureId, completedAdventureIds);
+}
+
+export function getTownVendorStock(vendor: ArkenfallVendorId, completedAdventureIds: string[] = []): InventoryItem[] {
+  return ITEMS.filter((item) => getArkenfallVendor(item) === vendor && isTownVendorItemUnlocked(item, completedAdventureIds));
+}
+
+export function getTownCraftingCatalog(station: ArkenfallVendorId, completedAdventureIds: string[] = []): InventoryItem[] {
+  return ITEMS.filter((item) => getItemCraftingRecipe(item)?.station === station && isTownCraftingRecipeUnlocked(item, completedAdventureIds));
 }
 
 export function getInventoryItemCount(inventory: InventoryItem[], itemId: string): number {
   return inventory.reduce((count, item) => count + (item.id === itemId ? 1 : 0), 0);
 }
 
-export function canCraftTownItem(inventory: InventoryItem[], item: InventoryItem, station: ArkenfallVendorId): boolean {
+export function canCraftTownItem(inventory: InventoryItem[], item: InventoryItem, station: ArkenfallVendorId, completedAdventureIds: string[] = []): boolean {
   const recipe = getItemCraftingRecipe(item);
-  return Boolean(recipe && recipe.station === station && recipe.ingredients.every((ingredient) => getInventoryItemCount(inventory, ingredient.itemId) >= ingredient.quantity));
+  return Boolean(recipe && recipe.station === station && isTownCraftingRecipeUnlocked(item, completedAdventureIds) && recipe.ingredients.every((ingredient) => getInventoryItemCount(inventory, ingredient.itemId) >= ingredient.quantity));
 }
 
 function removeCraftingIngredients(inventory: InventoryItem[], recipe: ItemCraftingRecipe): InventoryItem[] {
@@ -106,7 +118,7 @@ function removeCraftingIngredients(inventory: InventoryItem[], recipe: ItemCraft
 export function purchaseTownItem(state: GameState, vendor: ArkenfallVendorId, itemId: string): TownActionResult {
   if (state.adventure.active) return { state, success: false, message: "Finish your current adventure before visiting a vendor." };
   const item = ITEMS.find((candidate) => candidate.id === itemId);
-  if (!item || getArkenfallVendor(item) !== vendor) return { state, success: false, message: "That item is not sold here." };
+  if (!item || getArkenfallVendor(item) !== vendor || !isTownVendorItemUnlocked(item, state.character.completedAdventureIds)) return { state, success: false, message: "That item is not sold here." };
   const cost = getItemGoldCost(item);
   if (state.character.gold < cost) return { state, success: false, message: `You need ${cost - state.character.gold} more Gold.` };
   return {
@@ -128,8 +140,8 @@ export function craftTownItem(state: GameState, station: ArkenfallVendorId, item
   if (state.adventure.active) return { state, success: false, message: "Finish your current adventure before crafting." };
   const item = ITEMS.find((candidate) => candidate.id === itemId);
   const recipe = item ? getItemCraftingRecipe(item) : null;
-  if (!item || !recipe || recipe.station !== station) return { state, success: false, message: "That item cannot be made here." };
-  if (!canCraftTownItem(state.character.inventory, item, station)) return { state, success: false, message: "You do not have all the required materials." };
+  if (!item || !recipe || recipe.station !== station || !isTownCraftingRecipeUnlocked(item, state.character.completedAdventureIds)) return { state, success: false, message: "That item cannot be made here." };
+  if (!canCraftTownItem(state.character.inventory, item, station, state.character.completedAdventureIds)) return { state, success: false, message: "You do not have all the required materials." };
   return {
     state: {
       ...state,
