@@ -20,6 +20,7 @@ export const ADVENTURE_TRANSITION_TIMING = {
   travelMs: 2500,
   encounterIntroMs: 1500,
   encounterEnterMs: 650,
+  encounterMoveMs: 1100,
   encounterExitMs: INITIATIVE_TIMING.flightMs,
 } as const;
 

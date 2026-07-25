@@ -610,6 +610,7 @@ function App() {
           className={`encounter-flavor ${encounterFlavor.phase}`}
           style={{
             "--encounter-flavor-enter-duration": `${ADVENTURE_TRANSITION_TIMING.encounterEnterMs}ms`,
+            "--encounter-flavor-move-duration": `${ADVENTURE_TRANSITION_TIMING.encounterMoveMs}ms`,
             "--encounter-flavor-exit-duration": `${ADVENTURE_TRANSITION_TIMING.encounterExitMs}ms`,
           } as React.CSSProperties}
           role="status"

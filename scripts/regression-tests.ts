@@ -5,8 +5,9 @@ import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
 import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
+import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
-import { purchaseEventMerchantItem, resolveAdventureEventChoice } from "../src/game/eventOutcomes";
+import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice } from "../src/game/eventOutcomes";
 import { getItemGoldCost } from "../src/game/items";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import type { AdventureEventChoice, ConsumableItem, GameState } from "../src/game/types";
@@ -64,6 +65,17 @@ function testStoryEncounterIntroduction() {
   assert.equal(getStoryNodeIntroduction(node, "Generated enemy wording."), entry.description, "A story combat must introduce the editor-authored entry description.");
   assert.equal(getStoryNodeIntroduction({ ...node, description: "" }, "Generated enemy wording."), "Generated enemy wording.", "An empty combat description must retain a readable fallback.");
   assert.equal(getStoryNodeIntroduction({ ...node, type: "event", enemies: undefined }, "Generated event wording."), "", "Events must not use the travel transition's generic discovery announcement.");
+}
+
+function testOpposedHitAndDodge() {
+  const startingHitChance = 0.95 + 5 * 0.005;
+  const wolfDodgeChance = 0.1;
+  assert.ok(Math.abs(getFinalHitChance(startingHitChance, wolfDodgeChance) - 0.875) < 1e-10, "97.5% raw Hit against 10% Dodge must resolve to 87.5% final Hit Chance.");
+  assert.equal(getEffectiveDodgeChance(0.2, 0.6), 0.5, "Permanent and temporary Dodge must share the global 50% cap.");
+  assert.equal(getFinalHitChance(1.55, 0.4), 1, "Uncapped raw Hit must be able to fully overcome Dodge.");
+  assert.equal(getFinalHitChance(0.1, 0.5), 0.2, "Final Hit Chance must retain its 20% minimum.");
+  assert.equal(rollHit(startingHitChance, wolfDodgeChance, () => 0.8749), true, "A roll below final Hit Chance must hit.");
+  assert.equal(rollHit(startingHitChance, wolfDodgeChance, () => 0.875), false, "A roll at final Hit Chance must miss.");
 }
 
 function testAdventureEditorRepairsInternalIds() {
@@ -207,6 +219,13 @@ function testDirectEventMerchant() {
   assert.equal(purchaseEventMerchantItem(purchased, "not-for-sale"), purchased, "Items outside merchant stock must not be purchasable.");
 }
 
+function testResolvedMerchantPresentation() {
+  const result = { resolution: "direct" as const, choiceId: "browse", outcomeText: "The merchant opens their pack." };
+  assert.equal(getInitialEventPresentationPhase(result, 1), "merchant", "Resolved merchant stock must open immediately.");
+  assert.equal(getInitialEventPresentationPhase(result, 0), "outcome", "A resolved non-merchant event must show its outcome.");
+  assert.equal(getInitialEventPresentationPhase(null, 1), "title", "An unresolved event must begin with its title.");
+}
+
 function testCombatConsumable() {
   const item: ConsumableItem = {
     kind: "consumable",
@@ -239,6 +258,7 @@ function testCombatConsumable() {
 
 testContentIntegrity();
 testStoryEncounterIntroduction();
+testOpposedHitAndDodge();
 testAdventureEditorRepairsInternalIds();
 testAdventureEditorReordersStages();
 testEventEditorRepairsInternalIds();
@@ -247,5 +267,6 @@ testStatusContracts();
 testBasicPlayerAbility();
 testStructuredEventOutcome();
 testDirectEventMerchant();
+testResolvedMerchantPresentation();
 testCombatConsumable();
 console.log("Arkenfall regression checks passed.");

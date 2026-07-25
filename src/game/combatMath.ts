@@ -19,6 +19,6 @@ export function getFinalHitChance(rawHitChance: number, targetDodgeChance: numbe
   );
 }
 
-export function rollHit(rawHitChance: number, targetDodgeChance: number): boolean {
-  return Math.random() < getFinalHitChance(rawHitChance, targetDodgeChance);
+export function rollHit(rawHitChance: number, targetDodgeChance: number, random: () => number = Math.random): boolean {
+  return random() < getFinalHitChance(rawHitChance, targetDodgeChance);
 }

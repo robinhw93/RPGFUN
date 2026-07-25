@@ -385,6 +385,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
       {combatInventoryOpen && (
         <CombatInventoryModal
           inventory={game.character.inventory.filter(isConsumableItem)}
+          gold={game.character.gold}
           queuedActions={queuedActions}
           availableCounts={queueProjection.consumableCounts}
           selectedTargetAvailable={Boolean(queueProjection.targetStatusIds.get(combat.selectedEnemyId) && !queueProjection.targetStatusIds.get(combat.selectedEnemyId)?.has("stealth"))}
@@ -454,8 +455,9 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   );
 }
 
-function CombatInventoryModal({ inventory, queuedActions, availableCounts, selectedTargetAvailable, visibleEnemyAvailable, disabled, onUse, onClose }: {
+function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts, selectedTargetAvailable, visibleEnemyAvailable, disabled, onUse, onClose }: {
   inventory: ConsumableItem[];
+  gold: number;
   queuedActions: QueuedCombatAction[];
   availableCounts: Map<string, number>;
   selectedTargetAvailable: boolean;
@@ -480,7 +482,7 @@ function CombatInventoryModal({ inventory, queuedActions, availableCounts, selec
   return (
     <div className="combat-inventory-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="combat-inventory-dialog" role="dialog" aria-modal="true" aria-labelledby="combat-inventory-title">
-        <header><div><p className="eyebrow">Combat Inventory</p><h2 id="combat-inventory-title">Consumables</h2><p>Using an item does not end your turn. Enemy-targeted effects use your current target.</p></div><button type="button" onClick={onClose} aria-label="Close inventory">×</button></header>
+        <header><div className="combat-inventory-heading"><h2 id="combat-inventory-title">Combat Inventory</h2><span className="combat-inventory-gold"><GoldIcon /> {gold} Gold</span></div><button type="button" onClick={onClose} aria-label="Close inventory">×</button></header>
         <div className="combat-inventory-list">
           {uniqueItems.length === 0 && <div className="combat-inventory-empty"><FlaskConical /><strong>No consumables</strong><p>Your inventory contains no items that can be used in combat.</p></div>}
           {uniqueItems.map((item) => {

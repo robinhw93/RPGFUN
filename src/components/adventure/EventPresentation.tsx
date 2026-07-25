@@ -1,13 +1,20 @@
-import { FlaskConical } from "lucide-react";
+import { ChevronRight, FlaskConical } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { GearSlotIcon } from "../GearSlotIcon";
 import { ITEMS } from "../../game/data";
+import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
 import { getItemGoldCost, isConsumableItem } from "../../game/items";
 import type { AdventureEventDefinition, AdventureEventRollResult } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
 import { GoldIcon } from "../../ui/gameUi";
 
 type EventPresentationPhase = "title" | "description" | "choices" | "direct" | "rolling" | "raw" | "bonus" | "outcome" | "merchant";
+
+function choiceOpensMerchant(definition: AdventureEventDefinition | undefined, choiceId: string) {
+  const choice = definition?.choices.find((candidate) => candidate.id === choiceId);
+  const outcome = choice?.resolution === "direct" ? (choice.outcome ?? choice.success) : undefined;
+  return outcome?.effects.some((effect) => effect.type === "openMerchant") ?? false;
+}
 
 function randomD100() {
   return Math.floor(Math.random() * 100) + 1;
@@ -40,7 +47,7 @@ export function EventPresentation({
   onPurchase: (itemId: string) => void;
   onContinue: () => void;
 }) {
-  const [phase, setPhase] = useState<EventPresentationPhase>(() => rollResult ? "outcome" : "title");
+  const [phase, setPhase] = useState<EventPresentationPhase>(() => getInitialEventPresentationPhase(rollResult, merchantItemIds.length));
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(() => rollResult?.choiceId ?? null);
   const [displayedRoll, setDisplayedRoll] = useState(() => rollResult && rollResult.resolution !== "direct" ? rollResult.dieRoll : randomD100());
   const selectedChoice = useMemo(
@@ -74,7 +81,11 @@ export function EventPresentation({
   }, [rollResult]);
 
   useEffect(() => {
-    if (!rollResult || selectedChoiceId !== rollResult.choiceId || phase === "outcome") return;
+    if (!rollResult || selectedChoiceId !== rollResult.choiceId || phase === "outcome" || phase === "merchant") return;
+    if (merchantItems.length > 0) {
+      setPhase("merchant");
+      return;
+    }
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (rollResult.resolution === "direct") {
       if (reducedMotion) {
@@ -106,14 +117,14 @@ export function EventPresentation({
       window.clearTimeout(bonusTimer);
       window.clearTimeout(outcomeTimer);
     };
-  }, [rollResult, selectedChoiceId]);
+  }, [merchantItems.length, rollResult, selectedChoiceId]);
 
   const choose = (choiceId: string) => {
     if (selectedChoiceId) return;
     const choice = definition?.choices.find((candidate) => candidate.id === choiceId);
     setSelectedChoiceId(choiceId);
     setDisplayedRoll(randomD100());
-    setPhase(choice?.resolution === "direct" ? "direct" : "rolling");
+    setPhase(choiceOpensMerchant(definition, choiceId) ? "merchant" : choice?.resolution === "direct" ? "direct" : "rolling");
     onChoose(choiceId);
   };
   const introVisible = phase !== "title";
@@ -176,6 +187,7 @@ export function EventPresentation({
 
         {phase === "merchant" && (
           <div className="event-merchant" aria-live="polite">
+            {rollResult?.outcomeText && <p className="event-merchant-intro">{rollResult.outcomeText}</p>}
             <div className="event-merchant-heading"><div><p className="eyebrow">Wandering Merchant</p><h2>Goods for the road</h2></div><span className="event-merchant-gold"><GoldIcon /> {gold}</span></div>
             <div className="event-merchant-grid">
               {merchantItems.map((item) => {
@@ -187,7 +199,7 @@ export function EventPresentation({
                 </article>;
               })}
             </div>
-            <button type="button" className="secondary-button event-merchant-leave" onClick={onContinue}>Leave Merchant</button>
+            <button type="button" className="primary-button event-merchant-leave" onClick={onContinue}>Leave Merchant <ChevronRight size={17} /></button>
           </div>
         )}
       </div>

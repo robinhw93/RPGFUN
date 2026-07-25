@@ -6,10 +6,19 @@ import { isStatusEffectId } from "./statusEffects";
 import type {
   AdventureCombatStartStatus,
   AdventureEventChoice,
+  AdventureEventRollResult,
   AdventureEventOutcome,
   AdventureEventOutcomeEffect,
   GameState,
 } from "./types";
+
+export function getInitialEventPresentationPhase(
+  rollResult: AdventureEventRollResult | null,
+  merchantItemCount: number,
+): "title" | "outcome" | "merchant" {
+  if (!rollResult) return "title";
+  return merchantItemCount > 0 ? "merchant" : "outcome";
+}
 
 function nonNegativeInteger(value: number): number {
   return Math.max(0, Math.round(Number.isFinite(value) ? value : 0));

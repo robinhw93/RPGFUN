@@ -38,7 +38,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 
 - `src/App.tsx` owns top-level React state, navigation, application orchestration, and the high-level commands sent to game modules. It lazy-loads the talent screen and developer tools so those large editing surfaces are absent from the initial bundle.
 - `src/components/character/` owns character creation plus the Character and Equipment/Inventory screens.
-- `src/components/adventure/` owns adventure selection, combat-screen composition, score screens, and the cinematic event sequence. `EventPresentation.tsx` reveals the title, scenario, choices, precomputed d100 result, derived-stat bonus, and outcome in order without recalculating the event rule.
+- `src/components/adventure/` owns adventure selection, combat-screen composition, score screens, and the cinematic event sequence. `EventPresentation.tsx` reveals the title, scenario, choices, precomputed d100 result, derived-stat bonus, and outcome in order without recalculating the event rule; direct merchant choices instead reveal their resolved outcome text and stock together.
 - `src/components/combat/` owns the combat HUD, initiative presentation, and transient combat/VFX renderers.
 - `src/components/talents/` owns the runtime talent tree, talent details, and ability-loadout dialogs.
 - `src/ui/gameUi.tsx` owns shared presentation helpers such as stat/ability icons, encounter wording, asset preloading, and display-only derived-stat rows.
@@ -420,7 +420,7 @@ Enemy, Event, Adventure, and Item editors retain browser-local drafts under lega
 
 ## Regression protection
 
-- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, merchant purchases, and presentation-timed consumable resolution.
+- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, opposed Hit/Dodge arithmetic and caps, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, merchant purchases, and presentation-timed consumable resolution.
 - `npm run docs:check` verifies that the documented talent count matches the live talent catalog.
 - `npm run build` remains the full type-check and production-bundle gate. UI, touch, animation, and VFX behavior still require browser verification at desktop and mobile widths.
 
