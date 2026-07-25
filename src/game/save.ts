@@ -40,6 +40,12 @@ export function loadGame(): GameState | null {
       const definition = itemDefinitions.get(item.id);
       return definition ? { ...item, ...structuredClone(definition) } : item;
     };
+    const hydrateLoot = (value: unknown): InventoryItem[] => {
+      const rawItems = Array.isArray(value) ? value : value && typeof value === "object" ? [value] : [];
+      return rawItems.flatMap((item) => item && typeof item === "object" && "id" in item && typeof item.id === "string"
+        ? [hydrateInventoryItem(item as InventoryItem)]
+        : []);
+    };
     const equipment = Object.fromEntries(
       Object.entries(state.character.equipment).map(([slot, item]) => {
         const hydrated = item ? hydrateInventoryItem(item) : item;
@@ -47,6 +53,7 @@ export function loadGame(): GameState | null {
       }),
     ) as GameState["character"]["equipment"];
     const inventory = (state.character.inventory ?? []).map(hydrateInventoryItem);
+    const latestLoot = hydrateLoot(state.adventure.latestLoot);
     if ((equipment.mainHand?.weaponEquipType === "twoHand" || equipment.mainHand?.weaponType === "twoHanded") && equipment.offHand) {
       inventory.push(equipment.offHand);
       delete equipment.offHand;
@@ -77,7 +84,10 @@ export function loadGame(): GameState | null {
         nextCombatEnemyStatuses: state.adventure.nextCombatEnemyStatuses ?? [],
         eventEncounter: state.adventure.eventEncounter ?? null,
         eventMerchant: state.adventure.eventMerchant ?? null,
-        pendingReward: state.adventure.pendingReward ?? null,
+        latestLoot: latestLoot.length > 0 ? latestLoot : null,
+        pendingReward: state.adventure.pendingReward
+          ? { ...state.adventure.pendingReward, loot: hydrateLoot((state.adventure.pendingReward as unknown as { loot?: unknown }).loot) }
+          : null,
         ...(state.adventure.mode !== "endless" && !state.adventure.adventureId ? {
           active: false,
           nodeIndex: 0,

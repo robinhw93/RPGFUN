@@ -657,6 +657,12 @@ export interface ConsumableItem {
 
 export type InventoryItem = GearItem | ConsumableItem;
 
+export interface ItemDropDefinition {
+  itemId: string;
+  /** Independent percentage chance from 0 through 100. */
+  chance: number;
+}
+
 export interface EnemyAbilityDefinition {
   id: string;
   name: string;
@@ -699,6 +705,8 @@ export interface EnemyTemplate {
   critChance: number;
   energyRegen: number;
   maxEnergy: number;
+  /** Each defeated enemy instance rolls every entry independently. */
+  dropTable?: ItemDropDefinition[];
   /** Executable abilities implemented in source after their editor drafts are integrated. */
   abilities: EnemyAbilityDefinition[];
   /** Free-form design notes describing intended ability priorities and conditions. */
@@ -937,6 +945,8 @@ export interface AdventureStageEntry {
 export interface AdventureStageDefinition {
   id: string;
   name: string;
+  /** Rolled once after winning a combat on this stage. */
+  dropTable?: ItemDropDefinition[];
   entries: AdventureStageEntry[];
 }
 
@@ -981,7 +991,7 @@ export interface CombatReward {
   nodeIndex: number;
   experience: number;
   gold: number;
-  loot: GearItem | null;
+  loot: InventoryItem[];
   levelBefore: number;
   xpBefore: number;
   levelAfter: number;
@@ -1005,7 +1015,7 @@ export interface AdventureProgress {
   nextCombatEnemyStatuses: AdventureCombatStartStatus[];
   eventEncounter: AdventureEventEncounter | null;
   eventMerchant: AdventureEventMerchant | null;
-  latestLoot: GearItem | null;
+  latestLoot: InventoryItem[] | null;
   pendingReward: CombatReward | null;
   completed: boolean;
 }

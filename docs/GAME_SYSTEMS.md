@@ -488,7 +488,7 @@ The current set catalog is summarized in [Content reference](CONTENT_REFERENCE.m
 
 ## Loot and gold
 
-Adventure combat rewards define experience and gold only. Automatic gear drops are disabled until enemy-owned loot tables are implemented; Adventure definitions and the Adventure Editor do not control loot.
+Adventure combat rewards always define experience and gold and may additionally award items from two independent sources. Every defeated enemy instance rolls every row in its own drop table, then the current stage rolls every row in its stage drop table once. Each row uses its configured 0–100% chance independently, so a victory can award several items or none. Repeated copies of the same enemy each receive their own rolls. Dropped gear and consumables enter Inventory immediately and are listed individually on the score screen.
 
 Gold is stored on the character and displayed in the top bar, reward screens, and Wandering Merchant view. Event outcomes may open a merchant stocked with any live items selected in Event Manager. Purchases deduct the item's live Gold Cost and immediately add one copy to inventory; the selected merchant stock is unlimited for that visit.
 

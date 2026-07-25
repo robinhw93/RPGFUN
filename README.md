@@ -51,7 +51,7 @@ The checks run focused gameplay regressions, verify documentation against the li
 - Initiative-based combat against up to three enemies in current content; the state model supports larger groups.
 - Energy, cooldowns, multi-action player turns, buffs, debuffs, damage-over-time effects, enemy intent, floating combat text, and an inspectable combat log.
 - A 263-node classless talent tree with bidirectional ANY connections, pan, zoom, and a six-slot ability loadout.
-- Eight equipment slots, weapon-hand rules, rarity, item comparison, inventory filtering/sorting, combat consumables, item prices, and event-driven Wandering Merchants.
+- Eight equipment slots, weapon-hand rules, rarity, item comparison, inventory filtering/sorting, combat consumables, item prices, independent enemy/stage item drops, and event-driven Wandering Merchants.
 - Experience and level-ups through the level-50 cap, plus stat points, talent points, and gold rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.
 - Password-gated Talent, Enemy, Event, Adventure, Item, and Portrait editors with browser-local drafts and Codex-ready JSON exports. While Vite is running locally, Event Manager, Adventure Editor, and Item Editor Save replace their complete canonical live catalogs; restricted fields on existing talents, abilities, and enemies use narrower source-sync writes.

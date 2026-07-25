@@ -571,12 +571,15 @@ export function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onCont
           <small className="score-xp-count">+{displayedExperience} XP</small>
         </div>
 
-        {reward.loot && (
-          <div className={`score-loot-card ${reward.loot.rarity}`}>
-            <span className="score-loot-glyph"><GearSlotIcon slot={reward.loot.slot} item={reward.loot} size={24} /></span>
-            <span><small>{reward.loot.rarity} · {getGearCategoryLabel(reward.loot)}</small><strong>{reward.loot.name}</strong><em>{reward.loot.description}</em></span>
-          </div>
-        )}
+        {reward.loot.length > 0 && <div className="score-loot-list" aria-label="Items found">
+          <p className="eyebrow">Items Found</p>
+          {reward.loot.map((item, index) => (
+            <div className={`score-loot-card ${item.rarity}`} key={`${item.id}-${index}`}>
+              <span className="score-loot-glyph">{isConsumableItem(item) ? <FlaskConical size={22} /> : <GearSlotIcon slot={item.slot} item={item} size={24} />}</span>
+              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : getGearCategoryLabel(item)}</small><strong>{item.name}</strong><em>{item.description}</em></span>
+            </div>
+          ))}
+        </div>}
 
         <div className="victory-score-actions">
           <button className={`score-character-button ${levelUpPending ? "level-up" : ""}`} onClick={onCharacter}>{levelUpPending ? <Sparkles size={16} /> : <UserRound size={16} />} {levelUpPending ? "Level up!" : "View Character"}</button>

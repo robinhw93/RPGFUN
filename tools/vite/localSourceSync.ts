@@ -128,6 +128,21 @@ function assertUniqueIds(ids: string[], label: string) {
   if (new Set(ids).size !== ids.length) throw new Error(`${label} IDs must be unique.`);
 }
 
+function validateDropTable(value: unknown, itemIds: Set<string>, label: string): Array<{ itemId: string; chance: number }> {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error(`${label} must be a list.`);
+  const drops = value.map((rawDrop, index) => {
+    const drop = catalogObject(rawDrop, `${label} entry ${index + 1}`);
+    const itemId = catalogId(drop.itemId, `${label} item`);
+    if (!itemIds.has(itemId)) throw new Error(`${label} references an item that is not saved in the live game.`);
+    const chance = catalogNumber(drop.chance, `${label} chance`);
+    if (chance > 100) throw new Error(`${label} chance cannot exceed 100%.`);
+    return { itemId, chance };
+  });
+  assertUniqueIds(drops.map((drop) => drop.itemId), `${label} item`);
+  return drops;
+}
+
 const positiveEventEffects = new Set(["heal", "playerNextCombatBuff", "gainGold", "gainItem", "openMerchant", "gainExperience", "gainTalentPoints", "gainAttributePoints", "enemiesNextCombatDebuff"]);
 const negativeEventEffects = new Set(["loseHealth", "loseGold", "playerNextCombatDebuff", "loseExperience", "enemiesNextCombatBuff", "immediateEncounter"]);
 const allEventEffects = new Set([...positiveEventEffects, ...negativeEventEffects]);
@@ -214,7 +229,7 @@ function validateEventExchange(exchangeValue: unknown, itemIds: Set<string>, ene
   return record;
 }
 
-function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>, eventIds: Set<string>): unknown[] {
+function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>, eventIds: Set<string>, itemIds: Set<string>): unknown[] {
   const exchange = catalogObject(exchangeValue, "Adventure exchange");
   if (exchange.format !== "arkenfall-adventures" || exchange.version !== 1 || !Array.isArray(exchange.adventures) || exchange.adventures.length === 0) throw new Error("Unsupported or empty adventure exchange format.");
   const adventureIds = exchange.adventures.map((rawAdventure: unknown) => catalogId(catalogObject(rawAdventure, "Adventure").id, "Adventure ID"));
@@ -235,6 +250,7 @@ function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>
     adventure.stages.forEach((rawStage: unknown) => {
       const stage = catalogObject(rawStage, "Stage");
       catalogString(stage.name, "Stage name");
+      stage.dropTable = validateDropTable(stage.dropTable, itemIds, `${stage.name} drop table`);
       if (!Array.isArray(stage.entries) || stage.entries.length === 0) throw new Error(`${stage.name} must have at least one possibility.`);
       const entryIds = stage.entries.map((rawEntry: unknown) => catalogId(catalogObject(rawEntry, "Stage possibility").id, "Stage possibility ID"));
       assertUniqueIds(entryIds, `${stage.name} possibility`);
@@ -430,6 +446,50 @@ export function localSourceSync() {
         });
       });
 
+      server.middlewares.use("/__arkenfall/enemy-drop-table", (request, response, next) => {
+        if (request.method !== "POST") {
+          next();
+          return;
+        }
+
+        request.setEncoding("utf8");
+        let body = "";
+        request.on("data", (chunk: string) => {
+          body += chunk;
+          if (body.length > 128_000) request.destroy();
+        });
+        request.on("end", async () => {
+          try {
+            const payload = JSON.parse(body) as { id?: unknown; dropTable?: unknown };
+            if (typeof payload.id !== "string" || !/^[a-z0-9_-]+$/i.test(payload.id)) throw new Error("Invalid enemy drop-table payload.");
+            const enemyId = payload.id;
+
+            await enqueueSourceMutation(async () => {
+              const [enemySource, gearSource] = await Promise.all([
+                readFile(enemySourcePath, "utf8"),
+                readFile(gearSourcePath, "utf8"),
+              ]);
+              const enemySourceFile = ts.createSourceFile(enemySourcePath, enemySource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+              const gearSourceFile = ts.createSourceFile(gearSourcePath, gearSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+              const enemies = catalogObjectsFromRecord(variableInitializer(enemySourceFile, "ENEMIES"));
+              const enemy = objectById(enemies, enemyId);
+              if (!enemy) throw new Error("This enemy is not part of the live source data.");
+              const itemIds = catalogIdsFromArray(variableInitializer(gearSourceFile, "ITEMS"));
+              const dropTable = validateDropTable(payload.dropTable, itemIds, "Enemy drop table");
+              const edits = collectObjectEdits(enemySource, enemySourceFile, enemy, { dropTable: JSON.stringify(dropTable, null, 2) });
+              await writeFile(enemySourcePath, applySourceEdits(enemySource, edits), "utf8");
+            });
+            response.statusCode = 200;
+            response.setHeader("Content-Type", "application/json");
+            response.end(JSON.stringify({ ok: true }));
+          } catch (error) {
+            response.statusCode = 400;
+            response.setHeader("Content-Type", "application/json");
+            response.end(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : "Enemy drop table could not be written." }));
+          }
+        });
+      });
+
       server.middlewares.use("/__arkenfall/talent-content", (request, response, next) => {
         if (request.method !== "POST") {
           next();
@@ -584,7 +644,7 @@ export function localSourceSync() {
               if (!initializer) throw new Error(`The live ${payload.kind} catalog could not be located.`);
               const liveValue = payload.kind === "events"
                 ? validateEventExchange(payload.exchange, itemIds, enemyIds, statusKinds)
-                : validateAdventureExchange(payload.exchange, enemyIds, currentEventIds);
+                : validateAdventureExchange(payload.exchange, enemyIds, currentEventIds, itemIds);
               const replacement = JSON.stringify(liveValue, null, 2);
               await writeFile(adventureSourcePath, applySourceEdits(adventureSource, [{ start: initializer.getStart(adventureSourceFile), end: initializer.getEnd(), text: replacement }]), "utf8");
             });

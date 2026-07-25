@@ -463,6 +463,8 @@ Windsong Forest follows six ordered stages. Stages with several possibilities ma
 
 Event definitions support two or three choices. Each choice can resolve through an attribute check or a direct outcome with no roll. Outcomes contain ordered effect lists that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, immediate rewarded encounters, and Wandering Merchants stocked with selected live items. **Stalked by Wolves** is used at the Forest Edge: the player may test Agility 29, Strength 31, or Intelligence 34 for 10 XP or a next-combat status; failed physical approaches immediately encounter two Windsong Wolves for 71 XP and 5 gold.
 
+Enemy templates and adventure stages may each define item drop tables. Every configured item chance is rolled independently; enemy tables roll once per defeated instance and the current stage table rolls once per combat victory. Drop tables may reference any live gear or consumable item.
+
 ## Testing adventure: Shadow Proving Grounds
 
 | Property | Rule |

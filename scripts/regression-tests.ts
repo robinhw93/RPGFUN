@@ -9,8 +9,9 @@ import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice } from "../src/game/eventOutcomes";
 import { getItemGoldCost } from "../src/game/items";
+import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
-import type { AdventureEventChoice, ConsumableItem, GameState } from "../src/game/types";
+import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
 
 function testContentIntegrity() {
   assert.equal(TALENTS.length, 263, "The canonical talent count changed unexpectedly.");
@@ -26,10 +27,19 @@ function testContentIntegrity() {
   });
   assert.equal(new Set([...ITEMS.map((item) => item.id), ...GEAR_SETS.map((set) => set.id)]).size, ITEMS.length + GEAR_SETS.length, "Item and gear-set IDs must be unique.");
   ITEMS.forEach((item) => assert.ok(typeof item.goldCost === "number" && item.goldCost >= 0, `${item.name} needs a non-negative Gold Cost.`));
+  const itemIds = new Set(ITEMS.map((item) => item.id));
+  Object.values(ENEMIES).forEach((enemy) => (enemy.dropTable ?? []).forEach((drop) => {
+    assert.ok(itemIds.has(drop.itemId), `${enemy.name} references missing drop item ${drop.itemId}.`);
+    assert.ok(drop.chance >= 0 && drop.chance <= 100, `${enemy.name} has an invalid drop chance.`);
+  }));
   ADVENTURES.forEach((adventure) => {
     assert.ok(adventure.id, "Every adventure needs an internal ID.");
     assert.equal(new Set(adventure.stages.map((stage) => stage.id)).size, adventure.stages.length, `${adventure.name} stage IDs must be unique.`);
     adventure.stages.forEach((stage) => {
+      (stage.dropTable ?? []).forEach((drop) => {
+        assert.ok(itemIds.has(drop.itemId), `${stage.name} references missing drop item ${drop.itemId}.`);
+        assert.ok(drop.chance >= 0 && drop.chance <= 100, `${stage.name} has an invalid drop chance.`);
+      });
       assert.ok(stage.id, `${adventure.name} contains a stage without an internal ID.`);
       assert.equal(new Set(stage.entries.map((entry) => entry.id)).size, stage.entries.length, `${stage.name} possibility IDs must be unique.`);
       assert.equal(stage.entries.reduce((sum, entry) => sum + entry.chance, 0), 100, `${stage.name} possibility chances must total 100%.`);
@@ -256,6 +266,37 @@ function testCombatConsumable() {
   assert.equal(poison?.duration, 3, "Consumable status duration must be preserved.");
 }
 
+function testIndependentItemDrops() {
+  const firstItem = ITEMS[0];
+  const secondItem = ITEMS[1];
+  assert.ok(firstItem && secondItem, "Drop-table regression requires at least two live items.");
+  const enemyTables: ItemDropDefinition[][] = [
+    [{ itemId: firstItem.id, chance: 100 }],
+    [{ itemId: firstItem.id, chance: 100 }, { itemId: secondItem.id, chance: 2 }],
+  ];
+  const rolls = [0.99, 0.5, 0.01, 0.05];
+  const loot = rollCombatDropTables(enemyTables, [{ itemId: secondItem.id, chance: 5 }], () => rolls.shift() ?? 1);
+  assert.deepEqual(loot.map((item) => item.id), [firstItem.id, firstItem.id, secondItem.id], "Every enemy instance and stage entry must roll independently, including exact percentage boundaries.");
+
+  const character = { ...structuredClone(INITIAL_GAME.character), inventory: [] };
+  const combat = createCombat(character, ["dummy"]);
+  const state: GameState = {
+    ...structuredClone(INITIAL_GAME),
+    characterCreated: true,
+    character,
+    adventure: {
+      ...structuredClone(INITIAL_GAME.adventure),
+      mode: "endless",
+      active: true,
+      combat: { ...combat, outcome: "victory", enemies: combat.enemies.map((enemy) => ({ ...enemy, dropTable: [{ itemId: firstItem.id, chance: 100 }] })) },
+    },
+  };
+  const rewarded = grantCombatReward(state, 1, () => 0);
+  assert.equal(rewarded.adventure.pendingReward?.loot.length, 1, "Rolled loot must be captured by the score-screen reward.");
+  assert.equal(rewarded.character.inventory.at(-1)?.id, firstItem.id, "Rolled loot must enter the character inventory immediately.");
+  assert.equal(grantCombatReward(rewarded, 2, () => 0).character.inventory.length, 1, "A resolved combat reward must never reroll or duplicate loot.");
+}
+
 testContentIntegrity();
 testStoryEncounterIntroduction();
 testOpposedHitAndDodge();
@@ -269,4 +310,5 @@ testStructuredEventOutcome();
 testDirectEventMerchant();
 testResolvedMerchantPresentation();
 testCombatConsumable();
+testIndependentItemDrops();
 console.log("Arkenfall regression checks passed.");
