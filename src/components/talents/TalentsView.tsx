@@ -30,11 +30,10 @@ export type RuntimeTalentGesture = {
   moved: boolean;
 };
 
-export function TalentDetailModal({ talent, character, locked, freeUnlocks, onClose, onUnlock, onToggleAbility }: {
+export function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onToggleAbility }: {
   talent: (typeof TALENTS)[number];
   character: CharacterState;
   locked: boolean;
-  freeUnlocks: boolean;
   onClose: () => void;
   onUnlock: (id: string) => void;
   onToggleAbility: (id: string) => void;
@@ -53,7 +52,7 @@ export function TalentDetailModal({ talent, character, locked, freeUnlocks, onCl
   const requiredNames = getTalentConnectionIds(talent.id, TALENTS)
     .filter((id) => !character.unlockedTalents.includes(id))
     .map((id) => TALENTS.find((candidate) => candidate.id === id)?.name ?? id);
-  const canUnlock = !locked && available && (freeUnlocks || character.talentPoints >= talent.cost) && !unlocked;
+  const canUnlock = !locked && available && character.talentPoints >= talent.cost && !unlocked;
   const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";
 
   useEffect(() => {
@@ -91,9 +90,7 @@ export function TalentDetailModal({ talent, character, locked, freeUnlocks, onCl
       ? "Requires Level 10"
     : !requirementsMet
       ? `Requires one of: ${requiredNames.join(", ")}`
-      : freeUnlocks
-        ? "Unlock for Free"
-        : character.talentPoints < talent.cost
+      : character.talentPoints < talent.cost
         ? `Requires ${talent.cost} Talent Point${talent.cost === 1 ? "" : "s"}`
         : `Unlock for ${talent.cost} Talent Point${talent.cost === 1 ? "" : "s"}`;
 
@@ -268,7 +265,7 @@ export function AbilityLoadoutModal({ character, locked, onClose, onSelectSlot }
   );
 }
 
-export function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; freeUnlocks: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
+export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [selectedAbilitySlot, setSelectedAbilitySlot] = useState<number | null>(null);
   const [abilityLoadoutOpen, setAbilityLoadoutOpen] = useState(false);
@@ -478,7 +475,6 @@ export function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggle
         </button>
       </div>
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
-      {freeUnlocks && !locked && <div className="testing-talent-banner"><Sparkles size={15} /> Shadow Proving Grounds: talents unlock for free.</div>}
       <div className="runtime-talent-stage">
         <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree">
         <div ref={treeSurfaceRef} className="runtime-talent-zoom-surface" style={{ width: treeWidth * RUNTIME_TALENT_DEFAULT_ZOOM + RUNTIME_TALENT_SCREEN_GUTTER * 2, height: treeHeight * RUNTIME_TALENT_DEFAULT_ZOOM + RUNTIME_TALENT_SCREEN_GUTTER * 2 }}>
@@ -532,7 +528,6 @@ export function TalentsView({ character, locked, freeUnlocks, onUnlock, onToggle
         talent={selectedTalent}
         character={character}
         locked={locked}
-        freeUnlocks={freeUnlocks}
         onClose={closeTalentDetails}
         onUnlock={(talentId) => {
           onUnlock(talentId);

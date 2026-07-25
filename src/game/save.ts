@@ -21,6 +21,8 @@ export function loadGame(): GameState | null {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const state = JSON.parse(raw) as GameState;
+    const savedAdventureMode = (state.adventure as { mode?: unknown }).mode;
+    const shouldResetAdventure = savedAdventureMode === "endless" || !state.adventure.adventureId;
     const normalizedLevel = Math.min(MAX_LEVEL, Math.max(1, Math.floor(state.character.level || 1)));
     const validTalentIds = new Set(TALENTS.map((talent) => talent.id));
     const removedTalents = state.character.unlockedTalents.filter((id) => !validTalentIds.has(id));
@@ -76,9 +78,9 @@ export function loadGame(): GameState | null {
       },
       adventure: {
         ...state.adventure,
-        mode: state.adventure.mode ?? "story",
+        mode: "story",
         adventureId: state.adventure.adventureId ?? DEFAULT_ADVENTURE_ID,
-        stageEntryId: state.adventure.mode === "endless" ? null : state.adventure.stageEntryId ?? null,
+        stageEntryId: state.adventure.stageEntryId ?? null,
         eventRollResult: state.adventure.eventRollResult ?? null,
         nextCombatPlayerStatuses: state.adventure.nextCombatPlayerStatuses ?? [],
         nextCombatEnemyStatuses: state.adventure.nextCombatEnemyStatuses ?? [],
@@ -91,7 +93,8 @@ export function loadGame(): GameState | null {
         pendingReward: state.adventure.pendingReward
           ? { ...state.adventure.pendingReward, loot: hydrateLoot((state.adventure.pendingReward as unknown as { loot?: unknown }).loot) }
           : null,
-        ...(state.adventure.mode !== "endless" && !state.adventure.adventureId ? {
+        ...(shouldResetAdventure ? {
+          adventureId: DEFAULT_ADVENTURE_ID,
           active: false,
           nodeIndex: 0,
           stageEntryId: null,

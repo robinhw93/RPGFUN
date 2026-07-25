@@ -192,8 +192,7 @@ A change is complete only when the applicable items are true:
 
 At the time of this handoff:
 
-- Windsong Forest is the six-stage story adventure with fixed combat encounters and a dedicated bright-forest combat theme.
-- Shadow Proving Grounds is the endless testing adventure with two or three 100-Health DUMMIES per fight and two level-ups per victory.
+- Windsong Forest is the only player-facing adventure. It is the bright-forest story route; the former Shadow Proving Grounds testing route has been removed.
 - Shadow, Arcanist, and Brute each have 87 live nodes including their class node. Shadow's latest extensions add Physical Power, Agility, Intelligence, and Spell Power routes.
 - Arcanist includes Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, Elemental Fury, and later Spell Power, Intelligence, Hit Chance, and Critical Strike routes.
 - Brute includes Fire, Bleed, Armor/Guard, holy-vigor, Smite, Spell Power, and hybrid Power paths. Cultist currently has only its class node.

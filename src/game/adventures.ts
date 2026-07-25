@@ -1,4 +1,4 @@
-import { ADVENTURES, ADVENTURE_EVENTS, ENDLESS_ADVENTURE, ENEMIES } from "./data";
+import { ADVENTURES, ADVENTURE_EVENTS, ENEMIES } from "./data";
 import type { AdventureDefinition, AdventureNode, AdventureProgress, AdventureStageEntry } from "./types";
 
 export const DEFAULT_ADVENTURE_ID = "windsong-forest";
@@ -59,7 +59,6 @@ export function getStoryNodeIntroduction(node: AdventureNode, encounterFallback:
 }
 
 export function getAdventureEntry(progress: AdventureProgress): AdventureStageEntry | null {
-  if (progress.mode === "endless") return null;
   const adventure = getAdventureDefinition(progress.adventureId);
   const stage = adventure.stages[progress.nodeIndex];
   if (!stage) return null;
@@ -67,7 +66,6 @@ export function getAdventureEntry(progress: AdventureProgress): AdventureStageEn
 }
 
 export function getAdventureNode(progress: AdventureProgress): AdventureNode {
-  if (progress.mode === "endless") return { ...ENDLESS_ADVENTURE, eyebrow: `Training Fight ${progress.nodeIndex + 1}` };
   if (progress.combat && progress.eventEncounter) {
     const enemyNames = progress.eventEncounter.enemyIds.map((id) => ENEMIES[id]?.name ?? "Unknown Enemy");
     return {

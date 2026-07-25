@@ -3,11 +3,10 @@ import {
   CircleCheckBig,
   ChevronRight, CircleDot,
   Droplets,
-  Flame, FlaskConical, Footprints, Gem,
+  Flame, FlaskConical,
   Heart, HeartPulse,
   Skull,
   Sparkles,
-  Swords,
   Trophy,
   UserRound,
   Zap
@@ -27,7 +26,7 @@ import { getGearCategoryLabel } from "../../game/gear";
 import { consumableCount, describeConsumableEffect, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
-import type { AdventureMode, AdventureStageDefinition, CharacterState, CombatLogEntry, CombatReward, ConsumableItem, GameState, GearItem, InspectableInfo, StatusEffectId } from "../../game/types";
+import type { CharacterState, CombatLogEntry, CombatReward, ConsumableItem, GameState, GearItem, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
 import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
@@ -39,11 +38,11 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
-  onBegin: (mode: AdventureMode, adventureId?: string) => void;
+  onBegin: (adventureId?: string) => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
   onConsumable: (id: string) => void;
@@ -55,7 +54,6 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   onInitiativeOrderStart: () => void;
   onInitiativeComplete: () => void;
   onContinue: () => void;
-  onLeaveTraining: () => void;
   onReturnToAdventures: () => void;
   onEvent: (choiceId: string) => void;
   onMerchantPurchase: (itemId: string) => void;
@@ -117,7 +115,6 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
           <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
         </div>
         <button className="primary-button" onClick={onReturnToAdventures}>Return to Adventures <ChevronRight size={17} /></button>
-        <button className="text-button" onClick={() => onBegin("endless")}>Enter Shadow Proving Grounds</button>
         <button className="text-button" onClick={onTalents}>Spend talent points</button>
       </section>
     );
@@ -135,26 +132,13 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
             <h1>{featuredAdventure.name}</h1>
             <p>{featuredAdventure.description}</p>
             <div className="adventure-tags"><span>Recommended Level {featuredAdventure.recommendedLevel}</span><span>{featuredAdventure.stages.length} Stages</span><span>{featuredAvailability === "completed" ? "Replay · 10% XP" : "Dynamic Encounters"}</span></div>
-            <button className="primary-button" disabled={featuredAvailability === "locked"} onClick={() => onBegin("story", featuredAdventure.id)}>{featuredAvailability === "completed" ? <>Replay Adventure <ChevronRight size={18} /></> : featuredAvailability === "locked" ? "Locked" : <>Begin Journey <ChevronRight size={18} /></>}</button>
+            <button className="primary-button" disabled={featuredAvailability === "locked"} onClick={() => onBegin(featuredAdventure.id)}>{featuredAvailability === "completed" ? <>Replay Adventure <ChevronRight size={18} /></> : featuredAvailability === "locked" ? "Locked" : <>Begin Journey <ChevronRight size={18} /></>}</button>
           </div>
         </div>
         {ADVENTURES.length > 1 && <div className="story-adventure-list">{ADVENTURES.slice(1).map((definition) => {
           const availability = getStoryAdventureAvailability(definition, game.character.completedAdventureIds);
-          return <article className={availability === "completed" ? "completed" : ""} key={definition.id}><div><p className="eyebrow">{availability === "completed" ? "Completed Adventure" : "Story Adventure"}</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{availability === "completed" ? <span>Replay · 10% XP</span> : definition.prerequisiteAdventureId && <span>{availability === "locked" ? `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}` : "Unlocked"}</span>}</div></div><div className="story-adventure-actions">{availability === "completed" && <div className="story-adventure-completed"><CircleCheckBig /><strong>Completed</strong></div>}<button className="secondary-button" disabled={availability === "locked"} onClick={() => onBegin("story", definition.id)}>{availability === "completed" ? "Replay Adventure" : availability === "available" ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button></div></article>;
+          return <article className={availability === "completed" ? "completed" : ""} key={definition.id}><div><p className="eyebrow">{availability === "completed" ? "Completed Adventure" : "Story Adventure"}</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{availability === "completed" ? <span>Replay · 10% XP</span> : definition.prerequisiteAdventureId && <span>{availability === "locked" ? `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}` : "Unlocked"}</span>}</div></div><div className="story-adventure-actions">{availability === "completed" && <div className="story-adventure-completed"><CircleCheckBig /><strong>Completed</strong></div>}<button className="secondary-button" disabled={availability === "locked"} onClick={() => onBegin(definition.id)}>{availability === "completed" ? "Replay Adventure" : availability === "available" ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button></div></article>;
         })}</div>}
-        <div className="training-adventure-card">
-          <div>
-            <p className="eyebrow">Testing Adventure</p>
-            <h2>Shadow Proving Grounds</h2>
-            <p>An endless training route built for testing talents, abilities, and Shadow builds.</p>
-            <div className="adventure-tags"><span>2–3 DUMMIES</span><span>100 Health</span><span>+2 Levels per Victory</span></div>
-          </div>
-          <button className="secondary-button" onClick={() => onBegin("endless")}>Begin Testing <ChevronRight size={18} /></button>
-        </div>
-        <div className="section-heading"><div><p className="eyebrow">Route Preview</p><h2>What lies ahead</h2></div><span className="muted">Progress saves automatically</span></div>
-        <div className="route-grid">
-          {featuredAdventure.stages.map((stage, index) => <StageCard key={stage.id} stage={stage} index={index} />)}
-        </div>
       </section>
     );
   }
@@ -244,7 +228,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   return (
     <section className={`combat-page compact-combat ${adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).theme === "windsong_forest" ? "windsong-forest-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}>
       <button type="button" className="combat-log-button combat-log-corner" onClick={() => setLogOpen(true)} aria-label="Open Combat Log"><BookOpen size={15} /></button>
-      <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
+      <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onOrderStart={onInitiativeOrderStart} onComplete={onInitiativeComplete} />}
       {targetFeedback && <div key={targetFeedback.id} className="combat-target-feedback" role="status" aria-live="polite">{targetFeedback.text}</div>}
@@ -453,9 +437,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
           encounterTitle={node.title}
           onCharacter={onCharacter}
           onContinue={onContinue}
-          onLeaveTraining={onLeaveTraining}
-          finalEncounter={adventure.mode === "story" && adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
-          endless={adventure.mode === "endless"}
+          finalEncounter={adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
           presentationPlayed={rewardPresentationPlayed}
           unspentAttributePoints={game.character.unspentStatPoints}
           unspentTalentPoints={game.character.talentPoints}
@@ -522,15 +504,13 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
   );
 }
 
-export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onContinue, onLeaveTraining, finalEncounter, endless, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart }: {
+export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onContinue, finalEncounter, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart }: {
   reward: CombatReward;
   character: CharacterState;
   encounterTitle: string;
   onCharacter: () => void;
   onContinue: () => void;
-  onLeaveTraining: () => void;
   finalEncounter: boolean;
-  endless: boolean;
   presentationPlayed: boolean;
   unspentAttributePoints: number;
   unspentTalentPoints: number;
@@ -616,25 +596,15 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
 
         <div className="victory-score-actions">
           <button className={`score-character-button ${levelUpPending ? "level-up" : ""}`} onClick={onCharacter}>{levelUpPending ? <Sparkles size={16} /> : <UserRound size={16} />} {levelUpPending ? "Level up!" : "View Character"}</button>
-          <button className="primary-button score-continue-button" disabled={levelUpPending} data-game-tooltip={levelUpPending ? continueTooltip : undefined} onClick={onContinue}>{endless ? "Continue Training" : finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
+          <button className="primary-button score-continue-button" disabled={levelUpPending} data-game-tooltip={levelUpPending ? continueTooltip : undefined} onClick={onContinue}>{finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
-        {endless && <button className="text-button score-leave-training" onClick={onLeaveTraining}>Leave Training</button>}
       </section>
       {inspectedGear && <ItemDetailModal item={inspectedGear} character={character} locked viewOnly onClose={() => setInspectedGear(null)} />}
     </div>
   );
 }
 
-export function StageCard({ stage, index }: { stage: AdventureStageDefinition; index: number }) {
-  const icons = [<Footprints />, <Gem />, <Swords />, <Trophy />];
-  const possibilities = stage.entries.map((entry) => `${entry.chance}% ${entry.type === "event" ? "Event" : entry.type === "boss" ? "Boss" : "Combat"}`).join(" · ");
-  return <article className="route-card"><span className="route-number">0{index + 1}</span><span className="route-icon">{icons[index] ?? <Footprints />}</span><p className="eyebrow">Stage {index + 1}</p><h3>{stage.name}</h3><p>{possibilities}</p></article>;
-}
-
-export function ProgressHeader({ index, mode, adventureId }: { index: number; mode: AdventureMode; adventureId: string }) {
-  if (mode === "endless") {
-    return <div className="journey-progress endless"><span>Shadow Proving Grounds</span><div className="journey-progress-track" aria-hidden="true"><i style={{ width: "100%" }} /></div><span>Fight {index + 1}</span></div>;
-  }
+export function ProgressHeader({ index, adventureId }: { index: number; adventureId: string }) {
   const definition = getAdventureDefinition(adventureId);
   const progress = ((index + 1) / definition.stages.length) * 100;
   return <div className="journey-progress"><span>{definition.name}</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={definition.stages.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {definition.stages.length}</span></div>;

@@ -134,10 +134,6 @@ export function preloadCharacterAssets(avatarUrl: string, portraitUrl: string): 
   ])].map(preloadImage));
 }
 
-export function rollDummyEncounter(): string[] {
-  return Array.from({ length: Math.random() < 0.5 ? 2 : 3 }, () => "dummy");
-}
-
 export const ENCOUNTER_COUNT_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
 export function pluralizeEnemyName(name: string): string {

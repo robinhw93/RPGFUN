@@ -403,12 +403,14 @@ function testIndependentItemDrops() {
     character,
     adventure: {
       ...structuredClone(INITIAL_GAME.adventure),
-      mode: "endless",
+      mode: "story",
       active: true,
+      stageEntryId: ADVENTURES[0].stages[0].entries[0].id,
       combat: { ...combat, outcome: "victory", enemies: combat.enemies.map((enemy) => ({ ...enemy, dropTable: [{ itemId: firstItem.id, chance: 100 }] })) },
     },
   };
-  const rewarded = grantCombatReward(state, 1, () => 0);
+  const rewardRolls = [0];
+  const rewarded = grantCombatReward(state, 1, () => rewardRolls.shift() ?? 1);
   assert.equal(rewarded.adventure.pendingReward?.loot.length, 1, "Rolled loot must be captured by the score-screen reward.");
   assert.equal(rewarded.character.inventory.at(-1)?.id, firstItem.id, "Rolled loot must enter the character inventory immediately.");
   assert.equal(grantCombatReward(rewarded, 2, () => 0).character.inventory.length, 1, "A resolved combat reward must never reroll or duplicate loot.");

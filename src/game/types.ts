@@ -1013,7 +1013,7 @@ export interface CombatReward {
   levelsGained: number;
 }
 
-export type AdventureMode = "story" | "endless";
+export type AdventureMode = "story";
 
 export interface AdventureProgress {
   mode: AdventureMode;

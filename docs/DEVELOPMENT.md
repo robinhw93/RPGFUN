@@ -119,7 +119,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/content/talents.ts` | Canonical talent nodes and runtime tree canvas. |
 | `src/game/content/enemies.ts` | Canonical enemy templates and executable enemy abilities. |
 | `src/game/content/gear.ts` | Canonical items and gear-set thresholds. |
-| `src/game/content/adventures.ts` | Canonical events, story adventures, and endless adventure definition. |
+| `src/game/content/adventures.ts` | Canonical events and story adventures. |
 | `src/game/character.ts` | New-character state and derived-stat calculation. |
 | `src/game/engine.ts` | Stable public facade for combat transitions. |
 | `src/game/combat/` | State creation, event queues, damage, turn flow/triggers, player actions, enemy actions, and presentation resolution. |
@@ -380,7 +380,7 @@ Current migration behavior:
 - Resolves legacy two-handed weapon values and moves an invalid Off Hand item into inventory.
 - Restores missing avatar, stat-point, pending-reward, initiative, cooldown, status, per-round acted-actor, and combat-sequencing fields.
 - Clamps loaded characters to the level-50 cap and clears stored experience at the cap.
-- Restores a missing adventure mode as `story`; new saves may use `endless` for the Shadow Proving Grounds. Saves from the removed Ashen Road reset safely to the Windsong Forest map while preserving the character.
+- Restores a missing adventure mode as `story`. Saves left inside removed adventures, including Shadow Proving Grounds and Ashen Road, reset safely to the Windsong Forest map while preserving the character.
 
 ## UI conventions
 

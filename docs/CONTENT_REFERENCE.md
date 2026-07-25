@@ -467,15 +467,6 @@ Every Wandering Merchant also buys any gear, consumable, or ordinary item curren
 
 Enemy templates and adventure stages may each define item drop tables. Every configured item chance is rolled independently; enemy tables roll once per defeated instance and the current stage table rolls once per combat victory. Drop tables may reference any live gear, consumable, or ordinary item.
 
-## Testing adventure: Shadow Proving Grounds
-
-| Property | Rule |
-| --- | --- |
-| Length | Endless; the fight counter has no maximum. |
-| Encounter | Randomly two or three DUMMIES each fight. |
-| Reward | The exact XP required for two complete levels; no gold. |
-| Between fights | Restore full Health; the Character hub and Leave Training remain available from the score screen. Talents & Abilities is a submenu inside Character. |
-
 ## Item catalog
 
 ### Available gear

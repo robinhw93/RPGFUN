@@ -14,20 +14,6 @@ This document describes the rules currently implemented in Arkenfall. Percentage
 
 Death is permanent. When combat reaches defeat, the browser save is deleted. The defeat screen returns the player to character creation, and the previous character, equipment, talents, and adventure progress cannot be recovered through the game UI.
 
-### Shadow Proving Grounds
-
-The adventure screen also offers a separate endless testing route for developing and validating Shadow builds:
-
-- Every fight contains a newly randomized group of two or three DUMMIES.
-- Each DUMMY has 100 Health, no defense or Dodge, and a 95% Hit Chance training attack with 1 base Physical damage.
-- Every victory awards exactly two complete levels, including six attribute points and two talent points.
-- Training victories award no gold.
-- Health is restored to the character's current maximum before the next training fight.
-- Talent nodes can be unlocked for free while this testing route is active. Requirements between nodes and the active-combat lock still apply, and the character's saved talent-point total is not reduced.
-- The victory screen links to the Character hub so the player can allocate points, open its **Talents & Abilities** submenu, and change the six equipped abilities before continuing.
-- Training can be left safely from the victory screen without losing the character or earned progression.
-- The route has no final encounter; its fight counter continues until the character dies or another adventure is started.
-
 ## Character creation and starting state
 
 Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a compact clipped square image with clearance above the Health bar; enemies always use a thin dark-red portrait frame. Clicking the player's portrait opens the character's five current Attributes plus combat-adjusted stats such as Spell Power, Hit Chance, Critical Strike Chance, defenses, Initiative, and Energy. Temporary statuses are included there through the same rules used by combat, so Fierce raises the displayed Critical Strike Chance while Blind, Shatter, Slowed, Evasion, and Exhausted adjust their corresponding values. Clicking an enemy portrait opens the enemy's equally icon-led, combat-adjusted information.
@@ -410,7 +396,7 @@ The talent tree is classless. Wayfarer's Spark begins at the center, and the fir
 
 ### Unlock rules
 
-- A node costs its configured number of talent points in normal adventures. Shadow Proving Grounds temporarily makes valid unlocks free without changing the character's stored points.
+- A node costs its configured number of talent points.
 - Talent connections are bidirectional. If either node stores the connection, unlocking either end can make the node at the other end available.
 - Any one connected node is always enough; there is no alternate requirement mode.
 - After one non-origin class node is unlocked, the other class nodes remain locked until character level 10. At level 10, their normal connection and Talent Point requirements apply again.

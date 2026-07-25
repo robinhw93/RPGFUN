@@ -1,6 +1,6 @@
 import { getAdventureDefinition, getAdventureExperienceReward, getAdventureNode } from "./adventures";
 import { ITEMS } from "./data";
-import { addExperience, experienceForLevelGains } from "./progression";
+import { addExperience } from "./progression";
 import type { CombatReward, GameState, InventoryItem, ItemDropDefinition } from "./types";
 
 export function rollItemDropTable(
@@ -18,9 +18,7 @@ export function rollItemDropTable(
 
 export function rollCombatLoot(state: GameState, random: () => number = Math.random): InventoryItem[] {
   const enemyDropTables = state.adventure.combat?.enemies.map((enemy) => enemy.dropTable) ?? [];
-  const stageDropTable = state.adventure.mode === "endless"
-    ? undefined
-    : getAdventureDefinition(state.adventure.adventureId).stages[state.adventure.nodeIndex]?.dropTable;
+  const stageDropTable = getAdventureDefinition(state.adventure.adventureId).stages[state.adventure.nodeIndex]?.dropTable;
   return rollCombatDropTables(enemyDropTables, stageDropTable, random);
 }
 
@@ -40,9 +38,7 @@ export function grantCombatReward(state: GameState, timestamp = Date.now(), rand
   const adventure = state.adventure;
   if (adventure.combat?.outcome !== "victory" || adventure.pendingReward?.nodeIndex === adventure.nodeIndex) return state;
 
-  const rewardDefinition = adventure.mode === "endless"
-    ? { experience: experienceForLevelGains(state.character.level, state.character.xp, 2), gold: 0 }
-    : getAdventureNode(adventure).reward;
+  const rewardDefinition = getAdventureNode(adventure).reward;
   if (!rewardDefinition) return state;
 
   const experienceReward = getAdventureExperienceReward(rewardDefinition.experience, adventure, state.character.completedAdventureIds);

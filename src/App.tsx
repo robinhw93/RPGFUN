@@ -22,7 +22,7 @@ import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
-import type { AdventureMode, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
+import type { CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
 import { useCombatActionQueue } from "./hooks/useCombatActionQueue";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -32,7 +32,7 @@ import { CharacterCreation } from "./components/character/CharacterCreation";
 
 import { CharacterAssetBoundary, CharacterView } from "./components/character/CharacterView";
 
-import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, rollDummyEncounter, type CharacterSection } from "./ui/gameUi";
+import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, type CharacterSection } from "./ui/gameUi";
 
 type View = "adventure" | "character" | DevtoolKind;
 type EncounterFlavorPhase = "center" | "lower" | "exit";
@@ -131,9 +131,9 @@ function App() {
     presentedRewardIds.current.add(rewardId);
   }, []);
 
-  const playTravelTransition = (mode: AdventureMode, message: string, onComplete: () => void, revealMessage = true) => {
+  const playTravelTransition = (message: string, onComplete: () => void, revealMessage = true) => {
     if (travelTransition || encounterFlavor) return;
-    const travelLabel = mode === "endless" ? "Returning to the proving grounds" : "Walking beneath the windsong canopy";
+    const travelLabel = "Walking beneath the windsong canopy";
     setTravelTransition({ phase: "travel", dots: 1, travelLabel });
     const dotInterval = window.setInterval(() => {
       setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
@@ -170,27 +170,21 @@ function App() {
     travelTimers.current = [completeTimer];
   };
 
-  const beginAdventure = (mode: AdventureMode, adventureId = DEFAULT_ADVENTURE_ID) => {
-    if (mode === "story") {
-      const definition = getAdventureDefinition(adventureId);
-      if (!canStartStoryAdventure(definition, game.character.completedAdventureIds)) return;
-    }
-    const entry = mode === "endless" ? null : selectStageEntry(getAdventureDefinition(adventureId), 0);
-    const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;
+  const beginAdventure = (adventureId = DEFAULT_ADVENTURE_ID) => {
+    const definition = getAdventureDefinition(adventureId);
+    if (!canStartStoryAdventure(definition, game.character.completedAdventureIds)) return;
+    const entry = selectStageEntry(definition, 0);
+    const enemyIds = entry.enemyIds;
     const node = entry ? entryToNode(entry) : null;
     const generatedEncounter = enemyIds?.length ? describeEnemyEncounter(enemyIds) : "";
-    const message = mode === "endless"
-      ? generatedEncounter
-      : node
-        ? getStoryNodeIntroduction(node, generatedEncounter)
-        : "You discover a new path.";
-    playTravelTransition(mode, message, () => {
+    const message = node ? getStoryNodeIntroduction(node, generatedEncounter) : "You discover a new path.";
+    playTravelTransition(message, () => {
       setGame((current) => {
         const maxHp = getDerivedStats(current.character).maxHp;
         const combat = enemyIds?.length ? createCombat(current.character, enemyIds, maxHp) : null;
         return {
           ...current,
-          adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
+          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -244,39 +238,13 @@ function App() {
     travelTimers.current = [...travelTimers.current, flavorTimer];
   };
 
-  const advanceJourney = (endlessEnemyIds?: string[], nextStoryEntryId?: string) => {
+  const advanceJourney = (nextStoryEntryId?: string) => {
     setGame((current) => {
       const adventure = current.adventure;
       const wonCombat = adventure.combat?.outcome === "victory";
       const carryHp = wonCombat ? adventure.combat!.playerHp : (adventure.carryHp ?? getDerivedStats(current.character).maxHp);
       const character = current.character;
       const latestLoot = adventure.pendingReward?.loot ?? adventure.latestLoot;
-
-      if (adventure.mode === "endless") {
-        const maxHp = getDerivedStats(character).maxHp;
-        const nextIndex = adventure.nodeIndex + 1;
-        const combat = createCombat(character, endlessEnemyIds ?? rollDummyEncounter(), maxHp);
-        return {
-          ...current,
-          adventure: {
-            ...adventure,
-            active: true,
-            completed: false,
-            nodeIndex: nextIndex,
-            carryHp: maxHp,
-            combat,
-            eventResolved: false,
-            eventRollResult: null,
-            nextCombatPlayerStatuses: [],
-            nextCombatEnemyStatuses: [],
-            eventEncounter: null,
-            eventMerchant: null,
-            stageEntryId: null,
-            latestLoot: null,
-            pendingReward: null,
-          },
-        };
-      }
 
       const definition = getAdventureDefinition(adventure.adventureId);
       if (adventure.nodeIndex >= definition.stages.length - 1) {
@@ -339,48 +307,16 @@ function App() {
       return;
     }
     const definition = getAdventureDefinition(game.adventure.adventureId);
-    if (game.adventure.mode === "story" && game.adventure.nodeIndex >= definition.stages.length - 1) {
+    if (game.adventure.nodeIndex >= definition.stages.length - 1) {
       advanceJourney();
       return;
     }
-    const endlessEnemyIds = game.adventure.mode === "endless" ? rollDummyEncounter() : undefined;
-    const nextEntry = game.adventure.mode === "endless" ? null : selectStageEntry(definition, game.adventure.nodeIndex + 1);
-    const nextNode = nextEntry ? entryToNode(nextEntry) : null;
-    const message = endlessEnemyIds
-      ? describeEnemyEncounter(endlessEnemyIds)
-      : nextNode
-        ? getStoryNodeIntroduction(nextNode, nextNode.enemies?.length ? describeEnemyEncounter(nextNode.enemies) : "")
-        : "You discover a new path.";
-    playTravelTransition(game.adventure.mode, message, () => {
-      advanceJourney(endlessEnemyIds, nextEntry?.id);
-    }, nextNode?.type !== "event");
-  };
-
-  const leaveTraining = () => {
-    setGame((current) => {
-      if (current.adventure.mode !== "endless" || current.adventure.combat?.outcome !== "victory") return current;
-      return {
-        ...current,
-        adventure: {
-          mode: "story",
-          adventureId: DEFAULT_ADVENTURE_ID,
-          active: false,
-          nodeIndex: 0,
-          stageEntryId: null,
-          carryHp: null,
-          combat: null,
-          eventResolved: false,
-          eventRollResult: null,
-          nextCombatPlayerStatuses: [],
-          nextCombatEnemyStatuses: [],
-          eventEncounter: null,
-          eventMerchant: null,
-          latestLoot: null,
-          pendingReward: null,
-          completed: false,
-        },
-      };
-    });
+    const nextEntry = selectStageEntry(definition, game.adventure.nodeIndex + 1);
+    const nextNode = entryToNode(nextEntry);
+    const message = getStoryNodeIntroduction(nextNode, nextNode.enemies?.length ? describeEnemyEncounter(nextNode.enemies) : "");
+    playTravelTransition(message, () => {
+      advanceJourney(nextEntry.id);
+    }, nextNode.type !== "event");
   };
 
   const resolveEvent = (choiceId: string) => {
@@ -406,8 +342,7 @@ function App() {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
       const talent = TALENTS.find((item) => item.id === talentId);
-      const freeTestingUnlock = current.adventure.mode === "endless";
-      if (!talent || current.character.unlockedTalents.includes(talentId) || (!freeTestingUnlock && talent.cost > current.character.talentPoints)) return current;
+      if (!talent || current.character.unlockedTalents.includes(talentId) || talent.cost > current.character.talentPoints) return current;
       if (!areTalentRequirementsMet(talent, current.character.unlockedTalents, TALENTS)) return current;
       if (isAdditionalClassTalentLocked(talent, current.character.unlockedTalents, current.character.level, TALENTS)) return current;
       const equipped = talent.abilityId && current.character.equippedAbilities.length < 6
@@ -417,7 +352,7 @@ function App() {
         ...current,
         character: {
           ...current.character,
-          talentPoints: freeTestingUnlock ? current.character.talentPoints : current.character.talentPoints - talent.cost,
+          talentPoints: current.character.talentPoints - talent.cost,
           unlockedTalents: [...current.character.unlockedTalents, talentId],
           equippedAbilities: equipped,
         },
@@ -562,7 +497,6 @@ function App() {
             onInitiativeOrderStart={beginInitiativeOrder}
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
-            onLeaveTraining={leaveTraining}
             onReturnToAdventures={returnToAdventureList}
             onEvent={resolveEvent}
             onMerchantPurchase={buyMerchantItem}
@@ -588,7 +522,7 @@ function App() {
               </CharacterAssetBoundary>
             ) : (
               <Suspense fallback={null}>
-                <TalentsView character={game.character} locked={combatLocked} freeUnlocks={game.adventure.mode === "endless"} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
+                <TalentsView character={game.character} locked={combatLocked} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
               </Suspense>
             )}
           </>
