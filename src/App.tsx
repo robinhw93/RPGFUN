@@ -218,6 +218,10 @@ function App() {
       if (!combat || combat.initiativeRevealed) return current;
       return { ...current, adventure: { ...current.adventure, combat: { ...combat, initiativeRevealed: true } } };
     });
+  };
+
+  const beginInitiativeOrder = () => {
+    if (!encounterFlavor) return;
     setEncounterFlavor((current) => current ? { ...current, phase: "exit" } : current);
     const flavorTimer = window.setTimeout(() => setEncounterFlavor(null), ADVENTURE_TRANSITION_TIMING.encounterExitMs);
     travelTimers.current = [...travelTimers.current, flavorTimer];
@@ -525,6 +529,7 @@ function App() {
             onCombatEvent={combatSequencer.revealEvent}
             onCombatSequenceComplete={combatSequencer.completeSequence}
             onPlayerTurnReady={setPlayerTurnReadyEventId}
+            onInitiativeOrderStart={beginInitiativeOrder}
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
             onLeaveTraining={leaveTraining}
@@ -590,7 +595,15 @@ function App() {
         </div>
       )}
       {encounterFlavor && (
-        <div className={`encounter-flavor ${encounterFlavor.phase}`} role="status" aria-live="polite">
+        <div
+          className={`encounter-flavor ${encounterFlavor.phase}`}
+          style={{
+            "--encounter-flavor-enter-duration": `${ADVENTURE_TRANSITION_TIMING.encounterEnterMs}ms`,
+            "--encounter-flavor-exit-duration": `${ADVENTURE_TRANSITION_TIMING.encounterExitMs}ms`,
+          } as React.CSSProperties}
+          role="status"
+          aria-live="polite"
+        >
           <span>{encounterFlavor.message}</span>
         </div>
       )}

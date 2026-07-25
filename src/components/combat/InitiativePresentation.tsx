@@ -7,7 +7,7 @@ import { calculateInitiativeFlight, getInitiativeRowBounds } from "../../game/in
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "../../game/timing";
 import type { CombatState } from "../../game/types";
 
-export function InitiativeRoll({ combat, onComplete }: { combat: CombatState; onComplete: () => void }) {
+export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: CombatState; onOrderStart: () => void; onComplete: () => void }) {
   const [phase, setPhase] = useState<"rolling" | "landed" | "bonus" | "order">("rolling");
   const [displayedRolls, setDisplayedRolls] = useState<Record<string, number>>(() => Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
   const [landingRect, setLandingRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
@@ -62,7 +62,10 @@ export function InitiativeRoll({ combat, onComplete }: { combat: CombatState; on
         nextGeometry[actorId] = calculateInitiativeFlight(source, target);
       });
       setFlightGeometry(nextGeometry);
-      orderFrame = window.requestAnimationFrame(() => setPhase("order"));
+      orderFrame = window.requestAnimationFrame(() => {
+        onOrderStart();
+        setPhase("order");
+      });
     }, INITIATIVE_TIMING.orderMs);
     const completeTimer = window.setTimeout(onComplete, INITIATIVE_TIMING.completeMs);
     return () => {

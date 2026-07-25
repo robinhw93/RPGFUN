@@ -1158,9 +1158,11 @@ main { min-height: calc(100vh - 68px); }
 @keyframes travel-footstep { 0% { opacity: 0; scale: .78; translate: 0 7px; } 22%, 62% { opacity: .9; scale: 1; translate: 0 0; } 100% { opacity: 0; scale: 1.04; translate: 0 -9px; } }
 @keyframes travel-message { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 .encounter-flavor { --encounter-flavor-offset: clamp(150px, 24vh, 230px); position: fixed; z-index: 205; inset: 0; overflow: hidden; pointer-events: none; }
-.encounter-flavor span { width: min(720px, calc(100% - 2rem)); position: absolute; left: 50%; top: 50%; color: #e8e5dc; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.05rem, 4vw, 1.45rem); letter-spacing: .025em; line-height: 1.55; text-align: center; text-shadow: 0 2px 18px rgba(0,0,0,.95); opacity: 1; transform: translate3d(-50%, -50%, 0); transition: opacity .65s ease, transform .9s cubic-bezier(.22,.72,.2,1); will-change: opacity, transform; }
+.encounter-flavor span { width: min(720px, calc(100% - 2rem)); position: absolute; left: 50%; top: 50%; color: #e8e5dc; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.05rem, 4vw, 1.45rem); letter-spacing: .025em; line-height: 1.55; text-align: center; text-shadow: 0 2px 18px rgba(0,0,0,.95); opacity: 1; transform: translate3d(-50%, -50%, 0); transition: opacity var(--encounter-flavor-exit-duration, 1.4s) ease, transform .9s cubic-bezier(.22,.72,.2,1); will-change: opacity, transform; }
+.encounter-flavor.center span { animation: encounter-flavor-enter var(--encounter-flavor-enter-duration, .65s) ease both; }
 .encounter-flavor.lower span { transform: translate3d(-50%, var(--encounter-flavor-offset), 0); }
-.encounter-flavor.exit span { opacity: 0; transform: translate3d(-50%, calc(var(--encounter-flavor-offset) + 12px), 0); }
+.encounter-flavor.exit span { opacity: 0; transform: translate3d(-50%, var(--encounter-flavor-offset), 0); }
+@keyframes encounter-flavor-enter { from { opacity: 0; transform: translate3d(-50%, calc(-50% + 8px), 0); } to { opacity: 1; transform: translate3d(-50%, -50%, 0); } }
 
 @media (max-width: 760px) {
   body.combat-open { height: 100dvh; padding-bottom: 0; overflow: hidden; }
