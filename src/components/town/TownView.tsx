@@ -7,7 +7,7 @@ import { describeConsumableEffect, getItemGoldCost, isConsumableItem, isGearItem
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_MEALS, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, GameState, InventoryItem } from "../../game/types";
-import { GoldIcon } from "../../ui/gameUi";
+import { formatItemStatValue, getItemStatLines, GoldIcon } from "../../ui/gameUi";
 
 type TownLocation = "square" | "blacksmith" | "alchemist" | "tavern";
 type VendorTab = "shop" | "craft";
@@ -36,11 +36,7 @@ function TownItemDetails({ item, onClose }: { item: InventoryItem; onClose: () =
         <p>{item.description || "No description has been written for this item yet."}</p>
         {isConsumableItem(item) && <ul>{item.effects.map((effect, index) => <li key={index}>{describeConsumableEffect(effect)}</li>)}</ul>}
         {isGearItem(item) && <div className="town-item-stat-list">
-          {Object.entries(item.stats).filter(([, value]) => value).map(([stat, value]) => <span key={stat}><strong>+{value}</strong> {stat}</span>)}
-          {item.armor ? <span><strong>+{item.armor}</strong> Armor</span> : null}
-          {item.magicResistance ? <span><strong>+{item.magicResistance}</strong> Magic Resistance</span> : null}
-          {item.physicalPower ? <span><strong>+{item.physicalPower}</strong> Physical Power</span> : null}
-          {item.magicalPower ? <span><strong>+{item.magicalPower}</strong> Spell Power</span> : null}
+          {getItemStatLines(item).map((stat) => <span key={stat.label}><strong>+{formatItemStatValue(stat.value, stat.percent)}</strong> {stat.label}</span>)}
         </div>}
         <div className="town-item-modal-value"><GoldIcon /> {getItemGoldCost(item)} Gold</div>
       </article>

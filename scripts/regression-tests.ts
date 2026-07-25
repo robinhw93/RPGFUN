@@ -18,6 +18,7 @@ import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import { craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, ItemDropDefinition } from "../src/game/types";
+import { getItemStatLines } from "../src/ui/gameUi";
 
 function testGearIconLibrary() {
   assert.equal(Object.keys(GEAR_ICON_VARIANTS).length, 14, "Every supported gear category needs its own generated icon group.");
@@ -30,6 +31,22 @@ function testGearIconLibrary() {
   const staff: GearItem = { kind: "gear", id: "test-staff", name: "Test Staff", slot: "mainHand", weaponEquipType: "twoHand", weaponKind: "staff", rarity: "common", description: "", stats: {} };
   assert.equal(getGearIconCategory(staff), "staff", "Weapon kind must drive the focused gear-art category.");
   assert.deepEqual(getGearIconChoices(staff).slice(-5), GEAR_ICON_VARIANTS.staff, "The Staff picker must expose all five generated Staff icons.");
+}
+
+function testGearCombatStatsArePresented() {
+  const boots: GearItem = {
+    kind: "gear",
+    id: "test-dusty-boots",
+    name: "Dusty Boots",
+    slot: "boots",
+    rarity: "common",
+    description: "",
+    stats: {},
+    combat: { passive: { initiative: 3, dodgeChance: 0.01 } },
+  };
+  const lines = getItemStatLines(boots);
+  assert.deepEqual(lines.find((line) => line.label === "Initiative"), { label: "Initiative", value: 3, icon: "initiativeBonus", percent: undefined });
+  assert.deepEqual(lines.find((line) => line.label === "Dodge Chance"), { label: "Dodge Chance", value: 0.01, icon: "dodgeChance", percent: true });
 }
 
 function testContentIntegrity() {
@@ -502,6 +519,7 @@ function testIndependentItemDrops() {
 
 testContentIntegrity();
 testGearIconLibrary();
+testGearCombatStatsArePresented();
 testStoryEncounterIntroduction();
 testCompletedAdventureAvailability();
 testStoryReplayRewards();

@@ -17,7 +17,7 @@ import { getDerivedStats } from "../game/character";
 import { ABILITIES, ENEMIES, TALENTS } from "../game/data";
 import { canEquipItemInSlot } from "../game/gear";
 import { isConsumableItem, isGearItem, isMiscItem } from "../game/items";
-import type { Ability, CharacterState, DamageType, GearItem, GearSlot, InventoryItem, ItemRarity, StatName, StatusEffectId } from "../game/types";
+import type { Ability, CharacterState, DamageType, GearItem, GearSlot, InventoryItem, ItemRarity, PassiveBonuses, StatName, StatusEffectId } from "../game/types";
 
 export type CharacterSection = "overview" | "equipment" | "talents";
 
@@ -74,6 +74,13 @@ export const ATTRIBUTE_ICON_URLS: Record<StatName, string> = {
 
 export type DerivedStatIconName = "physicalPower" | "magicalPower" | "hitChance" | "dodgeChance" | "critChance" | "maxHp" | "armor" | "magicResistance" | "initiativeBonus" | "maxEnergy";
 export type StatIconName = StatName | DerivedStatIconName;
+
+export type ItemStatLine = {
+  label: string;
+  value: number;
+  icon?: StatIconName;
+  percent?: boolean;
+};
 
 export const DERIVED_STAT_ICON_URLS: Record<DerivedStatIconName, string> = {
   physicalPower: "/assets/stat-icons/physical-power.png",
@@ -264,6 +271,59 @@ export function formatPercent(value: number): string {
 
 export function formatStat(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+const ITEM_STAT_LABELS: Record<StatName, string> = {
+  strength: "Strength",
+  agility: "Agility",
+  intelligence: "Intelligence",
+  vitality: "Vitality",
+  luck: "Luck",
+};
+
+const ITEM_PASSIVE_STAT_LINES: Array<{ key: keyof PassiveBonuses; label: string; icon?: StatIconName; percent?: boolean }> = [
+  { key: "armor", label: "Armor", icon: "armor" },
+  { key: "magicResistance", label: "Magic Resistance", icon: "magicResistance" },
+  { key: "physicalPower", label: "Physical Power", icon: "physicalPower" },
+  { key: "magicalPower", label: "Spell Power", icon: "magicalPower" },
+  { key: "maxEnergy", label: "Max Energy", icon: "maxEnergy" },
+  { key: "energyRegen", label: "Energy Regeneration", icon: "maxEnergy" },
+  { key: "hitChance", label: "Hit Chance", icon: "hitChance", percent: true },
+  { key: "dodgeChance", label: "Dodge Chance", icon: "dodgeChance", percent: true },
+  { key: "critChance", label: "Critical Strike Chance", icon: "critChance", percent: true },
+  { key: "initiative", label: "Initiative", icon: "initiativeBonus" },
+];
+
+export function getItemStatLines(item: GearItem): ItemStatLine[] {
+  const lines = new Map<string, ItemStatLine>();
+  const addLine = (line: ItemStatLine) => {
+    if (!line.value) return;
+    const existing = lines.get(line.label);
+    lines.set(line.label, existing ? { ...existing, value: existing.value + line.value } : line);
+  };
+
+  (Object.entries(item.stats) as Array<[StatName, number | undefined]>).forEach(([stat, value]) => {
+    if (value) addLine({ label: ITEM_STAT_LABELS[stat], value, icon: stat });
+  });
+  (Object.entries(item.combat?.passive?.stats ?? {}) as Array<[StatName, number | undefined]>).forEach(([stat, value]) => {
+    if (value) addLine({ label: ITEM_STAT_LABELS[stat], value, icon: stat });
+  });
+  addLine({ label: "Armor", value: item.armor ?? 0, icon: "armor" });
+  addLine({ label: "Magic Resistance", value: item.magicResistance ?? 0, icon: "magicResistance" });
+  addLine({ label: "Physical Power", value: item.physicalPower ?? 0, icon: "physicalPower" });
+  addLine({ label: "Spell Power", value: item.magicalPower ?? 0, icon: "magicalPower" });
+  addLine({ label: "Power", value: item.power ?? 0, icon: "physicalPower" });
+
+  const passive = item.combat?.passive;
+  ITEM_PASSIVE_STAT_LINES.forEach(({ key, label, icon, percent }) => {
+    const value = passive?.[key];
+    if (typeof value === "number") addLine({ label, value, icon, percent });
+  });
+  return [...lines.values()].sort((left, right) => left.label.localeCompare(right.label));
+}
+
+export function formatItemStatValue(value: number, percent = false): string {
+  return percent ? formatPercent(value) : formatStat(value);
 }
 
 export function getDerivedStatRows(derived: ReturnType<typeof getDerivedStats>): Array<{ icon: DerivedStatIconName; label: string; value: string; tooltip: string }> {

@@ -14,7 +14,7 @@ import { describeConsumableEffect, isConsumableItem, isGearItem, isMiscItem } fr
 import { experienceToNextLevel, MAX_LEVEL } from "../../game/progression";
 import type { CharacterState, ConsumableItem, GearItem, GearSlot, MiscItem, StatName } from "../../game/types";
 
-import { ATTRIBUTE_SUMMARIES, ATTRIBUTE_TOOLTIPS, EQUIPMENT_SLOT_ORDER, formatStat, getDerivedStatRows, INVENTORY_GEAR_FILTERS, itemMatchesInventoryFilter, RARITY_SORT_WEIGHT, SLOT_LABELS, STAT_LABELS, StatIcon, type CharacterSection, type InventoryGearFilter, type InventorySort, type StatIconName } from "../../ui/gameUi";
+import { ATTRIBUTE_SUMMARIES, ATTRIBUTE_TOOLTIPS, EQUIPMENT_SLOT_ORDER, formatItemStatValue, formatStat, getDerivedStatRows, getItemStatLines, INVENTORY_GEAR_FILTERS, itemMatchesInventoryFilter, RARITY_SORT_WEIGHT, SLOT_LABELS, STAT_LABELS, StatIcon, type CharacterSection, type InventoryGearFilter, type InventorySort, type StatIconName } from "../../ui/gameUi";
 
 export function CharacterLoadingScreen() {
   return (
@@ -315,37 +315,18 @@ export function GearSlotPickerModal({ slot, character, locked, onClose, onInspec
   );
 }
 
-export const ITEM_STAT_LABELS: Record<StatName, string> = {
-  strength: "Strength",
-  agility: "Agility",
-  intelligence: "Intelligence",
-  vitality: "Vitality",
-  luck: "Luck",
-};
-
-export type ItemStatLine = { label: string; value: number; icon?: StatIconName };
-
-export function getItemStatLines(item: GearItem): ItemStatLine[] {
-  const lines: ItemStatLine[] = (Object.entries(item.stats) as Array<[StatName, number | undefined]>).flatMap(([stat, value]) => value ? [{ label: ITEM_STAT_LABELS[stat], value, icon: stat }] : []);
-  if (item.armor) lines.push({ label: "Armor", value: item.armor, icon: "armor" });
-  if (item.magicResistance) lines.push({ label: "Magic Resistance", value: item.magicResistance, icon: "magicResistance" });
-  if (item.physicalPower) lines.push({ label: "Physical Power", value: item.physicalPower, icon: "physicalPower" });
-  if (item.magicalPower) lines.push({ label: "Spell Power", value: item.magicalPower, icon: "magicalPower" });
-  if (item.power) lines.push({ label: "Power", value: item.power, icon: "physicalPower" });
-  return lines.sort((left, right) => left.label.localeCompare(right.label));
-}
-
-export function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number; icon?: StatIconName }> {
+export function getItemComparisonLines(current: GearItem, candidate: GearItem): Array<{ label: string; current: number; candidate: number; difference: number; icon?: StatIconName; percent?: boolean }> {
   const currentLines = getItemStatLines(current);
   const candidateLines = getItemStatLines(candidate);
   const currentStats = new Map(currentLines.map((stat) => [stat.label, stat.value]));
   const candidateStats = new Map(candidateLines.map((stat) => [stat.label, stat.value]));
   const icons = new Map([...currentLines, ...candidateLines].map((stat) => [stat.label, stat.icon]));
+  const percentages = new Map([...currentLines, ...candidateLines].map((stat) => [stat.label, stat.percent]));
   const labels = [...new Set([...currentStats.keys(), ...candidateStats.keys()])];
   return labels.map((label) => {
     const currentValue = currentStats.get(label) ?? 0;
     const candidateValue = candidateStats.get(label) ?? 0;
-    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue, icon: icons.get(label) };
+    return { label, current: currentValue, candidate: candidateValue, difference: candidateValue - currentValue, icon: icons.get(label), percent: percentages.get(label) };
   });
 }
 
@@ -393,7 +374,7 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
 
         <section className="item-detail-section">
           <h3>Item Stats</h3>
-          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</small><strong>+{stat.value}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
+          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</small><strong>+{formatItemStatValue(stat.value, stat.percent)}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
         </section>
 
         {item.set && (
@@ -414,8 +395,8 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
               {comparisonLines.length > 0 ? comparisonLines.map((stat) => (
                 <div key={stat.label}>
                   <strong className="comparison-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</strong>
-                  <span>{stat.current} <i>→</i> {stat.candidate}</span>
-                  <em className={stat.difference > 0 ? "positive" : stat.difference < 0 ? "negative" : "neutral"}>{stat.difference > 0 ? `+${stat.difference}` : stat.difference < 0 ? stat.difference : "—"}</em>
+                  <span>{formatItemStatValue(stat.current, stat.percent)} <i>→</i> {formatItemStatValue(stat.candidate, stat.percent)}</span>
+                  <em className={stat.difference > 0 ? "positive" : stat.difference < 0 ? "negative" : "neutral"}>{stat.difference > 0 ? `+${formatItemStatValue(stat.difference, stat.percent)}` : stat.difference < 0 ? `-${formatItemStatValue(Math.abs(stat.difference), stat.percent)}` : "—"}</em>
                 </div>
               )) : <p className="item-detail-muted">These items grant no direct stat bonuses.</p>}
             </div>
