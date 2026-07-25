@@ -72,7 +72,7 @@ function VendorItemCard({ item, mode, game, station, actionItemId, onInspect, on
       <button type="button" className="town-item-action" disabled={mode === "shop" ? !affordable : !craftable} onClick={onAction}>
         {mode === "shop" ? <><ShoppingBag /> Buy <span><GoldIcon /> {getItemGoldCost(item)}</span></> : station === "alchemist" ? <><FlaskConical /> Brew</> : <><Hammer /> Craft</>}
       </button>
-      {actionItemId === item.id && <span className="town-item-acquired-mark" aria-hidden="true"><Check /></span>}
+      {actionItemId === item.id && <span className="town-item-acquired-mark" aria-hidden="true"><span className="town-purchase-seal"><Check /></span><i /><i /><i /><i /></span>}
     </article>
   );
 }
@@ -95,7 +95,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
     setFeedback(result.message);
     if (result.success) {
       setActionItemId(item.id);
-      window.setTimeout(() => setActionItemId((current) => current === item.id ? null : current), 900);
+      window.setTimeout(() => setActionItemId((current) => current === item.id ? null : current), 1050);
     }
   };
   return (
