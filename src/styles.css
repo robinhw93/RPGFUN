@@ -1421,8 +1421,9 @@ main { min-height: calc(100vh - 68px); }
 .town-location { min-height: calc(100dvh - 68px); position: relative; isolation: isolate; padding: clamp(1rem,3vw,2.2rem) max(1rem,calc((100vw - 1220px)/2)) 6rem; overflow: hidden; background-color: #111510; background-position: center; background-size: cover; }
 .town-location::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(180deg, rgba(6,8,7,.18), rgba(6,8,7,.48) 54%, rgba(6,8,7,.88)); pointer-events: none; }
 .town-square { display: flex; flex-direction: column; justify-content: space-between; background-image: url("/assets/town/arkenfall-town.webp"); }
-.town-blacksmith { background-image: url("/assets/town/blacksmith-brunhilde.webp"); }
-.town-alchemist { background-image: url("/assets/town/alchemist-ray.webp"); }
+.town-vendor-background { position:fixed;z-index:-2;inset:68px 0 0;background-color:#111510;background-repeat:no-repeat;pointer-events:none }
+.town-blacksmith .town-vendor-background { background-image:url("/assets/town/blacksmith-brunhilde.webp");background-position:center top;background-size:auto 170% }
+.town-alchemist .town-vendor-background { background-image:url("/assets/town/alchemist-ray.webp");background-position:center;background-size:cover }
 .town-tavern { background-image: url("/assets/town/resting-hart-tavern.webp"); }
 .town-back-button { min-height: 38px; display: inline-flex; align-items: center; gap: .42rem; padding: .5rem .7rem; color: #e5dbc4; border: 1px solid rgba(221,202,154,.38); background: rgba(9,12,10,.74); backdrop-filter: blur(9px); cursor: pointer; }
 .town-back-button svg { width: 16px; }
@@ -1478,7 +1479,8 @@ main { min-height: calc(100vh - 68px); }
 
 @media (max-width: 760px) {
   .arkenfall-town-entry { min-height: 82px; padding: .8rem; }.arkenfall-town-entry-icon{width:44px;height:44px}.arkenfall-town-entry em{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-  .town-location { min-height: calc(100dvh - 58px); padding: .7rem .7rem calc(74px + env(safe-area-inset-bottom)); background-position: center; }.town-square{background-position:54% center}.town-blacksmith{background-position:51% center}.town-alchemist{background-position:50% center}.town-tavern{background-position:48% center}
+  .town-vendor-background { inset:58px 0 0 }.town-blacksmith .town-vendor-background{background-position:51% top}.town-alchemist .town-vendor-background{background-position:50% center}
+  .town-location { min-height: calc(100dvh - 58px); padding: .7rem .7rem calc(74px + env(safe-area-inset-bottom)); background-position: center; }.town-square{background-position:54% center}.town-tavern{background-position:48% center}
   .town-square-header { margin-top: 1rem; padding: 1rem; background:rgba(7,10,8,.73) }.town-square-header .town-back-button{margin-bottom:1.4rem}.town-square-header h1{font-size:2.8rem}.town-square-header>p:not(.eyebrow){font-size:.75rem}
   .town-destination-grid { grid-template-columns: 1fr; gap:.5rem; margin-top:1rem }.town-destination{min-height:92px;padding:.75rem}.town-destination>span{width:40px;height:40px}.town-destination p:not(.eyebrow){-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .town-location-header { grid-template-columns: auto minmax(0,1fr); padding:.75rem }.town-location-header>div{grid-column:1/-1}.town-location-header .town-gold{position:absolute;right:.75rem;top:.75rem}.town-location-header h1{font-size:1.65rem}.town-location-header p:not(.eyebrow){font-size:.7rem}

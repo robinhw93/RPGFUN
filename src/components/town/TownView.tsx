@@ -122,6 +122,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   };
   return (
     <section className={`town-location town-${vendor}`}>
+      <div className="town-vendor-background" aria-hidden="true" />
       <div className="town-ambient-layer" aria-hidden="true"><i /><i /><i /><i /><i /></div>
       {purchaseToast && <div key={purchaseToast.id} className="town-action-toast" role="status" aria-live="polite"><strong className={getItemNameClass(purchaseToast.value)}>{purchaseToast.value.name}</strong> added to inventory.</div>}
       <header className="town-location-header">
