@@ -23,21 +23,24 @@ export function normalizeEventExchange(exchange: EventExchange): EventExchange {
         choices: (event.choices ?? []).map((choice) => ({
           ...choice,
           id: ensureInternalId(choice.id, "choice", usedChoiceIds, choice.label),
+          resolution: choice.resolution ?? "check",
           success: normalizeOutcome(choice.success),
           failure: normalizeOutcome(choice.failure),
+          outcome: choice.resolution === "direct" ? normalizeOutcome(choice.outcome ?? choice.success) : choice.outcome ? normalizeOutcome(choice.outcome) : undefined,
         })),
       };
     }),
   };
 }
-export function blankChoice(index: number): AdventureEventChoice { return { id: makeId("choice"), label: `Choice ${index}`, description: "", stat: "strength", threshold: 60, success: { ...EMPTY_OUTCOME, text: "Success." }, failure: { ...EMPTY_OUTCOME, text: "Failure." } }; }
+export function blankChoice(index: number): AdventureEventChoice { return { id: makeId("choice"), label: `Choice ${index}`, description: "", resolution: "check", stat: "strength", threshold: 60, success: { ...EMPTY_OUTCOME, text: "Success." }, failure: { ...EMPTY_OUTCOME, text: "Failure." } }; }
 
-export type OutcomePolarity = "positive" | "negative";
+export type OutcomePolarity = "positive" | "negative" | "any";
 export const POSITIVE_OUTCOME_OPTIONS: Array<{ type: AdventureEventOutcomeEffect["type"]; label: string }> = [
   { type: "heal", label: "Heal" },
   { type: "playerNextCombatBuff", label: "Start next combat with buff" },
   { type: "gainGold", label: "Gain gold" },
   { type: "gainItem", label: "Gain item" },
+  { type: "openMerchant", label: "Open Wandering Merchant" },
   { type: "gainExperience", label: "Gain experience" },
   { type: "gainTalentPoints", label: "Gain Talent Points" },
   { type: "gainAttributePoints", label: "Gain Attribute Points" },
@@ -51,12 +54,14 @@ export const NEGATIVE_OUTCOME_OPTIONS: Array<{ type: AdventureEventOutcomeEffect
   { type: "enemiesNextCombatBuff", label: "Enemies start next combat with buff" },
   { type: "immediateEncounter", label: "Encounter enemies immediately" },
 ];
+export const ALL_OUTCOME_OPTIONS = [...POSITIVE_OUTCOME_OPTIONS, ...NEGATIVE_OUTCOME_OPTIONS];
 export const BUFF_OPTIONS = Object.values(STATUS_EFFECTS).filter((status) => status.kind === "buff");
 export const DEBUFF_OPTIONS = Object.values(STATUS_EFFECTS).filter((status) => status.kind === "debuff");
 
 export function blankOutcomeEffect(type: AdventureEventOutcomeEffect["type"]): AdventureEventOutcomeEffect {
   switch (type) {
     case "gainItem": return { type, itemId: ITEMS[0]?.id ?? "" };
+    case "openMerchant": return { type, itemIds: ITEMS[0] ? [ITEMS[0].id] : [] };
     case "playerNextCombatBuff":
     case "enemiesNextCombatBuff": return { type, status: BUFF_OPTIONS[0]?.id ?? "strengthened", stacks: 1 };
     case "playerNextCombatDebuff":
@@ -73,7 +78,7 @@ export function OutcomeEffectFields({ effect, polarity, enemies, onChange, onRem
   onChange: (effect: AdventureEventOutcomeEffect) => void;
   onRemove: () => void;
 }) {
-  const options = polarity === "positive" ? POSITIVE_OUTCOME_OPTIONS : NEGATIVE_OUTCOME_OPTIONS;
+  const options = polarity === "positive" ? POSITIVE_OUTCOME_OPTIONS : polarity === "negative" ? NEGATIVE_OUTCOME_OPTIONS : ALL_OUTCOME_OPTIONS;
   const isStatus = effect.type === "playerNextCombatBuff" || effect.type === "playerNextCombatDebuff" || effect.type === "enemiesNextCombatBuff" || effect.type === "enemiesNextCombatDebuff";
   const statusOptions = effect.type === "playerNextCombatBuff" || effect.type === "enemiesNextCombatBuff" ? BUFF_OPTIONS : DEBUFF_OPTIONS;
   const isAmount = "amount" in effect;
@@ -83,6 +88,7 @@ export function OutcomeEffectFields({ effect, polarity, enemies, onChange, onRem
       <label><span>Effect</span><select value={effect.type} onChange={(event) => onChange(blankOutcomeEffect(event.target.value as AdventureEventOutcomeEffect["type"]))}>{options.map((option) => <option key={option.type} value={option.type}>{option.label}</option>)}</select></label>
       {isAmount && <NumberField label="Amount" value={effect.amount} min={0} onChange={(amount) => onChange({ ...effect, amount })} />}
       {effect.type === "gainItem" && <label><span>Item</span><select value={effect.itemId} onChange={(event) => onChange({ ...effect, itemId: event.target.value })}>{ITEMS.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+      {effect.type === "openMerchant" && <fieldset className="merchant-stock-picker"><legend>Items for sale</legend>{ITEMS.map((item) => <label key={item.id}><input type="checkbox" checked={effect.itemIds.includes(item.id)} onChange={(event) => onChange({ ...effect, itemIds: event.target.checked ? [...effect.itemIds, item.id] : effect.itemIds.filter((itemId) => itemId !== item.id) })} /><span>{item.name}</span></label>)}</fieldset>}
       {isStatus && <><label><span>Status</span><select value={effect.status} onChange={(event) => onChange({ ...effect, status: event.target.value as StatusEffectId })}>{statusOptions.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}</select></label><NumberField label="Stacks / amount" value={effect.stacks} min={1} onChange={(stacks) => onChange({ ...effect, stacks })} /></>}
       {effect.type === "immediateEncounter" && <><label><span>Enemy</span><select value={effect.enemyId} onChange={(event) => onChange({ ...effect, enemyId: event.target.value })}>{enemies.map((enemy) => <option key={enemy.id} value={enemy.id}>{enemy.name}</option>)}</select></label><NumberField label="Enemy count" value={effect.count} min={1} onChange={(count) => onChange({ ...effect, count })} /><NumberField label="Victory XP" value={effect.experience} min={0} onChange={(experience) => onChange({ ...effect, experience })} /><NumberField label="Victory gold" value={effect.gold} min={0} onChange={(gold) => onChange({ ...effect, gold })} /></>}
     </div>
@@ -91,10 +97,10 @@ export function OutcomeEffectFields({ effect, polarity, enemies, onChange, onRem
 
 export function OutcomeFields({ title, polarity, outcome, enemies, onChange }: { title: string; polarity: OutcomePolarity; outcome: AdventureEventOutcome; enemies: Array<{ id: string; name: string }>; onChange: (outcome: AdventureEventOutcome) => void }) {
   const effects = outcome.effects ?? [];
-  const defaultType = polarity === "positive" ? "heal" : "loseHealth";
+  const defaultType = polarity === "negative" ? "loseHealth" : "heal";
   return <fieldset className="outcome-fields"><legend>{title}</legend><TextField label="Outcome text" value={outcome.text} onChange={(text) => onChange({ ...outcome, text })} textarea />
     <div className="outcome-effect-list">{effects.map((effect, index) => <OutcomeEffectFields key={`${effect.type}-${index}`} effect={effect} polarity={polarity} enemies={enemies} onChange={(nextEffect) => onChange({ ...outcome, effects: effects.map((candidate, effectIndex) => effectIndex === index ? nextEffect : candidate) })} onRemove={() => onChange({ ...outcome, effects: effects.filter((_, effectIndex) => effectIndex !== index) })} />)}</div>
-    <button type="button" className="secondary-editor-button add-outcome-effect" onClick={() => onChange({ ...outcome, effects: [...effects, blankOutcomeEffect(defaultType)] })}><Plus size={14} /> Add {polarity} outcome</button>
+    <button type="button" className="secondary-editor-button add-outcome-effect" onClick={() => onChange({ ...outcome, effects: [...effects, blankOutcomeEffect(defaultType)] })}><Plus size={14} /> Add outcome effect</button>
   </fieldset>;
 }
 
@@ -106,14 +112,51 @@ export function EventDevtool({ onExit }: { onExit: () => void }) {
   const update = (change: Partial<AdventureEventDefinition>) => store.setDraft((draft) => ({ ...draft, events: draft.events.map((event) => event.id === selected?.id ? { ...event, ...change } : event) }));
   const updateChoice = (choiceId: string, change: Partial<AdventureEventChoice>) => update({ choices: selected.choices.map((choice) => choice.id === choiceId ? { ...choice, ...change } : choice) });
   const add = () => { const id = makeId("event"); const next = { id, name: "New Event", eyebrow: "Unknown Event", description: "Describe the scenario.", choices: [blankChoice(1), blankChoice(2)] }; store.setDraft((draft) => ({ ...draft, events: [...draft.events, next] })); setSelectedId(id); };
+  const addMerchant = () => {
+    const id = makeId("event");
+    const browse = blankChoice(1);
+    const leave = blankChoice(2);
+    const next: AdventureEventDefinition = {
+      id,
+      name: "Wandering Merchant",
+      eyebrow: "Roadside Encounter",
+      description: "A weathered merchant waits beside the road, their pack opened to reveal an unusual collection of wares.",
+      choices: [
+        { ...browse, label: "Browse the wares", description: "You step closer and inspect the merchant's goods.", resolution: "direct", outcome: { text: "The merchant opens their pack and names a price for each item.", effects: [blankOutcomeEffect("openMerchant")] } },
+        { ...leave, label: "Continue on your way", description: "You politely decline and continue your journey.", resolution: "direct", outcome: { text: "The merchant nods and wishes you safe travels.", effects: [] } },
+      ],
+    };
+    store.setDraft((draft) => ({ ...draft, events: [...draft.events, next] }));
+    setSelectedId(id);
+  };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, events: draft.events.filter((event) => event.id !== selected.id) })); setSelectedId(store.draft.events.find((event) => event.id !== selected.id)?.id ?? ""); };
   const prepareDraft = () => { const prepared = normalizeEventExchange(store.draft); store.setDraft(prepared); window.localStorage.setItem(EVENT_DRAFT_STORAGE_KEY, JSON.stringify(prepared)); return prepared; };
   const copy = async () => { try { await copyJson(prepareDraft()); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
   const save = async () => { try { const prepared = prepareDraft(); store.setMessage("Writing events to live source…"); await saveLiveCatalog("events", prepared); store.setMessage("Events saved permanently to the live game"); } catch (error) { store.setMessage(error instanceof Error ? error.message : "Events could not be saved to the live game"); } };
-  return <EditorShell title="Event Manager" description="Create two- or three-choice events resolved by d100 plus a selected attribute. Internal IDs are handled automatically." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-events.json", prepareDraft()); store.setMessage("JSON exported"); }} onExit={onExit}>
-    <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New event</button>{store.draft.events.map((event) => <button className={event.id === selected?.id ? "selected" : ""} key={event.id} onClick={() => setSelectedId(event.id)}><strong>{event.name}</strong><small>{event.choices.length} choices</small></button>)}</aside>
+  return <EditorShell title="Event Manager" description="Create two- or three-choice events with direct outcomes or d100 attribute checks. Add a Wandering Merchant to any suitable outcome." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-events.json", prepareDraft()); store.setMessage("JSON exported"); }} onExit={onExit}>
+    <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New event</button><button className="add-content-button" onClick={addMerchant}><Plus size={14} /> New merchant</button>{store.draft.events.map((event) => <button className={event.id === selected?.id ? "selected" : ""} key={event.id} onClick={() => setSelectedId(event.id)}><strong>{event.name}</strong><small>{event.choices.length} choices</small></button>)}</aside>
       {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Event Definition</p><h2>{selected.name}</h2></div><button className="danger-icon-button" onClick={remove}><Trash2 size={15} /> Delete</button></div><div className="content-form-grid"><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Eyebrow" value={selected.eyebrow} onChange={(eyebrow) => update({ eyebrow })} /><TextField label="Scenario" value={selected.description} onChange={(description) => update({ description })} textarea /></div>
-        <div className="choice-editor-list">{selected.choices.map((choice, index) => <article className="choice-editor" key={choice.id}><header><strong>Choice {index + 1}</strong>{selected.choices.length > 2 && <button onClick={() => update({ choices: selected.choices.filter((item) => item.id !== choice.id) })}><Trash2 size={14} /> Remove</button>}</header><div className="content-form-grid"><TextField label="Button label" value={choice.label} onChange={(label) => updateChoice(choice.id, { label })} /><TextField label="Choice description" value={choice.description} onChange={(description) => updateChoice(choice.id, { description })} textarea /><label><span>Attribute</span><select value={choice.stat} onChange={(event) => updateChoice(choice.id, { stat: event.target.value as StatName })}>{STAT_OPTIONS.map((stat) => <option key={stat.id} value={stat.id}>{stat.label}</option>)}</select></label><NumberField label="Success threshold" value={choice.threshold} min={1} onChange={(threshold) => updateChoice(choice.id, { threshold })} /></div><div className="choice-outcomes"><OutcomeFields title="Positive outcome" polarity="positive" outcome={choice.success} enemies={enemies} onChange={(success) => updateChoice(choice.id, { success })} /><OutcomeFields title="Negative outcome" polarity="negative" outcome={choice.failure} enemies={enemies} onChange={(failure) => updateChoice(choice.id, { failure })} /></div></article>)}</div>
+        <div className="choice-editor-list">{selected.choices.map((choice, index) => {
+          const resolution = choice.resolution ?? "check";
+          const directOutcome = choice.outcome ?? choice.success;
+          return <article className="choice-editor" key={choice.id}>
+            <header><strong>Choice {index + 1}</strong>{selected.choices.length > 2 && <button onClick={() => update({ choices: selected.choices.filter((item) => item.id !== choice.id) })}><Trash2 size={14} /> Remove</button>}</header>
+            <div className="content-form-grid">
+              <TextField label="Button label" value={choice.label} onChange={(label) => updateChoice(choice.id, { label })} />
+              <TextField label="Choice description" value={choice.description} onChange={(description) => updateChoice(choice.id, { description })} textarea />
+              <label><span>Resolution</span><select value={resolution} onChange={(event) => {
+                const nextResolution = event.target.value as "check" | "direct";
+                updateChoice(choice.id, { resolution: nextResolution, outcome: nextResolution === "direct" ? normalizeOutcome(choice.outcome ?? choice.success) : choice.outcome });
+              }}><option value="check">D100 attribute check</option><option value="direct">Direct outcome</option></select></label>
+              {resolution === "check" && <><label><span>Attribute</span><select value={choice.stat} onChange={(event) => updateChoice(choice.id, { stat: event.target.value as StatName })}>{STAT_OPTIONS.map((stat) => <option key={stat.id} value={stat.id}>{stat.label}</option>)}</select></label><NumberField label="Success threshold" value={choice.threshold} min={1} onChange={(threshold) => updateChoice(choice.id, { threshold })} /></>}
+            </div>
+            <div className={`choice-outcomes ${resolution === "direct" ? "direct" : ""}`}>
+              {resolution === "direct"
+                ? <OutcomeFields title="Outcome" polarity="any" outcome={directOutcome} enemies={enemies} onChange={(outcome) => updateChoice(choice.id, { outcome })} />
+                : <><OutcomeFields title="Positive outcome" polarity="positive" outcome={choice.success} enemies={enemies} onChange={(success) => updateChoice(choice.id, { success })} /><OutcomeFields title="Negative outcome" polarity="negative" outcome={choice.failure} enemies={enemies} onChange={(failure) => updateChoice(choice.id, { failure })} /></>}
+            </div>
+          </article>;
+        })}</div>
         {selected.choices.length < 3 && <button className="secondary-editor-button" onClick={() => update({ choices: [...selected.choices, blankChoice(selected.choices.length + 1)] })}><Plus size={14} /> Add third choice</button>}
       </section>}
     </div>

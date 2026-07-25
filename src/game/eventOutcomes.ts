@@ -1,5 +1,6 @@
 import { getDerivedStats } from "./character";
 import { ENEMIES, ITEMS } from "./data";
+import { getItemGoldCost } from "./items";
 import { addExperience } from "./progression";
 import { isStatusEffectId } from "./statusEffects";
 import type {
@@ -44,20 +45,22 @@ function addPendingStatus(statuses: AdventureCombatStartStatus[], status: Advent
     : [...statuses, { status: status.status, stacks }];
 }
 
-/** Resolves a rolled event choice and applies every configured outcome effect exactly once. */
+/** Resolves a checked or direct event choice and applies every configured outcome effect exactly once. */
 export function resolveAdventureEventChoice(state: GameState, choice: AdventureEventChoice, random = Math.random): GameState {
   if (state.adventure.eventResolved) return state;
-  const statBonus = getDerivedStats(state.character)[choice.stat];
-  const dieRoll = Math.floor(Math.max(0, Math.min(0.999999, random())) * 100) + 1;
+  const direct = choice.resolution === "direct";
+  const statBonus = direct ? 0 : getDerivedStats(state.character)[choice.stat];
+  const dieRoll = direct ? 0 : Math.floor(Math.max(0, Math.min(0.999999, random())) * 100) + 1;
   const total = dieRoll + statBonus;
-  const success = total >= choice.threshold;
-  const outcome = success ? choice.success : choice.failure;
+  const success = direct || total >= choice.threshold;
+  const outcome = direct ? (choice.outcome ?? choice.success) : success ? choice.success : choice.failure;
   let character = state.character;
   const maxHp = getDerivedStats(character).maxHp;
   let carryHp = state.adventure.carryHp ?? maxHp;
   let nextCombatPlayerStatuses = [...(state.adventure.nextCombatPlayerStatuses ?? [])];
   let nextCombatEnemyStatuses = [...(state.adventure.nextCombatEnemyStatuses ?? [])];
   let eventEncounter = state.adventure.eventEncounter ?? null;
+  let eventMerchant = state.adventure.eventMerchant ?? null;
 
   getAdventureEventOutcomeEffects(outcome).forEach((effect) => {
     switch (effect.type) {
@@ -90,6 +93,9 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
         if (item) character = { ...character, inventory: [...character.inventory, structuredClone(item)] };
         break;
       }
+      case "openMerchant":
+        eventMerchant = { itemIds: [...new Set(effect.itemIds.filter((itemId) => ITEMS.some((item) => item.id === itemId)))] };
+        break;
       case "playerNextCombatBuff":
       case "playerNextCombatDebuff":
         if (isStatusEffectId(effect.status)) nextCombatPlayerStatuses = addPendingStatus(nextCombatPlayerStatuses, effect);
@@ -118,10 +124,31 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
       ...state.adventure,
       carryHp: Math.min(getDerivedStats(character).maxHp, carryHp),
       eventResolved: true,
-      eventRollResult: { choiceId: choice.id, dieRoll, stat: choice.stat, statBonus, total, threshold: choice.threshold, success, outcomeText: outcome.text },
+      eventRollResult: direct
+        ? { resolution: "direct", choiceId: choice.id, outcomeText: outcome.text }
+        : { resolution: "check", choiceId: choice.id, dieRoll, stat: choice.stat, statBonus, total, threshold: choice.threshold, success, outcomeText: outcome.text },
       nextCombatPlayerStatuses,
       nextCombatEnemyStatuses,
       eventEncounter,
+      eventMerchant,
+    },
+  };
+}
+
+/** Purchases one copy from the active event merchant. Merchant stock is intentionally unlimited. */
+export function purchaseEventMerchantItem(state: GameState, itemId: string): GameState {
+  const merchant = state.adventure.eventMerchant;
+  if (!state.adventure.active || !state.adventure.eventResolved || !merchant?.itemIds.includes(itemId)) return state;
+  const item = ITEMS.find((candidate) => candidate.id === itemId);
+  if (!item) return state;
+  const goldCost = getItemGoldCost(item);
+  if (state.character.gold < goldCost) return state;
+  return {
+    ...state,
+    character: {
+      ...state.character,
+      gold: state.character.gold - goldCost,
+      inventory: [...state.character.inventory, structuredClone(item)],
     },
   };
 }

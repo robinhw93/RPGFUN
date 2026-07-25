@@ -6,7 +6,8 @@ import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TAL
 import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
-import { resolveAdventureEventChoice } from "../src/game/eventOutcomes";
+import { purchaseEventMerchantItem, resolveAdventureEventChoice } from "../src/game/eventOutcomes";
+import { getItemGoldCost } from "../src/game/items";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import type { AdventureEventChoice, ConsumableItem, GameState } from "../src/game/types";
 
@@ -23,6 +24,7 @@ function testContentIntegrity() {
     assert.ok(ability.types.length > 0, `${ability.id} needs at least one presentation type.`);
   });
   assert.equal(new Set([...ITEMS.map((item) => item.id), ...GEAR_SETS.map((set) => set.id)]).size, ITEMS.length + GEAR_SETS.length, "Item and gear-set IDs must be unique.");
+  ITEMS.forEach((item) => assert.ok(typeof item.goldCost === "number" && item.goldCost >= 0, `${item.name} needs a non-negative Gold Cost.`));
   ADVENTURES.forEach((adventure) => {
     assert.ok(adventure.id, "Every adventure needs an internal ID.");
     assert.equal(new Set(adventure.stages.map((stage) => stage.id)).size, adventure.stages.length, `${adventure.name} stage IDs must be unique.`);
@@ -52,6 +54,8 @@ function testItemEditorRepairsInternalIds() {
   assert.equal(exchange.sets[0].id, "field-kit");
   assert.equal(exchange.items[0].id, "field-hood");
   assert.equal(exchange.items[1].id, "field-tonic");
+  assert.equal(exchange.items[0].goldCost, 12, "Old gear drafts must receive a sensible default Gold Cost.");
+  assert.equal(exchange.items[1].goldCost, 8, "Old consumable drafts must receive a sensible default Gold Cost.");
 }
 
 function testStoryEncounterIntroduction() {
@@ -163,6 +167,33 @@ function testStructuredEventOutcome() {
   assert.equal(resolveAdventureEventChoice(result, choice, () => 0), result, "A resolved event must not apply twice.");
 }
 
+function testDirectEventMerchant() {
+  const item = ITEMS[0];
+  assert.ok(item, "Merchant regression requires at least one live item.");
+  const state = structuredClone(INITIAL_GAME) as GameState;
+  state.characterCreated = true;
+  state.character.gold = getItemGoldCost(item) + 5;
+  state.adventure = { ...state.adventure, active: true, eventResolved: false };
+  const choice: AdventureEventChoice = {
+    id: "merchant-choice",
+    label: "Browse the wares",
+    description: "You approach the merchant.",
+    resolution: "direct",
+    stat: "luck",
+    threshold: 100,
+    success: { text: "Legacy fallback.", effects: [] },
+    failure: { text: "Unused.", effects: [] },
+    outcome: { text: "The merchant opens a weathered pack.", effects: [{ type: "openMerchant", itemIds: [item.id] }] },
+  };
+  const result = resolveAdventureEventChoice(state, choice, () => { throw new Error("Direct outcomes must not roll d100."); });
+  assert.equal(result.adventure.eventRollResult?.resolution, "direct", "A direct choice must produce a non-roll resolution result.");
+  assert.deepEqual(result.adventure.eventMerchant?.itemIds, [item.id], "The selected merchant stock must persist in adventure state.");
+  const purchased = purchaseEventMerchantItem(result, item.id);
+  assert.equal(purchased.character.gold, 5, "A merchant purchase must deduct the item's live Gold Cost.");
+  assert.equal(purchased.character.inventory.at(-1)?.id, item.id, "A purchased item must be added to inventory.");
+  assert.equal(purchaseEventMerchantItem(purchased, "not-for-sale"), purchased, "Items outside merchant stock must not be purchasable.");
+}
+
 function testCombatConsumable() {
   const item: ConsumableItem = {
     kind: "consumable",
@@ -201,5 +232,6 @@ testItemEditorRepairsInternalIds();
 testStatusContracts();
 testBasicPlayerAbility();
 testStructuredEventOutcome();
+testDirectEventMerchant();
 testCombatConsumable();
 console.log("Arkenfall regression checks passed.");

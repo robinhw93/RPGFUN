@@ -1,7 +1,7 @@
 import { FlaskConical, Gem, Plus, Shield, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { GEAR_SETS, ITEMS } from "../../game/data";
-import { isConsumableItem, isGearItem } from "../../game/items";
+import { getItemGoldCost, isConsumableItem, isGearItem } from "../../game/items";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import type { ConsumableEffect, ConsumableItem, ConsumableTarget, GearItem, GearSetDefinition, GearType, ItemRarity, PassiveBonuses, StatName, StatusEffectId, WeaponEquipType, WeaponKind } from "../../game/types";
 import { GEAR_ICON_URLS, resolveGearIconUrl } from "../GearSlotIcon";
@@ -37,18 +37,18 @@ export function normalizeItemExchange(exchange: ItemExchange): ItemExchange {
   const setById = new Map(sets.map((set) => [set.id, set]));
   const items = (exchange.items ?? []).map((item) => {
     const id = ensureInternalId(item.id, item.kind === "consumable" ? "consumable" : "gear", used, item.name);
-    if (isConsumableItem(item)) return { ...item, id, effects: item.effects ?? [] };
+    if (isConsumableItem(item)) return { ...item, id, goldCost: getItemGoldCost(item), effects: item.effects ?? [] };
     const set = item.set ? setById.get(item.set) : undefined;
-    return { ...item, kind: "gear" as const, id, stats: item.stats ?? {}, set: set?.id, setName: set?.name };
+    return { ...item, kind: "gear" as const, id, goldCost: getItemGoldCost(item), stats: item.stats ?? {}, set: set?.id, setName: set?.name };
   });
   return { format: "arkenfall-items", version: 1, items, sets };
 }
 
 function blankGear(): GearItem {
-  return { kind: "gear", id: makeId("gear"), name: "New Gear", slot: "head", armorMaterial: "cloth", rarity: "common", description: "", iconUrl: GEAR_ICON_URLS[0], stats: {} };
+  return { kind: "gear", id: makeId("gear"), name: "New Gear", goldCost: 12, slot: "head", armorMaterial: "cloth", rarity: "common", description: "", iconUrl: GEAR_ICON_URLS[0], stats: {} };
 }
 function blankSet(): GearSetDefinition { return { id: makeId("set"), name: "New Gear Set", pieceCount: 2, bonuses: [{ requiredPieces: 2, description: "+1 Strength.", passive: { stats: { strength: 1 } } }] }; }
-function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", rarity: "common", description: "", effects: [{ type: "heal", amount: 10 }] }; }
+function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", goldCost: 8, rarity: "common", description: "", effects: [{ type: "heal", amount: 10 }] }; }
 function blankEffect(type: ConsumableEffect["type"]): ConsumableEffect {
   if (type === "apply_status") return { type, target: "self", status: "strengthened", stacks: 1, duration: 3 };
   if (type === "damage") return { type, target: "target", amount: 5 };
@@ -63,6 +63,7 @@ function GearFields({ item, sets, onChange }: { item: GearItem; sets: GearSetDef
       <TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} />
       <label><span>Slot</span><select value={item.slot} onChange={(event) => { const slot = event.target.value as GearType; onChange({ slot, weaponEquipType: slot === "mainHand" ? "oneHand" : slot === "offHand" ? "offHand" : undefined, weaponKind: slot === "mainHand" ? "sword" : slot === "offHand" ? "shield" : undefined, armorMaterial: ["head", "chest", "pants", "boots"].includes(slot) ? (item.armorMaterial ?? "cloth") : undefined }); }} >{GEAR_SLOTS.map((slot) => <option value={slot.id} key={slot.id}>{slot.label}</option>)}</select></label>
       <label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label>
+      <NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} />
       {item.slot === "mainHand" && <><label><span>Weapon grip</span><select value={item.weaponEquipType ?? "oneHand"} onChange={(event) => onChange({ weaponEquipType: event.target.value as WeaponEquipType })}><option value="mainHand">Main hand only</option><option value="oneHand">One hand / either hand</option><option value="twoHand">Two hand</option></select></label><label><span>Weapon kind</span><select value={item.weaponKind ?? "sword"} onChange={(event) => onChange({ weaponKind: event.target.value as WeaponKind })}>{WEAPON_KINDS.filter((kind) => !["shield", "tome"].includes(kind)).map((kind) => <option key={kind}>{kind}</option>)}</select></label></>}
       {item.slot === "offHand" && <label><span>Off-hand kind</span><select value={item.weaponKind ?? "shield"} onChange={(event) => onChange({ weaponKind: event.target.value as WeaponKind })}><option value="shield">Shield</option><option value="tome">Tome / Focus</option><option value="dagger">Dagger</option><option value="wand">Wand</option></select></label>}
       {["head", "chest", "pants", "boots"].includes(item.slot) && <label><span>Armor material</span><select value={item.armorMaterial ?? "cloth"} onChange={(event) => onChange({ armorMaterial: event.target.value as GearItem["armorMaterial"] })}><option value="cloth">Cloth</option><option value="leather">Leather</option><option value="plate">Plate</option></select></label>}
@@ -90,7 +91,7 @@ function EffectFields({ effect, onChange, onRemove }: { effect: ConsumableEffect
 }
 
 function ConsumableFields({ item, onChange }: { item: ConsumableItem; onChange: (change: Partial<ConsumableItem>) => void }) {
-  return <><div className="content-form-grid"><TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} /><label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label><TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea /></div><fieldset className="item-editor-section"><legend>Combat effects</legend><div className="set-bonus-list">{item.effects.map((effect, index) => <EffectFields key={index} effect={effect} onChange={(next) => onChange({ effects: item.effects.map((candidate, candidateIndex) => candidateIndex === index ? next : candidate) })} onRemove={() => onChange({ effects: item.effects.filter((_, candidateIndex) => candidateIndex !== index) })} />)}</div><button type="button" className="secondary-editor-button" onClick={() => onChange({ effects: [...item.effects, blankEffect("heal")] })}><Plus size={14} /> Add effect</button></fieldset><div className="content-form-grid"><TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea /></div></>;
+  return <><div className="content-form-grid"><TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} /><label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label><NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} /><TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea /></div><fieldset className="item-editor-section"><legend>Combat effects</legend><div className="set-bonus-list">{item.effects.map((effect, index) => <EffectFields key={index} effect={effect} onChange={(next) => onChange({ effects: item.effects.map((candidate, candidateIndex) => candidateIndex === index ? next : candidate) })} onRemove={() => onChange({ effects: item.effects.filter((_, candidateIndex) => candidateIndex !== index) })} />)}</div><button type="button" className="secondary-editor-button" onClick={() => onChange({ effects: [...item.effects, blankEffect("heal")] })}><Plus size={14} /> Add effect</button></fieldset><div className="content-form-grid"><TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea /></div></>;
 }
 
 export function ItemDevtool({ onExit }: { onExit: () => void }) {

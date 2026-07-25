@@ -36,7 +36,7 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/game/combatMath.ts`: Hit/Dodge rules and caps.
 - `src/game/statusEffects.ts`: status definitions, stacking, durations, ticking formulas, and generic multipliers.
 - `src/game/combatFeatures.ts`: data-driven passives, triggers, damage modifiers, and ability modifiers from talents, gear, and sets.
-- `src/game/items.ts` and `src/game/consumables.ts`: inventory-item helpers and presentation-timed standard consumable effects.
+- `src/game/items.ts` and `src/game/consumables.ts`: inventory-item classification/pricing helpers and presentation-timed standard consumable effects.
 - `src/game/talentRequirements.ts`: bidirectional ANY talent connections.
 - `src/hooks/useCombatActionQueue.ts`: queued player abilities and End Turn projection.
 - `src/hooks/useCombatEventSequencer.ts`: presentation-time event resolution.

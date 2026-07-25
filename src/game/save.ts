@@ -76,6 +76,7 @@ export function loadGame(): GameState | null {
         nextCombatPlayerStatuses: state.adventure.nextCombatPlayerStatuses ?? [],
         nextCombatEnemyStatuses: state.adventure.nextCombatEnemyStatuses ?? [],
         eventEncounter: state.adventure.eventEncounter ?? null,
+        eventMerchant: state.adventure.eventMerchant ?? null,
         pendingReward: state.adventure.pendingReward ?? null,
         ...(state.adventure.mode !== "endless" && !state.adventure.adventureId ? {
           active: false,
@@ -88,6 +89,7 @@ export function loadGame(): GameState | null {
           nextCombatPlayerStatuses: [],
           nextCombatEnemyStatuses: [],
           eventEncounter: null,
+          eventMerchant: null,
           pendingReward: null,
           completed: false,
         } : {}),

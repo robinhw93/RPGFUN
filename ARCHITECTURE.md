@@ -71,7 +71,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/items.ts` owns inventory-item classification, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` applies a combat reward exactly once and stores the immutable score-screen snapshot.
-- `src/game/eventOutcomes.ts` normalizes legacy event outcomes and applies Health, currency, progression, inventory, next-combat status, and immediate-encounter effects.
+- `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists event-merchant stock, and owns atomic merchant purchases.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
 - `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
 - `src/game/timing.ts` is the source of truth for combat, initiative, and adventure-event presentation durations.
@@ -416,11 +416,11 @@ Canvas positions are percentages, but grid spacing is stored as fixed world unit
 
 An exported draft is design input. Advanced effect notes are not executable until translated into ability/status/combat-feature definitions. The exception is the restricted local-development sync: leaving the talent-tooltip field updates an existing talent, while leaving the ability-tooltip or Power-percentage fields updates the ability already referenced by that live talent. New/reassigned abilities and all other fields remain draft-only.
 
-Enemy, Event, Adventure, and Item editors retain browser-local drafts under legacy-compatible `emberfall.*-devtool.v1` keys. New files and exchange-format labels use the Arkenfall name. Event Manager uses exchange version 2; Item Editor uses `arkenfall-items` version 1 for the combined item and set catalogs. Internal IDs remain stable or are regenerated from readable names when missing, invalid, or duplicated. While local Vite is running, Event and Adventure Save write the appropriate initializer in `src/game/content/adventures.ts`, and Item Save writes `ITEMS` plus `GEAR_SETS` in `src/game/content/gear.ts`. Standard gear stats, set passives, and consumable effects are executable immediately; free-form special notes remain design input. Validation completes before any file changes.
+Enemy, Event, Adventure, and Item editors retain browser-local drafts under legacy-compatible `emberfall.*-devtool.v1` keys. New files and exchange-format labels use the Arkenfall name. Event Manager uses exchange version 2 and supports checked choices, direct choices, and item-referenced Wandering Merchants. Item Editor uses `arkenfall-items` version 1 for the combined item and set catalogs, including each item's Gold Cost. Internal IDs remain stable or are regenerated from readable names when missing, invalid, or duplicated. While local Vite is running, Event and Adventure Save write the appropriate initializer in `src/game/content/adventures.ts`, and Item Save writes `ITEMS` plus `GEAR_SETS` in `src/game/content/gear.ts`. Standard gear stats, set passives, consumable effects, prices, and merchant catalogs are executable immediately; free-form special notes remain design input. Validation completes before any file changes.
 
 ## Regression protection
 
-- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references, talent graph integrity, editor ID repair, Stealth and Stun/Diminishing Returns behavior, a representative player ability, structured event outcomes, and presentation-timed consumable resolution.
+- `npm test` bundles and runs focused rule checks against the real TypeScript modules. It covers content references and item prices, talent graph integrity, editor ID repair, Stealth and Stun/Diminishing Returns behavior, a representative player ability, checked/direct event outcomes, merchant purchases, and presentation-timed consumable resolution.
 - `npm run docs:check` verifies that the documented talent count matches the live talent catalog.
 - `npm run build` remains the full type-check and production-bundle gate. UI, touch, animation, and VFX behavior still require browser verification at desktop and mobile widths.
 

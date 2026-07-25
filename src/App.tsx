@@ -16,7 +16,7 @@ import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
 import { ADVENTURE_EVENTS, TALENTS } from "./game/data";
 import { createCombat, ensureCombatState, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
-import { resolveAdventureEventChoice } from "./game/eventOutcomes";
+import { purchaseEventMerchantItem, resolveAdventureEventChoice } from "./game/eventOutcomes";
 import { equipGearItem, unequipGearItem } from "./game/gear";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
@@ -190,7 +190,7 @@ function App() {
         const combat = enemyIds?.length ? createCombat(current.character, enemyIds, maxHp) : null;
         return {
           ...current,
-          adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, latestLoot: null, pendingReward: null, completed: false },
+          adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -254,6 +254,7 @@ function App() {
             nextCombatPlayerStatuses: [],
             nextCombatEnemyStatuses: [],
             eventEncounter: null,
+            eventMerchant: null,
             stageEntryId: null,
             latestLoot: null,
             pendingReward: null,
@@ -266,7 +267,7 @@ function App() {
         return {
           ...current,
           character: { ...character, completedAdventureIds: [...new Set([...character.completedAdventureIds, definition.id])] },
-          adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null, eventEncounter: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
+          adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null, eventEncounter: null, eventMerchant: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
         };
       }
 
@@ -291,6 +292,7 @@ function App() {
           nextCombatPlayerStatuses: combat ? [] : adventure.nextCombatPlayerStatuses,
           nextCombatEnemyStatuses: combat ? [] : adventure.nextCombatEnemyStatuses,
           eventEncounter: null,
+          eventMerchant: null,
           latestLoot: wonCombat ? latestLoot : null,
           pendingReward: null,
         },
@@ -355,6 +357,7 @@ function App() {
           nextCombatPlayerStatuses: [],
           nextCombatEnemyStatuses: [],
           eventEncounter: null,
+          eventMerchant: null,
           latestLoot: null,
           pendingReward: null,
           completed: false,
@@ -372,6 +375,10 @@ function App() {
       if (!choice) return current;
       return resolveAdventureEventChoice(current, choice);
     });
+  };
+
+  const buyMerchantItem = (itemId: string) => {
+    setGame((current) => purchaseEventMerchantItem(current, itemId));
   };
 
   const unlockTalent = (talentId: string) => {
@@ -536,6 +543,7 @@ function App() {
             onContinue={continueJourney}
             onLeaveTraining={leaveTraining}
             onEvent={resolveEvent}
+            onMerchantPurchase={buyMerchantItem}
             onPermadeath={returnToCharacterCreation}
             onTalents={() => openCharacterSection("talents")}
             onCharacter={() => openCharacterSection("overview")}

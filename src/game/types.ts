@@ -611,6 +611,7 @@ export interface GearItem {
   kind?: "gear";
   id: string;
   name: string;
+  goldCost?: number;
   slot: GearType;
   armorMaterial?: ArmorMaterial;
   weaponEquipType?: WeaponEquipType;
@@ -647,6 +648,7 @@ export interface ConsumableItem {
   kind: "consumable";
   id: string;
   name: string;
+  goldCost?: number;
   rarity: ItemRarity;
   description: string;
   effects: ConsumableEffect[];
@@ -891,6 +893,7 @@ export type AdventureEventOutcomeEffect =
   | { type: "gainTalentPoints"; amount: number }
   | { type: "gainAttributePoints"; amount: number }
   | { type: "gainItem"; itemId: string }
+  | { type: "openMerchant"; itemIds: string[] }
   | { type: "playerNextCombatBuff"; status: StatusEffectId; stacks: number }
   | { type: "playerNextCombatDebuff"; status: StatusEffectId; stacks: number }
   | { type: "enemiesNextCombatBuff"; status: StatusEffectId; stacks: number }
@@ -901,10 +904,14 @@ export interface AdventureEventChoice {
   id: string;
   label: string;
   description: string;
+  /** Older choices omit this and resolve as an attribute check. */
+  resolution?: "check" | "direct";
   stat: StatName;
   threshold: number;
   success: AdventureEventOutcome;
   failure: AdventureEventOutcome;
+  /** Used when resolution is direct; success/failure remain for draft compatibility. */
+  outcome?: AdventureEventOutcome;
 }
 
 export interface AdventureEventDefinition {
@@ -945,7 +952,8 @@ export interface AdventureDefinition {
   completionDescription: string;
 }
 
-export interface AdventureEventRollResult {
+export interface AdventureEventCheckResult {
+  resolution?: "check";
   choiceId: string;
   dieRoll: number;
   stat: StatName;
@@ -954,6 +962,18 @@ export interface AdventureEventRollResult {
   threshold: number;
   success: boolean;
   outcomeText: string;
+}
+
+export interface AdventureEventDirectResult {
+  resolution: "direct";
+  choiceId: string;
+  outcomeText: string;
+}
+
+export type AdventureEventRollResult = AdventureEventCheckResult | AdventureEventDirectResult;
+
+export interface AdventureEventMerchant {
+  itemIds: string[];
 }
 
 export interface CombatReward {
@@ -984,6 +1004,7 @@ export interface AdventureProgress {
   nextCombatPlayerStatuses: AdventureCombatStartStatus[];
   nextCombatEnemyStatuses: AdventureCombatStartStatus[];
   eventEncounter: AdventureEventEncounter | null;
+  eventMerchant: AdventureEventMerchant | null;
   latestLoot: GearItem | null;
   pendingReward: CombatReward | null;
   completed: boolean;

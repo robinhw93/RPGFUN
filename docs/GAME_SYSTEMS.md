@@ -382,9 +382,9 @@ The current story adventure is **Windsong Forest**, containing six ordered stage
 
 Remaining Health carries from one stage to the next. Starting an adventure and moving between stages both show the animated footsteps transition first. A story combat then fades in the selected Adventure Editor entry's Description; if that field is empty, the game falls back to generated enemy-count wording. As initiative begins, that introduction slides down and remains visible below the roll. It fades out in sync with the initiative cards flying up into the turn-order row. Events do not show a generic discovery announcement after the footsteps. They move directly into their dedicated presentation. An immediate encounter caused by an event outcome skips the footsteps and **Walking...** text entirely, but still uses generated enemy-count wording before and during initiative. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite.
 
-Events use a black full-screen sequence without an event icon, category label, or adventure-progress header. The title fades into the center and moves upward before the scenario fades in. Two or three label-only choice buttons then appear one at a time; they contain neither icons nor advance descriptions or roll requirements. Selecting one replaces the choices with its description while a d100 counter visibly cycles in the same style as initiative. The raw die locks, the selected derived-attribute bonus is added, and the configured outcome text fades in last. A total equal to or above the choice threshold applies the success outcome; a lower total applies the failure outcome.
+Events use a black full-screen sequence without an event icon, category label, or adventure-progress header. The title fades into the center and moves upward before the scenario fades in. Two or three label-only choice buttons then appear one at a time; they contain neither icons nor advance descriptions or roll requirements. Each choice may use a d100 attribute check or a direct outcome. Checked choices replace the buttons with their description while a d100 counter cycles in the same style as initiative; the raw die locks, the selected derived-attribute bonus is added, and success or failure fades in last. Direct choices skip the die entirely, show the selected action description, and then fade in that choice's configured outcome.
 
-Event outcomes contain any number of typed effects. Positive outcomes can restore Health, grant gold, items, experience, Talent Points, or Attribute Points, give the player a buff in the next combat, or begin the next combat with enemies debuffed. Negative outcomes can remove Health, gold, or current-level experience, give the player a debuff in the next combat, begin it with enemies buffed, or launch an immediate encounter with its own XP and gold reward. Health remains between 1 and Max Health, gold and current-level experience cannot fall below zero, and losing experience never removes a completed level. Queued statuses persist through intervening events and are consumed when the next combat is created; an immediate event encounter counts as that combat.
+Event outcomes contain any number of typed effects. Positive outcomes can restore Health, grant gold, items, experience, Talent Points, or Attribute Points, give the player a buff in the next combat, begin the next combat with enemies debuffed, or open a Wandering Merchant with an editor-selected item catalog. Negative outcomes can remove Health, gold, or current-level experience, give the player a debuff in the next combat, begin it with enemies buffed, or launch an immediate encounter with its own XP and gold reward. Direct outcomes may combine either category. Health remains between 1 and Max Health, gold and current-level experience cannot fall below zero, and losing experience never removes a completed level. Queued statuses persist through intervening events and are consumed when the next combat is created; an immediate event encounter counts as that combat.
 
 ## Experience and levels
 
@@ -473,6 +473,7 @@ Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mac
 - Compare shows the equipped and candidate items with green positive and red negative differences.
 - Item and equipment modals lock background scrolling.
 - Inventory can be filtered by gear category and sorted by rarity or name.
+- Every item has an editor-owned Gold Cost used by Wandering Merchants.
 
 ### Combat consumables
 
@@ -482,13 +483,13 @@ During the player's turn, **Inventory** opens a combat-owned consumable list. Us
 
 Set items show all thresholds for their own set. Fulfilled thresholds are green; unfulfilled thresholds are gray. Items without a set show no set section. Only equipped pieces count toward active set bonuses.
 
-The current Ashborn Warplate thresholds are in [Content reference](CONTENT_REFERENCE.md#gear-set-bonuses).
+The current set catalog is summarized in [Content reference](CONTENT_REFERENCE.md#gear-set-bonuses).
 
 ## Loot and gold
 
 Adventure combat rewards define experience and gold only. Automatic gear drops are disabled until enemy-owned loot tables are implemented; Adventure definitions and the Adventure Editor do not control loot.
 
-Gold is stored on the character and displayed in the top bar and reward screens. There is no shop or gold-spending system yet.
+Gold is stored on the character and displayed in the top bar, reward screens, and Wandering Merchant view. Event outcomes may open a merchant stocked with any live items selected in Event Manager. Purchases deduct the item's live Gold Cost and immediately add one copy to inventory; the selected merchant stock is unlimited for that visit.
 
 ## Saving and reset behavior
 

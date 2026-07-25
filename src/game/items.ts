@@ -1,12 +1,20 @@
 import { STATUS_EFFECTS } from "./statusEffects";
 import type { ConsumableEffect, ConsumableItem, GearItem, InventoryItem } from "./types";
 
+const DEFAULT_GEAR_COSTS = { common: 12, uncommon: 28, rare: 65, epic: 140 } as const;
+const DEFAULT_CONSUMABLE_COSTS = { common: 8, uncommon: 15, rare: 30, epic: 60 } as const;
+
 export function isConsumableItem(item: InventoryItem): item is ConsumableItem {
   return item.kind === "consumable";
 }
 
 export function isGearItem(item: InventoryItem): item is GearItem {
   return !isConsumableItem(item);
+}
+
+export function getItemGoldCost(item: InventoryItem): number {
+  if (typeof item.goldCost === "number" && Number.isFinite(item.goldCost)) return Math.max(0, Math.round(item.goldCost));
+  return isConsumableItem(item) ? DEFAULT_CONSUMABLE_COSTS[item.rarity] : DEFAULT_GEAR_COSTS[item.rarity];
 }
 
 export function consumableCount(inventory: InventoryItem[], itemId: string): number {

@@ -461,7 +461,7 @@ Windsong Forest follows six ordered stages. Stages with several possibilities ma
 | 5 | Bear Danger | 50% | Brown Bear | 58 XP, 8 gold. |
 | 6 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 100 XP, 28 gold. |
 
-Event definitions support two or three attribute-check choices. Each positive or negative result contains an ordered effect list that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, and an immediate rewarded encounter. **Stalked by Wolves** is used at the Forest Edge: the player may test Agility 29, Strength 31, or Intelligence 34 for 10 XP or a next-combat status; failed physical approaches immediately encounter two Windsong Wolves for 71 XP and 5 gold. **The Singing Grove** remains available to the Adventure Editor but is not currently referenced by Windsong Forest.
+Event definitions support two or three choices. Each choice can resolve through an attribute check or a direct outcome with no roll. Outcomes contain ordered effect lists that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, immediate rewarded encounters, and Wandering Merchants stocked with selected live items. **Stalked by Wolves** is used at the Forest Edge: the player may test Agility 29, Strength 31, or Intelligence 34 for 10 XP or a next-combat status; failed physical approaches immediately encounter two Windsong Wolves for 71 XP and 5 gold.
 
 ## Testing adventure: Shadow Proving Grounds
 
@@ -472,60 +472,21 @@ Event definitions support two or three attribute-check choices. Each positive or
 | Reward | The exact XP required for two complete levels; no gold. |
 | Between fights | Restore full Health; the Character hub and Leave Training remain available from the score screen. Talents & Abilities is a submenu inside Character. |
 
-## Equipment catalog
+## Item catalog
 
-### Available items
+### Available gear
 
-New characters begin with no equipped gear and an empty inventory. The items below remain the canonical equipment catalog. Drop sources are currently unassigned while enemy-owned loot tables are being designed.
-
-| Item | Slot/category | Rarity | Mechanical stats | Set |
-| --- | --- | --- | --- | --- |
-| Notched Iron Cleaver | One-Hand Axe | Uncommon | +3 Physical Power, +2 Strength | Ashborn Warplate |
-| Embershard Focus | Off-Hand Tome | Rare | +2 Spell Power, +3 Intelligence | — |
-| Wanderer's Hood | Leather Head | Common | +1 Armor, +1 Agility | — |
-| Ashborn Cuirass | Plate Chest | Rare | +5 Armor, +2 Strength, +2 Vitality | Ashborn Warplate |
-| Veilwalker Trousers | Leather Pants | Uncommon | +2 Armor, +2 Agility | Veilwalker's Guile; no set bonuses are currently defined. |
-| Dustworn Boots | Leather Boots | Common | +1 Armor, +1 Vitality | — |
-| Garnet Signet | Ring | Rare | +1 Strength, +2 Luck | — |
-| Moonlit Coil | Ring | Epic | +1 Agility, +2 Intelligence, +1 Luck | — |
-| Warden's Broken Crown | Plate Head | Epic | +4 Armor, +2 Strength, +3 Vitality | Ashborn Warplate |
-| Forest Spirit Charm | Ring | Epic | +2 Armor, +3 Vitality, +2 Luck | — |
-| Cowl of Quiet Sparks | Cloth Head | Uncommon | +2 Magic Resistance, +2 Intelligence | — |
-| Nightstitch Vest | Leather Chest | Uncommon | +3 Armor, +2 Agility, +1 Vitality | — |
-| Emberweave Robe | Cloth Chest | Rare | +1 Armor, +4 Magic Resistance, +3 Intelligence | — |
-| Ashbound Legguards | Plate Pants | Rare | +4 Armor, +1 Strength, +2 Vitality | Ashborn Warplate |
-| Runecloth Legwraps | Cloth Pants | Uncommon | +2 Magic Resistance, +2 Intelligence, +1 Luck | — |
-| Ironmarch Sabatons | Plate Boots | Rare | +4 Armor, +1 Strength, +2 Vitality | — |
-| Softstep Slippers | Cloth Boots | Uncommon | +1 Magic Resistance, +2 Agility, +1 Intelligence | — |
-| Wayfarer's Copper Loop | Ring | Common | +1 Vitality, +1 Luck | — |
-| Warden's Shortsword | Main-Hand Sword | Uncommon | +4 Physical Power, +2 Strength | — |
-| Cinder Pilgrim's Mace | Main-Hand Mace | Rare | +5 Physical Power, +3 Strength, +1 Vitality | — |
-| Veilglass Dagger | One-Hand Dagger | Rare | +3 Physical Power, +3 Agility | — |
-| Ashen Conduit | One-Hand Wand | Epic | +5 Spell Power, +3 Intelligence, +1 Luck | — |
-| Black Gate Buckler | Off-Hand Shield | Uncommon | +3 Armor, +2 Vitality | — |
-| Roadcleaver Greatsword | Two-Hand Sword | Rare | +7 Physical Power, +4 Strength | — |
-| Ashfall Greataxe | Two-Hand Axe | Epic | +8 Physical Power, +5 Strength, +1 Vitality | — |
-| Gatebreaker Maul | Two-Hand Mace | Rare | +7 Physical Power, +4 Strength, +2 Vitality | — |
-| Embercaller's Staff | Two-Hand Staff | Epic | +8 Spell Power, +5 Intelligence | — |
-| Cinderwatch Polearm | Two-Hand Polearm | Rare | +7 Physical Power, +2 Strength, +3 Agility | — |
+New characters begin with no equipped gear and an empty inventory. The current live item catalog contains no gear; new gear can be authored and priced in Item Editor.
 
 ### Consumables
 
 Consumables use one inventory slot per copy and can be queued from the combat Inventory button without ending the player's turn. Their current acquisition sources are unassigned; Event Manager can grant any live item.
 
-| Item | Rarity | Effects |
-| --- | --- | --- |
-| Healing Draught | Common | Restores 15 Health. |
-| Energizing Tonic | Uncommon | Restores 3 Energy. |
-| Hex Flask | Rare | Applies 1 Weaken to the selected enemy for 3 turns. |
-| Volatile Flask | Rare | Deals 6 fixed damage to every enemy simultaneously. |
+| Item | Rarity | Gold Cost | Effects |
+| --- | --- | ---: | --- |
+| Yumberries | Common | 8 | Applies Regenerate to the player for 3 turns. |
+| Minor Healing Potion | Common | 8 | Restores 10 Health. |
 
 ### Gear set bonuses
 
-Only equipped pieces count.
-
-| Set | Pieces | Bonus |
-| --- | ---: | --- |
-| Ashborn Warplate | 2 | +2 Strength. |
-| Ashborn Warplate | 3 | Bleed deals 50% less damage to the player. |
-| Ashborn Warplate | 4 | +3 Vitality. |
+Only equipped pieces count. No gear sets are currently defined in the live catalog.

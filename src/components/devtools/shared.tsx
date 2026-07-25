@@ -180,7 +180,7 @@ export function DevtoolAccessDialog({ onClose, onOpen }: { onClose: () => void; 
       </> : <div className="devtool-launcher-grid">
         <button onClick={() => onOpen("talentDevtool")}><BookOpen /><span><strong>Talent Editor</strong><small>Talents, abilities and connections</small></span></button>
         <button onClick={() => onOpen("enemyDevtool")}><Skull /><span><strong>Create Enemy</strong><small>Stats, abilities and behavior</small></span></button>
-        <button onClick={() => onOpen("eventDevtool")}><Copy /><span><strong>Event Manager</strong><small>Scenarios, choices and rolls</small></span></button>
+        <button onClick={() => onOpen("eventDevtool")}><Copy /><span><strong>Event Manager</strong><small>Choices, checks and merchants</small></span></button>
         <button onClick={() => onOpen("adventureDevtool")}><Wrench /><span><strong>Adventure Editor</strong><small>Stages, chances and prerequisites</small></span></button>
         <button onClick={() => onOpen("itemDevtool")}><Gem /><span><strong>Item Editor</strong><small>Gear, sets and consumables</small></span></button>
         <button onClick={() => onOpen("portraitDevtool")}><Image /><span><strong>Portrait Editor</strong><small>Artwork and combat portrait crops</small></span></button>

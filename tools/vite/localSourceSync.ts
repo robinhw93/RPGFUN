@@ -128,15 +128,16 @@ function assertUniqueIds(ids: string[], label: string) {
   if (new Set(ids).size !== ids.length) throw new Error(`${label} IDs must be unique.`);
 }
 
-const positiveEventEffects = new Set(["heal", "playerNextCombatBuff", "gainGold", "gainItem", "gainExperience", "gainTalentPoints", "gainAttributePoints", "enemiesNextCombatDebuff"]);
+const positiveEventEffects = new Set(["heal", "playerNextCombatBuff", "gainGold", "gainItem", "openMerchant", "gainExperience", "gainTalentPoints", "gainAttributePoints", "enemiesNextCombatDebuff"]);
 const negativeEventEffects = new Set(["loseHealth", "loseGold", "playerNextCombatDebuff", "loseExperience", "enemiesNextCombatBuff", "immediateEncounter"]);
+const allEventEffects = new Set([...positiveEventEffects, ...negativeEventEffects]);
 const amountEventEffects = new Set(["heal", "loseHealth", "gainGold", "loseGold", "gainExperience", "loseExperience", "gainTalentPoints", "gainAttributePoints"]);
 const playerBuffEffects = new Set(["playerNextCombatBuff", "enemiesNextCombatBuff"]);
 const playerDebuffEffects = new Set(["playerNextCombatDebuff", "enemiesNextCombatDebuff"]);
 
 function validateEventOutcome(
   value: unknown,
-  polarity: "positive" | "negative",
+  polarity: "positive" | "negative" | "any",
   itemIds: Set<string>,
   enemyIds: Set<string>,
   statusKinds: Map<string, string>,
@@ -144,14 +145,22 @@ function validateEventOutcome(
   const outcome = catalogObject(value, `${polarity} outcome`);
   catalogString(outcome.text, `${polarity} outcome text`, true);
   if (!Array.isArray(outcome.effects)) throw new Error(`${polarity} outcome effects must be a list.`);
-  const allowed = polarity === "positive" ? positiveEventEffects : negativeEventEffects;
+  const allowed = polarity === "positive" ? positiveEventEffects : polarity === "negative" ? negativeEventEffects : allEventEffects;
   let encounters = 0;
+  let merchants = 0;
   outcome.effects.forEach((rawEffect: unknown, index: number) => {
     const effect = catalogObject(rawEffect, `${polarity} effect ${index + 1}`);
     const type = catalogString(effect.type, `${polarity} effect type`);
     if (!allowed.has(type)) throw new Error(`${type} is not a valid ${polarity} outcome effect.`);
     if (amountEventEffects.has(type)) catalogNumber(effect.amount, `${type} amount`);
     if (type === "gainItem" && !itemIds.has(catalogId(effect.itemId, "Item ID"))) throw new Error("The selected item is not part of the live item catalog.");
+    if (type === "openMerchant") {
+      merchants += 1;
+      if (!Array.isArray(effect.itemIds) || effect.itemIds.length === 0) throw new Error("A Wandering Merchant must sell at least one item.");
+      const merchantItemIds = effect.itemIds.map((itemId: unknown) => catalogId(itemId, "Merchant item ID"));
+      assertUniqueIds(merchantItemIds, "Merchant item");
+      if (merchantItemIds.some((itemId) => !itemIds.has(itemId))) throw new Error("The Wandering Merchant contains an item that is not part of the live item catalog.");
+    }
     if (playerBuffEffects.has(type) || playerDebuffEffects.has(type)) {
       const status = catalogId(effect.status, "Status ID");
       const requiredKind = playerBuffEffects.has(type) ? "buff" : "debuff";
@@ -167,6 +176,7 @@ function validateEventOutcome(
     }
   });
   if (encounters > 1) throw new Error("An outcome can contain only one immediate encounter.");
+  if (merchants > 1) throw new Error("An outcome can contain only one Wandering Merchant.");
 }
 
 function validateEventExchange(exchangeValue: unknown, itemIds: Set<string>, enemyIds: Set<string>, statusKinds: Map<string, string>): Record<string, unknown> {
@@ -188,10 +198,16 @@ function validateEventExchange(exchangeValue: unknown, itemIds: Set<string>, ene
       const choice = catalogObject(rawChoice, "Choice");
       catalogString(choice.label, "Choice label");
       catalogString(choice.description, "Choice description", true);
-      if (!["strength", "agility", "intelligence", "vitality", "luck"].includes(choice.stat)) throw new Error("Choice attribute is invalid.");
-      catalogNumber(choice.threshold, "Choice threshold", 1);
-      validateEventOutcome(choice.success, "positive", itemIds, enemyIds, statusKinds);
-      validateEventOutcome(choice.failure, "negative", itemIds, enemyIds, statusKinds);
+      const resolution = choice.resolution ?? "check";
+      if (resolution !== "check" && resolution !== "direct") throw new Error("Choice resolution is invalid.");
+      if (resolution === "direct") {
+        validateEventOutcome(choice.outcome, "any", itemIds, enemyIds, statusKinds);
+      } else {
+        if (!["strength", "agility", "intelligence", "vitality", "luck"].includes(choice.stat)) throw new Error("Choice attribute is invalid.");
+        catalogNumber(choice.threshold, "Choice threshold", 1);
+        validateEventOutcome(choice.success, "positive", itemIds, enemyIds, statusKinds);
+        validateEventOutcome(choice.failure, "negative", itemIds, enemyIds, statusKinds);
+      }
     });
     record[id] = event;
   });
@@ -307,6 +323,7 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
     const item = catalogObject(raw, "Item");
     catalogString(item.name, "Item name");
     catalogString(item.description, "Item description", true);
+    catalogNumber(item.goldCost, `${item.name} gold cost`);
     if (!itemRarities.has(item.rarity)) throw new Error(`${item.name} has an invalid rarity.`);
     if (item.kind === "consumable") {
       if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Consumable special effect notes", true);
