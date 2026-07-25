@@ -1,6 +1,6 @@
 import type { Ability, DamageType } from "../types";
 
-type AbilityDefinition = Omit<Ability, "types"> & { types?: DamageType[] };
+type AbilityDefinition = Omit<Ability, "types" | "flatDamage"> & { types?: DamageType[]; flatDamage?: number };
 
 const ABILITY_TYPE_OVERRIDES: Record<string, DamageType[]> = {
   PoisonStab: ["physical", "spell"],
@@ -224,22 +224,22 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   crushingBlow: {
     range: "melee",
     id: "crushingBlow", name: "Crushing Blow", description: "A heavy strike that leaves the enemy vulnerable.", energyCost: 4,
-    target: "enemy", damageType: "physical", power: 12, scalingStat: "strength", icon: "✦", branch: "brute", effect: "vulnerable",
+    target: "enemy", damageType: "physical", flatDamage: 12, scalingStat: "strength", icon: "✦", branch: "brute", effect: "vulnerable",
   },
   groundSlam: {
     range: "melee",
     id: "groundSlam", name: "Ground Slam", description: "Damage all enemies with a chance to stun.", energyCost: 6,
-    target: "all_enemies", damageType: "physical", power: 7, scalingStat: "strength", icon: "✹", branch: "brute", effect: "stun",
+    target: "all_enemies", damageType: "physical", flatDamage: 7, scalingStat: "strength", icon: "✹", branch: "brute", effect: "stun",
   },
   sever: {
     range: "melee",
     id: "sever", name: "Sever", description: "A swift cut that applies Bleed for 3 turns.", energyCost: 3,
-    target: "enemy", damageType: "shadow", power: 7, scalingStat: "agility", icon: "◢", branch: "shadow", effect: "bleed",
+    target: "enemy", damageType: "shadow", flatDamage: 7, scalingStat: "agility", icon: "◢", branch: "shadow", effect: "bleed",
   },
   venom: {
     range: "melee",
     id: "venom", name: "Venom Edge", description: "Poison an enemy and deal light damage.", energyCost: 4,
-    target: "enemy", damageType: "shadow", power: 5, scalingStat: "agility", icon: "⌁", branch: "shadow", effect: "poison",
+    target: "enemy", damageType: "shadow", flatDamage: 5, scalingStat: "agility", icon: "⌁", branch: "shadow", effect: "poison",
   },
   arcaneBolt: {
     range: "ranged",
@@ -522,10 +522,10 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
     range: "ranged",
     rangedPresentation: "target",
     id: "siphon", name: "Essence Siphon", description: "Deal damage and recover 2 Energy.", energyCost: 4,
-    target: "enemy", damageType: "arcane", power: 7, scalingStat: "intelligence", icon: "◎", branch: "arcanist", effect: "energy", vfx: "essence_siphon", vfxDirection: "to_player",
+    target: "enemy", damageType: "arcane", flatDamage: 7, scalingStat: "intelligence", icon: "◎", branch: "arcanist", effect: "energy", vfx: "essence_siphon", vfxDirection: "to_player",
   },
 };
 
 export const ABILITIES: Record<string, Ability> = Object.fromEntries(
-  Object.entries(ABILITY_DEFINITIONS).map(([id, ability]) => [id, { ...ability, types: resolveAbilityTypes(ability) }]),
+  Object.entries(ABILITY_DEFINITIONS).map(([id, ability]) => [id, { ...ability, flatDamage: ability.flatDamage ?? 0, types: resolveAbilityTypes(ability) }]),
 );

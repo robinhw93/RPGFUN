@@ -97,11 +97,11 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 | Ability | Energy | Cooldown | Effect |
 | --- | ---: | ---: | --- |
-| Crushing Blow | 4 | None | Physical attack with 12 flat power plus Physical Power; applies Vulnerable. |
-| Ground Slam | 6 | None | Physical area attack with 7 flat power plus Physical Power; each target has a base 45% Stun chance plus Luck's chance-effect bonus. |
-| Sever | 3 | None | Shadow attack with 7 flat power plus Physical Power; applies Bleed. |
-| Venom Edge | 4 | None | Shadow attack with 5 flat power plus Physical Power; applies Poison. |
-| Essence Siphon | 4 | None | Arcane attack with 7 flat power plus Spell Power; restores 2 Energy after use. |
+| Crushing Blow | 4 | None | Physical attack with 12 Flat Damage plus Physical Power; applies Vulnerable. |
+| Ground Slam | 6 | None | Physical area attack with 7 Flat Damage plus Physical Power; each target has a base 45% Stun chance plus Luck's chance-effect bonus. |
+| Sever | 3 | None | Shadow attack with 7 Flat Damage plus Physical Power; applies Bleed. |
+| Venom Edge | 4 | None | Shadow attack with 5 Flat Damage plus Physical Power; applies Poison. |
+| Essence Siphon | 4 | None | Arcane attack with 7 Flat Damage plus Spell Power; restores 2 Energy after use. |
 
 ## Talent tree
 

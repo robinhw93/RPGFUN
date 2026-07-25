@@ -538,7 +538,7 @@ export function localSourceSync() {
             if (typeof payload.talentId !== "string" || !/^[a-z0-9_-]+$/i.test(payload.talentId) || !payload.changes || typeof payload.changes !== "object") {
               throw new Error("Invalid talent content payload.");
             }
-            const allowedFields = new Set(["talentDescription", "abilityDescription", "physicalPowerPercent", "spellPowerPercent"]);
+            const allowedFields = new Set(["talentDescription", "abilityDescription", "energyCost", "cooldownTurns", "flatDamage", "physicalPowerPercent", "spellPowerPercent"]);
             const suppliedFields = Object.keys(payload.changes);
             if (suppliedFields.length === 0 || suppliedFields.some((field) => !allowedFields.has(field))) {
               throw new Error("No editable talent content was supplied.");
@@ -557,6 +557,15 @@ export function localSourceSync() {
               const value = payload.changes?.[field];
               if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 10_000) throw new Error(`${field} must be between 0 and 10000.`);
             });
+            ["energyCost", "cooldownTurns"].forEach((field) => {
+              if (!Object.prototype.hasOwnProperty.call(payload.changes, field)) return;
+              const value = payload.changes?.[field];
+              if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 1_000) throw new Error(`${field} must be a whole number between 0 and 1000.`);
+            });
+            if (Object.prototype.hasOwnProperty.call(payload.changes, "flatDamage")) {
+              const value = payload.changes?.flatDamage;
+              if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 1_000_000) throw new Error("flatDamage must be a whole number between 0 and 1000000.");
+            }
 
             await enqueueSourceMutation(async () => {
               const [talentSource, abilitySource] = await Promise.all([
@@ -590,6 +599,9 @@ export function localSourceSync() {
                 if (!ability) throw new Error("This ability is not part of the live source data.");
                 const abilityReplacements: Record<string, string> = {};
                 if (typeof payload.changes?.abilityDescription === "string") abilityReplacements.description = JSON.stringify(payload.changes.abilityDescription);
+                if (typeof payload.changes?.energyCost === "number") abilityReplacements.energyCost = String(payload.changes.energyCost);
+                if (typeof payload.changes?.cooldownTurns === "number") abilityReplacements.cooldownTurns = String(payload.changes.cooldownTurns);
+                if (typeof payload.changes?.flatDamage === "number") abilityReplacements.flatDamage = String(payload.changes.flatDamage);
                 if (typeof payload.changes?.physicalPowerPercent === "number") abilityReplacements.physicalPowerScaling = sourceScaling(payload.changes.physicalPowerPercent);
                 if (typeof payload.changes?.spellPowerPercent === "number") abilityReplacements.spellPowerScaling = sourceScaling(payload.changes.spellPowerPercent);
                 abilityEdits.push(...collectObjectEdits(abilitySource, abilitySourceFile, ability, abilityReplacements));

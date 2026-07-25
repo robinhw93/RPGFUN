@@ -10,6 +10,7 @@ import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAd
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
+import { applyAbilityFlatDamage } from "../src/game/combat/damage";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
@@ -66,6 +67,7 @@ function testContentIntegrity() {
   Object.values(ABILITIES).forEach((ability) => {
     assert.ok(ability.range === "melee" || ability.range === "ranged", `${ability.id} needs a valid range.`);
     assert.ok(ability.types.length > 0, `${ability.id} needs at least one presentation type.`);
+    assert.ok(Number.isInteger(ability.flatDamage) && ability.flatDamage >= 0, `${ability.id} needs non-negative whole-number Flat Damage.`);
   });
   assert.equal(new Set([...ITEMS.map((item) => item.id), ...GEAR_SETS.map((set) => set.id)]).size, ITEMS.length + GEAR_SETS.length, "Item and gear-set IDs must be unique.");
   ITEMS.forEach((item) => assert.ok(typeof item.goldCost === "number" && item.goldCost >= 0, `${item.name} needs a non-negative Gold Cost.`));
@@ -93,6 +95,14 @@ function testContentIntegrity() {
       });
     });
   });
+}
+
+function testAbilityFlatDamage() {
+  const ability = { ...ABILITIES.quickSlash, flatDamage: 7 };
+  const components = applyAbilityFlatDamage(ability, [{ damageType: "physical", power: 2, powerScaling: 0.5 }]);
+  assert.deepEqual(components, [{ damageType: "physical", power: 9, powerScaling: 0.5 }], "Flat Damage must be added once to the primary damage component of every direct hit.");
+  assert.equal(ABILITIES.crushingBlow.flatDamage, 12, "Legacy fixed ability damage must migrate without changing its value.");
+  assert.equal(ABILITIES.siphon.flatDamage, 7, "Legacy spell fixed damage must migrate without changing its value.");
 }
 
 function testItemEditorRepairsInternalIds() {
@@ -523,6 +533,7 @@ function testIndependentItemDrops() {
   assert.deepEqual(grouped.map(({ item, count }) => [item.id, count]), [[firstItem.id, 2], [secondItem.id, 1]], "Duplicate score-screen loot must group by item without changing order.");
 }
 
+testAbilityFlatDamage();
 testContentIntegrity();
 testGearIconLibrary();
 testGearCombatStatsArePresented();

@@ -322,7 +322,7 @@ The editor supports:
 - Live Shadow, Arcanist, Brute, and Cultist node counters in the editor header.
 - Player-facing descriptions, branches, class/passive/ability types, costs, icons, and circle/square shapes.
 - Multiple flat and percentage passive bonuses, including attributes, Physical Power, and Spell Power.
-- Ability-ID references, Energy cost, cooldown turns, Melee/Ranged selection, free-form effect/proc notes, a dedicated live ability tooltip, and total **% of Physical Power** / **% of Spell Power** damage fields. Current values are inferred from the canonical ability, including hybrid and multi-element component totals; non-damaging abilities show 0/0.
+- Ability-ID references, live-synced Energy cost, cooldown turns, and **Flat Damage per hit**, Melee/Ranged selection, free-form effect/proc notes, a dedicated live ability tooltip, and total **% of Physical Power** / **% of Spell Power** damage fields. Current values come from the canonical ability, including hybrid and multi-element component totals; non-damaging abilities keep every damage field at zero.
 - Bidirectional connections where any one unlocked adjacent talent is enough.
 - Searchable buff/debuff reference.
 - Separate content and layout signatures. Canonical content updates preserve local placement, while an intentional canonical layout update migrates the canvas, positions, connections, icons, and shapes in an existing saved draft once.
@@ -333,7 +333,7 @@ The editor supports:
 
 ### What Save does
 
-Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/content/talents.ts` through the local Vite server. If the talent references an existing canonical ability, leaving its **Ability tooltip for players** or either Power-percentage field writes the ability description or both scaling totals directly to `src/game/content/abilities.ts`. These restricted field writes are independent of the Save button.
+Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/content/talents.ts` through the local Vite server. If the talent references an existing canonical ability, leaving its **Energy cost**, **Cooldown**, **Flat Damage per hit**, **Ability tooltip for players**, or either Power-percentage field writes that value directly to `src/game/content/abilities.ts`. These restricted field writes are independent of the Save button.
 
 The **Save** button itself does not:
 
@@ -349,7 +349,7 @@ The **Save** button itself does not:
 - Free-form effect notes are documentation for implementation, not executable mechanics.
 - An ability ID must already exist or be implemented alongside the talent.
 - Advanced triggers, damage modifiers, ability modifiers, and new status mechanics must currently be added in TypeScript after export.
-- Direct source sync is available only through the local Vite development server and only when the talent and referenced ability already form the same canonical pair. Reassigned/new abilities stay draft-only.
+- Direct source sync is available only through the local Vite development server and only when the talent and referenced ability already form the same canonical pair. This includes Energy cost, cooldown, Flat Damage, tooltip, and Physical/Spell Power totals; reassigned/new abilities stay draft-only.
 - Editor storage belongs to one browser/site origin.
 
 ## Enemy, Event, Adventure, Item, and Portrait editors

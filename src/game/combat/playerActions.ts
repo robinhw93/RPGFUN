@@ -17,7 +17,7 @@ import {
   isStatusEffectId
 } from "../statusEffects";
 import type { Ability, CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, InspectableInfo, StatusEffect, StatusEffectId } from "../types";
-import { applyAbilityPowerScalingTotals, createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
+import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
 import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, applyPlayerDeathPrevention, moveToNextActor, processTurnEnd, processTurnStart, runDeathPreventionHealingTriggers, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyStealthed, isEnemyTargetable, normalizeEnemies, orderTurnEntries } from "./state";
@@ -754,7 +754,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const targetStatusStackPowerScaling = ability.damagePerTargetStatusStack
         ? targetStatusStackCount * ((ability.damagePerTargetStatusStack.powerScaling ?? 0) + targetStatusStackPowerScalingBonus)
         : 0;
-      const damageComponents = editorScaledDamageComponents.map((component, componentIndex) => componentIndex === 0 ? {
+      const damageComponents = applyAbilityFlatDamage(ability, editorScaledDamageComponents).map((component, componentIndex) => componentIndex === 0 ? {
         ...component,
         powerScaling: (powerScalingBonus !== 0 && !usesDynamicDamageScaling) || targetStatusStackPowerScaling !== 0
           ? (component.powerScaling ?? 1) + (usesDynamicDamageScaling ? 0 : powerScalingBonus) + targetStatusStackPowerScaling

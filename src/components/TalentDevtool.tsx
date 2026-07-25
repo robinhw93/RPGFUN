@@ -52,12 +52,13 @@ interface TalentDraftNode {
   abilityCooldownTurns: number;
   abilityRange: AbilityRange;
   abilityDescription: string;
+  abilityFlatDamage: number;
   abilityPhysicalPowerPercent: number;
   abilitySpellPowerPercent: number;
   effectNotes: string;
 }
 
-interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns" | "abilityRange" | "abilityDescription" | "abilityPhysicalPowerPercent" | "abilitySpellPowerPercent"> {
+interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passiveBonuses" | "abilityEnergyCost" | "abilityCooldownTurns" | "abilityRange" | "abilityDescription" | "abilityFlatDamage" | "abilityPhysicalPowerPercent" | "abilitySpellPowerPercent"> {
   tier?: number;
   shape?: TalentNodeShape;
   passiveBonuses?: TalentPassiveBonus[];
@@ -65,6 +66,7 @@ interface LegacyTalentDraftNode extends Omit<TalentDraftNode, "shape" | "passive
   abilityCooldownTurns?: number;
   abilityRange?: AbilityRange;
   abilityDescription?: string;
+  abilityFlatDamage?: number;
   abilityPhysicalPowerPercent?: number;
   abilitySpellPowerPercent?: number;
   passiveBonus?: PassiveBonus | "";
@@ -162,7 +164,8 @@ function roundPowerPercent(value: number): number {
 
 function abilityHasDirectDamage(ability?: Ability): boolean {
   return Boolean(ability && ability.dealsDamage !== false && (
-    ability.damageComponents?.length
+    ability.flatDamage > 0
+    || ability.damageComponents?.length
     || ability.damageType !== undefined
     || ability.power !== undefined
     || ability.powerScaling !== undefined
@@ -210,6 +213,7 @@ function createGameDataNodes(): TalentDraftNode[] {
       abilityCooldownTurns: talent.abilityCooldownTurns ?? ability?.cooldownTurns ?? 0,
       abilityRange: talent.abilityRange ?? ability?.range ?? "melee",
       abilityDescription: ability?.description ?? "",
+      abilityFlatDamage: ability?.flatDamage ?? 0,
       abilityPhysicalPowerPercent: powerPercents.physical,
       abilitySpellPowerPercent: powerPercents.spell,
       effectNotes: talent.effectNotes ?? "",
@@ -231,6 +235,7 @@ function getGameDataSignature(nodes: TalentDraftNode[]): string {
     abilityCooldownTurns: node.abilityCooldownTurns,
     abilityRange: node.abilityRange,
     abilityDescription: node.abilityDescription,
+    abilityFlatDamage: node.abilityFlatDamage,
     abilityPhysicalPowerPercent: node.abilityPhysicalPowerPercent,
     abilitySpellPowerPercent: node.abilitySpellPowerPercent,
     effectNotes: node.effectNotes,
@@ -322,6 +327,7 @@ function normalizeDraft(draft: { version: 1; sourceSignature?: string; layoutSig
         abilityCooldownTurns: numbers.cooldownTurns,
         abilityRange: node.abilityRange === "ranged" || node.abilityRange === "melee" ? node.abilityRange : ABILITIES[node.abilityId ?? ""]?.range ?? "melee",
         abilityDescription: node.abilityDescription ?? ability?.description ?? "",
+        abilityFlatDamage: Number.isFinite(node.abilityFlatDamage) ? Math.max(0, Math.round(Number(node.abilityFlatDamage))) : ability?.flatDamage ?? 0,
         abilityPhysicalPowerPercent: Number.isFinite(node.abilityPhysicalPowerPercent) ? Number(node.abilityPhysicalPowerPercent) : powerPercents.physical,
         abilitySpellPowerPercent: Number.isFinite(node.abilitySpellPowerPercent) ? Number(node.abilitySpellPowerPercent) : powerPercents.spell,
         effectNotes: node.effectNotes ?? "",
@@ -357,6 +363,7 @@ function syncDraftWithGameData(draft: TalentDraft): TalentDraft {
         abilityCooldownTurns: gameNode.abilityCooldownTurns,
         abilityRange: gameNode.abilityRange,
         abilityDescription: gameNode.abilityDescription,
+        abilityFlatDamage: gameNode.abilityFlatDamage,
         abilityPhysicalPowerPercent: gameNode.abilityPhysicalPowerPercent,
         abilitySpellPowerPercent: gameNode.abilitySpellPowerPercent,
         effectNotes: gameNode.effectNotes,
@@ -463,6 +470,9 @@ function exportDraft(draft: TalentDraft): string {
 interface TalentSourceChanges {
   talentDescription?: string;
   abilityDescription?: string;
+  energyCost?: number;
+  cooldownTurns?: number;
+  flatDamage?: number;
   physicalPowerPercent?: number;
   spellPowerPercent?: number;
 }
@@ -597,6 +607,9 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       return;
     }
     const changesAbility = changes.abilityDescription !== undefined
+      || changes.energyCost !== undefined
+      || changes.cooldownTurns !== undefined
+      || changes.flatDamage !== undefined
       || changes.physicalPowerPercent !== undefined
       || changes.spellPowerPercent !== undefined;
     if (changesAbility && (!node.abilityId || liveTalent.abilityId !== node.abilityId || !ABILITIES[node.abilityId])) {
@@ -622,6 +635,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
         abilityCooldownTurns: ability.cooldownTurns ?? 0,
         abilityRange: ability.range,
         abilityDescription: ability.description,
+        abilityFlatDamage: ability.flatDamage,
         abilityPhysicalPowerPercent: powerPercents.physical,
         abilitySpellPowerPercent: powerPercents.spell,
       } : {}),
@@ -652,6 +666,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
       abilityCooldownTurns: 0,
       abilityRange: "melee",
       abilityDescription: "",
+      abilityFlatDamage: 0,
       abilityPhysicalPowerPercent: 0,
       abilitySpellPowerPercent: 0,
       effectNotes: "",
@@ -935,7 +950,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
             <label className="talent-form-field"><span>Talent tooltip for players</span><textarea rows={3} value={selected.description} onChange={(event) => updateSelected({ description: event.target.value })} onBlur={(event) => void syncSelectedSource(selected, { talentDescription: event.currentTarget.value })} /></label>
             <p className="talent-source-sync-note">{selectedLiveTalent
               ? selected.abilityId
-                ? "Talent tooltip, ability tooltip, and damage fields write to the live source when you leave the field."
+                ? "Talent tooltip and all supported ability fields write to the live source when you leave the field."
                 : "The talent tooltip writes to the live source when you leave the field."
               : "This new talent is a local draft until it is implemented."}</p>
             <div className="talent-form-grid two-columns">
@@ -951,15 +966,16 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                 <>
                   <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => changeSelectedAbilityId(event.target.value)} /></label>
                   <div className="talent-form-grid two-columns">
-                    <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => updateSelected({ abilityEnergyCost: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
-                    <label><span>Cooldown (turns)</span><input type="number" min={0} step={1} value={selected.abilityCooldownTurns} onChange={(event) => updateSelected({ abilityCooldownTurns: Math.max(0, Math.round(Number(event.target.value))) })} /></label>
+                    <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => updateSelected({ abilityEnergyCost: Math.max(0, Math.round(Number(event.target.value))) })} onBlur={(event) => void syncSelectedSource(selected, { energyCost: Math.max(0, Math.round(Number(event.currentTarget.value))) })} /></label>
+                    <label><span>Cooldown (turns)</span><input type="number" min={0} step={1} value={selected.abilityCooldownTurns} onChange={(event) => updateSelected({ abilityCooldownTurns: Math.max(0, Math.round(Number(event.target.value))) })} onBlur={(event) => void syncSelectedSource(selected, { cooldownTurns: Math.max(0, Math.round(Number(event.currentTarget.value))) })} /></label>
                   </div>
                   <label className="talent-form-field"><span>Attack range</span><select value={selected.abilityRange} onChange={(event) => updateSelected({ abilityRange: event.target.value as AbilityRange })}><option value="melee">Melee</option><option value="ranged">Ranged</option></select></label>
+                  <label className="talent-form-field"><span>Flat Damage per hit</span><input type="number" min={0} step={1} value={selected.abilityFlatDamage} disabled={!abilityDamageEditable} onChange={(event) => updateSelected({ abilityFlatDamage: Math.max(0, Math.round(Number(event.target.value))) })} onBlur={(event) => void syncSelectedSource(selected, { flatDamage: Math.max(0, Math.round(Number(event.currentTarget.value))) })} /></label>
                   <div className="talent-form-grid two-columns">
                     <label><span>% of Physical Power</span><input type="number" min={0} step="0.1" value={selected.abilityPhysicalPowerPercent} disabled={!abilityDamageEditable} onChange={(event) => updateSelected({ abilityPhysicalPowerPercent: Math.max(0, Number(event.target.value)) })} onBlur={(event) => void syncSelectedSource(selected, { physicalPowerPercent: Math.max(0, Number(event.currentTarget.value)), spellPowerPercent: selected.abilitySpellPowerPercent })} /></label>
                     <label><span>% of Spell Power</span><input type="number" min={0} step="0.1" value={selected.abilitySpellPowerPercent} disabled={!abilityDamageEditable} onChange={(event) => updateSelected({ abilitySpellPowerPercent: Math.max(0, Number(event.target.value)) })} onBlur={(event) => void syncSelectedSource(selected, { physicalPowerPercent: selected.abilityPhysicalPowerPercent, spellPowerPercent: Math.max(0, Number(event.currentTarget.value)) })} /></label>
                   </div>
-                  {!abilityDamageEditable && <p className="talent-source-sync-note">This ability does not deal direct damage, so both damage fields remain at 0.</p>}
+                  {!abilityDamageEditable && <p className="talent-source-sync-note">This ability does not deal direct damage, so its damage fields remain at 0.</p>}
                   <label className="talent-form-field"><span>Ability tooltip for players</span><textarea rows={4} value={selected.abilityDescription} onChange={(event) => updateSelected({ abilityDescription: event.target.value })} onBlur={(event) => void syncSelectedSource(selected, { abilityDescription: event.currentTarget.value })} /></label>
                 </>
               ) : null}

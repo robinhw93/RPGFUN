@@ -55,6 +55,16 @@ export function applyAbilityPowerScalingTotals(
   return scaled;
 }
 
+export function applyAbilityFlatDamage(
+  ability: Ability,
+  components: NonNullable<Ability["damageComponents"]>,
+): NonNullable<Ability["damageComponents"]> {
+  if (ability.flatDamage <= 0 || components.length === 0) return components;
+  return components.map((component, index) => index === 0
+    ? { ...component, power: (component.power ?? 0) + ability.flatDamage }
+    : component);
+}
+
 export function getDefense(armor: number, magicResistance: number, statuses: StatusEffect[], damageType?: DamageType): number {
   return damageType === "physical" ? getEffectiveArmor(armor, statuses) : magicResistance;
 }

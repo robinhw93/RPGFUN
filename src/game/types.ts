@@ -438,6 +438,8 @@ export interface Ability {
   physicalPowerScaling?: number;
   /** Optional editor-owned total Spell Power scaling across all direct-damage components. */
   spellPowerScaling?: number;
+  /** Flat damage added to every direct hit before Critical Strike, modifiers, and defense. */
+  flatDamage: number;
   /** Number of separate attacks performed by one use. Each attack can trigger on-hit effects. */
   hits?: number;
   /** Overrides hits while the player carries the configured status. */

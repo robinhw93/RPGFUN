@@ -46,7 +46,7 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/game/save.ts`: load, save, and migrations.
 - `src/App.tsx`: application orchestration and high-level state only. Screen rendering belongs under `src/components/character/`, `adventure/`, `combat/`, `town/`, and `talents/`; shared display helpers belong in `src/ui/gameUi.tsx`.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
-- `src/components/TalentDevtool.tsx`: isolated talent draft/export UI plus restricted local source sync for existing talent/ability tooltips and direct-damage Power totals.
+- `src/components/TalentDevtool.tsx`: isolated talent draft/export UI plus restricted local source sync for existing talent/ability tooltips, Energy cost, cooldown, Flat Damage, and direct-damage Power totals.
 - `src/components/ContentDevtools.tsx`: compatibility facade for the separate editor modules under `src/components/devtools/`. Existing-enemy numeric stat fields and drop tables use local Vite source-sync routes. Event Manager, Adventure Editor, and Item Editor Save validate and replace their complete canonical catalogs while local Vite is running; Item Editor's Arkenfall vendor and typed recipe fields are standard executable data, while special item notes, ability rules, and new enemies remain implementation input.
 - `tools/vite/localSourceSync.ts`: development-only validation and source writes for supported editor fields and catalogs. `vite.config.ts` only composes the plugin and server settings.
 
@@ -114,6 +114,7 @@ Status icons use circular badges and fixed three-segment duration rings by defau
 Active abilities should have distinct, readable feedback when their effect warrants it.
 
 - Every ability declares `range: "melee" | "ranged"`. Direct Melee attacks use the combatant lunge; direct Ranged attacks keep the attacker stationary and launch a damage-type or ability-specific projectile that reaches the target at attack impact.
+- Every live player ability exposes non-negative whole-number `flatDamage`; it is added to the primary damage component of every direct hit before Critical Strike, damage modifiers, and defense. Non-damaging abilities keep it at zero.
 - Preserve the range value in Talent Editor drafts and exports. A Ranged direct-damage ability must have readable projectile presentation even when it has no bespoke `vfx`; the shared damage-type fallback is the minimum treatment.
 
 1. Add or reuse a `CombatAbilityVfxKind`.
@@ -147,7 +148,7 @@ When the owner supplies Talent Editor JSON:
 6. Keep existing ability definitions, talent combat bundles, editor metadata, and all documentation synchronized.
 7. Verify every ability talent points to a real ability and every connection points to a real node.
 
-The Talent Editor's **Save** button only writes its browser-local draft. It does not edit the canonical modules under `src/game/content/`, update the runtime tree, or push Git changes. Separately, leaving the supported tooltip and Physical/Spell Power percentage fields for an existing canonical talent/ability pair writes those specific fields through the restricted local Vite source-sync route.
+The Talent Editor's **Save** button only writes its browser-local draft. It does not edit the canonical modules under `src/game/content/`, update the runtime tree, or push Git changes. Separately, leaving the supported tooltip, Energy cost, cooldown, Flat Damage, and Physical/Spell Power percentage fields for an existing canonical talent/ability pair writes those specific fields through the restricted local Vite source-sync route.
 
 ## Saves and compatibility
 
