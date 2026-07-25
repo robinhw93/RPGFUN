@@ -4,6 +4,7 @@ import {
   Droplets,
   Flame, FlaskConical, Footprints, Gem,
   Heart, HeartPulse,
+  Package,
   Skull,
   Sparkles,
   Swords,
@@ -21,7 +22,7 @@ import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCh
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "../../game/combatSequence";
 import { ABILITIES, ADVENTURE_EVENTS, ADVENTURES, ENEMIES } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
-import { consumableCount, describeConsumableEffect, isConsumableItem } from "../../game/items";
+import { consumableCount, describeConsumableEffect, isConsumableItem, isMiscItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
 import type { AdventureMode, AdventureStageDefinition, CombatLogEntry, CombatReward, ConsumableItem, GameState, InspectableInfo, StatusEffectId } from "../../game/types";
@@ -578,8 +579,8 @@ export function VictoryScoreScreen({ reward, encounterTitle, onCharacter, onCont
           <p className="eyebrow">Items Found</p>
           {reward.loot.map((item, index) => (
             <div className={`score-loot-card ${item.rarity}`} key={`${item.id}-${index}`}>
-              <span className="score-loot-glyph">{isConsumableItem(item) ? <FlaskConical size={22} /> : <GearSlotIcon slot={item.slot} item={item} size={24} />}</span>
-              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : getGearCategoryLabel(item)}</small><strong>{item.name}</strong><em>{item.description}</em></span>
+              <span className="score-loot-glyph">{isConsumableItem(item) ? <FlaskConical size={22} /> : isMiscItem(item) ? <Package size={22} /> : <GearSlotIcon slot={item.slot} item={item} size={24} />}</span>
+              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong>{item.name}</strong><em>{item.description}</em></span>
             </div>
           ))}
         </div>}

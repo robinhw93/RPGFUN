@@ -2,6 +2,7 @@ import {
   ChevronRight,
   FlaskConical,
   Gem,
+  Package,
   Shield,
   UserRound
 } from "lucide-react";
@@ -11,9 +12,9 @@ import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { GEAR_SET_BONUSES } from "../../game/data";
 import { canEquipItemInSlot, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem } from "../../game/gear";
-import { describeConsumableEffect, isConsumableItem, isGearItem } from "../../game/items";
+import { describeConsumableEffect, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceToNextLevel, MAX_LEVEL } from "../../game/progression";
-import type { CharacterState, ConsumableItem, GearItem, GearSlot, StatName } from "../../game/types";
+import type { CharacterState, ConsumableItem, GearItem, GearSlot, MiscItem, StatName } from "../../game/types";
 
 import { ATTRIBUTE_SUMMARIES, ATTRIBUTE_TOOLTIPS, EQUIPMENT_SLOT_ORDER, formatStat, getDerivedStatRows, INVENTORY_GEAR_FILTERS, itemMatchesInventoryFilter, RARITY_SORT_WEIGHT, SLOT_LABELS, STAT_LABELS, StatIcon, type CharacterSection, type InventoryGearFilter, type InventorySort, type StatIconName } from "../../ui/gameUi";
 
@@ -84,10 +85,11 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
 }) {
   const [inspectedItem, setInspectedItem] = useState<{ item: GearItem; equippedSlot?: GearSlot; preferredSlot?: GearSlot } | null>(null);
   const [inspectedConsumable, setInspectedConsumable] = useState<ConsumableItem | null>(null);
+  const [inspectedMiscItem, setInspectedMiscItem] = useState<MiscItem | null>(null);
   const [selectedGearSlot, setSelectedGearSlot] = useState<GearSlot | null>(null);
   const [inventoryFilter, setInventoryFilter] = useState<InventoryGearFilter>("all");
   const [inventorySort, setInventorySort] = useState<InventorySort>("rarity");
-  const modalOpen = Boolean(inspectedItem || inspectedConsumable || selectedGearSlot);
+  const modalOpen = Boolean(inspectedItem || inspectedConsumable || inspectedMiscItem || selectedGearSlot);
   useEffect(() => {
     if (!modalOpen) return;
     const scrollY = window.scrollY;
@@ -191,7 +193,9 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
       <div className="inventory-grid">
         {visibleInventory.length ? visibleInventory.map((item, index) => isConsumableItem(item)
           ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedConsumable(item)}><span className="item-glyph"><FlaskConical size={25} /></span><span className="rarity">{item.rarity} · Consumable</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
-          : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
+          : isMiscItem(item)
+            ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedMiscItem(item)}><span className="item-glyph"><Package size={25} /></span><span className="rarity">{item.rarity} · Item</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
+            : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? activeInventoryFilter.id === "misc" ? "No other items in your inventory." : `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
       </div>
       </>}
       {selectedGearSlot && (
@@ -219,7 +223,29 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
         />
       )}
       {inspectedConsumable && <ConsumableDetailModal item={inspectedConsumable} onClose={() => setInspectedConsumable(null)} />}
+      {inspectedMiscItem && <MiscItemDetailModal item={inspectedMiscItem} onClose={() => setInspectedMiscItem(null)} />}
     </section>
+  );
+}
+
+function MiscItemDetailModal({ item, onClose }: { item: MiscItem; onClose: () => void }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
+      <article className="item-detail-card" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close item details">×</button>
+        <header className="item-detail-header">
+          <span className={`item-detail-icon ${item.rarity}`}><Package size={42} /></span>
+          <span><small>{item.rarity} · Item</small><h2 className={`item-name-${item.rarity}`}>{item.name}</h2><p>{item.description}</p></span>
+        </header>
+        <section className="item-detail-section"><p className="item-detail-muted">This item is carried in your Inventory. It cannot be equipped or used in combat.</p></section>
+      </article>
+    </div>
   );
 }
 

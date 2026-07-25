@@ -655,7 +655,18 @@ export interface ConsumableItem {
   specialEffectNotes?: string;
 }
 
-export type InventoryItem = GearItem | ConsumableItem;
+/** A carried item with no equip or combat-use behavior. */
+export interface MiscItem {
+  kind: "misc";
+  id: string;
+  name: string;
+  goldCost?: number;
+  rarity: ItemRarity;
+  description: string;
+  specialEffectNotes?: string;
+}
+
+export type InventoryItem = GearItem | ConsumableItem | MiscItem;
 
 export interface ItemDropDefinition {
   itemId: string;

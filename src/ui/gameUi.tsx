@@ -15,7 +15,7 @@ import { GEAR_ICON_URLS } from "../components/GearSlotIcon";
 import { getDerivedStats } from "../game/character";
 import { ABILITIES, ENEMIES, TALENTS } from "../game/data";
 import { canEquipItemInSlot } from "../game/gear";
-import { isConsumableItem } from "../game/items";
+import { isConsumableItem, isGearItem, isMiscItem } from "../game/items";
 import type { Ability, CharacterState, DamageType, GearItem, GearSlot, InventoryItem, ItemRarity, StatName, StatusEffectId } from "../game/types";
 
 export type CharacterSection = "overview" | "equipment" | "talents";
@@ -27,12 +27,13 @@ export const SLOT_LABELS: Record<GearSlot, string> = {
 
 export const EQUIPMENT_SLOT_ORDER: GearSlot[] = ["head", "chest", "pants", "boots", "mainHand", "offHand", "ring1", "ring2"];
 
-export type InventoryGearFilter = "all" | "consumable" | "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring";
+export type InventoryGearFilter = "all" | "consumable" | "misc" | "head" | "chest" | "pants" | "boots" | "mainHand" | "offHand" | "ring";
 export type InventorySort = "rarity" | "name";
 
 export const INVENTORY_GEAR_FILTERS: Array<{ id: InventoryGearFilter; label: string }> = [
   { id: "all", label: "All" },
   { id: "consumable", label: "Consumables" },
+  { id: "misc", label: "Other Items" },
   { id: "head", label: "Head" },
   { id: "chest", label: "Chest" },
   { id: "pants", label: "Pants" },
@@ -47,7 +48,8 @@ export const RARITY_SORT_WEIGHT: Record<ItemRarity, number> = { common: 0, uncom
 export function itemMatchesInventoryFilter(item: InventoryItem, filter: InventoryGearFilter): boolean {
   if (filter === "all") return true;
   if (filter === "consumable") return isConsumableItem(item);
-  if (isConsumableItem(item)) return false;
+  if (filter === "misc") return isMiscItem(item);
+  if (!isGearItem(item)) return false;
   if (filter === "ring") return item.slot === "ring";
   if (filter === "mainHand" || filter === "offHand") return canEquipItemInSlot(item, filter);
   return item.slot === filter;

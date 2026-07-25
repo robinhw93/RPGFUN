@@ -68,7 +68,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/combatFeatures.ts` aggregates data-driven gear, set, and talent combat features.
 - `src/game/talentRequirements.ts` owns bidirectional ANY-connection evaluation for both UI state and unlock authorization.
 - `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, and item category normalization.
-- `src/game/items.ts` owns inventory-item classification, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
+- `src/game/items.ts` owns the explicit gear, consumable, and ordinary-item classification plus prices, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` independently rolls every defeated enemy instance's drop table plus the current stage drop table, applies a combat reward exactly once, transfers found items into inventory, and stores the immutable score-screen snapshot.
 - `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists event-merchant stock, and owns atomic merchant purchases and one-copy inventory sales.

@@ -1,13 +1,13 @@
-import { FlaskConical, Gem, Plus, Shield, Trash2 } from "lucide-react";
+import { FlaskConical, Gem, Package, Plus, Shield, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { GEAR_SETS, ITEMS } from "../../game/data";
-import { getItemGoldCost, isConsumableItem, isGearItem } from "../../game/items";
+import { getItemGoldCost, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
-import type { ConsumableEffect, ConsumableItem, ConsumableTarget, GearItem, GearSetDefinition, GearType, ItemRarity, PassiveBonuses, StatName, StatusEffectId, WeaponEquipType, WeaponKind } from "../../game/types";
+import type { ConsumableEffect, ConsumableItem, ConsumableTarget, GearItem, GearSetDefinition, GearType, InventoryItem, ItemRarity, MiscItem, PassiveBonuses, StatName, StatusEffectId, WeaponEquipType, WeaponKind } from "../../game/types";
 import { GEAR_ICON_URLS, resolveGearIconUrl } from "../GearSlotIcon";
 import { copyJson, downloadJson, EditorShell, ensureInternalId, ITEM_DRAFT_STORAGE_KEY, makeId, NumberField, saveLiveCatalog, TextField, useLocalDraft, type ItemExchange } from "./shared";
 
-type ItemEditorTab = "gear" | "sets" | "consumables";
+type ItemEditorTab = "gear" | "sets" | "consumables" | "misc";
 const RARITIES: ItemRarity[] = ["common", "uncommon", "rare", "epic"];
 const GEAR_SLOTS: Array<{ id: GearType; label: string }> = [
   { id: "head", label: "Head" }, { id: "chest", label: "Chest" }, { id: "pants", label: "Pants" }, { id: "boots", label: "Boots" },
@@ -36,8 +36,10 @@ export function normalizeItemExchange(exchange: ItemExchange): ItemExchange {
   }));
   const setById = new Map(sets.map((set) => [set.id, set]));
   const items = (exchange.items ?? []).map((item) => {
-    const id = ensureInternalId(item.id, item.kind === "consumable" ? "consumable" : "gear", used, item.name);
+    const idPrefix = isConsumableItem(item) ? "consumable" : isMiscItem(item) ? "item" : "gear";
+    const id = ensureInternalId(item.id, idPrefix, used, item.name);
     if (isConsumableItem(item)) return { ...item, id, goldCost: getItemGoldCost(item), effects: item.effects ?? [] };
+    if (isMiscItem(item)) return { ...item, kind: "misc" as const, id, goldCost: getItemGoldCost(item) };
     const set = item.set ? setById.get(item.set) : undefined;
     return { ...item, kind: "gear" as const, id, goldCost: getItemGoldCost(item), stats: item.stats ?? {}, set: set?.id, setName: set?.name };
   });
@@ -49,6 +51,7 @@ function blankGear(): GearItem {
 }
 function blankSet(): GearSetDefinition { return { id: makeId("set"), name: "New Gear Set", pieceCount: 2, bonuses: [{ requiredPieces: 2, description: "+1 Strength.", passive: { stats: { strength: 1 } } }] }; }
 function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", goldCost: 8, rarity: "common", description: "", effects: [{ type: "heal", amount: 10 }] }; }
+function blankMiscItem(): MiscItem { return { kind: "misc", id: makeId("item"), name: "New Item", goldCost: 0, rarity: "common", description: "" }; }
 function blankEffect(type: ConsumableEffect["type"]): ConsumableEffect {
   if (type === "apply_status") return { type, target: "self", status: "strengthened", stacks: 1, duration: 3 };
   if (type === "damage") return { type, target: "target", amount: 5 };
@@ -94,23 +97,39 @@ function ConsumableFields({ item, onChange }: { item: ConsumableItem; onChange: 
   return <><div className="content-form-grid"><TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} /><label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label><NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} /><TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea /></div><fieldset className="item-editor-section"><legend>Combat effects</legend><div className="set-bonus-list">{item.effects.map((effect, index) => <EffectFields key={index} effect={effect} onChange={(next) => onChange({ effects: item.effects.map((candidate, candidateIndex) => candidateIndex === index ? next : candidate) })} onRemove={() => onChange({ effects: item.effects.filter((_, candidateIndex) => candidateIndex !== index) })} />)}</div><button type="button" className="secondary-editor-button" onClick={() => onChange({ effects: [...item.effects, blankEffect("heal")] })}><Plus size={14} /> Add effect</button></fieldset><div className="content-form-grid"><TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea /></div></>;
 }
 
+function MiscItemFields({ item, onChange }: { item: MiscItem; onChange: (change: Partial<MiscItem>) => void }) {
+  return <div className="content-form-grid">
+    <TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} />
+    <label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label>
+    <NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} />
+    <TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea />
+    <TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea />
+  </div>;
+}
+
+function itemsForTab(items: InventoryItem[], tab: Exclude<ItemEditorTab, "sets">): InventoryItem[] {
+  if (tab === "gear") return items.filter(isGearItem);
+  if (tab === "consumables") return items.filter(isConsumableItem);
+  return items.filter(isMiscItem);
+}
+
 export function ItemDevtool({ onExit }: { onExit: () => void }) {
   const store = useLocalDraft<ItemExchange>(ITEM_DRAFT_STORAGE_KEY, canonicalItemExchange(), normalizeItemExchange);
   const [tab, setTab] = useState<ItemEditorTab>("gear");
   const [selectedId, setSelectedId] = useState(() => store.draft.items.find(isGearItem)?.id ?? "");
-  const entries = useMemo(() => tab === "sets" ? store.draft.sets : store.draft.items.filter(tab === "gear" ? isGearItem : isConsumableItem), [store.draft, tab]);
+  const entries = useMemo(() => tab === "sets" ? store.draft.sets : itemsForTab(store.draft.items, tab), [store.draft, tab]);
   const selected = entries.find((entry) => entry.id === selectedId) ?? entries[0];
-  const chooseTab = (next: ItemEditorTab) => { setTab(next); const list = next === "sets" ? store.draft.sets : store.draft.items.filter(next === "gear" ? isGearItem : isConsumableItem); setSelectedId(list[0]?.id ?? ""); };
+  const chooseTab = (next: ItemEditorTab) => { setTab(next); const list = next === "sets" ? store.draft.sets : itemsForTab(store.draft.items, next); setSelectedId(list[0]?.id ?? ""); };
   const prepare = () => { const normalized = normalizeItemExchange(store.draft); store.setDraft(normalized); window.localStorage.setItem(ITEM_DRAFT_STORAGE_KEY, JSON.stringify(normalized)); return normalized; };
   const save = async () => { try { const exchange = prepare(); store.setMessage("Writing items to live source..."); await saveLiveCatalog("items", exchange); store.setMessage("Items and sets saved permanently to the live game"); } catch (error) { store.setMessage(error instanceof Error ? error.message : "Items could not be saved to the live game"); } };
   const copy = async () => { try { await copyJson(prepare()); store.setMessage("JSON copied - paste it into Codex for special mechanics"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
-  const add = () => { const entry = tab === "gear" ? blankGear() : tab === "consumables" ? blankConsumable() : blankSet(); if (tab === "sets") store.setDraft((draft) => ({ ...draft, sets: [...draft.sets, entry as GearSetDefinition] })); else store.setDraft((draft) => ({ ...draft, items: [...draft.items, entry as GearItem | ConsumableItem] })); setSelectedId(entry.id); };
+  const add = () => { const entry = tab === "gear" ? blankGear() : tab === "consumables" ? blankConsumable() : tab === "misc" ? blankMiscItem() : blankSet(); if (tab === "sets") store.setDraft((draft) => ({ ...draft, sets: [...draft.sets, entry as GearSetDefinition] })); else store.setDraft((draft) => ({ ...draft, items: [...draft.items, entry as InventoryItem] })); setSelectedId(entry.id); };
   const remove = () => { if (!selected) return; if (tab === "sets") store.setDraft((draft) => ({ ...draft, sets: draft.sets.filter((entry) => entry.id !== selected.id), items: draft.items.map((item) => isGearItem(item) && item.set === selected.id ? { ...item, set: undefined, setName: undefined } : item) })); else store.setDraft((draft) => ({ ...draft, items: draft.items.filter((entry) => entry.id !== selected.id) })); setSelectedId(entries.find((entry) => entry.id !== selected.id)?.id ?? ""); };
   const updateSelected = (change: object) => { if (!selected) return; if (tab === "sets") store.setDraft((draft) => ({ ...draft, sets: draft.sets.map((entry) => entry.id === selected.id ? { ...entry, ...change } : entry) })); else store.setDraft((draft) => ({ ...draft, items: draft.items.map((entry) => entry.id === selected.id ? { ...entry, ...change } as typeof entry : entry) })); };
-  return <EditorShell title="Item Editor" description="Create gear, gear sets and combat consumables. Save writes standard mechanics directly to the live game; special notes are exported for Codex." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-items.json", prepare()); store.setMessage("JSON exported"); }} onExit={onExit}>
-    <div className="item-editor-tabs"><button className={tab === "gear" ? "active" : ""} onClick={() => chooseTab("gear")}><Shield size={14} /> Gear</button><button className={tab === "sets" ? "active" : ""} onClick={() => chooseTab("sets")}><Gem size={14} /> Sets</button><button className={tab === "consumables" ? "active" : ""} onClick={() => chooseTab("consumables")}><FlaskConical size={14} /> Consumables</button></div>
-    <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New {tab === "consumables" ? "consumable" : tab === "sets" ? "set" : "gear"}</button>{entries.map((entry) => <button className={entry.id === selected?.id ? "selected" : ""} key={entry.id} onClick={() => setSelectedId(entry.id)}><strong>{entry.name}</strong><small>{entry.id}</small></button>)}</aside>
-      {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">{tab === "sets" ? "Gear Set" : tab === "consumables" ? "Consumable Item" : "Gear Item"}</p><h2>{selected.name}</h2></div><button type="button" className="danger-icon-button" onClick={remove}><Trash2 size={14} /> Delete</button></div>{tab === "gear" ? <GearFields item={selected as GearItem} sets={store.draft.sets} onChange={updateSelected} /> : tab === "sets" ? <SetFields set={selected as GearSetDefinition} onChange={updateSelected} /> : <ConsumableFields item={selected as ConsumableItem} onChange={updateSelected} />}</section>}
+  return <EditorShell title="Item Editor" description="Create gear, gear sets, combat consumables and other inventory items. Save writes standard mechanics directly to the live game; special notes are exported for Codex." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-items.json", prepare()); store.setMessage("JSON exported"); }} onExit={onExit}>
+    <div className="item-editor-tabs"><button className={tab === "gear" ? "active" : ""} onClick={() => chooseTab("gear")}><Shield size={14} /> Gear</button><button className={tab === "sets" ? "active" : ""} onClick={() => chooseTab("sets")}><Gem size={14} /> Sets</button><button className={tab === "consumables" ? "active" : ""} onClick={() => chooseTab("consumables")}><FlaskConical size={14} /> Consumables</button><button className={tab === "misc" ? "active" : ""} onClick={() => chooseTab("misc")}><Package size={14} /> Other Items</button></div>
+    <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New {tab === "consumables" ? "consumable" : tab === "sets" ? "set" : tab === "misc" ? "item" : "gear"}</button>{entries.map((entry) => <button className={entry.id === selected?.id ? "selected" : ""} key={entry.id} onClick={() => setSelectedId(entry.id)}><strong>{entry.name}</strong><small>{entry.id}</small></button>)}</aside>
+      {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">{tab === "sets" ? "Gear Set" : tab === "consumables" ? "Consumable Item" : tab === "misc" ? "Other Item" : "Gear Item"}</p><h2>{selected.name}</h2></div><button type="button" className="danger-icon-button" onClick={remove}><Trash2 size={14} /> Delete</button></div>{tab === "gear" ? <GearFields item={selected as GearItem} sets={store.draft.sets} onChange={updateSelected} /> : tab === "sets" ? <SetFields set={selected as GearSetDefinition} onChange={updateSelected} /> : tab === "consumables" ? <ConsumableFields item={selected as ConsumableItem} onChange={updateSelected} /> : <MiscItemFields item={selected as MiscItem} onChange={updateSelected} />}</section>}
     </div>
   </EditorShell>;
 }

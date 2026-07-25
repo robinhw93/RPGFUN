@@ -1,9 +1,9 @@
-import { ChevronRight, FlaskConical } from "lucide-react";
+import { ChevronRight, FlaskConical, Package } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { GearSlotIcon } from "../GearSlotIcon";
 import { ITEMS } from "../../game/data";
 import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
-import { getItemGoldCost, getItemSellValue, isConsumableItem } from "../../game/items";
+import { getItemGoldCost, getItemSellValue, isConsumableItem, isMiscItem } from "../../game/items";
 import type { AdventureEventDefinition, AdventureEventRollResult, InventoryItem } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
 import { GoldIcon } from "../../ui/gameUi";
@@ -230,7 +230,7 @@ function MerchantItemCard({ item, meta, buttonLabel, disabled, onAction }: {
   onAction: () => void;
 }) {
   return <article className={`event-merchant-item ${item.rarity}`}>
-    <span className="event-merchant-icon">{isConsumableItem(item) ? <FlaskConical /> : <GearSlotIcon slot={item.slot} item={item} size={30} />}</span>
+    <span className="event-merchant-icon">{isConsumableItem(item) ? <FlaskConical /> : isMiscItem(item) ? <Package /> : <GearSlotIcon slot={item.slot} item={item} size={30} />}</span>
     <small>{meta}</small><strong>{item.name}</strong><p>{item.description}</p>
     <button type="button" disabled={disabled} onClick={onAction}><GoldIcon /> {buttonLabel}</button>
   </article>;

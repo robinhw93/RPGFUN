@@ -365,6 +365,13 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
       return;
     }
 
+    if (item.kind === "misc") {
+      if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Item special effect notes", true);
+      return;
+    }
+
+    if (item.kind !== undefined && item.kind !== "gear") throw new Error(`${item.name} has an invalid item type.`);
+
     if (!gearSlots.has(item.slot)) throw new Error(`${item.name} has an invalid gear slot.`);
     if (item.armorMaterial !== undefined && !armorMaterials.has(item.armorMaterial)) throw new Error(`${item.name} has an invalid armor material.`);
     if (item.weaponEquipType !== undefined && !weaponEquipTypes.has(item.weaponEquipType)) throw new Error(`${item.name} has an invalid weapon grip.`);

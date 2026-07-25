@@ -8,7 +8,7 @@ import { INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
-import { getItemGoldCost, getItemSellValue } from "../src/game/items";
+import { getItemGoldCost, getItemSellValue, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
@@ -60,13 +60,19 @@ function testItemEditorRepairsInternalIds() {
     items: [
       { kind: "gear", id: "", name: "Field Hood", slot: "head", rarity: "common", description: "", stats: {}, set: "field-kit" },
       { kind: "consumable", id: "", name: "Field Tonic", rarity: "common", description: "", effects: [{ type: "heal", amount: 2 }] },
+      { kind: "misc", id: "", name: "Field Token", rarity: "uncommon", description: "A keepsake." },
     ],
   });
   assert.equal(exchange.sets[0].id, "field-kit");
   assert.equal(exchange.items[0].id, "field-hood");
   assert.equal(exchange.items[1].id, "field-tonic");
+  assert.equal(exchange.items[2].id, "field-token");
   assert.equal(exchange.items[0].goldCost, 12, "Old gear drafts must receive a sensible default Gold Cost.");
   assert.equal(exchange.items[1].goldCost, 8, "Old consumable drafts must receive a sensible default Gold Cost.");
+  assert.equal(exchange.items[2].goldCost, 0, "Other items without a configured Gold Cost must remain valueless until priced.");
+  assert.equal(isMiscItem(exchange.items[2]), true, "Other items must retain their non-usable item type.");
+  assert.equal(isGearItem(exchange.items[2]), false, "Other items must never be classified as gear.");
+  assert.equal(isConsumableItem(exchange.items[2]), false, "Other items must never be classified as consumables.");
 }
 
 function testStoryEncounterIntroduction() {

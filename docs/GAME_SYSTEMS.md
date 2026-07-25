@@ -473,8 +473,9 @@ Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mac
 - A compatible equipment slot opens a filtered list of equippable inventory items.
 - Compare shows the equipped and candidate items with green positive and red negative differences.
 - Item and equipment modals lock background scrolling.
-- Inventory can be filtered by gear category and sorted by rarity or name.
+- Inventory can be filtered by item type or gear category and sorted by rarity or name.
 - Every item has an editor-owned Gold Cost used by Wandering Merchants.
+- Ordinary items are carried in Inventory but cannot be equipped or used in combat. They have their own **Other Items** filter and may still be granted, dropped, bought, or sold.
 
 ### Combat consumables
 
@@ -488,7 +489,7 @@ The current set catalog is summarized in [Content reference](CONTENT_REFERENCE.m
 
 ## Loot and gold
 
-Adventure combat rewards always define experience and gold and may additionally award items from two independent sources. Every defeated enemy instance rolls every row in its own drop table, then the current stage rolls every row in its stage drop table once. Each row uses its configured 0–100% chance independently, so a victory can award several items or none. Repeated copies of the same enemy each receive their own rolls. Dropped gear and consumables enter Inventory immediately and are listed individually on the score screen.
+Adventure combat rewards always define experience and gold and may additionally award items from two independent sources. Every defeated enemy instance rolls every row in its own drop table, then the current stage rolls every row in its stage drop table once. Each row uses its configured 0–100% chance independently, so a victory can award several items or none. Repeated copies of the same enemy each receive their own rolls. Dropped gear, consumables, and ordinary items enter Inventory immediately and are listed individually on the score screen.
 
 Gold is stored on the character and displayed in the top bar, reward screens, and Wandering Merchant view. Event outcomes may open a merchant stocked with any live items selected in Event Manager. The merchant's **Buy** tab deducts the item's live Gold Cost and immediately adds one copy to inventory; selected stock is unlimited for that visit. The **Sell** tab lists every item currently in Inventory and removes one copy per sale. Sell value is 25% of the item's Gold Cost, rounded down to whole Gold, with a minimum of 1 Gold for any item whose Gold Cost is above zero. Equipped gear is not part of Inventory and therefore cannot be sold until unequipped.
 
