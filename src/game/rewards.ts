@@ -1,4 +1,4 @@
-import { getAdventureDefinition, getAdventureNode } from "./adventures";
+import { getAdventureDefinition, getAdventureExperienceReward, getAdventureNode } from "./adventures";
 import { ITEMS } from "./data";
 import { addExperience, experienceForLevelGains } from "./progression";
 import type { CombatReward, GameState, InventoryItem, ItemDropDefinition } from "./types";
@@ -45,12 +45,13 @@ export function grantCombatReward(state: GameState, timestamp = Date.now(), rand
     : getAdventureNode(adventure).reward;
   if (!rewardDefinition) return state;
 
-  const experience = addExperience(state.character, rewardDefinition.experience);
+  const experienceReward = getAdventureExperienceReward(rewardDefinition.experience, adventure, state.character.completedAdventureIds);
+  const experience = addExperience(state.character, experienceReward);
   const loot = rollCombatLoot(state, random);
   const reward: CombatReward = {
     id: `combat-reward-${adventure.nodeIndex}-${timestamp}`,
     nodeIndex: adventure.nodeIndex,
-    experience: rewardDefinition.experience,
+    experience: experienceReward,
     gold: rewardDefinition.gold,
     loot,
     levelBefore: experience.levelBefore,

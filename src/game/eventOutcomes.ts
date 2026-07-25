@@ -1,4 +1,5 @@
 import { getDerivedStats } from "./character";
+import { getAdventureExperienceReward } from "./adventures";
 import { ENEMIES, ITEMS } from "./data";
 import { getItemGoldCost, getItemSellValue } from "./items";
 import { addExperience } from "./progression";
@@ -86,7 +87,7 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
         character = { ...character, gold: Math.max(0, character.gold - nonNegativeInteger(effect.amount)) };
         break;
       case "gainExperience":
-        character = addExperience(character, nonNegativeInteger(effect.amount)).character;
+        character = addExperience(character, getAdventureExperienceReward(effect.amount, state.adventure, state.character.completedAdventureIds)).character;
         break;
       case "loseExperience":
         character = { ...character, xp: Math.max(0, character.xp - nonNegativeInteger(effect.amount)) };

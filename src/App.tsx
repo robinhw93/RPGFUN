@@ -10,7 +10,7 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { DevtoolAccessDialog, type DevtoolKind } from "./components/devtools/shared";
-import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getStoryAdventureAvailability, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
+import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -173,7 +173,7 @@ function App() {
   const beginAdventure = (mode: AdventureMode, adventureId = DEFAULT_ADVENTURE_ID) => {
     if (mode === "story") {
       const definition = getAdventureDefinition(adventureId);
-      if (getStoryAdventureAvailability(definition, game.character.completedAdventureIds) !== "available") return;
+      if (!canStartStoryAdventure(definition, game.character.completedAdventureIds)) return;
     }
     const entry = mode === "endless" ? null : selectStageEntry(getAdventureDefinition(adventureId), 0);
     const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;

@@ -3,7 +3,7 @@ import { moveAdventureStage, normalizeAdventureExchange } from "../src/component
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
-import { entryToNode, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
+import { canStartStoryAdventure, entryToNode, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
@@ -93,10 +93,68 @@ function testStoryEncounterIntroduction() {
 function testCompletedAdventureAvailability() {
   const firstAdventure = ADVENTURES[0];
   assert.equal(getStoryAdventureAvailability(firstAdventure, []), "available", "An unfinished adventure without a missing prerequisite must be playable.");
-  assert.equal(getStoryAdventureAvailability(firstAdventure, [firstAdventure.id]), "completed", "A completed adventure must never become replayable.");
+  assert.equal(getStoryAdventureAvailability(firstAdventure, [firstAdventure.id]), "completed", "A finished adventure must retain its Completed presentation state.");
+  assert.equal(canStartStoryAdventure(firstAdventure, [firstAdventure.id]), true, "A completed adventure must remain replayable.");
   const lockedAdventure = { ...firstAdventure, id: "locked-regression-adventure", prerequisiteAdventureId: "required-regression-adventure" };
   assert.equal(getStoryAdventureAvailability(lockedAdventure, []), "locked", "A missing prerequisite must keep an unfinished adventure locked.");
+  assert.equal(canStartStoryAdventure(lockedAdventure, []), false, "A missing prerequisite must still block an adventure start.");
   assert.equal(getStoryAdventureAvailability(lockedAdventure, ["required-regression-adventure"]), "available", "Completing a prerequisite must unlock the next unfinished adventure.");
+}
+
+function testStoryReplayExperienceRewards() {
+  const definition = ADVENTURES[0];
+  const entry = definition.stages[0].entries.find((candidate) => candidate.enemyIds?.length && candidate.reward);
+  assert.ok(entry?.enemyIds?.length && entry.reward, "Replay reward regression requires a rewarded combat entry.");
+
+  const replayCharacter = { ...structuredClone(INITIAL_GAME.character), completedAdventureIds: [definition.id] };
+  const replayCombat = createCombat(replayCharacter, entry.enemyIds);
+  const replayState: GameState = {
+    ...structuredClone(INITIAL_GAME),
+    characterCreated: true,
+    character: replayCharacter,
+    adventure: {
+      ...structuredClone(INITIAL_GAME.adventure),
+      mode: "story",
+      adventureId: definition.id,
+      active: true,
+      nodeIndex: 0,
+      stageEntryId: entry.id,
+      combat: { ...replayCombat, outcome: "victory" },
+    },
+  };
+  const replayRewarded = grantCombatReward(replayState, 1, () => 1);
+  const expectedReplayXp = Math.floor(entry.reward.experience * 0.1);
+  assert.equal(replayRewarded.adventure.pendingReward?.experience, expectedReplayXp, "Replay combat rewards must display 10% of their original experience.");
+  assert.equal(replayRewarded.character.xp, expectedReplayXp, "Replay combat rewards must grant exactly the reduced experience.");
+
+  const firstRunCharacter = structuredClone(INITIAL_GAME.character);
+  const firstRunCombat = createCombat(firstRunCharacter, entry.enemyIds);
+  const firstRunRewarded = grantCombatReward({
+    ...replayState,
+    character: firstRunCharacter,
+    adventure: { ...replayState.adventure, combat: { ...firstRunCombat, outcome: "victory" } },
+  }, 2, () => 1);
+  assert.equal(firstRunRewarded.adventure.pendingReward?.experience, entry.reward.experience, "A first story completion must retain its full experience reward.");
+
+  const replayEventState: GameState = {
+    ...structuredClone(INITIAL_GAME),
+    characterCreated: true,
+    character: replayCharacter,
+    adventure: { ...structuredClone(INITIAL_GAME.adventure), mode: "story", adventureId: definition.id, active: true },
+  };
+  const replayEventChoice: AdventureEventChoice = {
+    id: "replay-experience",
+    label: "Accept the lesson",
+    description: "You listen carefully.",
+    resolution: "direct",
+    stat: "intelligence",
+    threshold: 1,
+    success: { text: "You learn from the path.", effects: [] },
+    failure: { text: "Unused.", effects: [] },
+    outcome: { text: "You learn from the path.", effects: [{ type: "gainExperience", amount: 53 }] },
+  };
+  const replayEventRewarded = resolveAdventureEventChoice(replayEventState, replayEventChoice);
+  assert.equal(replayEventRewarded.character.xp, 5, "Positive event experience must use the same 10% replay rule and round down.");
 }
 
 function testOpposedHitAndDodge() {
@@ -360,6 +418,7 @@ function testIndependentItemDrops() {
 testContentIntegrity();
 testStoryEncounterIntroduction();
 testCompletedAdventureAvailability();
+testStoryReplayExperienceRewards();
 testOpposedHitAndDodge();
 testStatusAdjustedCombatStats();
 testAdventureEditorRepairsInternalIds();

@@ -8,11 +8,22 @@ export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefi
 }
 
 export type StoryAdventureAvailability = "available" | "locked" | "completed";
+export const STORY_REPLAY_EXPERIENCE_MULTIPLIER = 0.1;
 
 export function getStoryAdventureAvailability(adventure: AdventureDefinition, completedAdventureIds: string[]): StoryAdventureAvailability {
   if (completedAdventureIds.includes(adventure.id)) return "completed";
   if (adventure.prerequisiteAdventureId && !completedAdventureIds.includes(adventure.prerequisiteAdventureId)) return "locked";
   return "available";
+}
+
+export function canStartStoryAdventure(adventure: AdventureDefinition, completedAdventureIds: string[]): boolean {
+  return getStoryAdventureAvailability(adventure, completedAdventureIds) !== "locked";
+}
+
+export function getAdventureExperienceReward(amount: number, progress: Pick<AdventureProgress, "mode" | "adventureId">, completedAdventureIds: string[]): number {
+  const experience = Math.max(0, Math.round(Number.isFinite(amount) ? amount : 0));
+  const replayingCompletedStory = progress.mode === "story" && completedAdventureIds.includes(progress.adventureId);
+  return replayingCompletedStory ? Math.floor(experience * STORY_REPLAY_EXPERIENCE_MULTIPLIER) : experience;
 }
 export function selectStageEntry(adventure: AdventureDefinition, stageIndex: number, random = Math.random): AdventureStageEntry {
   const stage = adventure.stages[stageIndex];
