@@ -489,7 +489,7 @@ The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No l
 
 ### Consumables
 
-Consumables use one inventory slot per copy and can be queued from the combat Inventory button without ending the player's turn. Their current acquisition sources are unassigned; Event Manager can grant any live item.
+Consumables use one inventory slot per copy and can be queued from the **Inventory** button during combat without ending the player's turn. Their current acquisition sources are unassigned; Event Manager can grant any live item.
 
 | Item | Rarity | Gold Cost | Effects |
 | --- | --- | ---: | --- |

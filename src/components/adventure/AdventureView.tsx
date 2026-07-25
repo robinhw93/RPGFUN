@@ -486,7 +486,7 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
   return (
     <div className="combat-inventory-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="combat-inventory-dialog" role="dialog" aria-modal="true" aria-labelledby="combat-inventory-title">
-        <header><div className="combat-inventory-heading"><h2 id="combat-inventory-title">Combat Inventory</h2><span className="combat-inventory-gold"><GoldIcon /> {gold} Gold</span></div><button type="button" onClick={onClose} aria-label="Close inventory">×</button></header>
+        <header><div className="combat-inventory-heading"><h2 id="combat-inventory-title">Inventory</h2><span className="combat-inventory-gold"><GoldIcon /> {gold} Gold</span></div><button type="button" onClick={onClose} aria-label="Close inventory">×</button></header>
         <div className="combat-inventory-list">
           {uniqueItems.length === 0 && <div className="combat-inventory-empty"><FlaskConical /><strong>No consumables</strong><p>Your inventory contains no items that can be used in combat.</p></div>}
           {uniqueItems.map((item) => {
