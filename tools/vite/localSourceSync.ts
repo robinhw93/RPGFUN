@@ -322,7 +322,7 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>, ad
   assertUniqueIds([...itemIds, ...setIds], "Item and set");
   const knownSets = new Set(setIds);
   const knownItems = new Set(itemIds);
-  const townVendors = new Set(["blacksmith", "alchemist"]);
+  const townVendors = new Set(["blacksmith", "alchemist", "tailor", "leatherworker", "jeweler"]);
   const validateAdventureRequirement = (value: unknown, label: string) => {
     if (value === undefined || value === null) return;
     const adventureId = catalogId(value, label);

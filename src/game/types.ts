@@ -609,7 +609,7 @@ export interface Talent {
   };
 }
 
-export type ArkenfallVendorId = "blacksmith" | "alchemist";
+export type ArkenfallVendorId = "blacksmith" | "alchemist" | "tailor" | "leatherworker" | "jeweler";
 
 export interface ItemCraftingIngredient {
   itemId: string;

@@ -1,4 +1,4 @@
-import { ArrowLeft, BedDouble, Check, Crosshair, Dumbbell, FlaskConical, Hammer, HeartPulse, Package, ShoppingBag, Sparkles, Utensils, X } from "lucide-react";
+import { ArrowLeft, BedDouble, Check, Crosshair, Dumbbell, FlaskConical, Gem, Hammer, HeartPulse, Package, Scissors, Shield, ShoppingBag, Sparkles, Utensils, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
 import { ITEMS } from "../../game/data";
@@ -9,8 +9,72 @@ import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTave
 import type { ArkenfallVendorId, GameState, InventoryItem } from "../../game/types";
 import { formatItemStatValue, getItemNameClass, getItemStatLines, GoldIcon } from "../../ui/gameUi";
 
-type TownLocation = "square" | "blacksmith" | "alchemist" | "tavern";
+type TownLocation = "square" | "tavern" | ArkenfallVendorId;
 type VendorTab = "shop" | "craft";
+
+const VENDOR_PRESENTATION: Record<ArkenfallVendorId, {
+  profession: string;
+  name: string;
+  quote: string;
+  destinationEyebrow: string;
+  destinationDescription: string;
+  craftLabel: string;
+  emptyCraftTitle: string;
+}> = {
+  blacksmith: {
+    profession: "Blacksmith",
+    name: "Brunhilde von Trott",
+    quote: "“Good steel remembers the hands that shaped it.”",
+    destinationEyebrow: "Forge and Armory",
+    destinationDescription: "Buy equipment or turn hard-won materials into arms and armor.",
+    craftLabel: "Crafting",
+    emptyCraftTitle: "No designs to craft yet",
+  },
+  alchemist: {
+    profession: "Alchemist",
+    name: "Ray Charlston",
+    quote: "“Every remedy begins with the right ingredients.”",
+    destinationEyebrow: "Tonics and Remedies",
+    destinationDescription: "Shop for alchemical supplies or brew potions from gathered ingredients.",
+    craftLabel: "Brew",
+    emptyCraftTitle: "No recipes to brew yet",
+  },
+  tailor: {
+    profession: "Tailor",
+    name: "Mirelle Threadgold",
+    quote: "“A proper cut can turn cloth into confidence.”",
+    destinationEyebrow: "Cloth and Finery",
+    destinationDescription: "Browse fine garments or stitch gathered fabrics into new equipment.",
+    craftLabel: "Tailoring",
+    emptyCraftTitle: "No patterns to tailor yet",
+  },
+  leatherworker: {
+    profession: "Leatherworker",
+    name: "Torren Hidehand",
+    quote: "“Good leather bends when you need it and holds when you don't.”",
+    destinationEyebrow: "Hides and Leather",
+    destinationDescription: "Buy rugged gear or shape hides into flexible armor and fieldwear.",
+    craftLabel: "Leatherworking",
+    emptyCraftTitle: "No patterns to work yet",
+  },
+  jeweler: {
+    profession: "Jeweler",
+    name: "Celestine Veyra",
+    quote: "“Every stone hides a light. My work is to reveal it.”",
+    destinationEyebrow: "Gems and Adornments",
+    destinationDescription: "Purchase precious pieces or craft gems and metals into enchanted jewelry.",
+    craftLabel: "Jewelcrafting",
+    emptyCraftTitle: "No designs to jewelcraft yet",
+  },
+};
+
+function VendorIcon({ vendor }: { vendor: ArkenfallVendorId }) {
+  if (vendor === "alchemist") return <FlaskConical />;
+  if (vendor === "tailor") return <Scissors />;
+  if (vendor === "leatherworker") return <Shield />;
+  if (vendor === "jeweler") return <Gem />;
+  return <Hammer />;
+}
 
 const ITEM_BY_ID = new Map(ITEMS.map((item) => [item.id, item]));
 
@@ -86,7 +150,7 @@ function VendorItemCard({ item, mode, game, station, actionItemId, onInspect, on
         return <span className={owned >= ingredient.quantity ? "ready" : "missing"} key={ingredient.itemId}>{material ? <em className={getItemNameClass(material)}>{material.name}</em> : ingredient.itemId} <strong>{owned}/{ingredient.quantity}</strong></span>;
       })}</div>}
       <button type="button" className="town-item-action" disabled={mode === "shop" ? !affordable : !craftable} onClick={onAction}>
-        {mode === "shop" ? <><ShoppingBag /> Buy <span><GoldIcon /> {getItemGoldCost(item)}</span></> : station === "alchemist" ? <><FlaskConical /> Brew</> : <><Hammer /> Craft</>}
+        {mode === "shop" ? <><ShoppingBag /> Buy <span><GoldIcon /> {getItemGoldCost(item)}</span></> : <><VendorIcon vendor={station} /> {VENDOR_PRESENTATION[station].craftLabel}</>}
       </button>
       {actionItemId === item.id && <span className="town-item-acquired-mark" aria-hidden="true"><span className="town-purchase-seal"><Check /></span><i /><i /><i /><i /></span>}
     </article>
@@ -106,7 +170,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   const [actionItemId, setActionItemId] = useState<string | null>(null);
   const { toast: purchaseToast, showToast: showPurchaseToast } = useTownToast<InventoryItem>();
   const stock = useMemo(() => tab === "shop" ? getTownVendorStock(vendor, game.character.completedAdventureIds) : getTownCraftingCatalog(vendor, game.character.completedAdventureIds), [game.character.completedAdventureIds, tab, vendor]);
-  const isAlchemist = vendor === "alchemist";
+  const presentation = VENDOR_PRESENTATION[vendor];
   const runAction = (item: InventoryItem) => {
     const result = tab === "shop" ? onBuy(vendor, item.id) : onCraft(vendor, item.id);
     if (tab === "shop" && result.success && result.item) {
@@ -127,16 +191,16 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
       {purchaseToast && <div key={purchaseToast.id} className="town-action-toast" role="status" aria-live="polite"><strong className={getItemNameClass(purchaseToast.value)}>{purchaseToast.value.name}</strong> added to inventory.</div>}
       <header className="town-location-header">
         <button type="button" className="town-back-button" onClick={onBack}><ArrowLeft /> Arkenfall</button>
-        <div><p className="eyebrow">{isAlchemist ? "Alchemist" : "Blacksmith"}</p><h1>{isAlchemist ? "Ray Charlston" : "Brunhilde von Trott"}</h1><p>{isAlchemist ? "“Every remedy begins with the right ingredients.”" : "“Good steel remembers the hands that shaped it.”"}</p></div>
+        <div><p className="eyebrow">{presentation.profession}</p><h1>{presentation.name}</h1><p>{presentation.quote}</p></div>
         <span className="town-gold"><GoldIcon /> {game.character.gold}</span>
       </header>
       <div className="town-vendor-panel">
-        <nav className="town-vendor-tabs" aria-label={`${isAlchemist ? "Alchemist" : "Blacksmith"} services`}>
+        <nav className="town-vendor-tabs" aria-label={`${presentation.profession} services`}>
           <button type="button" className={tab === "shop" ? "active" : ""} onClick={() => { setTab("shop"); setFeedback(null); }}><ShoppingBag /> Shop</button>
-          <button type="button" className={tab === "craft" ? "active" : ""} onClick={() => { setTab("craft"); setFeedback(null); }}>{isAlchemist ? <FlaskConical /> : <Hammer />} {isAlchemist ? "Brew" : "Crafting"}</button>
+          <button type="button" className={tab === "craft" ? "active" : ""} onClick={() => { setTab("craft"); setFeedback(null); }}><VendorIcon vendor={vendor} /> {presentation.craftLabel}</button>
         </nav>
         {feedback && <div className="town-feedback" role="status">{feedback}</div>}
-        {stock.length > 0 ? <div className="town-item-grid">{stock.map((item) => <VendorItemCard key={item.id} item={item} mode={tab} game={game} station={vendor} actionItemId={actionItemId} onInspect={() => setInspected(item)} onAction={() => runAction(item)} />)}</div> : <div className="town-empty-stock"><Package /><h2>{tab === "shop" ? "Nothing on the shelves yet" : isAlchemist ? "No recipes to brew yet" : "No designs to craft yet"}</h2><p>Items assigned here in the Item Editor will appear automatically.</p></div>}
+        {stock.length > 0 ? <div className="town-item-grid">{stock.map((item) => <VendorItemCard key={item.id} item={item} mode={tab} game={game} station={vendor} actionItemId={actionItemId} onInspect={() => setInspected(item)} onAction={() => runAction(item)} />)}</div> : <div className="town-empty-stock"><Package /><h2>{tab === "shop" ? "Nothing on the shelves yet" : presentation.emptyCraftTitle}</h2><p>Items assigned here in the Item Editor will appear automatically.</p></div>}
       </div>
       {inspected && <TownItemDetails item={inspected} onClose={() => setInspected(null)} />}
     </section>
@@ -160,7 +224,7 @@ export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location]);
-  if (location === "blacksmith" || location === "alchemist") return <VendorView vendor={location} game={game} onBack={() => setLocation("square")} onBuy={onBuy} onCraft={onCraft} />;
+  if (location !== "square" && location !== "tavern") return <VendorView vendor={location} game={game} onBack={() => setLocation("square")} onBuy={onBuy} onCraft={onCraft} />;
   if (location === "tavern") return (
     <section className="town-location town-tavern">
       <div className="town-hearth-glow" aria-hidden="true" />
@@ -183,10 +247,12 @@ export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }
   return (
     <section className="town-location town-square">
       <div className="town-square-light" aria-hidden="true" />
-      <header className="town-square-header"><button type="button" className="town-back-button" onClick={onExit}><ArrowLeft /> Adventures</button><p className="eyebrow">Safe Haven</p><h1>Arkenfall</h1><p>Forge steel, replenish your supplies, and rest before the road calls again.</p><div className="town-square-resources"><span><GoldIcon /> {game.character.gold} Gold</span><span><HeartPulse /> {currentHp} / {maxHp} Health</span></div></header>
+      <header className="town-square-header"><button type="button" className="town-back-button" onClick={onExit}><ArrowLeft /> Adventures</button><p className="eyebrow">Safe Haven</p><h1>Arkenfall</h1><p>Trade, craft, replenish your supplies, and rest before the road calls again.</p><div className="town-square-resources"><span><GoldIcon /> {game.character.gold} Gold</span><span><HeartPulse /> {currentHp} / {maxHp} Health</span></div></header>
       <div className="town-destination-grid">
-        <button type="button" className="town-destination blacksmith" onClick={() => setLocation("blacksmith")}><span><Hammer /></span><div><p className="eyebrow">Forge and Armory</p><h2>Brunhilde von Trott</h2><p>Buy equipment or turn hard-won materials into arms and armor.</p></div><Sparkles /></button>
-        <button type="button" className="town-destination alchemist" onClick={() => setLocation("alchemist")}><span><FlaskConical /></span><div><p className="eyebrow">Tonics and Remedies</p><h2>Ray Charlston</h2><p>Shop for alchemical supplies or brew potions from gathered ingredients.</p></div><Sparkles /></button>
+        {(["blacksmith", "alchemist", "tailor", "leatherworker", "jeweler"] as ArkenfallVendorId[]).map((vendor) => {
+          const presentation = VENDOR_PRESENTATION[vendor];
+          return <button type="button" className={`town-destination ${vendor}`} onClick={() => setLocation(vendor)} key={vendor}><span><VendorIcon vendor={vendor} /></span><div><p className="eyebrow">{presentation.destinationEyebrow}</p><h2>{presentation.name}</h2><p>{presentation.destinationDescription}</p></div><Sparkles /></button>;
+        })}
         <button type="button" className="town-destination tavern" onClick={() => setLocation("tavern")}><span><BedDouble /></span><div><p className="eyebrow">Tavern and Inn</p><h2>The Resting Hart</h2><p>Recover all Health before setting out on another adventure.</p></div><Sparkles /></button>
       </div>
     </section>

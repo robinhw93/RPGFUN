@@ -26,6 +26,9 @@ const PASSIVE_FIELDS: Array<{ id: keyof PassiveBonuses; label: string; percent?:
 const ARKENFALL_VENDORS: Array<{ id: ArkenfallVendorId; shop: string; crafting: string }> = [
   { id: "blacksmith", shop: "Blacksmith — Brunhilde von Trott", crafting: "Blacksmith — Crafting" },
   { id: "alchemist", shop: "Alchemist — Ray Charlston", crafting: "Alchemist — Brew" },
+  { id: "tailor", shop: "Tailor — Mirelle Threadgold", crafting: "Tailor — Tailoring" },
+  { id: "leatherworker", shop: "Leatherworker — Torren Hidehand", crafting: "Leatherworker — Leatherworking" },
+  { id: "jeweler", shop: "Jeweler — Celestine Veyra", crafting: "Jeweler — Jewelcrafting" },
 ];
 
 export function canonicalItemExchange(): ItemExchange {

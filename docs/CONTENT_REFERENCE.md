@@ -448,12 +448,15 @@ The Forest Spirit always enters with two Forest Wisps and restores 25% of maximu
 
 ## Arkenfall Town
 
-The town hub is listed above adventures and contains three illustrated destinations:
+The town hub is listed above adventures and contains six illustrated destinations:
 
 | Destination | Services | Live default catalog |
 | --- | --- | --- |
 | Blacksmith — Brunhilde von Trott | Repeatable Shop purchases and material-based Crafting. | All legacy gear is sold here. Windsong Staff requires 2 Wisp Essence and 1 Fur; Windsong Sword requires 2 Bear Claws and 1 Fur; Windsong Dagger requires 2 Wolf Fangs and 1 Fur. |
 | Alchemist — Ray Charlston | Repeatable Shop purchases and potion Brewing. | All legacy consumables are sold here. Minor Healing Potion requires 2 Small Bloodberries and 1 Yumberries. |
+| Tailor — Mirelle Threadgold | Repeatable Shop purchases and material-based Tailoring. | Populated through Item Editor vendor and recipe assignments. |
+| Leatherworker — Torren Hidehand | Repeatable Shop purchases and material-based Leatherworking. | Populated through Item Editor vendor and recipe assignments. |
+| Jeweler — Celestine Veyra | Repeatable Shop purchases and material-based Jewelcrafting. | Populated through Item Editor vendor and recipe assignments. |
 | The Resting Hart | Paid full recovery and next-combat meals. | Rest costs 1 Gold per 3 missing Health, rounded up. Ironpot Stew costs 5 Gold and grants Strengthened; Peppercrust Boar costs 8 Gold and grants Fierce; Hartroot Broth costs 10 Gold and grants Regenerate. Each meal benefit is applied when the next combat begins and may be prepared once at a time. |
 
 These legacy defaults keep the original item catalog usable after the hub update. Item Editor writes an explicit vendor or no-vendor value and an explicit recipe or non-craftable value for later edits, so future stock is fully data-driven. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab.

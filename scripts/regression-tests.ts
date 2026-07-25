@@ -120,7 +120,7 @@ function testItemEditorRepairsInternalIds() {
     items: [
       { kind: "gear", id: "", name: "Field Hood", slot: "head", rarity: "common", description: "", stats: {}, set: "field-kit" },
       { kind: "consumable", id: "", name: "Field Tonic", rarity: "common", description: "", iconUrl: "/assets/items/minor-healing-potion.webp", effects: [{ type: "heal", amount: 2 }] },
-      { kind: "misc", id: "", name: "Field Token", rarity: "uncommon", description: "A keepsake.", iconUrl: "/assets/items/wisp-essence.webp", arkenfallVendor: "blacksmith", vendorPrerequisiteAdventureId: ADVENTURES[0].id, craftingRecipe: { station: "blacksmith", ingredients: [{ itemId: "field-tonic", quantity: 1 }], prerequisiteAdventureId: ADVENTURES[0].id } },
+      { kind: "misc", id: "", name: "Field Token", rarity: "uncommon", description: "A keepsake.", iconUrl: "/assets/items/wisp-essence.webp", arkenfallVendor: "jeweler", vendorPrerequisiteAdventureId: ADVENTURES[0].id, craftingRecipe: { station: "jeweler", ingredients: [{ itemId: "field-tonic", quantity: 1 }], prerequisiteAdventureId: ADVENTURES[0].id } },
       { kind: "gear", id: "", name: "Legendary Crown", slot: "head", rarity: "legendary", description: "A relic.", stats: {} },
     ],
   });
@@ -136,6 +136,8 @@ function testItemEditorRepairsInternalIds() {
   assert.equal(exchange.items[3].rarity, "legendary", "The Item Editor must preserve Legendary as a live rarity.");
   assert.equal(exchange.items[1].iconUrl, "/assets/items/minor-healing-potion.webp", "Consumable artwork selections must survive Item Editor normalization.");
   assert.equal(exchange.items[2].iconUrl, "/assets/items/wisp-essence.webp", "Other Item artwork selections must survive Item Editor normalization.");
+  assert.equal(exchange.items[2].arkenfallVendor, "jeweler", "New town vendor assignments must survive Item Editor normalization.");
+  assert.equal(exchange.items[2].craftingRecipe?.station, "jeweler", "New crafting-station assignments must survive Item Editor normalization.");
   assert.equal(exchange.items[2].vendorPrerequisiteAdventureId, ADVENTURES[0].id, "Shop adventure requirements must survive Item Editor normalization.");
   assert.equal(exchange.items[2].craftingRecipe?.prerequisiteAdventureId, ADVENTURES[0].id, "Recipe adventure requirements must survive Item Editor normalization.");
   assert.equal(isMiscItem(exchange.items[2]), true, "Other items must retain their non-usable item type.");
@@ -152,16 +154,20 @@ function testTownAdventureRequirements() {
     name: "Gated Item",
     rarity: "common",
     description: "",
-    arkenfallVendor: "blacksmith",
+    arkenfallVendor: "leatherworker",
     vendorPrerequisiteAdventureId: prerequisiteAdventureId,
-    craftingRecipe: { station: "blacksmith", ingredients: [{ itemId: material.id, quantity: 1 }], prerequisiteAdventureId },
+    craftingRecipe: { station: "leatherworker", ingredients: [{ itemId: material.id, quantity: 1 }], prerequisiteAdventureId },
   };
   assert.equal(isTownVendorItemUnlocked(gatedItem, []), false, "A gated shop item must stay hidden before its adventure is completed.");
   assert.equal(isTownVendorItemUnlocked(gatedItem, [prerequisiteAdventureId]), true, "Completing the required adventure must reveal a gated shop item.");
   assert.equal(isTownCraftingRecipeUnlocked(gatedItem, []), false, "A gated recipe must stay hidden before its adventure is completed.");
   assert.equal(isTownCraftingRecipeUnlocked(gatedItem, [prerequisiteAdventureId]), true, "Completing the required adventure must reveal a gated recipe.");
-  assert.equal(canCraftTownItem([material], gatedItem, "blacksmith", []), false, "Materials alone must not bypass a recipe's adventure requirement.");
-  assert.equal(canCraftTownItem([material], gatedItem, "blacksmith", [prerequisiteAdventureId]), true, "A completed requirement plus all materials must enable crafting.");
+  assert.equal(canCraftTownItem([material], gatedItem, "leatherworker", []), false, "Materials alone must not bypass a recipe's adventure requirement.");
+  assert.equal(canCraftTownItem([material], gatedItem, "leatherworker", [prerequisiteAdventureId]), true, "A completed requirement plus all materials must enable crafting.");
+  (["tailor", "leatherworker", "jeweler"] as const).forEach((vendor) => {
+    assert.ok(Array.isArray(getTownVendorStock(vendor)), `${vendor} must be a valid live town vendor.`);
+    assert.ok(Array.isArray(getTownCraftingCatalog(vendor)), `${vendor} must be a valid live crafting station.`);
+  });
 }
 
 function testArkenfallTownCommerceAndCrafting() {
