@@ -6,6 +6,14 @@ export const DEFAULT_ADVENTURE_ID = "windsong-forest";
 export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefinition {
   return ADVENTURES.find((adventure) => adventure.id === id) ?? ADVENTURES[0];
 }
+
+export type StoryAdventureAvailability = "available" | "locked" | "completed";
+
+export function getStoryAdventureAvailability(adventure: AdventureDefinition, completedAdventureIds: string[]): StoryAdventureAvailability {
+  if (completedAdventureIds.includes(adventure.id)) return "completed";
+  if (adventure.prerequisiteAdventureId && !completedAdventureIds.includes(adventure.prerequisiteAdventureId)) return "locked";
+  return "available";
+}
 export function selectStageEntry(adventure: AdventureDefinition, stageIndex: number, random = Math.random): AdventureStageEntry {
   const stage = adventure.stages[stageIndex];
   if (!stage || stage.entries.length === 0) throw new Error(`Adventure stage ${stageIndex + 1} has no entries.`);

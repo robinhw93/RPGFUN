@@ -151,7 +151,9 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/components/FloatingCombatText.tsx` | Timed floating-message presentation. |
 | `src/components/GameConfirmDialog.tsx` | Game-owned destructive-action confirmation. |
 | `src/components/GearSlotIcon.tsx` | Resolves equipment-category image assets. |
-| `public/assets/` | Avatars and stat, attribute, gear, and gold images. |
+| `src/components/ItemIcon.tsx` | Resolves per-item artwork with safe category fallbacks. |
+| `src/game/itemIcons.ts` | Stable live item-ID to generated artwork mapping. |
+| `public/assets/` | Avatars and stat, attribute, gear, item, and gold images. |
 
 See [Architecture](../ARCHITECTURE.md) for ownership and sequencing rules.
 
@@ -466,3 +468,5 @@ For gear changes, verify:
 - Rarity colors, alphabetical stats, set thresholds, and comparison differences.
 - Background scroll lock in all item and slot modals.
 - Merchant and score-screen read-only gear inspection, merchant purchase/sold-out animation, grouped duplicate loot, and the event Inventory/Equipment shortcut at mobile and desktop widths.
+- Per-item artwork consistency across Inventory, equipment slots, details/comparison, combat Inventory, merchants, and score-screen loot.
+- Completed adventures remain listed with the green Completed treatment and are rejected by both their disabled control and the application start boundary.

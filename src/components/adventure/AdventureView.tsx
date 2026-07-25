@@ -1,10 +1,10 @@
 import {
   BookOpen,
+  CircleCheckBig,
   ChevronRight, CircleDot,
   Droplets,
   Flame, FlaskConical, Footprints, Gem,
   Heart, HeartPulse,
-  Package,
   Skull,
   Sparkles,
   Swords,
@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { FloatingCombatText } from "../../components/FloatingCombatText";
-import { GearSlotIcon } from "../../components/GearSlotIcon";
+import { ItemIcon } from "../../components/ItemIcon";
 import { ItemDetailModal } from "../../components/character/CharacterView";
-import { getAdventureDefinition, getAdventureNode } from "../../game/adventures";
+import { getAdventureDefinition, getAdventureNode, getStoryAdventureAvailability } from "../../game/adventures";
 import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { getStatusAdjustedCombatStats } from "../../game/combatStats";
@@ -39,7 +39,7 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onLeaveTraining, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
@@ -56,6 +56,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   onInitiativeComplete: () => void;
   onContinue: () => void;
   onLeaveTraining: () => void;
+  onReturnToAdventures: () => void;
   onEvent: (choiceId: string) => void;
   onMerchantPurchase: (itemId: string) => void;
   onMerchantSell: (itemId: string) => void;
@@ -115,7 +116,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
         <div className="reward-strip">
           <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
         </div>
-        <button className="primary-button" onClick={() => onBegin("story", completedAdventure.id)}>Venture Forth Again <ChevronRight size={17} /></button>
+        <button className="primary-button" onClick={onReturnToAdventures}>Return to Adventures <ChevronRight size={17} /></button>
         <button className="text-button" onClick={() => onBegin("endless")}>Enter Shadow Proving Grounds</button>
         <button className="text-button" onClick={onTalents}>Spend talent points</button>
       </section>
@@ -124,19 +125,23 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
 
   if (!adventure.active) {
     const featuredAdventure = ADVENTURES[0];
-    const locked = Boolean(featuredAdventure.prerequisiteAdventureId && !game.character.completedAdventureIds.includes(featuredAdventure.prerequisiteAdventureId));
+    const featuredAvailability = getStoryAdventureAvailability(featuredAdventure, game.character.completedAdventureIds);
     return (
       <section className="page adventure-home">
-        <div className="hero-card">
+        <div className={`hero-card ${featuredAvailability === "completed" ? "completed" : ""}`}>
           <div className="hero-copy">
-            <p className="eyebrow">Available Adventure</p>
+            {featuredAvailability === "completed" && <div className="adventure-completed-mark"><CircleCheckBig /><strong>Completed</strong></div>}
+            <p className="eyebrow">{featuredAvailability === "completed" ? "Completed Adventure" : "Available Adventure"}</p>
             <h1>{featuredAdventure.name}</h1>
             <p>{featuredAdventure.description}</p>
             <div className="adventure-tags"><span>Recommended Level {featuredAdventure.recommendedLevel}</span><span>{featuredAdventure.stages.length} Stages</span><span>Dynamic Encounters</span></div>
-            <button className="primary-button" disabled={locked} onClick={() => onBegin("story", featuredAdventure.id)}>{locked ? "Locked" : "Begin Journey"} <ChevronRight size={18} /></button>
+            <button className="primary-button" disabled={featuredAvailability !== "available"} onClick={() => onBegin("story", featuredAdventure.id)}>{featuredAvailability === "completed" ? <><CircleCheckBig size={18} /> Completed</> : featuredAvailability === "locked" ? "Locked" : <>Begin Journey <ChevronRight size={18} /></>}</button>
           </div>
         </div>
-        {ADVENTURES.length > 1 && <div className="story-adventure-list">{ADVENTURES.slice(1).map((definition) => { const prerequisiteMet = !definition.prerequisiteAdventureId || game.character.completedAdventureIds.includes(definition.prerequisiteAdventureId); return <article key={definition.id}><div><p className="eyebrow">Story Adventure</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{definition.prerequisiteAdventureId && <span>{prerequisiteMet ? "Unlocked" : `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}`}</span>}</div></div><button className="secondary-button" disabled={!prerequisiteMet} onClick={() => onBegin("story", definition.id)}>{prerequisiteMet ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button></article>; })}</div>}
+        {ADVENTURES.length > 1 && <div className="story-adventure-list">{ADVENTURES.slice(1).map((definition) => {
+          const availability = getStoryAdventureAvailability(definition, game.character.completedAdventureIds);
+          return <article className={availability === "completed" ? "completed" : ""} key={definition.id}><div><p className="eyebrow">{availability === "completed" ? "Completed Adventure" : "Story Adventure"}</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{definition.prerequisiteAdventureId && <span>{availability === "locked" ? `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}` : "Unlocked"}</span>}</div></div>{availability === "completed" ? <div className="story-adventure-completed"><CircleCheckBig /><strong>Completed</strong></div> : <button className="secondary-button" disabled={availability === "locked"} onClick={() => onBegin("story", definition.id)}>{availability === "available" ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button>}</article>;
+        })}</div>}
         <div className="training-adventure-card">
           <div>
             <p className="eyebrow">Testing Adventure</p>
@@ -509,7 +514,7 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
             const targetUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "target") && !selectedTargetAvailable;
             const groupUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "all_enemies") && !visibleEnemyAvailable;
             const unavailable = targetUnavailable || groupUnavailable;
-            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><FlaskConical /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{unavailable && <em>No valid enemy target.</em>}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
+            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><ItemIcon item={item} size={42} /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{unavailable && <em>No valid enemy target.</em>}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
           })}
         </div>
       </section>
@@ -600,7 +605,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
           <p className="eyebrow">Items Found</p>
           {groupedLoot.map(({ item, count }) => {
             const content = <>
-              <span className="score-loot-glyph">{isConsumableItem(item) ? <FlaskConical size={22} /> : isMiscItem(item) ? <Package size={22} /> : <GearSlotIcon slot={item.slot} item={item} size={24} />}</span>
+              <span className="score-loot-glyph"><ItemIcon item={item} size={40} /></span>
               <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
             </>;
             return isGearItem(item)

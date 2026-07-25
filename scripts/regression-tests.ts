@@ -3,13 +3,14 @@ import { moveAdventureStage, normalizeAdventureExchange } from "../src/component
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
-import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
+import { entryToNode, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
+import { ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
@@ -28,6 +29,7 @@ function testContentIntegrity() {
   });
   assert.equal(new Set([...ITEMS.map((item) => item.id), ...GEAR_SETS.map((set) => set.id)]).size, ITEMS.length + GEAR_SETS.length, "Item and gear-set IDs must be unique.");
   ITEMS.forEach((item) => assert.ok(typeof item.goldCost === "number" && item.goldCost >= 0, `${item.name} needs a non-negative Gold Cost.`));
+  ITEMS.forEach((item) => assert.ok(ITEM_ICON_URLS[item.id], `${item.name} needs a generated inventory icon.`));
   const itemIds = new Set(ITEMS.map((item) => item.id));
   Object.values(ENEMIES).forEach((enemy) => (enemy.dropTable ?? []).forEach((drop) => {
     assert.ok(itemIds.has(drop.itemId), `${enemy.name} references missing drop item ${drop.itemId}.`);
@@ -82,6 +84,15 @@ function testStoryEncounterIntroduction() {
   assert.equal(getStoryNodeIntroduction(node, "Generated enemy wording."), entry.description, "A story combat must introduce the editor-authored entry description.");
   assert.equal(getStoryNodeIntroduction({ ...node, description: "" }, "Generated enemy wording."), "Generated enemy wording.", "An empty combat description must retain a readable fallback.");
   assert.equal(getStoryNodeIntroduction({ ...node, type: "event", enemies: undefined }, "Generated event wording."), "", "Events must not use the travel transition's generic discovery announcement.");
+}
+
+function testCompletedAdventureAvailability() {
+  const firstAdventure = ADVENTURES[0];
+  assert.equal(getStoryAdventureAvailability(firstAdventure, []), "available", "An unfinished adventure without a missing prerequisite must be playable.");
+  assert.equal(getStoryAdventureAvailability(firstAdventure, [firstAdventure.id]), "completed", "A completed adventure must never become replayable.");
+  const lockedAdventure = { ...firstAdventure, id: "locked-regression-adventure", prerequisiteAdventureId: "required-regression-adventure" };
+  assert.equal(getStoryAdventureAvailability(lockedAdventure, []), "locked", "A missing prerequisite must keep an unfinished adventure locked.");
+  assert.equal(getStoryAdventureAvailability(lockedAdventure, ["required-regression-adventure"]), "available", "Completing a prerequisite must unlock the next unfinished adventure.");
 }
 
 function testOpposedHitAndDodge() {
@@ -344,6 +355,7 @@ function testIndependentItemDrops() {
 
 testContentIntegrity();
 testStoryEncounterIntroduction();
+testCompletedAdventureAvailability();
 testOpposedHitAndDodge();
 testStatusAdjustedCombatStats();
 testAdventureEditorRepairsInternalIds();

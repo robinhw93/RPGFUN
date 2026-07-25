@@ -10,7 +10,7 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { DevtoolAccessDialog, type DevtoolKind } from "./components/devtools/shared";
-import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
+import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getStoryAdventureAvailability, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -173,7 +173,7 @@ function App() {
   const beginAdventure = (mode: AdventureMode, adventureId = DEFAULT_ADVENTURE_ID) => {
     if (mode === "story") {
       const definition = getAdventureDefinition(adventureId);
-      if (definition.prerequisiteAdventureId && !game.character.completedAdventureIds.includes(definition.prerequisiteAdventureId)) return;
+      if (getStoryAdventureAvailability(definition, game.character.completedAdventureIds) !== "available") return;
     }
     const entry = mode === "endless" ? null : selectStageEntry(getAdventureDefinition(adventureId), 0);
     const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;
@@ -194,6 +194,22 @@ function App() {
         };
       });
     }, node?.type !== "event");
+  };
+
+  const returnToAdventureList = () => {
+    setGame((current) => ({
+      ...current,
+      adventure: {
+        ...current.adventure,
+        active: false,
+        completed: false,
+        combat: null,
+        eventEncounter: null,
+        eventMerchant: null,
+        latestLoot: null,
+        pendingReward: null,
+      },
+    }));
   };
 
   const selectEnemy = (enemyId: string) => {
@@ -547,6 +563,7 @@ function App() {
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
             onLeaveTraining={leaveTraining}
+            onReturnToAdventures={returnToAdventureList}
             onEvent={resolveEvent}
             onMerchantPurchase={buyMerchantItem}
             onMerchantSell={sellMerchantItem}

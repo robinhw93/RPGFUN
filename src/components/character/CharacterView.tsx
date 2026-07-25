@@ -1,13 +1,11 @@
 import {
   ChevronRight,
-  FlaskConical,
   Gem,
-  Package,
   Shield,
   UserRound
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { GearSlotIcon } from "../../components/GearSlotIcon";
+import { EquipmentSlotIcon, ItemIcon } from "../../components/ItemIcon";
 import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { GEAR_SET_BONUSES } from "../../game/data";
@@ -166,7 +164,7 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
                   aria-label={`Choose equipment for ${SLOT_LABELS[slot]}${item ? `, currently ${item.name}` : slotLocked ? ", slot locked" : ", currently empty"}`}
                 >
                   <small>{SLOT_LABELS[slot]}</small>
-                  <span className="paper-doll-slot-glyph"><GearSlotIcon slot={slot} item={item} /></span>
+                  <span className="paper-doll-slot-glyph"><EquipmentSlotIcon slot={slot} item={item} /></span>
                   <strong>{slotLocked ? "Locked" : item?.name ?? "Empty"}</strong>
                   {slotLocked && <em>Two-Hand weapon equipped</em>}
                 </button>
@@ -192,10 +190,10 @@ export function CharacterView({ mode, character, locked, onEquip, onUnequip, onA
       </div>
       <div className="inventory-grid">
         {visibleInventory.length ? visibleInventory.map((item, index) => isConsumableItem(item)
-          ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedConsumable(item)}><span className="item-glyph"><FlaskConical size={25} /></span><span className="rarity">{item.rarity} · Consumable</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
+          ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedConsumable(item)}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · Consumable</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
           : isMiscItem(item)
-            ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedMiscItem(item)}><span className="item-glyph"><Package size={25} /></span><span className="rarity">{item.rarity} · Item</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
-            : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><GearSlotIcon slot={item.slot} item={item} size={25} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? activeInventoryFilter.id === "misc" ? "No other items in your inventory." : `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
+            ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedMiscItem(item)}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · Item</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
+            : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? activeInventoryFilter.id === "misc" ? "No other items in your inventory." : `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
       </div>
       </>}
       {selectedGearSlot && (
@@ -240,7 +238,7 @@ function MiscItemDetailModal({ item, onClose }: { item: MiscItem; onClose: () =>
       <article className="item-detail-card" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close item details">×</button>
         <header className="item-detail-header">
-          <span className={`item-detail-icon ${item.rarity}`}><Package size={42} /></span>
+          <span className={`item-detail-icon ${item.rarity}`}><ItemIcon item={item} size={76} /></span>
           <span><small>{item.rarity} · Item</small><h2 className={`item-name-${item.rarity}`}>{item.name}</h2><p>{item.description}</p></span>
         </header>
         <section className="item-detail-section"><p className="item-detail-muted">This item is carried in your Inventory. It cannot be equipped or used in combat.</p></section>
@@ -260,15 +258,15 @@ function ConsumableDetailModal({ item, onClose }: { item: ConsumableItem; onClos
     <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
       <article className={`item-detail-card ${item.rarity}`} onClick={(event) => event.stopPropagation()}>
         <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close item details">×</button>
-        <div className="item-detail-heading">
-          <span className="item-detail-glyph"><FlaskConical size={34} /></span>
-          <div><small>{item.rarity} · Consumable</small><h2>{item.name}</h2><p>{item.description}</p></div>
-        </div>
-        <section className="item-stat-section">
+        <header className="item-detail-header">
+          <span className={`item-detail-icon ${item.rarity}`}><ItemIcon item={item} size={76} /></span>
+          <span><small>{item.rarity} · Consumable</small><h2 className={`item-name-${item.rarity}`}>{item.name}</h2><p>{item.description}</p></span>
+        </header>
+        <section className="item-detail-section">
           <h3>Effects</h3>
-          <div className="item-stat-lines">{item.effects.map((effect, index) => <div key={`${effect.type}-${index}`}><span>{describeConsumableEffect(effect)}</span></div>)}</div>
+          <div className="consumable-effect-lines">{item.effects.map((effect, index) => <div key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</div>)}</div>
         </section>
-        <p className="muted">Consumables can be used from Inventory during your turn in combat.</p>
+        <p className="item-detail-muted consumable-detail-note">Consumables can be used from Inventory during your turn in combat.</p>
       </article>
     </div>
   );
@@ -293,7 +291,7 @@ export function GearSlotPickerModal({ slot, character, locked, onClose, onInspec
 
   const itemRow = (item: GearItem, current = false) => (
     <button type="button" className={`gear-choice-row ${item.rarity}`} key={`${current ? "equipped" : "inventory"}-${item.id}`} onClick={() => onInspect(item, current ? slot : undefined)}>
-      <span className="gear-choice-icon"><GearSlotIcon slot={item.slot} item={item} size={34} /></span>
+      <span className="gear-choice-icon"><ItemIcon item={item} size={46} /></span>
       <span><small>{item.rarity} · {getGearCategoryLabel(item)}</small><strong>{item.name}</strong><em>{item.description}</em></span>
       <span className="gear-choice-action">{current ? "View Equipped" : locked || slotLocked ? "View Details" : "Select"}<ChevronRight size={15} /></span>
     </button>
@@ -385,7 +383,7 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
       <article className="item-detail-card" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="item-detail-close" onClick={onClose} aria-label="Close item details">×</button>
         <header className="item-detail-header">
-          <span className={`item-detail-icon ${item.rarity}`}><GearSlotIcon slot={item.slot} item={item} size={58} /></span>
+          <span className={`item-detail-icon ${item.rarity}`}><ItemIcon item={item} size={76} /></span>
           <span>
             <small>{item.rarity} · {getGearCategoryLabel(item)}</small>
             <h2 className={`item-name-${item.rarity}`}>{item.name}</h2>
@@ -409,8 +407,8 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
           <section className="item-comparison" aria-label={`Compare ${item.name} with ${comparisonItem.name}`}>
             <h3>Item Comparison</h3>
             <div className="comparison-items">
-              <div><small>Currently Equipped</small><span><GearSlotIcon slot={comparisonItem.slot} item={comparisonItem} size={34} /><strong className={`item-name-${comparisonItem.rarity}`}>{comparisonItem.name}</strong></span></div>
-              <div><small>New Item</small><span><GearSlotIcon slot={item.slot} item={item} size={34} /><strong className={`item-name-${item.rarity}`}>{item.name}</strong></span></div>
+              <div><small>Currently Equipped</small><span><ItemIcon item={comparisonItem} size={34} /><strong className={`item-name-${comparisonItem.rarity}`}>{comparisonItem.name}</strong></span></div>
+              <div><small>New Item</small><span><ItemIcon item={item} size={34} /><strong className={`item-name-${item.rarity}`}>{item.name}</strong></span></div>
             </div>
             <div className="comparison-stats">
               {comparisonLines.length > 0 ? comparisonLines.map((stat) => (

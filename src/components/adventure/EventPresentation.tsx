@@ -1,10 +1,10 @@
-import { Backpack, ChevronRight, FlaskConical, Package } from "lucide-react";
+import { Backpack, ChevronRight, FlaskConical } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GearSlotIcon } from "../GearSlotIcon";
+import { ItemIcon } from "../ItemIcon";
 import { ItemDetailModal } from "../character/CharacterView";
 import { ITEMS } from "../../game/data";
 import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
-import { getItemGoldCost, getItemSellValue, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
+import { getItemGoldCost, getItemSellValue, isGearItem } from "../../game/items";
 import type { AdventureEventDefinition, AdventureEventRollResult, CharacterState, GearItem, InventoryItem } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
 import { GoldIcon } from "../../ui/gameUi";
@@ -267,7 +267,7 @@ function MerchantItemCard({ item, meta, buttonLabel, disabled, purchasing = fals
     onClick={onInspect}
     onKeyDown={onInspect ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onInspect(); } } : undefined}
   >
-    <span className="event-merchant-icon">{isConsumableItem(item) ? <FlaskConical /> : isMiscItem(item) ? <Package /> : <GearSlotIcon slot={item.slot} item={item} size={30} />}</span>
+    <span className="event-merchant-icon"><ItemIcon item={item} size={42} /></span>
     <small>{meta}</small><strong>{item.name}</strong><p>{item.description}</p>
     <button type="button" disabled={disabled} onClick={(event) => { event.stopPropagation(); onAction(); }}><GoldIcon /> {purchasing ? "Purchased!" : buttonLabel}</button>
   </article>;

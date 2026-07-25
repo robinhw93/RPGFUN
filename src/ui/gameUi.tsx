@@ -12,6 +12,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { GEAR_ICON_URLS } from "../components/GearSlotIcon";
+import { ITEM_ICON_URLS } from "../game/itemIcons";
 import { getDerivedStats } from "../game/character";
 import { ABILITIES, ENEMIES, TALENTS } from "../game/data";
 import { canEquipItemInSlot } from "../game/gear";
@@ -128,6 +129,7 @@ export function preloadCharacterAssets(avatarUrl: string, portraitUrl: string): 
     portraitUrl,
     ...Object.values(STAT_ICON_URLS),
     ...GEAR_ICON_URLS,
+    ...Object.values(ITEM_ICON_URLS),
     "/assets/resource-icons/gold.png",
   ])].map(preloadImage));
 }

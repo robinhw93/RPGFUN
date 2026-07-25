@@ -480,7 +480,19 @@ Enemy templates and adventure stages may each define item drop tables. Every con
 
 ### Available gear
 
-New characters begin with no equipped gear and an empty inventory. The current live item catalog contains no gear; new gear can be authored and priced in Item Editor.
+New characters begin with no equipped gear and an empty inventory. Every live item below has dedicated generated artwork that follows it through all runtime item surfaces.
+
+| Item | Slot | Rarity | Gold Cost | Bonuses |
+| --- | --- | --- | ---: | --- |
+| Windsong Staff | Two-Hand weapon | Uncommon | 12 | +1 Intelligence, +1 Vitality, +1 Spell Power. |
+| Windsong Sword | Main Hand weapon | Uncommon | 12 | +1 Strength, +1 Vitality. |
+| Windsong Dagger | One-Hand weapon | Uncommon | 12 | +1 Agility, +1 Vitality. |
+| Dusty Cowl | Head | Common | 10 | +1 Vitality. |
+| Dusty Boots | Boots | Common | 8 | +3 Initiative and +1% Dodge Chance. |
+| Old Armor | Chest | Common | 12 | +1 Strength. |
+| Old Leather Pants | Pants | Common | 8 | +1 Agility. |
+| Old Robes | Chest | Common | 12 | +1 Intelligence. |
+| Mystical Ring | Head | Uncommon | 12 | +1 Agility, +1 Intelligence, +1 Strength, +1 Vitality, and +1 Luck. |
 
 ### Consumables
 
@@ -488,12 +500,21 @@ Consumables use one inventory slot per copy and can be queued from the combat In
 
 | Item | Rarity | Gold Cost | Effects |
 | --- | --- | ---: | --- |
-| Yumberries | Common | 8 | Applies Regenerate to the player for 3 turns. |
-| Minor Healing Potion | Common | 8 | Restores 10 Health. |
+| Yumberries | Common | 25 | Applies Regenerate to the player for 3 turns. |
+| Minor Healing Potion | Common | 20 | Restores 20 Health. |
+| Small Bloodberry | Common | 8 | Restores 5 Health. |
 
 ### Other items
 
-Ordinary items can be carried, granted, dropped, bought, and sold, but cannot be equipped or used in combat. No ordinary items are currently defined in the live catalog.
+Ordinary items can be carried, granted, dropped, bought, and sold, but cannot be equipped or used in combat.
+
+| Item | Rarity | Gold Cost | Description |
+| --- | --- | ---: | --- |
+| Fur | Common | 6 | A patch of fur from an animal. |
+| Wolf Fang | Common | 4 | The fang of a wolf. |
+| Rats Tail | Common | 4 | The tail of a rat. |
+| Wisp Essence | Common | 20 | Magical essence that brings Wisps to life. |
+| Bear Claw | Common | 10 | A claw as big as your head. |
 
 ### Gear set bonuses
 
