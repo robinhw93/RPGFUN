@@ -128,7 +128,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/combatSequence.ts` | Small pure helpers for queued combat presentation. |
 | `src/hooks/useCombatEventSequencer.ts` | Synchronizes floating text, attack wind-up, impact, and state resolution. |
 | `src/hooks/useCombatActionQueue.ts` | Queues player abilities and End Turn, projects reserved Energy/cooldowns, and dispatches actions between combat sequences. |
-| `src/game/timing.ts` | Combat and initiative presentation timings. |
+| `src/game/timing.ts` | Combat, initiative, adventure-transition, and event-presentation timings. |
 | `src/game/gear.ts` | Equipping, unequipping, compatibility, hand rules, and material/category normalization. |
 | `src/game/progression.ts` | Experience thresholds and level rewards. |
 | `src/game/rewards.ts` | Grants each combat reward once and captures score-screen data. |
@@ -218,7 +218,7 @@ Live definitions are separated under `src/game/content/` and re-exported by `src
 - Enemy IDs referenced by an adventure must exist in `ENEMIES`.
 - Enemy templates own separate Physical Power and Spell Power, executable abilities, Critical Strike Chance, Energy Regeneration, and Max Energy as well as Health, Armor, Magic Resistance, Hit, and Dodge values.
 - Story adventures are `ADVENTURES` definitions containing ordered stages. Every stage accepts an unlimited list of weighted combat, boss, and event entries. Runtime chooses one entry by its positive `chance` weights and saves that entry ID before presentation.
-- A selected story combat or boss entry uses its `description` as the encounter announcement between the footsteps and initiative. Empty descriptions fall back to generated enemy-count wording.
+- A selected story combat or boss entry uses its `description` as the encounter announcement between the footsteps and initiative. Empty descriptions fall back to generated enemy-count wording. `App.tsx` keeps that transient announcement mounted as initiative starts, moves it below the roll, and dismisses it only when initiative completes. Immediate encounters produced by event outcomes use the same announcement-to-initiative sequence without invoking the footsteps travel transition.
 - Event IDs referenced by an adventure must exist in `ADVENTURE_EVENTS`. Choices contain an attribute, threshold, and structured success/failure outcome. Each outcome contains an ordered list of typed effects; next-combat status effects are stored in adventure progress until combat creation, while an immediate encounter uses its own enemy group and combat reward.
 - Adventure rewards are granted only to combat/boss entries with a reward definition.
 - Gear IDs should remain stable because save hydration looks up current definitions by ID.

@@ -21,7 +21,7 @@ import { equipGearItem, unequipGearItem } from "./game/gear";
 import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
-import { COMBAT_TIMING } from "./game/timing";
+import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
 import type { AdventureMode, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
 import { useCombatActionQueue } from "./hooks/useCombatActionQueue";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
@@ -35,6 +35,7 @@ import { CharacterAssetBoundary, CharacterView } from "./components/character/Ch
 import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, rollDummyEncounter, type CharacterSection } from "./ui/gameUi";
 
 type View = "adventure" | "character" | DevtoolKind;
+type EncounterFlavorPhase = "center" | "lower" | "exit";
 
 const TalentsView = lazy(() => import("./components/talents/TalentsView").then((module) => ({ default: module.TalentsView })));
 const TalentDevtool = lazy(() => import("./components/TalentDevtool").then((module) => ({ default: module.TalentDevtool })));
@@ -63,7 +64,8 @@ function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
   const [view, setView] = useState<View>("adventure");
   const [characterSection, setCharacterSection] = useState<CharacterSection>("overview");
-  const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; message: string; travelLabel: string } | null>(null);
+  const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; travelLabel: string } | null>(null);
+  const [encounterFlavor, setEncounterFlavor] = useState<{ message: string; phase: EncounterFlavorPhase } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
@@ -129,9 +131,9 @@ function App() {
   }, []);
 
   const playTravelTransition = (mode: AdventureMode, message: string, onComplete: () => void, revealMessage = true) => {
-    if (travelTransition) return;
+    if (travelTransition || encounterFlavor) return;
     const travelLabel = mode === "endless" ? "Returning to the proving grounds" : "Walking beneath the windsong canopy";
-    setTravelTransition({ phase: "travel", dots: 1, message, travelLabel });
+    setTravelTransition({ phase: "travel", dots: 1, travelLabel });
     const dotInterval = window.setInterval(() => {
       setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
     }, 500);
@@ -142,8 +144,9 @@ function App() {
         setTravelTransition(null);
         return;
       }
-      setTravelTransition({ phase: "encounter", dots: 5, message, travelLabel });
-    }, 2500);
+      setTravelTransition({ phase: "encounter", dots: 5, travelLabel });
+      setEncounterFlavor({ message, phase: "center" });
+    }, ADVENTURE_TRANSITION_TIMING.travelMs);
     if (!revealMessage) {
       travelTimers.current = [dotInterval, encounterTimer];
       return;
@@ -151,8 +154,19 @@ function App() {
     const completeTimer = window.setTimeout(() => {
       onComplete();
       setTravelTransition(null);
-    }, 4000);
+      setEncounterFlavor((current) => current ? { ...current, phase: "lower" } : current);
+    }, ADVENTURE_TRANSITION_TIMING.travelMs + ADVENTURE_TRANSITION_TIMING.encounterIntroMs);
     travelTimers.current = [dotInterval, encounterTimer, completeTimer];
+  };
+
+  const playImmediateEncounterIntroduction = (message: string, onComplete: () => void) => {
+    if (travelTransition || encounterFlavor) return;
+    setEncounterFlavor({ message, phase: "center" });
+    const completeTimer = window.setTimeout(() => {
+      onComplete();
+      setEncounterFlavor((current) => current ? { ...current, phase: "lower" } : current);
+    }, ADVENTURE_TRANSITION_TIMING.encounterIntroMs);
+    travelTimers.current = [completeTimer];
   };
 
   const beginAdventure = (mode: AdventureMode, adventureId = DEFAULT_ADVENTURE_ID) => {
@@ -204,6 +218,9 @@ function App() {
       if (!combat || combat.initiativeRevealed) return current;
       return { ...current, adventure: { ...current.adventure, combat: { ...combat, initiativeRevealed: true } } };
     });
+    setEncounterFlavor((current) => current ? { ...current, phase: "exit" } : current);
+    const flavorTimer = window.setTimeout(() => setEncounterFlavor(null), ADVENTURE_TRANSITION_TIMING.encounterExitMs);
+    travelTimers.current = [...travelTimers.current, flavorTimer];
   };
 
   const advanceJourney = (endlessEnemyIds?: string[], nextStoryEntryId?: string) => {
@@ -277,10 +294,10 @@ function App() {
   };
 
   const continueJourney = () => {
-    if (travelTransition) return;
+    if (travelTransition || encounterFlavor) return;
     if (game.adventure.eventResolved && game.adventure.eventEncounter && !game.adventure.combat) {
       const encounter = game.adventure.eventEncounter;
-      playTravelTransition(game.adventure.mode, describeEnemyEncounter(encounter.enemyIds), () => {
+      playImmediateEncounterIntroduction(describeEnemyEncounter(encounter.enemyIds), () => {
         setGame((current) => {
           const pendingEncounter = current.adventure.eventEncounter;
           if (!pendingEncounter || current.adventure.combat) return current;
@@ -568,8 +585,13 @@ function App() {
                 <Footprints /><Footprints />
               </div>
             )}
-            <span>{travelTransition.phase === "travel" ? `${travelTransition.travelLabel}${".".repeat(travelTransition.dots)}` : travelTransition.message}</span>
+            {travelTransition.phase === "travel" && <span>{`${travelTransition.travelLabel}${".".repeat(travelTransition.dots)}`}</span>}
           </div>
+        </div>
+      )}
+      {encounterFlavor && (
+        <div className={`encounter-flavor ${encounterFlavor.phase}`} role="status" aria-live="polite">
+          <span>{encounterFlavor.message}</span>
         </div>
       )}
     </div>

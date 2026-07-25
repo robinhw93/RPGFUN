@@ -16,6 +16,12 @@ export const INITIATIVE_TIMING = {
   completeMs: 7600,
 } as const;
 
+export const ADVENTURE_TRANSITION_TIMING = {
+  travelMs: 2500,
+  encounterIntroMs: 1500,
+  encounterExitMs: 700,
+} as const;
+
 export const ADVENTURE_EVENT_TIMING = {
   descriptionMs: 900,
   choicesMs: 1750,
