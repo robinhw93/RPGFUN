@@ -10,7 +10,7 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { DevtoolAccessDialog, type DevtoolKind } from "./components/devtools/shared";
-import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
+import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getAdventureStartingHp, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -22,7 +22,8 @@ import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
-import type { CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
+import { craftTownItem, purchaseTownItem, restAtArkenfallTavern, type TownActionResult } from "./game/town";
+import type { ArkenfallVendorId, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
 import { useCombatActionQueue } from "./hooks/useCombatActionQueue";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
@@ -34,7 +35,7 @@ import { CharacterAssetBoundary, CharacterView } from "./components/character/Ch
 
 import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, type CharacterSection } from "./ui/gameUi";
 
-type View = "adventure" | "character" | DevtoolKind;
+type View = "adventure" | "character" | "town" | DevtoolKind;
 type EncounterFlavorPhase = "center" | "lower" | "exit";
 
 const TalentsView = lazy(() => import("./components/talents/TalentsView").then((module) => ({ default: module.TalentsView })));
@@ -44,6 +45,7 @@ const EventDevtool = lazy(() => import("./components/devtools/EventDevtool").the
 const AdventureDevtool = lazy(() => import("./components/devtools/AdventureDevtool").then((module) => ({ default: module.AdventureDevtool })));
 const ItemDevtool = lazy(() => import("./components/devtools/ItemDevtool").then((module) => ({ default: module.ItemDevtool })));
 const PortraitDevtool = lazy(() => import("./components/PortraitDevtool").then((module) => ({ default: module.PortraitDevtool })));
+const TownView = lazy(() => import("./components/town/TownView").then((module) => ({ default: module.TownView })));
 
 function cloneInitial(): GameState {
   return JSON.parse(JSON.stringify(INITIAL_GAME)) as GameState;
@@ -181,10 +183,11 @@ function App() {
     playTravelTransition(message, () => {
       setGame((current) => {
         const maxHp = getDerivedStats(current.character).maxHp;
-        const combat = enemyIds?.length ? createCombat(current.character, enemyIds, maxHp) : null;
+        const startingHp = getAdventureStartingHp(maxHp, current.adventure.carryHp);
+        const combat = enemyIds?.length ? createCombat(current.character, enemyIds, startingHp) : null;
         return {
           ...current,
-          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
+          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -338,6 +341,16 @@ function App() {
     setGame((current) => sellEventMerchantItem(current, itemId));
   };
 
+  const runTownAction = (action: (current: GameState) => TownActionResult): TownActionResult => {
+    const result = action(game);
+    if (result.success) setGame(result.state);
+    return result;
+  };
+
+  const buyTownItem = (vendor: ArkenfallVendorId, itemId: string) => runTownAction((current) => purchaseTownItem(current, vendor, itemId));
+  const makeTownItem = (station: ArkenfallVendorId, itemId: string) => runTownAction((current) => craftTownItem(current, station, itemId));
+  const restInTown = () => runTownAction(restAtArkenfallTavern);
+
   const unlockTalent = (talentId: string) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
@@ -485,6 +498,7 @@ function App() {
             game={game}
             derived={derived}
             onBegin={beginAdventure}
+            onTown={() => navigate("town")}
             onSelectEnemy={selectEnemy}
             queuedActions={combatActionQueue.actions}
             onAbility={combatActionQueue.queueAbility}
@@ -526,6 +540,11 @@ function App() {
               </Suspense>
             )}
           </>
+        )}
+        {view === "town" && (
+          <Suspense fallback={null}>
+            <TownView game={game} maxHp={derived.maxHp} onExit={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onRest={restInTown} />
+          </Suspense>
         )}
         <Suspense fallback={null}>
           {view === "talentDevtool" && <TalentDevtool onExit={() => navigate("adventure")} />}

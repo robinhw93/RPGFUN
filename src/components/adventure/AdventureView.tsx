@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Building2,
   CircleCheckBig,
   ChevronRight, CircleDot,
   Droplets,
@@ -38,11 +39,12 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onTown, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
   onBegin: (adventureId?: string) => void;
+  onTown: () => void;
   onSelectEnemy: (id: string) => void;
   onAbility: (id: string) => void;
   onConsumable: (id: string) => void;
@@ -125,6 +127,11 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
     const featuredAvailability = getStoryAdventureAvailability(featuredAdventure, game.character.completedAdventureIds);
     return (
       <section className="page adventure-home">
+        <button type="button" className="arkenfall-town-entry" onClick={onTown}>
+          <span className="arkenfall-town-entry-icon"><Building2 /></span>
+          <span><small>Town Hub</small><strong>Arkenfall Town</strong><em>Visit vendors, craft items, brew potions, and recover at the tavern.</em></span>
+          <ChevronRight />
+        </button>
         <div className={`hero-card ${featuredAvailability === "completed" ? "completed" : ""}`}>
           <div className="hero-copy">
             {featuredAvailability === "completed" && <div className="adventure-completed-mark"><CircleCheckBig /><strong>Completed</strong></div>}

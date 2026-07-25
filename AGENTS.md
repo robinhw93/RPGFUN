@@ -37,15 +37,16 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/game/statusEffects.ts`: status definitions, stacking, durations, ticking formulas, and generic multipliers.
 - `src/game/combatFeatures.ts`: data-driven passives, triggers, damage modifiers, and ability modifiers from talents, gear, and sets.
 - `src/game/items.ts` and `src/game/consumables.ts`: inventory-item classification/pricing helpers and presentation-timed standard consumable effects.
+- `src/game/town.ts`: Arkenfall vendor assignment, crafting/brewing recipes, town purchases, exact material consumption, and tavern healing.
 - `src/game/talentRequirements.ts`: bidirectional ANY talent connections.
 - `src/hooks/useCombatActionQueue.ts`: queued player abilities and End Turn projection.
 - `src/hooks/useCombatEventSequencer.ts`: presentation-time event resolution.
 - `src/game/timing.ts`: shared presentation durations.
 - `src/game/save.ts`: load, save, and migrations.
-- `src/App.tsx`: application orchestration and high-level state only. Screen rendering belongs under `src/components/character/`, `adventure/`, `combat/`, and `talents/`; shared display helpers belong in `src/ui/gameUi.tsx`.
+- `src/App.tsx`: application orchestration and high-level state only. Screen rendering belongs under `src/components/character/`, `adventure/`, `combat/`, `town/`, and `talents/`; shared display helpers belong in `src/ui/gameUi.tsx`.
 - `src/styles.css`: presentation and animation only; CSS must not decide game outcomes.
 - `src/components/TalentDevtool.tsx`: isolated talent draft/export UI plus restricted local source sync for existing talent/ability tooltips and direct-damage Power totals.
-- `src/components/ContentDevtools.tsx`: compatibility facade for the separate editor modules under `src/components/devtools/`. Existing-enemy numeric stat fields and drop tables use local Vite source-sync routes. Event Manager, Adventure Editor, and Item Editor Save validate and replace their complete canonical catalogs while local Vite is running; special item notes, ability rules, and new enemies remain implementation input.
+- `src/components/ContentDevtools.tsx`: compatibility facade for the separate editor modules under `src/components/devtools/`. Existing-enemy numeric stat fields and drop tables use local Vite source-sync routes. Event Manager, Adventure Editor, and Item Editor Save validate and replace their complete canonical catalogs while local Vite is running; Item Editor's Arkenfall vendor and typed recipe fields are standard executable data, while special item notes, ability rules, and new enemies remain implementation input.
 - `tools/vite/localSourceSync.ts`: development-only validation and source writes for supported editor fields and catalogs. `vite.config.ts` only composes the plugin and server settings.
 
 See `ARCHITECTURE.md` for the complete map.

@@ -3,8 +3,8 @@ import { moveAdventureStage, normalizeAdventureExchange } from "../src/component
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
-import { canStartStoryAdventure, entryToNode, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
-import { INITIAL_GAME } from "../src/game/character";
+import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
+import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
@@ -13,6 +13,7 @@ import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableIte
 import { ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
+import { craftTownItem, getItemCraftingRecipe, getTownCraftingCatalog, getTownVendorStock, purchaseTownItem, restAtArkenfallTavern } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, ItemDropDefinition } from "../src/game/types";
 
 function testContentIntegrity() {
@@ -82,6 +83,46 @@ function testItemEditorRepairsInternalIds() {
   assert.equal(isMiscItem(exchange.items[2]), true, "Other items must retain their non-usable item type.");
   assert.equal(isGearItem(exchange.items[2]), false, "Other items must never be classified as gear.");
   assert.equal(isConsumableItem(exchange.items[2]), false, "Other items must never be classified as consumables.");
+}
+
+function testArkenfallTownCommerceAndCrafting() {
+  const blacksmithStock = getTownVendorStock("blacksmith");
+  const alchemistStock = getTownVendorStock("alchemist");
+  assert.ok(blacksmithStock.some(isGearItem), "The Blacksmith must expose assigned gear stock.");
+  assert.ok(alchemistStock.some(isConsumableItem), "The Alchemist must expose assigned consumable stock.");
+
+  const soldItem = blacksmithStock[0];
+  const purchaseState: GameState = {
+    ...structuredClone(INITIAL_GAME),
+    characterCreated: true,
+    character: { ...structuredClone(INITIAL_GAME.character), gold: getItemGoldCost(soldItem) + 5, inventory: [] },
+  };
+  const purchased = purchaseTownItem(purchaseState, "blacksmith", soldItem.id);
+  assert.equal(purchased.success, true, "A town vendor must sell assigned stock when the character can afford it.");
+  assert.equal(purchased.state.character.gold, 5, "Town purchases must deduct the full configured Gold Cost.");
+  assert.equal(purchased.state.character.inventory[0]?.id, soldItem.id, "A purchased item must enter the persistent Inventory.");
+
+  const recipeItem = getTownCraftingCatalog("blacksmith")[0];
+  const recipe = getItemCraftingRecipe(recipeItem);
+  assert.ok(recipe, "The Blacksmith regression requires a live recipe.");
+  const materials = recipe.ingredients.flatMap((ingredient) => {
+    const definition = ITEMS.find((item) => item.id === ingredient.itemId);
+    assert.ok(definition, `Recipe material ${ingredient.itemId} must exist.`);
+    return Array.from({ length: ingredient.quantity }, () => structuredClone(definition));
+  });
+  const craftingState = { ...purchaseState, character: { ...purchaseState.character, inventory: materials } };
+  const crafted = craftTownItem(craftingState, "blacksmith", recipeItem.id);
+  assert.equal(crafted.success, true, "Crafting must succeed when every required material is present.");
+  assert.deepEqual(crafted.state.character.inventory.map((item) => item.id), [recipeItem.id], "Crafting must consume exact ingredient quantities and add one crafted item.");
+  assert.equal(craftTownItem(purchaseState, "blacksmith", recipeItem.id).success, false, "Crafting must fail without the required materials.");
+
+  const wounded = { ...purchaseState, adventure: { ...purchaseState.adventure, carryHp: 1 } };
+  const rested = restAtArkenfallTavern(wounded);
+  assert.equal(rested.success, true, "The tavern must heal a wounded character between adventures.");
+  assert.equal(rested.state.adventure.carryHp, getDerivedStats(rested.state.character).maxHp, "Tavern rest must restore carried Health to the derived maximum.");
+  assert.equal(getAdventureStartingHp(50, 17), 17, "Starting another adventure must preserve carried Health instead of healing automatically.");
+  assert.equal(getAdventureStartingHp(50, null), 50, "A fresh character without carried Health must begin at full Health.");
+  assert.equal(getAdventureStartingHp(50, 80), 50, "Carried Health must never exceed current Max Health.");
 }
 
 function testStoryEncounterIntroduction() {
@@ -433,6 +474,7 @@ testAdventureEditorRepairsInternalIds();
 testAdventureEditorReordersStages();
 testEventEditorRepairsInternalIds();
 testItemEditorRepairsInternalIds();
+testArkenfallTownCommerceAndCrafting();
 testStatusContracts();
 testBasicPlayerAbility();
 testStructuredEventOutcome();

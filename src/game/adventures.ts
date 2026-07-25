@@ -3,6 +3,10 @@ import type { AdventureDefinition, AdventureNode, AdventureProgress, AdventureSt
 
 export const DEFAULT_ADVENTURE_ID = "windsong-forest";
 
+export function getAdventureStartingHp(maxHp: number, carryHp: number | null): number {
+  return Math.max(1, Math.min(maxHp, carryHp ?? maxHp));
+}
+
 export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefinition {
   return ADVENTURES.find((adventure) => adventure.id === id) ?? ADVENTURES[0];
 }

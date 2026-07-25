@@ -607,7 +607,26 @@ export interface Talent {
   };
 }
 
-export interface GearItem {
+export type ArkenfallVendorId = "blacksmith" | "alchemist";
+
+export interface ItemCraftingIngredient {
+  itemId: string;
+  quantity: number;
+}
+
+export interface ItemCraftingRecipe {
+  station: ArkenfallVendorId;
+  ingredients: ItemCraftingIngredient[];
+}
+
+export interface ArkenfallItemAvailability {
+  /** Undefined preserves the live legacy defaults; null explicitly removes an item from town vendors. */
+  arkenfallVendor?: ArkenfallVendorId | null;
+  /** Undefined preserves any live legacy recipe; null explicitly makes the item unavailable for crafting. */
+  craftingRecipe?: ItemCraftingRecipe | null;
+}
+
+export interface GearItem extends ArkenfallItemAvailability {
   kind?: "gear";
   id: string;
   name: string;
@@ -644,7 +663,7 @@ export type ConsumableEffect =
   | { type: "damage"; target: ConsumableTarget; amount: number }
   | { type: "apply_status"; target: ConsumableTarget; status: StatusEffectId; stacks: number; duration: number };
 
-export interface ConsumableItem {
+export interface ConsumableItem extends ArkenfallItemAvailability {
   kind: "consumable";
   id: string;
   name: string;
@@ -657,7 +676,7 @@ export interface ConsumableItem {
 }
 
 /** A carried item with no equip or combat-use behavior. */
-export interface MiscItem {
+export interface MiscItem extends ArkenfallItemAvailability {
   kind: "misc";
   id: string;
   name: string;

@@ -446,6 +446,18 @@ Enemy Physical Power, Spell Power, Max Energy, Energy Regeneration, and Critical
 
 The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
 
+## Arkenfall Town
+
+The town hub is listed above adventures and contains three illustrated destinations:
+
+| Destination | Services | Live default catalog |
+| --- | --- | --- |
+| Blacksmith — Brunhilde von Trott | Repeatable Shop purchases and material-based Crafting. | All legacy gear is sold here. Windsong Staff requires 2 Wisp Essence and 1 Fur; Windsong Sword requires 2 Bear Claws and 1 Fur; Windsong Dagger requires 2 Wolf Fangs and 1 Fur. |
+| Alchemist — Ray Charlston | Repeatable Shop purchases and potion Brewing. | All legacy consumables are sold here. Minor Healing Potion requires 2 Small Bloodberries and 1 Yumberries. |
+| The Resting Hart | Free full recovery between adventures. | Restores carried Health to Max Health. |
+
+These legacy defaults keep the original item catalog usable after the hub update. Item Editor writes an explicit vendor or no-vendor value and an explicit recipe or non-craftable value for later edits, so future stock is fully data-driven.
+
 ## Adventure: Windsong Forest
 
 Windsong Forest follows six ordered stages. Stages with several possibilities make one weighted roll from the listed chances.
@@ -489,7 +501,7 @@ The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No l
 
 ### Consumables
 
-Consumables use one inventory slot per copy and can be queued from the **Inventory** button during combat without ending the player's turn. Their current acquisition sources are unassigned; Event Manager can grant any live item.
+Consumables use one inventory slot per copy and can be queued from the **Inventory** button during combat without ending the player's turn. Legacy consumables are sold by Ray Charlston in Arkenfall, Minor Healing Potion can also be brewed from its live default recipe, and Event Manager can grant any live item.
 
 | Item | Rarity | Gold Cost | Effects |
 | --- | --- | ---: | --- |

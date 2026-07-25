@@ -363,11 +363,23 @@ healing per stack = 3 + source Spell Power × 0.20
 
 The result is then multiplied by the target's healing-received multiplier and limited by missing Health.
 
+## Arkenfall Town
+
+**Arkenfall Town** is a persistent non-adventure hub shown above the adventure list. Entering it does not start a stage or travel transition. Its generated environment artwork uses cover sizing and crop-safe focal points for desktop and narrow mobile screens, with non-blocking ambient motion and reduced-motion fallbacks.
+
+- **Blacksmith — Brunhilde von Trott** has **Shop** and **Crafting** tabs. Shop purchases deduct the item's configured Gold Cost and add a fresh copy to Inventory. Crafting consumes the exact item quantities in the selected recipe and adds one crafted item.
+- **Alchemist — Ray Charlston** has **Shop** and **Brew** tabs. Purchases use the same persistent Inventory/gold rules, while Brew uses recipes assigned to the Alchemist.
+- **The Resting Hart** tavern restores carried Health to current Max Health. Resting is free in the current implementation and is disabled while already at full Health.
+
+Town vendor stock is repeatable rather than single-stock: unlike a Wandering Merchant, buying an item does not permanently remove its listing. Every transaction is saved through the normal `GameState` autosave. Recipe cards show owned and required material counts, and cannot be used until every requirement is met. Items and materials are ordinary Inventory copies, so equipped gear is not consumed as a crafting ingredient.
+
+Items may independently be sold in Arkenfall, craftable, both, or neither. Item Editor selects the vendor, crafting location, ingredient items, and quantities. Saving through the local Vite server validates every referenced item before replacing the live catalog.
+
 ## Adventures and events
 
 The current story adventure is **Windsong Forest**, containing six ordered stages. Its selection card and combat board use dedicated illustrated backgrounds with crop-safe focal points and `cover` sizing so each scene remains readable on desktop and narrow mobile screens. The selection artwork fills the complete card without a colored gradient; its copy sits on a neutral translucent readability panel. Each stage may contain any number of combat, boss, or event possibilities with configured percentage weights. The selected possibility is stored in adventure progress, so refreshing cannot reroll the active stage. Generated fallback introductions use a grammatically appropriate article for a single enemy, such as **a Forest Wisp**, and group repeated enemy templates into a single counted, pluralized phrase, such as **two Rabid Rats**. See the live stage table in [Content reference](CONTENT_REFERENCE.md#adventure-windsong-forest).
 
-Remaining Health carries from one stage to the next. Starting an adventure and moving between stages both show the animated footsteps transition first. A story combat then fades in the selected Adventure Editor entry's Description; if that field is empty, the game falls back to generated enemy-count wording. As initiative begins, that introduction follows one continuous eased movement from the center to its resting position below the roll. It fades out in sync with the initiative cards flying up into the turn-order row. Events do not show a generic discovery announcement after the footsteps. They move directly into their dedicated presentation. An immediate encounter caused by an event outcome skips the footsteps and **Walking...** text entirely, but still uses generated enemy-count wording before and during initiative. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite. A completed story adventure remains in the adventure list with a large green checkmark and **Completed** and may be replayed. Every positive XP reward during a replay—including combat, immediate encounters, and event outcomes—grants 10% of its original amount, rounded down. Combat gold rewards, including immediate encounters, grant 50% of their original amount, rounded down. Event-outcome gold and item drops are unchanged.
+Remaining Health carries from one stage to the next and remains after an adventure ends. Starting another adventure uses that carried value rather than automatically healing the character; the value is clamped to current Max Health. A fresh character begins at full Health, and the Arkenfall tavern is the normal between-adventure recovery source. Starting an adventure and moving between stages both show the animated footsteps transition first. A story combat then fades in the selected Adventure Editor entry's Description; if that field is empty, the game falls back to generated enemy-count wording. As initiative begins, that introduction follows one continuous eased movement from the center to its resting position below the roll. It fades out in sync with the initiative cards flying up into the turn-order row. Events do not show a generic discovery announcement after the footsteps. They move directly into their dedicated presentation. An immediate encounter caused by an event outcome skips the footsteps and **Walking...** text entirely, but still uses generated enemy-count wording before and during initiative. Completed adventure IDs are stored on the character and can satisfy another adventure's prerequisite. A completed story adventure remains in the adventure list with a large green checkmark and **Completed** and may be replayed. Every positive XP reward during a replay—including combat, immediate encounters, and event outcomes—grants 10% of its original amount, rounded down. Combat gold rewards, including immediate encounters, grant 50% of their original amount, rounded down. Event-outcome gold and item drops are unchanged.
 
 Events use a black full-screen sequence without an event icon, category label, or adventure-progress header. A compact **Inventory & Gear** button remains in the safe top-right corner throughout the event, allowing newly found or purchased gear to be reviewed and equipped before the journey continues. The title fades into the center and moves upward before the scenario fades in. Two or three label-only choice buttons then appear one at a time; they contain neither icons nor advance descriptions or roll requirements. Each choice may use a d100 attribute check or a direct outcome. Checked choices replace the buttons with their description while a d100 counter cycles in the same style as initiative; the raw die locks, the selected derived-attribute bonus is added, and success or failure fades in last. Direct choices skip the die entirely, show the selected action description, and then fade in that choice's configured outcome.
 
@@ -458,7 +470,7 @@ Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mac
 
 ### Item presentation
 
-- Rarity levels are Common, Uncommon, Rare, and Epic.
+- Rarity levels are Common, Uncommon, Rare, Epic, and Legendary.
 - Item names use their rarity color in inventory, equipment, details, and comparison.
 - Item cards show identity and flavor, while all mechanical stats appear in the item details modal.
 - Stats are sorted alphabetically and use stat icons.
@@ -467,6 +479,7 @@ Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mac
 - Item and equipment modals lock background scrolling.
 - Inventory can be filtered by item type or gear category and sorted by rarity or name.
 - Every item has an editor-owned Gold Cost used by Wandering Merchants.
+- Every item may optionally select an Arkenfall vendor and a crafting recipe. Recipes name the Blacksmith or Alchemist and require one or more live items with whole-number quantities.
 - Ordinary items are carried in Inventory but cannot be equipped or used in combat. They have their own **Other Items** filter and may still be granted, dropped, bought, or sold.
 
 ### Combat consumables

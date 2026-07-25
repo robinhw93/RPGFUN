@@ -4,7 +4,8 @@ import { GEAR_SETS, ITEMS } from "../../game/data";
 import { getItemGoldCost, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { getItemIconUrl, ITEM_ARTWORK_URLS } from "../../game/itemIcons";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
-import type { ConsumableEffect, ConsumableItem, ConsumableTarget, GearItem, GearSetDefinition, GearType, InventoryItem, ItemRarity, MiscItem, PassiveBonuses, StatName, StatusEffectId, WeaponEquipType, WeaponKind } from "../../game/types";
+import { getArkenfallVendor, getItemCraftingRecipe } from "../../game/town";
+import type { ArkenfallVendorId, ConsumableEffect, ConsumableItem, ConsumableTarget, GearItem, GearSetDefinition, GearType, InventoryItem, ItemCraftingRecipe, ItemRarity, MiscItem, PassiveBonuses, StatName, StatusEffectId, WeaponEquipType, WeaponKind } from "../../game/types";
 import { GEAR_ICON_URLS, resolveGearIconUrl } from "../GearSlotIcon";
 import { copyJson, downloadJson, EditorShell, ensureInternalId, ITEM_DRAFT_STORAGE_KEY, makeId, NumberField, saveLiveCatalog, TextField, useLocalDraft, type ItemExchange } from "./shared";
 
@@ -21,6 +22,10 @@ const STAT_FIELDS: Array<{ id: StatName; label: string }> = [
 const PASSIVE_FIELDS: Array<{ id: keyof PassiveBonuses; label: string; percent?: boolean }> = [
   { id: "armor", label: "Armor" }, { id: "magicResistance", label: "Magic Resistance" }, { id: "physicalPower", label: "Physical Power" }, { id: "magicalPower", label: "Spell Power" },
   { id: "maxEnergy", label: "Max Energy" }, { id: "energyRegen", label: "Energy Regeneration" }, { id: "hitChance", label: "Hit Chance %", percent: true }, { id: "dodgeChance", label: "Dodge Chance %", percent: true }, { id: "critChance", label: "Critical Strike Chance %", percent: true }, { id: "initiative", label: "Initiative" },
+];
+const ARKENFALL_VENDORS: Array<{ id: ArkenfallVendorId; shop: string; crafting: string }> = [
+  { id: "blacksmith", shop: "Blacksmith — Brunhilde von Trott", crafting: "Blacksmith — Crafting" },
+  { id: "alchemist", shop: "Alchemist — Ray Charlston", crafting: "Alchemist — Brew" },
 ];
 
 export function canonicalItemExchange(): ItemExchange {
@@ -39,27 +44,72 @@ export function normalizeItemExchange(exchange: ItemExchange): ItemExchange {
   const items = (exchange.items ?? []).map((item) => {
     const idPrefix = isConsumableItem(item) ? "consumable" : isMiscItem(item) ? "item" : "gear";
     const id = ensureInternalId(item.id, idPrefix, used, item.name);
-    if (isConsumableItem(item)) return { ...item, id, goldCost: getItemGoldCost(item), effects: item.effects ?? [] };
-    if (isMiscItem(item)) return { ...item, kind: "misc" as const, id, goldCost: getItemGoldCost(item) };
+    const itemWithId = { ...item, id } as InventoryItem;
+    const arkenfallVendor = getArkenfallVendor(itemWithId);
+    const rawRecipe = getItemCraftingRecipe(itemWithId);
+    const craftingRecipe = rawRecipe ? { ...rawRecipe, ingredients: rawRecipe.ingredients.map((ingredient) => ({ ...ingredient, quantity: Math.max(1, Math.round(ingredient.quantity || 1)) })) } : null;
+    if (isConsumableItem(item)) return { ...item, id, goldCost: getItemGoldCost(item), effects: item.effects ?? [], arkenfallVendor, craftingRecipe };
+    if (isMiscItem(item)) return { ...item, kind: "misc" as const, id, goldCost: getItemGoldCost(item), arkenfallVendor, craftingRecipe };
     const set = item.set ? setById.get(item.set) : undefined;
-    return { ...item, kind: "gear" as const, id, goldCost: getItemGoldCost(item), stats: item.stats ?? {}, set: set?.id, setName: set?.name };
+    return { ...item, kind: "gear" as const, id, goldCost: getItemGoldCost(item), stats: item.stats ?? {}, set: set?.id, setName: set?.name, arkenfallVendor, craftingRecipe };
   });
   return { format: "arkenfall-items", version: 1, items, sets };
 }
 
 function blankGear(): GearItem {
-  return { kind: "gear", id: makeId("gear"), name: "New Gear", goldCost: 12, slot: "head", armorMaterial: "cloth", rarity: "common", description: "", iconUrl: GEAR_ICON_URLS[0], stats: {} };
+  return { kind: "gear", id: makeId("gear"), name: "New Gear", goldCost: 12, slot: "head", armorMaterial: "cloth", rarity: "common", description: "", iconUrl: GEAR_ICON_URLS[0], stats: {}, arkenfallVendor: null, craftingRecipe: null };
 }
 function blankSet(): GearSetDefinition { return { id: makeId("set"), name: "New Gear Set", pieceCount: 2, bonuses: [{ requiredPieces: 2, description: "+1 Strength.", passive: { stats: { strength: 1 } } }] }; }
-function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", goldCost: 8, rarity: "common", description: "", iconUrl: ITEM_ARTWORK_URLS[0], effects: [{ type: "heal", amount: 10 }] }; }
-function blankMiscItem(): MiscItem { return { kind: "misc", id: makeId("item"), name: "New Item", goldCost: 0, rarity: "common", description: "", iconUrl: ITEM_ARTWORK_URLS[0] }; }
+function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", goldCost: 8, rarity: "common", description: "", iconUrl: ITEM_ARTWORK_URLS[0], effects: [{ type: "heal", amount: 10 }], arkenfallVendor: null, craftingRecipe: null }; }
+function blankMiscItem(): MiscItem { return { kind: "misc", id: makeId("item"), name: "New Item", goldCost: 0, rarity: "common", description: "", iconUrl: ITEM_ARTWORK_URLS[0], arkenfallVendor: null, craftingRecipe: null }; }
 function blankEffect(type: ConsumableEffect["type"]): ConsumableEffect {
   if (type === "apply_status") return { type, target: "self", status: "strengthened", stacks: 1, duration: 3 };
   if (type === "damage") return { type, target: "target", amount: 5 };
   return { type, amount: type === "change_energy" || type === "change_next_turn_energy_regen" ? -1 : 1 };
 }
 
-function GearFields({ item, sets, onChange }: { item: GearItem; sets: GearSetDefinition[]; onChange: (change: Partial<GearItem>) => void }) {
+function ArkenfallAvailabilityFields({ item, allItems, onChange }: {
+  item: InventoryItem;
+  allItems: InventoryItem[];
+  onChange: (change: { arkenfallVendor?: ArkenfallVendorId | null; craftingRecipe?: ItemCraftingRecipe | null }) => void;
+}) {
+  const vendor = getArkenfallVendor(item);
+  const recipe = getItemCraftingRecipe(item);
+  const ingredients = allItems.filter((candidate) => candidate.id !== item.id);
+  const defaultIngredientId = ingredients[0]?.id ?? "";
+  const updateRecipe = (change: Partial<ItemCraftingRecipe>) => {
+    if (!recipe) return;
+    onChange({ craftingRecipe: { ...recipe, ...change } });
+  };
+  return (
+    <fieldset className="item-editor-section arkenfall-item-settings">
+      <legend>Arkenfall availability</legend>
+      <div className="content-form-grid">
+        <label className="content-checkbox-field">
+          <input type="checkbox" checked={vendor !== null} onChange={(event) => onChange({ arkenfallVendor: event.target.checked ? (isConsumableItem(item) ? "alchemist" : "blacksmith") : null })} />
+          <span>Sold in Arkenfall</span>
+        </label>
+        {vendor && <label><span>Vendor</span><select value={vendor} onChange={(event) => onChange({ arkenfallVendor: event.target.value as ArkenfallVendorId })}>{ARKENFALL_VENDORS.map((option) => <option value={option.id} key={option.id}>{option.shop}</option>)}</select></label>}
+        <label className="content-checkbox-field">
+          <input type="checkbox" checked={recipe !== null} disabled={!defaultIngredientId && !recipe} onChange={(event) => onChange({ craftingRecipe: event.target.checked ? { station: isConsumableItem(item) ? "alchemist" : "blacksmith", ingredients: defaultIngredientId ? [{ itemId: defaultIngredientId, quantity: 1 }] : [] } : null })} />
+          <span>Craftable</span>
+        </label>
+        {recipe && <label><span>Crafting location</span><select value={recipe.station} onChange={(event) => updateRecipe({ station: event.target.value as ArkenfallVendorId })}>{ARKENFALL_VENDORS.map((option) => <option value={option.id} key={option.id}>{option.crafting}</option>)}</select></label>}
+      </div>
+      {recipe && <div className="crafting-recipe-editor">
+        <p>Required items</p>
+        {recipe.ingredients.map((ingredient, index) => <div className="crafting-ingredient-row" key={`${ingredient.itemId}-${index}`}>
+          <label><span>Item</span><select value={ingredient.itemId} onChange={(event) => updateRecipe({ ingredients: recipe.ingredients.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, itemId: event.target.value } : candidate) })}>{ingredients.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.name}</option>)}</select></label>
+          <NumberField label="Quantity" value={ingredient.quantity} min={1} onChange={(quantity) => updateRecipe({ ingredients: recipe.ingredients.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, quantity: Math.max(1, Math.round(quantity)) } : candidate) })} />
+          <button type="button" aria-label="Remove ingredient" onClick={() => updateRecipe({ ingredients: recipe.ingredients.filter((_, candidateIndex) => candidateIndex !== index) })}><Trash2 size={14} /></button>
+        </div>)}
+        <button type="button" className="secondary-editor-button" disabled={!defaultIngredientId} onClick={() => updateRecipe({ ingredients: [...recipe.ingredients, { itemId: defaultIngredientId, quantity: 1 }] })}><Plus size={14} /> Add required item</button>
+      </div>}
+    </fieldset>
+  );
+}
+
+function GearFields({ item, sets, allItems, onChange }: { item: GearItem; sets: GearSetDefinition[]; allItems: InventoryItem[]; onChange: (change: Partial<GearItem>) => void }) {
   const updateStat = (stat: StatName, value: number) => onChange({ stats: { ...item.stats, [stat]: value || undefined } });
   const selectedIconUrl = item.iconUrl ?? resolveGearIconUrl(item.slot, item);
   return <>
@@ -77,6 +127,7 @@ function GearFields({ item, sets, onChange }: { item: GearItem; sets: GearSetDef
     <fieldset className="item-editor-section"><legend>Gear image</legend><div className="gear-image-picker">{GEAR_ICON_URLS.map((url) => <button type="button" className={selectedIconUrl === url ? "selected" : ""} onClick={() => onChange({ iconUrl: url })} key={url}><img src={url} alt="" /><small>{url.split("/").pop()?.replace(".webp", "")}</small></button>)}</div></fieldset>
     <fieldset className="item-editor-section"><legend>Stats</legend><div className="content-form-grid">{STAT_FIELDS.map((field) => <NumberField key={field.id} label={field.label} value={item.stats[field.id] ?? 0} onChange={(value) => updateStat(field.id, value)} />)}<NumberField label="Armor" value={item.armor ?? 0} onChange={(armor) => onChange({ armor: armor || undefined })} /><NumberField label="Magic Resistance" value={item.magicResistance ?? 0} onChange={(magicResistance) => onChange({ magicResistance: magicResistance || undefined })} /><NumberField label="Physical Power" value={item.physicalPower ?? 0} onChange={(physicalPower) => onChange({ physicalPower: physicalPower || undefined })} /><NumberField label="Spell Power" value={item.magicalPower ?? 0} onChange={(magicalPower) => onChange({ magicalPower: magicalPower || undefined })} /></div></fieldset>
     <fieldset className="item-editor-section"><legend>Additional combat stats</legend><div className="content-form-grid">{PASSIVE_FIELDS.filter((field) => !["armor", "magicResistance", "physicalPower", "magicalPower"].includes(field.id)).map((field) => <NumberField key={field.id} label={field.label} value={Number(item.combat?.passive?.[field.id] ?? 0) * (field.percent ? 100 : 1)} onChange={(value) => onChange({ combat: { ...item.combat, passive: { ...item.combat?.passive, [field.id]: (field.percent ? value / 100 : value) || undefined } } })} />)}</div></fieldset>
+    <ArkenfallAvailabilityFields item={item} allItems={allItems} onChange={onChange} />
     <div className="content-form-grid"><TextField label="Special / unique bonus notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea /></div>
   </>;
 }
@@ -105,18 +156,18 @@ function ItemArtworkPicker({ selectedUrl, onChange }: { selectedUrl?: string; on
   })}</div></fieldset>;
 }
 
-function ConsumableFields({ item, onChange }: { item: ConsumableItem; onChange: (change: Partial<ConsumableItem>) => void }) {
-  return <><div className="content-form-grid"><TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} /><label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label><NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} /><TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea /></div><ItemArtworkPicker selectedUrl={item.iconUrl ?? getItemIconUrl(item.id)} onChange={(iconUrl) => onChange({ iconUrl })} /><fieldset className="item-editor-section"><legend>Combat effects</legend><div className="set-bonus-list">{item.effects.map((effect, index) => <EffectFields key={index} effect={effect} onChange={(next) => onChange({ effects: item.effects.map((candidate, candidateIndex) => candidateIndex === index ? next : candidate) })} onRemove={() => onChange({ effects: item.effects.filter((_, candidateIndex) => candidateIndex !== index) })} />)}</div><button type="button" className="secondary-editor-button" onClick={() => onChange({ effects: [...item.effects, blankEffect("heal")] })}><Plus size={14} /> Add effect</button></fieldset><div className="content-form-grid"><TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea /></div></>;
+function ConsumableFields({ item, allItems, onChange }: { item: ConsumableItem; allItems: InventoryItem[]; onChange: (change: Partial<ConsumableItem>) => void }) {
+  return <><div className="content-form-grid"><TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} /><label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label><NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} /><TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea /></div><ItemArtworkPicker selectedUrl={item.iconUrl ?? getItemIconUrl(item.id)} onChange={(iconUrl) => onChange({ iconUrl })} /><fieldset className="item-editor-section"><legend>Combat effects</legend><div className="set-bonus-list">{item.effects.map((effect, index) => <EffectFields key={index} effect={effect} onChange={(next) => onChange({ effects: item.effects.map((candidate, candidateIndex) => candidateIndex === index ? next : candidate) })} onRemove={() => onChange({ effects: item.effects.filter((_, candidateIndex) => candidateIndex !== index) })} />)}</div><button type="button" className="secondary-editor-button" onClick={() => onChange({ effects: [...item.effects, blankEffect("heal")] })}><Plus size={14} /> Add effect</button></fieldset><ArkenfallAvailabilityFields item={item} allItems={allItems} onChange={onChange} /><div className="content-form-grid"><TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea /></div></>;
 }
 
-function MiscItemFields({ item, onChange }: { item: MiscItem; onChange: (change: Partial<MiscItem>) => void }) {
+function MiscItemFields({ item, allItems, onChange }: { item: MiscItem; allItems: InventoryItem[]; onChange: (change: Partial<MiscItem>) => void }) {
   return <><div className="content-form-grid">
     <TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} />
     <label><span>Rarity</span><select value={item.rarity} onChange={(event) => onChange({ rarity: event.target.value as ItemRarity })}>{RARITIES.map((rarity) => <option key={rarity}>{rarity}</option>)}</select></label>
     <NumberField label="Gold cost" value={getItemGoldCost(item)} min={0} onChange={(goldCost) => onChange({ goldCost })} />
     <TextField label="Description" value={item.description} onChange={(description) => onChange({ description })} textarea />
     <TextField label="Special effect notes for Codex" value={item.specialEffectNotes ?? ""} onChange={(specialEffectNotes) => onChange({ specialEffectNotes: specialEffectNotes || undefined })} textarea />
-  </div><ItemArtworkPicker selectedUrl={item.iconUrl ?? getItemIconUrl(item.id)} onChange={(iconUrl) => onChange({ iconUrl })} /></>;
+  </div><ItemArtworkPicker selectedUrl={item.iconUrl ?? getItemIconUrl(item.id)} onChange={(iconUrl) => onChange({ iconUrl })} /><ArkenfallAvailabilityFields item={item} allItems={allItems} onChange={onChange} /></>;
 }
 
 function itemsForTab(items: InventoryItem[], tab: Exclude<ItemEditorTab, "sets">): InventoryItem[] {
@@ -141,7 +192,7 @@ export function ItemDevtool({ onExit }: { onExit: () => void }) {
   return <EditorShell title="Item Editor" description="Create gear, gear sets, combat consumables and other inventory items. Save writes standard mechanics directly to the live game; special notes are exported for Codex." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-items.json", prepare()); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="item-editor-tabs"><button className={tab === "gear" ? "active" : ""} onClick={() => chooseTab("gear")}><Shield size={14} /> Gear</button><button className={tab === "sets" ? "active" : ""} onClick={() => chooseTab("sets")}><Gem size={14} /> Sets</button><button className={tab === "consumables" ? "active" : ""} onClick={() => chooseTab("consumables")}><FlaskConical size={14} /> Consumables</button><button className={tab === "misc" ? "active" : ""} onClick={() => chooseTab("misc")}><Package size={14} /> Other Items</button></div>
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New {tab === "consumables" ? "consumable" : tab === "sets" ? "set" : tab === "misc" ? "item" : "gear"}</button>{entries.map((entry) => <button className={entry.id === selected?.id ? "selected" : ""} key={entry.id} onClick={() => setSelectedId(entry.id)}><strong>{entry.name}</strong><small>{entry.id}</small></button>)}</aside>
-      {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">{tab === "sets" ? "Gear Set" : tab === "consumables" ? "Consumable Item" : tab === "misc" ? "Other Item" : "Gear Item"}</p><h2>{selected.name}</h2></div><button type="button" className="danger-icon-button" onClick={remove}><Trash2 size={14} /> Delete</button></div>{tab === "gear" ? <GearFields item={selected as GearItem} sets={store.draft.sets} onChange={updateSelected} /> : tab === "sets" ? <SetFields set={selected as GearSetDefinition} onChange={updateSelected} /> : tab === "consumables" ? <ConsumableFields item={selected as ConsumableItem} onChange={updateSelected} /> : <MiscItemFields item={selected as MiscItem} onChange={updateSelected} />}</section>}
+      {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">{tab === "sets" ? "Gear Set" : tab === "consumables" ? "Consumable Item" : tab === "misc" ? "Other Item" : "Gear Item"}</p><h2>{selected.name}</h2></div><button type="button" className="danger-icon-button" onClick={remove}><Trash2 size={14} /> Delete</button></div>{tab === "gear" ? <GearFields item={selected as GearItem} sets={store.draft.sets} allItems={store.draft.items} onChange={updateSelected} /> : tab === "sets" ? <SetFields set={selected as GearSetDefinition} onChange={updateSelected} /> : tab === "consumables" ? <ConsumableFields item={selected as ConsumableItem} allItems={store.draft.items} onChange={updateSelected} /> : <MiscItemFields item={selected as MiscItem} allItems={store.draft.items} onChange={updateSelected} />}</section>}
     </div>
   </EditorShell>;
 }

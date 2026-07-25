@@ -321,6 +321,8 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
   const setIds = exchange.sets.map((raw: unknown) => catalogId(catalogObject(raw, "Gear set").id, "Gear set ID"));
   assertUniqueIds([...itemIds, ...setIds], "Item and set");
   const knownSets = new Set(setIds);
+  const knownItems = new Set(itemIds);
+  const townVendors = new Set(["blacksmith", "alchemist"]);
 
   exchange.sets.forEach((raw: unknown) => {
     const set = catalogObject(raw, "Gear set");
@@ -343,6 +345,23 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>): {
     catalogString(item.description, "Item description", true);
     catalogNumber(item.goldCost, `${item.name} gold cost`);
     if (!itemRarities.has(item.rarity)) throw new Error(`${item.name} has an invalid rarity.`);
+    if (item.arkenfallVendor !== undefined && item.arkenfallVendor !== null && !townVendors.has(item.arkenfallVendor as string)) throw new Error(`${item.name} has an invalid Arkenfall vendor.`);
+    if (item.craftingRecipe !== undefined && item.craftingRecipe !== null) {
+      const recipe = catalogObject(item.craftingRecipe, `${item.name} crafting recipe`);
+      if (!townVendors.has(recipe.station as string)) throw new Error(`${item.name} has an invalid crafting location.`);
+      if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) throw new Error(`${item.name} needs at least one crafting ingredient.`);
+      const recipeItemIds = new Set<string>();
+      recipe.ingredients.forEach((rawIngredient: unknown, index: number) => {
+        const ingredient = catalogObject(rawIngredient, `${item.name} ingredient ${index + 1}`);
+        const ingredientId = catalogId(ingredient.itemId, "Crafting ingredient ID");
+        if (!knownItems.has(ingredientId)) throw new Error(`${item.name} references a crafting ingredient that does not exist.`);
+        if (ingredientId === item.id) throw new Error(`${item.name} cannot require itself as a crafting ingredient.`);
+        if (recipeItemIds.has(ingredientId)) throw new Error(`${item.name} lists the same crafting ingredient more than once.`);
+        recipeItemIds.add(ingredientId);
+        const quantity = catalogNumber(ingredient.quantity, "Crafting ingredient quantity", 1);
+        if (!Number.isInteger(quantity)) throw new Error(`${item.name} crafting quantities must be whole numbers.`);
+      });
+    }
     if (item.kind === "consumable") {
       if (item.iconUrl !== undefined && (typeof item.iconUrl !== "string" || !itemArtworkUrls.has(item.iconUrl))) throw new Error(`${item.name} has an invalid item image.`);
       if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Consumable special effect notes", true);
