@@ -1410,13 +1410,13 @@ main { min-height: calc(100vh - 68px); }
 }
 
 /* Arkenfall town hub, vendors, crafting, and rest. */
-.arkenfall-town-entry { width: 100%; min-height: 94px; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem 1.2rem; color: #eee8da; border: 1px solid #796b4a; background: linear-gradient(110deg, rgba(35,31,21,.98), rgba(20,28,23,.98)); box-shadow: 0 12px 32px rgba(0,0,0,.24), inset 0 1px rgba(255,224,150,.08); text-align: left; cursor: pointer; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.arkenfall-town-entry { width: 100%; min-height: 94px; position: relative; isolation: isolate; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 1rem 1.2rem; overflow: hidden; color: #eee8da; border: 1px solid #796b4a; background-color: #171a15; background-image: url("/assets/town/arkenfall-town.webp"); background-position: center 56%; background-repeat: no-repeat; background-size: cover; box-shadow: 0 12px 32px rgba(0,0,0,.24), inset 0 1px rgba(255,224,150,.08); text-align: left; cursor: pointer; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.arkenfall-town-entry::before { content:""; position:absolute; z-index:-1; inset:0; background:rgba(5,8,6,.58); pointer-events:none; }
 .arkenfall-town-entry:hover, .arkenfall-town-entry:focus-visible { border-color: #c3a768; box-shadow: 0 15px 38px rgba(0,0,0,.34), 0 0 24px rgba(201,168,103,.09); transform: translateY(-2px); }
 .arkenfall-town-entry-icon { width: 52px; height: 52px; display: grid; place-items: center; color: #e4c77d; border: 1px solid #75633d; background: radial-gradient(circle, #332a19, #151713); }
 .arkenfall-town-entry > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: .18rem; }
-.arkenfall-town-entry small { color: var(--gold); font-size: .55rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-.arkenfall-town-entry strong { font-family: Georgia, serif; font-size: clamp(1.15rem, 2.5vw, 1.55rem); font-weight: 500; }
-.arkenfall-town-entry em { overflow: hidden; color: #969d94; font-size: .7rem; font-style: normal; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.arkenfall-town-entry strong { font-family: Georgia, serif; font-size: clamp(1.15rem, 2.5vw, 1.55rem); font-weight: 500; text-shadow:0 2px 4px rgba(0,0,0,.92); }
+.arkenfall-town-entry em { overflow: hidden; color: #c2c6bd; font-size: .7rem; font-style: normal; line-height: 1.4; text-overflow: ellipsis; text-shadow:0 1px 3px rgba(0,0,0,.95); white-space: nowrap; }
 
 .town-location { min-height: calc(100dvh - 68px); position: relative; isolation: isolate; padding: clamp(1rem,3vw,2.2rem) max(1rem,calc((100vw - 1220px)/2)) 6rem; overflow: hidden; background-color: #111510; background-position: center; background-size: cover; }
 .town-location::after { content: ""; position: absolute; z-index: -1; inset: 0; background: linear-gradient(180deg, rgba(6,8,7,.18), rgba(6,8,7,.48) 54%, rgba(6,8,7,.88)); pointer-events: none; }

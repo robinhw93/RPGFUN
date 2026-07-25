@@ -129,7 +129,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       <section className="page adventure-home">
         <button type="button" className="arkenfall-town-entry" onClick={onTown}>
           <span className="arkenfall-town-entry-icon"><Building2 /></span>
-          <span><small>Town Hub</small><strong>Arkenfall Town</strong><em>Visit vendors, craft items, brew potions, and recover at the tavern.</em></span>
+          <span><strong>Arkenfall Town</strong><em>Visit vendors, craft items, brew potions, and recover at the tavern.</em></span>
           <ChevronRight />
         </button>
         <div className={`hero-card ${featuredAvailability === "completed" ? "completed" : ""}`}>
