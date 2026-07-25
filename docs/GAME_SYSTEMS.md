@@ -365,7 +365,7 @@ The result is then multiplied by the target's healing-received multiplier and li
 
 ## Arkenfall Town
 
-**Arkenfall Town** is a persistent non-adventure hub shown above the adventure list. Entering it does not start a stage or travel transition. Its generated environment artwork uses cover sizing and crop-safe focal points for desktop and narrow mobile screens, with non-blocking ambient motion and reduced-motion fallbacks.
+**Arkenfall Town** is a persistent non-adventure hub shown above the adventure list. Entering it does not start a stage or travel transition. Its generated environment artwork uses cover sizing and crop-safe focal points for desktop and narrow mobile screens. The environment image itself remains still; only separate ambient particles and interface entrances animate, with reduced-motion fallbacks.
 
 - **Blacksmith — Brunhilde von Trott** has **Shop** and **Crafting** tabs. Shop purchases deduct the item's configured Gold Cost and add a fresh copy to Inventory. Crafting consumes the exact item quantities in the selected recipe and adds one crafted item.
 - **Alchemist — Ray Charlston** has **Shop** and **Brew** tabs. Purchases use the same persistent Inventory/gold rules, while Brew uses recipes assigned to the Alchemist.
