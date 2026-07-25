@@ -133,6 +133,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/progression.ts` | Experience thresholds and level rewards. |
 | `src/game/rewards.ts` | Grants each combat reward once and captures score-screen data. |
 | `src/game/eventOutcomes.ts` | Normalizes and applies typed event outcomes, queued next-combat statuses, and immediate encounters. |
+| `src/components/adventure/EventPresentation.tsx` | Full-screen staged event title, choice, d100, bonus, and outcome presentation. |
 | `src/game/save.ts` | Browser save/load/clear plus backward-compatible migration. |
 | `src/game/talentRequirements.ts` | Bidirectional ANY talent-connection evaluation. |
 | `src/game/initiativeLayout.ts` | Pure FLIP geometry for initiative-card transitions. |

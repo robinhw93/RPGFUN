@@ -128,7 +128,7 @@ function App() {
     presentedRewardIds.current.add(rewardId);
   }, []);
 
-  const playTravelTransition = (mode: AdventureMode, message: string, onComplete: () => void) => {
+  const playTravelTransition = (mode: AdventureMode, message: string, onComplete: () => void, revealMessage = true) => {
     if (travelTransition) return;
     const travelLabel = mode === "endless" ? "Returning to the proving grounds" : "Walking beneath the windsong canopy";
     setTravelTransition({ phase: "travel", dots: 1, message, travelLabel });
@@ -137,8 +137,17 @@ function App() {
     }, 500);
     const encounterTimer = window.setTimeout(() => {
       window.clearInterval(dotInterval);
+      if (!revealMessage) {
+        onComplete();
+        setTravelTransition(null);
+        return;
+      }
       setTravelTransition({ phase: "encounter", dots: 5, message, travelLabel });
     }, 2500);
+    if (!revealMessage) {
+      travelTimers.current = [dotInterval, encounterTimer];
+      return;
+    }
     const completeTimer = window.setTimeout(() => {
       onComplete();
       setTravelTransition(null);
@@ -169,7 +178,7 @@ function App() {
           adventure: { mode, adventureId, active: true, nodeIndex: 0, stageEntryId: entry?.id ?? null, carryHp: maxHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, latestLoot: null, pendingReward: null, completed: false },
         };
       });
-    });
+    }, node?.type !== "event");
   };
 
   const selectEnemy = (enemyId: string) => {
@@ -303,7 +312,7 @@ function App() {
         : "You discover a new path.";
     playTravelTransition(game.adventure.mode, message, () => {
       advanceJourney(endlessEnemyIds, nextEntry?.id);
-    });
+    }, nextNode?.type !== "event");
   };
 
   const leaveTraining = () => {

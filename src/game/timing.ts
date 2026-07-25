@@ -15,3 +15,12 @@ export const INITIATIVE_TIMING = {
   flightMs: 1400,
   completeMs: 7600,
 } as const;
+
+export const ADVENTURE_EVENT_TIMING = {
+  descriptionMs: 900,
+  choicesMs: 1750,
+  rollTickMs: INITIATIVE_TIMING.rollTickMs,
+  rawRollMs: INITIATIVE_TIMING.rawRollMs,
+  bonusMs: 2600,
+  outcomeMs: 3750,
+} as const;

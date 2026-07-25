@@ -33,6 +33,7 @@ import { ElectrifiedApplicationEffect, EnemyStatsModal, EnergySegments, HealthBa
 import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 
 import { GoldIcon, preloadImage } from "../../ui/gameUi";
+import { EventPresentation } from "./EventPresentation";
 
 export function AdventureView({ game, derived, queuedActions, onBegin, onSelectEnemy, onAbility, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeComplete, onContinue, onLeaveTraining, onEvent, onPermadeath, onTalents, onCharacter, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
@@ -145,20 +146,17 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onSelectE
   const node = getAdventureNode(adventure);
   if (node.type === "event") {
     const eventDefinition = node.eventId ? ADVENTURE_EVENTS[node.eventId] : undefined;
-    const rollResult = adventure.eventRollResult;
     return (
-      <section className="page narrow-page event-page">
-        <ProgressHeader index={adventure.nodeIndex} mode={adventure.mode} adventureId={adventure.adventureId} />
-        <div className="event-sigil">♢</div>
-        <p className="eyebrow">{node.eyebrow}</p>
-        <h1>{node.title}</h1>
-        <p>{node.description}</p>
-        {!adventure.eventResolved ? (
-          <div className="event-choices">{eventDefinition?.choices.map((choice) => <button className="choice-card" key={choice.id} onClick={() => onEvent(choice.id)}><Sparkles /><span><strong>{choice.label}</strong><small>{choice.description}</small><em>d100 + {choice.stat} · {choice.threshold} to succeed</em></span><ChevronRight /></button>)}</div>
-        ) : (
-          <div className={`outcome-panel event-roll-outcome ${rollResult?.success ? "success" : "failure"}`}><strong>{rollResult?.success ? "Success" : "Failure"}</strong><div className="event-roll-math"><span>d100 <b>{rollResult?.dieRoll}</b></span><span>{rollResult?.stat} <b>+{rollResult?.statBonus}</b></span><span>Total <b>{rollResult?.total}</b> / {rollResult?.threshold}</span></div><p>{rollResult?.outcomeText}</p><button className="primary-button" onClick={onContinue}>{adventure.eventEncounter ? "Face Encounter" : "Continue Journey"} <ChevronRight size={17} /></button></div>
-        )}
-      </section>
+      <EventPresentation
+        key={node.id}
+        definition={eventDefinition}
+        title={node.title}
+        description={node.description}
+        rollResult={adventure.eventRollResult}
+        hasImmediateEncounter={Boolean(adventure.eventEncounter)}
+        onChoose={onEvent}
+        onContinue={onContinue}
+      />
     );
   }
 

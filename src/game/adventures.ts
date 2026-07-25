@@ -35,6 +35,7 @@ export function entryToNode(entry: AdventureStageEntry): AdventureNode {
 
 export function getStoryNodeIntroduction(node: AdventureNode, encounterFallback: string): string {
   if (node.enemies?.length) return node.description.trim() || encounterFallback;
+  if (node.type === "event") return "";
   return `You discover ${node.title}.`;
 }
 

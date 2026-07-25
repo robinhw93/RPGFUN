@@ -38,7 +38,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 
 - `src/App.tsx` owns top-level React state, navigation, application orchestration, and the high-level commands sent to game modules. It lazy-loads the talent screen and developer tools so those large editing surfaces are absent from the initial bundle.
 - `src/components/character/` owns character creation plus the Character and Equipment/Inventory screens.
-- `src/components/adventure/` owns adventure selection, combat-screen composition, event presentation, and score screens.
+- `src/components/adventure/` owns adventure selection, combat-screen composition, score screens, and the cinematic event sequence. `EventPresentation.tsx` reveals the title, scenario, choices, precomputed d100 result, derived-stat bonus, and outcome in order without recalculating the event rule.
 - `src/components/combat/` owns the combat HUD, initiative presentation, and transient combat/VFX renderers.
 - `src/components/talents/` owns the runtime talent tree, talent details, and ability-loadout dialogs.
 - `src/ui/gameUi.tsx` owns shared presentation helpers such as stat/ability icons, encounter wording, asset preloading, and display-only derived-stat rows.
@@ -73,7 +73,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/eventOutcomes.ts` normalizes legacy event outcomes and applies Health, currency, progression, inventory, next-combat status, and immediate-encounter effects.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
 - `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
-- `src/game/timing.ts` is the source of truth for combat/initiative presentation durations.
+- `src/game/timing.ts` is the source of truth for combat, initiative, and adventure-event presentation durations.
 - `src/game/save.ts` owns storage and migration.
 
 ## State model
@@ -356,14 +356,14 @@ The initiative grid receives the live combatant count through a CSS variable. Tw
 
 `AdventureProgress` stores the active adventure ID, selected stage-entry ID, mode, carried Health, event-roll result, queued next-combat statuses, a possible immediate event encounter, and combat independently. Story adventures use finite weighted stage definitions; `stageEntryId` locks in a randomly selected possibility so refreshing cannot reroll it. `endless` uses the dynamic Shadow Proving Grounds encounter.
 
-Starting an adventure uses the same travel-transition contract as advancing a stage: footsteps render first, the selected story entry's Description is shown second, and only then is combat created so initiative cannot cover the introduction. Empty combat descriptions fall back to generated enemy-count wording. Dynamic testing and immediate event encounters also use generated wording because they have no authored stage entry.
+Starting an adventure uses the same travel-transition contract as advancing a stage: footsteps render first, the selected story combat entry's Description is shown second, and only then is combat created so initiative cannot cover the introduction. Empty combat descriptions fall back to generated enemy-count wording. Dynamic testing and immediate event encounters also use generated wording because they have no authored stage entry. A selected event skips the travel transition's encounter announcement after the footsteps and enters its own full-screen black presentation instead.
 
 - `beginAdventure` creates the first combat at Max Health.
 - Victory triggers `grantCombatReward` through a React effect.
 - Reward identity plus node index prevents duplicate application.
 - The score screen reads `pendingReward`, which records before/after level and XP values even though the character has already received the reward.
 - Continuing carries final Health into the next combat or event.
-- Events roll `d100 + the selected derived attribute` against their configured threshold, then apply every effect in the structured success or failure outcome. Outcomes can heal or remove Health, add or remove currency/XP, grant points/items, queue player or enemy statuses for the next combat, or launch an immediate rewarded encounter. Queued statuses persist across non-combat stages and are consumed exactly once when combat is created.
+- Events roll `d100 + the selected derived attribute` against their configured threshold, then apply every effect in the structured success or failure outcome. The resolved roll remains authoritative while `EventPresentation` first fades in and lifts the title, reveals the scenario and label-only choices, then presents the chosen description alongside the cycling d100, locks the raw die, adds the attribute bonus, and finally reveals the narrative outcome. Outcomes can heal or remove Health, add or remove currency/XP, grant points/items, queue player or enemy statuses for the next combat, or launch an immediate rewarded encounter. Queued statuses persist across non-combat stages and are consumed exactly once when combat is created.
 - Completing the final stage clears active combat, records the adventure ID on the character, and marks the adventure completed.
 
 The endless route generates two or three `dummy` enemy IDs before each travel transition, then reuses that exact group when creating combat so the encounter message and battlefield agree. It increments `nodeIndex` as an unbounded fight counter, restores the character to current Max Health, and never marks the adventure completed. `grantCombatReward` calculates the exact XP needed to cross two complete level thresholds from the character's current level and XP; normal story rewards still come from the node definition. The `unlockTalent` state boundary also treats `endless` as a test-only free-unlock mode: it enforces connections and the combat lock but skips both the point check and point deduction.
