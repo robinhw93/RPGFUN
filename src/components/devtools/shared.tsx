@@ -56,6 +56,39 @@ export function makeId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function makeReadableInternalId(seed: unknown, fallback: string) {
+  if (typeof seed !== "string") return fallback;
+  const slug = seed
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72);
+  return slug || fallback;
+}
+
+export function ensureInternalId(
+  value: unknown,
+  prefix: string,
+  usedIds: Set<string>,
+  readableSeed?: unknown,
+): string {
+  if (typeof value === "string" && value.length <= 96 && /^[a-z0-9_-]+$/i.test(value) && !usedIds.has(value)) {
+    usedIds.add(value);
+    return value;
+  }
+  const base = makeReadableInternalId(readableSeed, prefix);
+  let id = base;
+  let suffix = 2;
+  while (usedIds.has(id)) {
+    id = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  usedIds.add(id);
+  return id;
+}
+
 export function finiteNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }

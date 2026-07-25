@@ -448,18 +448,20 @@ The Forest Spirit always enters with two Forest Wisps and restores 25% of maximu
 
 ## Adventure: Windsong Forest
 
-Windsong Forest currently follows six fixed combat stages. Each stage has one 100% encounter.
+Windsong Forest follows six ordered stages. Stages with several possibilities make one weighted roll from the listed chances.
 
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
-| 1 | Rustling in the Clover | 100% | Two Rabid Rats | 50 XP, 3 gold. |
+| 1 | Rustling in the Clover | 1% | Two Rabid Rats | 50 XP, 3 gold. |
+| 1 | Stalked by Wolves | 99% | Attribute-check event | Outcome-dependent. |
 | 2 | Prowling Ambush | 100% | Windsong Wolf | 53 XP, 8 gold. |
 | 3 | Skittering Rats | 100% | Three Rabid Rats | 73 XP, 6 gold. |
 | 4 | Unwelcome Guest | 100% | Forest Wisp | 36 XP, 5 gold. |
-| 5 | They see you | 100% | Three Forest Wisps | 68 XP, 10 gold. |
+| 5 | They see you | 50% | Three Forest Wisps | 68 XP, 10 gold. |
+| 5 | Bear Danger | 50% | Brown Bear | 58 XP, 8 gold. |
 | 6 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 100 XP, 28 gold. |
 
-Event definitions support two or three attribute-check choices. Each positive or negative result contains an ordered effect list that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, and an immediate rewarded encounter. The two canonical forest event definitions remain available to the Adventure Editor even though the current fixed Windsong Forest route does not reference them.
+Event definitions support two or three attribute-check choices. Each positive or negative result contains an ordered effect list that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, and an immediate rewarded encounter. **Stalked by Wolves** is used at the Forest Edge: the player may test Agility 29, Strength 31, or Intelligence 34 for 10 XP or a next-combat status; failed physical approaches immediately encounter two Windsong Wolves for 71 XP and 5 gold. **The Singing Grove** remains available to the Adventure Editor but is not currently referenced by Windsong Forest.
 
 ## Testing adventure: Shadow Proving Grounds
 

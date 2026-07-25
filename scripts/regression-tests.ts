@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
+import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, TALENTS } from "../src/game/data";
 import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
@@ -19,10 +21,20 @@ function testContentIntegrity() {
     assert.ok(ability.range === "melee" || ability.range === "ranged", `${ability.id} needs a valid range.`);
     assert.ok(ability.types.length > 0, `${ability.id} needs at least one presentation type.`);
   });
-  ADVENTURES.forEach((adventure) => adventure.stages.forEach((stage) => stage.entries.forEach((entry) => {
-    entry.enemyIds?.forEach((enemyId) => assert.ok(ENEMIES[enemyId], `${entry.id} references missing enemy ${enemyId}.`));
-    if (entry.eventId) assert.ok(ADVENTURE_EVENTS[entry.eventId], `${entry.id} references missing event ${entry.eventId}.`);
-  })));
+  ADVENTURES.forEach((adventure) => {
+    assert.ok(adventure.id, "Every adventure needs an internal ID.");
+    assert.equal(new Set(adventure.stages.map((stage) => stage.id)).size, adventure.stages.length, `${adventure.name} stage IDs must be unique.`);
+    adventure.stages.forEach((stage) => {
+      assert.ok(stage.id, `${adventure.name} contains a stage without an internal ID.`);
+      assert.equal(new Set(stage.entries.map((entry) => entry.id)).size, stage.entries.length, `${stage.name} possibility IDs must be unique.`);
+      assert.equal(stage.entries.reduce((sum, entry) => sum + entry.chance, 0), 100, `${stage.name} possibility chances must total 100%.`);
+      stage.entries.forEach((entry) => {
+        assert.ok(entry.id, `${stage.name} contains a possibility without an internal ID.`);
+        entry.enemyIds?.forEach((enemyId) => assert.ok(ENEMIES[enemyId], `${entry.id} references missing enemy ${enemyId}.`));
+        if (entry.eventId) assert.ok(ADVENTURE_EVENTS[entry.eventId], `${entry.id} references missing event ${entry.eventId}.`);
+      });
+    });
+  });
 }
 
 function testStoryEncounterIntroduction() {
@@ -30,6 +42,53 @@ function testStoryEncounterIntroduction() {
   const node = entryToNode(entry);
   assert.equal(getStoryNodeIntroduction(node, "Generated enemy wording."), entry.description, "A story combat must introduce the editor-authored entry description.");
   assert.equal(getStoryNodeIntroduction({ ...node, description: "" }, "Generated enemy wording."), "Generated enemy wording.", "An empty combat description must retain a readable fallback.");
+}
+
+function testAdventureEditorRepairsInternalIds() {
+  const exchange = normalizeAdventureExchange({
+    format: "arkenfall-adventures",
+    version: 1,
+    adventures: [{
+      id: "",
+      name: "Readable Adventure",
+      description: "",
+      recommendedLevel: 1,
+      theme: "windsong_forest",
+      completionTitle: "Complete",
+      completionDescription: "",
+      stages: [{
+        id: "",
+        name: "First Stage",
+        entries: [
+          { id: "", type: "combat", chance: 50, title: "Repeated Encounter", eyebrow: "Encounter", description: "", enemyIds: ["dummy"], reward: { experience: 1, gold: 0 } },
+          { id: "", type: "combat", chance: 50, title: "Repeated Encounter", eyebrow: "Encounter", description: "", enemyIds: ["dummy"], reward: { experience: 1, gold: 0 } },
+        ],
+      }],
+    }],
+  });
+  const adventure = exchange.adventures[0];
+  assert.equal(adventure.id, "readable-adventure", "A missing adventure ID should be generated from its name.");
+  assert.equal(adventure.stages[0].id, "first-stage", "A missing stage ID should be generated from its name.");
+  assert.deepEqual(adventure.stages[0].entries.map((entry) => entry.id), ["repeated-encounter", "repeated-encounter-2"], "Missing or duplicate stage possibility IDs should be repaired without user input.");
+}
+
+function testEventEditorRepairsInternalIds() {
+  const exchange = normalizeEventExchange({
+    format: "arkenfall-events",
+    version: 2,
+    events: [{
+      id: "",
+      name: "Readable Event",
+      eyebrow: "Event",
+      description: "",
+      choices: [
+        { id: "", label: "Wait", description: "", stat: "agility", threshold: 50, success: { text: "Success.", effects: [] }, failure: { text: "Failure.", effects: [] } },
+        { id: "", label: "Wait", description: "", stat: "strength", threshold: 50, success: { text: "Success.", effects: [] }, failure: { text: "Failure.", effects: [] } },
+      ],
+    }],
+  });
+  assert.equal(exchange.events[0].id, "readable-event", "A missing event ID should be generated from its name.");
+  assert.deepEqual(exchange.events[0].choices.map((choice) => choice.id), ["wait", "wait-2"], "Missing or duplicate choice IDs should be repaired without user input.");
 }
 
 function testStatusContracts() {
@@ -88,6 +147,8 @@ function testStructuredEventOutcome() {
 
 testContentIntegrity();
 testStoryEncounterIntroduction();
+testAdventureEditorRepairsInternalIds();
+testEventEditorRepairsInternalIds();
 testStatusContracts();
 testBasicPlayerAbility();
 testStructuredEventOutcome();

@@ -4,20 +4,30 @@ import { ADVENTURE_EVENTS, ENEMIES, ITEMS } from "../../game/data";
 import { getAdventureEventOutcomeEffects } from "../../game/eventOutcomes";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import type { AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureEventOutcomeEffect, StatName, StatusEffectId } from "../../game/types";
-import { copyJson, downloadJson, EditorShell, EMPTY_OUTCOME, EVENT_DRAFT_STORAGE_KEY, localEnemies, makeId, NumberField, saveLiveCatalog, STAT_OPTIONS, TextField, useLocalDraft, type EventExchange } from "./shared";
+import { copyJson, downloadJson, EditorShell, EMPTY_OUTCOME, ensureInternalId, EVENT_DRAFT_STORAGE_KEY, localEnemies, makeId, NumberField, saveLiveCatalog, STAT_OPTIONS, TextField, useLocalDraft, type EventExchange } from "./shared";
 
 export function normalizeOutcome(outcome: AdventureEventOutcome): AdventureEventOutcome {
   return { text: outcome.text ?? "", effects: structuredClone(getAdventureEventOutcomeEffects(outcome)) };
 }
 export function canonicalEventExchange(): EventExchange { return { format: "arkenfall-events", version: 2, events: Object.values(ADVENTURE_EVENTS).map((event) => structuredClone(event)) }; }
 export function normalizeEventExchange(exchange: EventExchange): EventExchange {
+  const usedEventIds = new Set<string>();
   return {
     format: "arkenfall-events",
     version: 2,
-    events: (exchange.events ?? []).map((event) => ({
-      ...event,
-      choices: event.choices.map((choice) => ({ ...choice, success: normalizeOutcome(choice.success), failure: normalizeOutcome(choice.failure) })),
-    })),
+    events: (exchange.events ?? []).map((event) => {
+      const usedChoiceIds = new Set<string>();
+      return {
+        ...event,
+        id: ensureInternalId(event.id, "event", usedEventIds, event.name),
+        choices: (event.choices ?? []).map((choice) => ({
+          ...choice,
+          id: ensureInternalId(choice.id, "choice", usedChoiceIds, choice.label),
+          success: normalizeOutcome(choice.success),
+          failure: normalizeOutcome(choice.failure),
+        })),
+      };
+    }),
   };
 }
 export function blankChoice(index: number): AdventureEventChoice { return { id: makeId("choice"), label: `Choice ${index}`, description: "", stat: "strength", threshold: 60, success: { ...EMPTY_OUTCOME, text: "Success." }, failure: { ...EMPTY_OUTCOME, text: "Failure." } }; }
@@ -97,12 +107,13 @@ export function EventDevtool({ onExit }: { onExit: () => void }) {
   const updateChoice = (choiceId: string, change: Partial<AdventureEventChoice>) => update({ choices: selected.choices.map((choice) => choice.id === choiceId ? { ...choice, ...change } : choice) });
   const add = () => { const id = makeId("event"); const next = { id, name: "New Event", eyebrow: "Unknown Event", description: "Describe the scenario.", choices: [blankChoice(1), blankChoice(2)] }; store.setDraft((draft) => ({ ...draft, events: [...draft.events, next] })); setSelectedId(id); };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, events: draft.events.filter((event) => event.id !== selected.id) })); setSelectedId(store.draft.events.find((event) => event.id !== selected.id)?.id ?? ""); };
-  const copy = async () => { try { await copyJson(store.draft); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
-  const save = async () => { try { window.localStorage.setItem(EVENT_DRAFT_STORAGE_KEY, JSON.stringify(store.draft)); store.setMessage("Writing events to live source…"); await saveLiveCatalog("events", store.draft); store.setMessage("Events saved permanently to the live game"); } catch (error) { store.setMessage(error instanceof Error ? error.message : "Events could not be saved to the live game"); } };
-  return <EditorShell title="Event Manager" description="Create two- or three-choice events resolved by d100 plus a selected attribute." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-events.json", store.draft); store.setMessage("JSON exported"); }} onExit={onExit}>
+  const prepareDraft = () => { const prepared = normalizeEventExchange(store.draft); store.setDraft(prepared); window.localStorage.setItem(EVENT_DRAFT_STORAGE_KEY, JSON.stringify(prepared)); return prepared; };
+  const copy = async () => { try { await copyJson(prepareDraft()); store.setMessage("JSON copied — paste it into Codex"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
+  const save = async () => { try { const prepared = prepareDraft(); store.setMessage("Writing events to live source…"); await saveLiveCatalog("events", prepared); store.setMessage("Events saved permanently to the live game"); } catch (error) { store.setMessage(error instanceof Error ? error.message : "Events could not be saved to the live game"); } };
+  return <EditorShell title="Event Manager" description="Create two- or three-choice events resolved by d100 plus a selected attribute. Internal IDs are handled automatically." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-events.json", prepareDraft()); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New event</button>{store.draft.events.map((event) => <button className={event.id === selected?.id ? "selected" : ""} key={event.id} onClick={() => setSelectedId(event.id)}><strong>{event.name}</strong><small>{event.choices.length} choices</small></button>)}</aside>
-      {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Event Definition</p><h2>{selected.name}</h2></div><button className="danger-icon-button" onClick={remove}><Trash2 size={15} /> Delete</button></div><div className="content-form-grid"><TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Eyebrow" value={selected.eyebrow} onChange={(eyebrow) => update({ eyebrow })} /><TextField label="Scenario" value={selected.description} onChange={(description) => update({ description })} textarea /></div>
-        <div className="choice-editor-list">{selected.choices.map((choice, index) => <article className="choice-editor" key={choice.id}><header><strong>Choice {index + 1}</strong>{selected.choices.length > 2 && <button onClick={() => update({ choices: selected.choices.filter((item) => item.id !== choice.id) })}><Trash2 size={14} /> Remove</button>}</header><div className="content-form-grid"><TextField label="Choice ID" value={choice.id} onChange={(id) => updateChoice(choice.id, { id })} /><TextField label="Button label" value={choice.label} onChange={(label) => updateChoice(choice.id, { label })} /><TextField label="Choice description" value={choice.description} onChange={(description) => updateChoice(choice.id, { description })} textarea /><label><span>Attribute</span><select value={choice.stat} onChange={(event) => updateChoice(choice.id, { stat: event.target.value as StatName })}>{STAT_OPTIONS.map((stat) => <option key={stat.id} value={stat.id}>{stat.label}</option>)}</select></label><NumberField label="Success threshold" value={choice.threshold} min={1} onChange={(threshold) => updateChoice(choice.id, { threshold })} /></div><div className="choice-outcomes"><OutcomeFields title="Positive outcome" polarity="positive" outcome={choice.success} enemies={enemies} onChange={(success) => updateChoice(choice.id, { success })} /><OutcomeFields title="Negative outcome" polarity="negative" outcome={choice.failure} enemies={enemies} onChange={(failure) => updateChoice(choice.id, { failure })} /></div></article>)}</div>
+      {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">Event Definition</p><h2>{selected.name}</h2></div><button className="danger-icon-button" onClick={remove}><Trash2 size={15} /> Delete</button></div><div className="content-form-grid"><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Eyebrow" value={selected.eyebrow} onChange={(eyebrow) => update({ eyebrow })} /><TextField label="Scenario" value={selected.description} onChange={(description) => update({ description })} textarea /></div>
+        <div className="choice-editor-list">{selected.choices.map((choice, index) => <article className="choice-editor" key={choice.id}><header><strong>Choice {index + 1}</strong>{selected.choices.length > 2 && <button onClick={() => update({ choices: selected.choices.filter((item) => item.id !== choice.id) })}><Trash2 size={14} /> Remove</button>}</header><div className="content-form-grid"><TextField label="Button label" value={choice.label} onChange={(label) => updateChoice(choice.id, { label })} /><TextField label="Choice description" value={choice.description} onChange={(description) => updateChoice(choice.id, { description })} textarea /><label><span>Attribute</span><select value={choice.stat} onChange={(event) => updateChoice(choice.id, { stat: event.target.value as StatName })}>{STAT_OPTIONS.map((stat) => <option key={stat.id} value={stat.id}>{stat.label}</option>)}</select></label><NumberField label="Success threshold" value={choice.threshold} min={1} onChange={(threshold) => updateChoice(choice.id, { threshold })} /></div><div className="choice-outcomes"><OutcomeFields title="Positive outcome" polarity="positive" outcome={choice.success} enemies={enemies} onChange={(success) => updateChoice(choice.id, { success })} /><OutcomeFields title="Negative outcome" polarity="negative" outcome={choice.failure} enemies={enemies} onChange={(failure) => updateChoice(choice.id, { failure })} /></div></article>)}</div>
         {selected.choices.length < 3 && <button className="secondary-editor-button" onClick={() => update({ choices: [...selected.choices, blankChoice(selected.choices.length + 1)] })}><Plus size={14} /> Add third choice</button>}
       </section>}
     </div>

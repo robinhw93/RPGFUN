@@ -3,85 +3,89 @@ import type { AdventureDefinition, AdventureEventDefinition, AdventureNode } fro
 export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
   "brokenFootbridge": {
     "id": "brokenFootbridge",
-    "name": "The Broken Footbridge",
-    "eyebrow": "Forest Event",
-    "description": "A rain-swollen stream has torn the footbridge from its anchors. The opposite bank is close, but the current is fast.",
+    "name": "Stalked by Wolves",
+    "eyebrow": "Event",
+    "description": "You hear rustling in the bushes not far behind you and realize that two wolves are stalking you.",
     "choices": [
       {
-        "id": "leap",
-        "label": "Leap the gap",
-        "description": "Trust your footing and clear the broken span.",
+        "id": "climb",
+        "label": "Climb up a tree",
+        "description": "You climb up a tree to wait them out.",
         "stat": "agility",
-        "threshold": 62,
+        "threshold": 29,
         "success": {
-          "text": "You land lightly and find a dropped coin purse in the grass.",
+          "text": "You make it up the tree and wait them out. You study the wolves' behaviour and gain 10 experience.",
           "effects": [
             {
-              "type": "gainGold",
-              "amount": 8
+              "type": "gainExperience",
+              "amount": 10
             }
           ]
         },
         "failure": {
-          "text": "The wet timber gives way. You strike the stones before hauling yourself ashore.",
+          "text": "You do not make it up the tree before the wolves pounce.",
           "effects": [
             {
-              "type": "loseHealth",
-              "amount": 8
+              "type": "immediateEncounter",
+              "enemyId": "enemy-mrxj4o6o-o45ia",
+              "count": 2,
+              "experience": 71,
+              "gold": 5
             }
           ]
         }
       },
       {
         "id": "ford",
-        "label": "Ford the stream",
-        "description": "Push through the current and keep your pack above water.",
-        "stat": "vitality",
-        "threshold": 58,
+        "label": "Scare them off",
+        "description": "You attempt to scare the wolves away by making yourself big and threatening.",
+        "stat": "strength",
+        "threshold": 31,
         "success": {
-          "text": "You withstand the freezing current and emerge invigorated.",
+          "text": "The wolves run away. You feel a renewed confidence grow within. Start next combat with Fierce.",
           "effects": [
             {
-              "type": "heal",
-              "amount": 10
+              "type": "playerNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
             }
           ]
         },
         "failure": {
-          "text": "The current batters you against the grey stones.",
+          "text": "The wolves do not seem intimidated and leap at you.",
           "effects": [
             {
-              "type": "loseHealth",
-              "amount": 6
+              "type": "immediateEncounter",
+              "enemyId": "enemy-mrxj4o6o-o45ia",
+              "count": 2,
+              "experience": 71,
+              "gold": 5
             }
           ]
         }
       },
       {
         "id": "repair",
-        "label": "Repair the bridge",
-        "description": "Read the old joinery and bind the span back together.",
+        "label": "Keep walking",
+        "description": "You keep walking and attempt to hide your tracks and scent from the wolves.",
         "stat": "intelligence",
-        "threshold": 65,
+        "threshold": 34,
         "success": {
-          "text": "The repaired crossing holds. A grateful traveller rewards your work.",
+          "text": "After a while you stop hearing the rustling in the bushes. It seems you were successful in avoiding the wolves, and gain 10 experience.",
           "effects": [
             {
-              "type": "gainGold",
-              "amount": 12
-            },
-            {
               "type": "gainExperience",
-              "amount": 15
+              "amount": 10
             }
           ]
         },
         "failure": {
-          "text": "The repair consumes time and supplies, but the rotten frame will not hold.",
+          "text": "In your attempt to lose the wolves, you become lost in the forest. Tired from the extra walk, you start the next combat with Weaken.",
           "effects": [
             {
-              "type": "loseGold",
-              "amount": 4
+              "type": "playerNextCombatDebuff",
+              "status": "weaken",
+              "stacks": 1
             }
           ]
         }
@@ -173,7 +177,7 @@ export const ADVENTURES: AdventureDefinition[] = [
           {
             "id": "rat-pack",
             "type": "combat",
-            "chance": 100,
+            "chance": 1,
             "eyebrow": "Forest Encounter",
             "title": "Rustling in the Clover",
             "description": "Two rabid rats burst from the sunlit undergrowth and close around the path.",
@@ -185,6 +189,15 @@ export const ADVENTURES: AdventureDefinition[] = [
               "experience": 50,
               "gold": 3
             }
+          },
+          {
+            "id": "barkl",
+            "type": "event",
+            "chance": 99,
+            "eyebrow": "Event",
+            "title": "Stalked by Wolves",
+            "description": "You hear rustling in the bushes not far behind you and realize that two wolves are stalking you.",
+            "eventId": "brokenFootbridge"
           }
         ]
       },
@@ -260,7 +273,7 @@ export const ADVENTURES: AdventureDefinition[] = [
           {
             "id": "entry-mrxmqmcg-ppgfa",
             "type": "combat",
-            "chance": 100,
+            "chance": 50,
             "eyebrow": "Encounter",
             "title": "They see you",
             "description": "Three Wisps silently glide down from the treetops.",
@@ -272,6 +285,21 @@ export const ADVENTURES: AdventureDefinition[] = [
             "reward": {
               "experience": 68,
               "gold": 10
+            }
+          },
+          {
+            "id": "entry-mrypo1bf-8fddw",
+            "type": "combat",
+            "chance": 50,
+            "eyebrow": "Encounter",
+            "title": "Bear Danger",
+            "description": "You do not see it until it is too late. The Brown Bear charges at you, roaring.",
+            "enemyIds": [
+              "enemy-mrxkar5z-g9o5d"
+            ],
+            "reward": {
+              "experience": 58,
+              "gold": 8
             }
           }
         ]
