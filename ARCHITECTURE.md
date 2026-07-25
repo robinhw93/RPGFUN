@@ -356,7 +356,7 @@ The initiative grid receives the live combatant count through a CSS variable. Tw
 
 `AdventureProgress` stores the active adventure ID, selected stage-entry ID, mode, carried Health, event-roll result, queued next-combat statuses, a possible immediate event encounter, and combat independently. Story adventures use finite weighted stage definitions; `stageEntryId` locks in a randomly selected possibility so refreshing cannot reroll it. `endless` uses the dynamic Shadow Proving Grounds encounter.
 
-Starting an adventure uses the same travel-transition contract as advancing a stage: footsteps render first, the selected encounter copy is shown second, and only then is combat created so initiative cannot cover the introduction.
+Starting an adventure uses the same travel-transition contract as advancing a stage: footsteps render first, the selected story entry's Description is shown second, and only then is combat created so initiative cannot cover the introduction. Empty combat descriptions fall back to generated enemy-count wording. Dynamic testing and immediate event encounters also use generated wording because they have no authored stage entry.
 
 - `beginAdventure` creates the first combat at Max Health.
 - Victory triggers `grantCombatReward` through a React effect.

@@ -10,7 +10,7 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { DevtoolAccessDialog, type DevtoolKind } from "./components/devtools/shared";
-import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, selectStageEntry } from "./game/adventures";
+import { DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -154,9 +154,12 @@ function App() {
     const entry = mode === "endless" ? null : selectStageEntry(getAdventureDefinition(adventureId), 0);
     const enemyIds = mode === "endless" ? rollDummyEncounter() : entry?.enemyIds;
     const node = entry ? entryToNode(entry) : null;
-    const message = enemyIds?.length
-      ? describeEnemyEncounter(enemyIds)
-      : `You discover ${node?.title ?? "a new path"}.`;
+    const generatedEncounter = enemyIds?.length ? describeEnemyEncounter(enemyIds) : "";
+    const message = mode === "endless"
+      ? generatedEncounter
+      : node
+        ? getStoryNodeIntroduction(node, generatedEncounter)
+        : "You discover a new path.";
     playTravelTransition(mode, message, () => {
       setGame((current) => {
         const maxHp = getDerivedStats(current.character).maxHp;
@@ -295,9 +298,9 @@ function App() {
     const nextNode = nextEntry ? entryToNode(nextEntry) : null;
     const message = endlessEnemyIds
       ? describeEnemyEncounter(endlessEnemyIds)
-      : nextNode?.enemies
-        ? describeEnemyEncounter(nextNode.enemies)
-        : `You discover ${nextNode?.title}.`;
+      : nextNode
+        ? getStoryNodeIntroduction(nextNode, nextNode.enemies?.length ? describeEnemyEncounter(nextNode.enemies) : "")
+        : "You discover a new path.";
     playTravelTransition(game.adventure.mode, message, () => {
       advanceJourney(endlessEnemyIds, nextEntry?.id);
     });

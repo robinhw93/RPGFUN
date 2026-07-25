@@ -33,6 +33,11 @@ export function entryToNode(entry: AdventureStageEntry): AdventureNode {
   };
 }
 
+export function getStoryNodeIntroduction(node: AdventureNode, encounterFallback: string): string {
+  if (node.enemies?.length) return node.description.trim() || encounterFallback;
+  return `You discover ${node.title}.`;
+}
+
 export function getAdventureEntry(progress: AdventureProgress): AdventureStageEntry | null {
   if (progress.mode === "endless") return null;
   const adventure = getAdventureDefinition(progress.adventureId);

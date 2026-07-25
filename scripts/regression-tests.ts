@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, TALENTS } from "../src/game/data";
+import { entryToNode, getStoryNodeIntroduction } from "../src/game/adventures";
 import { INITIAL_GAME } from "../src/game/character";
 import { createCombat, useAbility } from "../src/game/engine";
 import { resolveAdventureEventChoice } from "../src/game/eventOutcomes";
@@ -22,6 +23,13 @@ function testContentIntegrity() {
     entry.enemyIds?.forEach((enemyId) => assert.ok(ENEMIES[enemyId], `${entry.id} references missing enemy ${enemyId}.`));
     if (entry.eventId) assert.ok(ADVENTURE_EVENTS[entry.eventId], `${entry.id} references missing event ${entry.eventId}.`);
   })));
+}
+
+function testStoryEncounterIntroduction() {
+  const entry = ADVENTURES[0].stages[0].entries[0];
+  const node = entryToNode(entry);
+  assert.equal(getStoryNodeIntroduction(node, "Generated enemy wording."), entry.description, "A story combat must introduce the editor-authored entry description.");
+  assert.equal(getStoryNodeIntroduction({ ...node, description: "" }, "Generated enemy wording."), "Generated enemy wording.", "An empty combat description must retain a readable fallback.");
 }
 
 function testStatusContracts() {
@@ -79,6 +87,7 @@ function testStructuredEventOutcome() {
 }
 
 testContentIntegrity();
+testStoryEncounterIntroduction();
 testStatusContracts();
 testBasicPlayerAbility();
 testStructuredEventOutcome();
