@@ -1,10 +1,11 @@
-import { ArrowLeft, BedDouble, Check, FlaskConical, Hammer, HeartPulse, Package, ShoppingBag, Sparkles, X } from "lucide-react";
+import { ArrowLeft, BedDouble, Check, Crosshair, Dumbbell, FlaskConical, Hammer, HeartPulse, Package, ShoppingBag, Sparkles, Utensils, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
 import { ITEMS } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
 import { describeConsumableEffect, getItemGoldCost, isConsumableItem, isGearItem } from "../../game/items";
-import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTownCraftingCatalog, getTownVendorStock, type TownActionResult } from "../../game/town";
+import { STATUS_EFFECTS } from "../../game/statusEffects";
+import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_MEALS, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, GameState, InventoryItem } from "../../game/types";
 import { GoldIcon } from "../../ui/gameUi";
 
@@ -118,17 +119,19 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   );
 }
 
-export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest }: {
+export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }: {
   game: GameState;
   maxHp: number;
   onExit: () => void;
   onBuy: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
   onCraft: (station: ArkenfallVendorId, itemId: string) => TownActionResult;
   onRest: () => TownActionResult;
+  onMeal: (mealId: TavernMealId) => TownActionResult;
 }) {
   const [location, setLocation] = useState<TownLocation>("square");
-  const [restFeedback, setRestFeedback] = useState<string | null>(null);
+  const [serviceFeedback, setServiceFeedback] = useState<string | null>(null);
   const currentHp = Math.min(maxHp, game.adventure.carryHp ?? maxHp);
+  const restCost = getTavernRestCost(currentHp, maxHp);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location]);
@@ -136,8 +139,19 @@ export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest }: {
   if (location === "tavern") return (
     <section className="town-location town-tavern">
       <div className="town-hearth-glow" aria-hidden="true" />
-      <header className="town-location-header"><button type="button" className="town-back-button" onClick={() => setLocation("square")}><ArrowLeft /> Arkenfall</button><div><p className="eyebrow">Tavern and Inn</p><h1>The Resting Hart</h1><p>Warm food, clean sheets, and a hearth that never seems to die.</p></div></header>
-      <div className="tavern-rest-card"><span className="tavern-heart"><HeartPulse /></span><p className="eyebrow">Rest between adventures</p><h2>{currentHp >= maxHp ? "You are fully rested" : "Let the road wait until morning"}</h2><div className="town-health-meter"><span style={{ width: `${maxHp > 0 ? currentHp / maxHp * 100 : 0}%` }} /><strong>{currentHp} / {maxHp} Health</strong></div><p>Your Health carries over between adventures. Resting at the tavern restores it completely.</p><button type="button" className="primary-button" disabled={currentHp >= maxHp} onClick={() => { const result = onRest(); setRestFeedback(result.message); }}>{currentHp >= maxHp ? "Already Fully Rested" : "Rest by the Hearth"}</button>{restFeedback && <div className="town-feedback" role="status">{restFeedback}</div>}</div>
+      <header className="town-location-header"><button type="button" className="town-back-button" onClick={() => setLocation("square")}><ArrowLeft /> Arkenfall</button><div><p className="eyebrow">Tavern and Inn</p><h1>The Resting Hart</h1><p>Warm food, clean sheets, and a hearth that never seems to die.</p></div><span className="town-gold"><GoldIcon /> {game.character.gold}</span></header>
+      <div className="tavern-services-panel">
+        <div className="tavern-services-heading"><Utensils /><div><p className="eyebrow">Food and lodging</p><h2>Tavern Services</h2></div></div>
+        {serviceFeedback && <div className="town-feedback" role="status">{serviceFeedback}</div>}
+        <div className="tavern-service-layout">
+          <article className="tavern-rest-card"><span className="tavern-service-icon"><HeartPulse /></span><p className="eyebrow">Rest between adventures</p><h3>{currentHp >= maxHp ? "You are fully rested" : "A Night by the Hearth"}</h3><div className="town-health-meter"><span style={{ width: `${maxHp > 0 ? currentHp / maxHp * 100 : 0}%` }} /><strong>{currentHp} / {maxHp} Health</strong></div><p>Recover all missing Health. The room costs 1 Gold for every 3 Health restored.</p><button type="button" className="tavern-service-button" disabled={currentHp >= maxHp || game.character.gold < restCost} onClick={() => { const result = onRest(); setServiceFeedback(result.message); }}>{currentHp >= maxHp ? "Already Fully Rested" : <><BedDouble /> Rest <span><GoldIcon /> {restCost}</span></>}</button></article>
+          <section className="tavern-meals" aria-labelledby="tavern-meals-heading"><div className="tavern-meals-heading"><div><p className="eyebrow">Fresh from the kitchen</p><h3 id="tavern-meals-heading">Meals</h3></div><small>Benefits are applied when your next combat begins.</small></div><div className="tavern-meal-grid">{TAVERN_MEALS.map((meal) => {
+            const prepared = hasPreparedTavernMeal(game, meal);
+            const status = STATUS_EFFECTS[meal.status];
+            return <article className={`tavern-meal-card meal-${meal.status}`} key={meal.id}><span className="tavern-service-icon">{meal.status === "strengthened" ? <Dumbbell /> : meal.status === "fierce" ? <Crosshair /> : <HeartPulse />}</span><div className="tavern-meal-copy"><p className="eyebrow">Grants {status.name}</p><h4>{meal.name}</h4><p>{meal.description}</p><small>{status.description}</small></div><button type="button" className="tavern-service-button" disabled={prepared || game.character.gold < meal.cost} onClick={() => { const result = onMeal(meal.id); setServiceFeedback(result.message); }}>{prepared ? <><Check /> Prepared</> : <><Utensils /> Order <span><GoldIcon /> {meal.cost}</span></>}</button></article>;
+          })}</div></section>
+        </div>
+      </div>
     </section>
   );
   return (

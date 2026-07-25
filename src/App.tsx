@@ -22,7 +22,7 @@ import { grantCombatReward } from "./game/rewards";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
-import { craftTownItem, purchaseTownItem, restAtArkenfallTavern, type TownActionResult } from "./game/town";
+import { craftTownItem, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, type TavernMealId, type TownActionResult } from "./game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
 import { useCombatActionQueue } from "./hooks/useCombatActionQueue";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
@@ -184,10 +184,13 @@ function App() {
       setGame((current) => {
         const maxHp = getDerivedStats(current.character).maxHp;
         const startingHp = getAdventureStartingHp(maxHp, current.adventure.carryHp);
-        const combat = enemyIds?.length ? createCombat(current.character, enemyIds, startingHp) : null;
+        const combat = enemyIds?.length ? createCombat(current.character, enemyIds, startingHp, {
+          playerStatuses: current.adventure.nextCombatPlayerStatuses,
+          enemyStatuses: current.adventure.nextCombatEnemyStatuses,
+        }) : null;
         return {
           ...current,
-          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
+          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -350,6 +353,7 @@ function App() {
   const buyTownItem = (vendor: ArkenfallVendorId, itemId: string) => runTownAction((current) => purchaseTownItem(current, vendor, itemId));
   const makeTownItem = (station: ArkenfallVendorId, itemId: string) => runTownAction((current) => craftTownItem(current, station, itemId));
   const restInTown = () => runTownAction(restAtArkenfallTavern);
+  const eatInTown = (mealId: TavernMealId) => runTownAction((current) => purchaseTavernMeal(current, mealId));
 
   const unlockTalent = (talentId: string) => {
     setGame((current) => {
@@ -543,7 +547,7 @@ function App() {
         )}
         {view === "town" && (
           <Suspense fallback={null}>
-            <TownView game={game} maxHp={derived.maxHp} onExit={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onRest={restInTown} />
+            <TownView game={game} maxHp={derived.maxHp} onExit={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onRest={restInTown} onMeal={eatInTown} />
           </Suspense>
         )}
         <Suspense fallback={null}>

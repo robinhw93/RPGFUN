@@ -77,7 +77,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/progression.ts` owns experience thresholds and level rewards.
 - `src/game/rewards.ts` independently rolls every defeated enemy instance's drop table plus the current stage drop table, applies a combat reward exactly once, transfers found items into inventory, and stores the immutable score-screen snapshot.
 - `src/game/eventOutcomes.ts` normalizes legacy event outcomes, resolves checked or direct choices, applies typed effects, persists per-item event-merchant sold-out state, and owns atomic single-stock purchases and one-copy inventory sales.
-- `src/game/town.ts` resolves editor-owned vendor/recipe data, legacy town defaults, ingredient counts, atomic repeatable vendor purchases, exact material consumption, crafted-item grants, and full tavern recovery.
+- `src/game/town.ts` resolves editor-owned vendor/recipe data, legacy town defaults, ingredient counts, atomic repeatable vendor purchases, exact material consumption, crafted-item grants, paid tavern recovery, and purchased meal buffs queued for the next combat.
 - `src/game/combatSequence.ts` owns small presentation-queue predicates shared by UI.
 - `src/game/initiativeLayout.ts` owns pure FLIP geometry for initiative cards.
 - `src/game/timing.ts` is the source of truth for combat, initiative, and adventure-event presentation durations.

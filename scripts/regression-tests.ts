@@ -16,7 +16,7 @@ import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableIte
 import { ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
-import { craftTownItem, getItemCraftingRecipe, getTownCraftingCatalog, getTownVendorStock, purchaseTownItem, restAtArkenfallTavern } from "../src/game/town";
+import { craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, ItemDropDefinition } from "../src/game/types";
 
 function testGearIconLibrary() {
@@ -132,10 +132,30 @@ function testArkenfallTownCommerceAndCrafting() {
   assert.deepEqual(crafted.state.character.inventory.map((item) => item.id), [recipeItem.id], "Crafting must consume exact ingredient quantities and add one crafted item.");
   assert.equal(craftTownItem(purchaseState, "blacksmith", recipeItem.id).success, false, "Crafting must fail without the required materials.");
 
-  const wounded = { ...purchaseState, adventure: { ...purchaseState.adventure, carryHp: 1 } };
+  const maxHp = getDerivedStats(purchaseState.character).maxHp;
+  const restCost = getTavernRestCost(1, maxHp);
+  const wounded = { ...purchaseState, character: { ...purchaseState.character, gold: restCost }, adventure: { ...purchaseState.adventure, carryHp: 1 } };
   const rested = restAtArkenfallTavern(wounded);
   assert.equal(rested.success, true, "The tavern must heal a wounded character between adventures.");
-  assert.equal(rested.state.adventure.carryHp, getDerivedStats(rested.state.character).maxHp, "Tavern rest must restore carried Health to the derived maximum.");
+  assert.equal(rested.state.adventure.carryHp, maxHp, "Tavern rest must restore carried Health to the derived maximum.");
+  assert.equal(rested.state.character.gold, 0, "Tavern rest must cost one Gold per three missing Health, rounded up.");
+  assert.equal(getTavernRestCost(maxHp - 4, maxHp), 2, "Partial groups of three missing Health must still cost one Gold.");
+  assert.equal(restAtArkenfallTavern({ ...wounded, character: { ...wounded.character, gold: restCost - 1 } }).success, false, "Rest must fail atomically when the character cannot afford full recovery.");
+
+  assert.deepEqual(TAVERN_MEALS.map((meal) => meal.status), ["strengthened", "fierce", "regenerate"], "The tavern menu must cover all three requested next-combat buffs.");
+  assert.ok(TAVERN_MEALS.every((meal) => meal.cost >= 5 && meal.cost <= 10), "Every tavern meal must cost between 5 and 10 Gold.");
+  const mealBudget = TAVERN_MEALS.reduce((sum, meal) => sum + meal.cost, 0);
+  let mealState: GameState = { ...structuredClone(INITIAL_GAME), characterCreated: true, character: { ...structuredClone(INITIAL_GAME.character), gold: mealBudget } };
+  TAVERN_MEALS.forEach((meal) => {
+    const ordered = purchaseTavernMeal(mealState, meal.id);
+    assert.equal(ordered.success, true, `${meal.name} must be purchasable between adventures.`);
+    mealState = ordered.state;
+  });
+  assert.equal(mealState.character.gold, 0, "Ordering meals must deduct each listed price.");
+  assert.deepEqual(mealState.adventure.nextCombatPlayerStatuses, TAVERN_MEALS.map((meal) => ({ status: meal.status, stacks: 1 })), "Meals must queue their buffs for the next combat.");
+  assert.equal(purchaseTavernMeal(mealState, TAVERN_MEALS[0].id).success, false, "A non-stackable meal benefit must not be charged twice before combat.");
+  const mealCombat = createCombat(mealState.character, ["dummy"], undefined, { playerStatuses: mealState.adventure.nextCombatPlayerStatuses });
+  assert.deepEqual(mealCombat.playerStatuses.map((status) => status.id), TAVERN_MEALS.map((meal) => meal.status), "Queued tavern meal buffs must become real combat statuses.");
   assert.equal(getAdventureStartingHp(50, 17), 17, "Starting another adventure must preserve carried Health instead of healing automatically.");
   assert.equal(getAdventureStartingHp(50, null), 50, "A fresh character without carried Health must begin at full Health.");
   assert.equal(getAdventureStartingHp(50, 80), 50, "Carried Health must never exceed current Max Health.");

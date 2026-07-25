@@ -1,7 +1,41 @@
 import { getDerivedStats } from "./character";
 import { ITEMS } from "./data";
 import { getItemGoldCost, isConsumableItem, isGearItem } from "./items";
-import type { ArkenfallVendorId, GameState, InventoryItem, ItemCraftingRecipe } from "./types";
+import type { ArkenfallVendorId, GameState, InventoryItem, ItemCraftingRecipe, StatusEffectId } from "./types";
+
+export type TavernMealId = "ironpot-stew" | "peppercrust-boar" | "hartroot-broth";
+
+export interface TavernMealDefinition {
+  id: TavernMealId;
+  name: string;
+  description: string;
+  cost: number;
+  status: Extract<StatusEffectId, "strengthened" | "fierce" | "regenerate">;
+}
+
+export const TAVERN_MEALS: TavernMealDefinition[] = [
+  {
+    id: "ironpot-stew",
+    name: "Ironpot Stew",
+    description: "A thick stew of root vegetables and slow-cooked beef.",
+    cost: 5,
+    status: "strengthened",
+  },
+  {
+    id: "peppercrust-boar",
+    name: "Peppercrust Boar",
+    description: "Fire-roasted boar with enough spice to sharpen every sense.",
+    cost: 8,
+    status: "fierce",
+  },
+  {
+    id: "hartroot-broth",
+    name: "Hartroot Broth",
+    description: "A restorative broth simmered with woodland herbs.",
+    cost: 10,
+    status: "regenerate",
+  },
+];
 
 const LEGACY_RECIPES: Record<string, ItemCraftingRecipe> = {
   "gear-ms0h89t2-sczql": {
@@ -115,9 +149,43 @@ export function restAtArkenfallTavern(state: GameState): TownActionResult {
   const maxHp = getDerivedStats(state.character).maxHp;
   const currentHp = Math.min(maxHp, state.adventure.carryHp ?? maxHp);
   if (currentHp >= maxHp) return { state, success: false, message: "You are already fully rested." };
+  const cost = getTavernRestCost(currentHp, maxHp);
+  if (state.character.gold < cost) return { state, success: false, message: `You need ${cost - state.character.gold} more Gold.` };
   return {
-    state: { ...state, adventure: { ...state.adventure, carryHp: maxHp } },
+    state: {
+      ...state,
+      character: { ...state.character, gold: state.character.gold - cost },
+      adventure: { ...state.adventure, carryHp: maxHp },
+    },
     success: true,
-    message: `You rest by the hearth and recover ${maxHp - currentHp} Health.`,
+    message: `You rest by the hearth and recover ${maxHp - currentHp} Health for ${cost} Gold.`,
+  };
+}
+
+export function getTavernRestCost(currentHp: number, maxHp: number): number {
+  return Math.ceil(Math.max(0, maxHp - currentHp) / 3);
+}
+
+export function hasPreparedTavernMeal(state: GameState, meal: TavernMealDefinition): boolean {
+  return state.adventure.nextCombatPlayerStatuses.some((effect) => effect.status === meal.status);
+}
+
+export function purchaseTavernMeal(state: GameState, mealId: TavernMealId): TownActionResult {
+  if (state.adventure.active) return { state, success: false, message: "You cannot order a meal while an adventure is in progress." };
+  const meal = TAVERN_MEALS.find((candidate) => candidate.id === mealId);
+  if (!meal) return { state, success: false, message: "That meal is not on the menu." };
+  if (hasPreparedTavernMeal(state, meal)) return { state, success: false, message: `${meal.name} is already prepared for your next combat.` };
+  if (state.character.gold < meal.cost) return { state, success: false, message: `You need ${meal.cost - state.character.gold} more Gold.` };
+  return {
+    state: {
+      ...state,
+      character: { ...state.character, gold: state.character.gold - meal.cost },
+      adventure: {
+        ...state.adventure,
+        nextCombatPlayerStatuses: [...state.adventure.nextCombatPlayerStatuses, { status: meal.status, stacks: 1 }],
+      },
+    },
+    success: true,
+    message: `${meal.name} will grant ${meal.status === "strengthened" ? "Strengthened" : meal.status === "fierce" ? "Fierce" : "Regenerate"} in your next combat.`,
   };
 }
