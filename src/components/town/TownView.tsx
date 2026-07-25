@@ -1,5 +1,5 @@
 import { ArrowLeft, BedDouble, Check, Crosshair, Dumbbell, FlaskConical, Hammer, HeartPulse, Package, ShoppingBag, Sparkles, Utensils, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
 import { ITEMS } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
@@ -83,12 +83,30 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   const [tab, setTab] = useState<VendorTab>("shop");
   const [inspected, setInspected] = useState<InventoryItem | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [purchaseToast, setPurchaseToast] = useState<{ id: number; item: InventoryItem } | null>(null);
   const [actionItemId, setActionItemId] = useState<string | null>(null);
+  const purchaseToastId = useRef(0);
+  const purchaseToastTimer = useRef<number | null>(null);
   const stock = useMemo(() => tab === "shop" ? getTownVendorStock(vendor) : getTownCraftingCatalog(vendor), [tab, vendor]);
   const isAlchemist = vendor === "alchemist";
+  useEffect(() => () => {
+    if (purchaseToastTimer.current !== null) window.clearTimeout(purchaseToastTimer.current);
+  }, []);
   const runAction = (item: InventoryItem) => {
     const result = tab === "shop" ? onBuy(vendor, item.id) : onCraft(vendor, item.id);
-    setFeedback(result.message);
+    if (tab === "shop" && result.success && result.item) {
+      setFeedback(null);
+      const toast = { id: purchaseToastId.current + 1, item: result.item };
+      purchaseToastId.current = toast.id;
+      setPurchaseToast(toast);
+      if (purchaseToastTimer.current !== null) window.clearTimeout(purchaseToastTimer.current);
+      purchaseToastTimer.current = window.setTimeout(() => {
+        setPurchaseToast((current) => current?.id === toast.id ? null : current);
+        purchaseToastTimer.current = null;
+      }, 1900);
+    } else {
+      setFeedback(result.message);
+    }
     if (result.success) {
       setActionItemId(item.id);
       window.setTimeout(() => setActionItemId((current) => current === item.id ? null : current), 1050);
@@ -97,6 +115,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   return (
     <section className={`town-location town-${vendor}`}>
       <div className="town-ambient-layer" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+      {purchaseToast && <div key={purchaseToast.id} className="town-item-added-toast" role="status" aria-live="polite"><strong className={getItemNameClass(purchaseToast.item)}>{purchaseToast.item.name}</strong> added to inventory.</div>}
       <header className="town-location-header">
         <button type="button" className="town-back-button" onClick={onBack}><ArrowLeft /> Arkenfall</button>
         <div><p className="eyebrow">{isAlchemist ? "Alchemist" : "Blacksmith"}</p><h1>{isAlchemist ? "Ray Charlston" : "Brunhilde von Trott"}</h1><p>{isAlchemist ? "“Every remedy begins with the right ingredients.”" : "“Good steel remembers the hands that shaped it.”"}</p></div>

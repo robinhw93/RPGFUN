@@ -150,6 +150,7 @@ function testArkenfallTownCommerceAndCrafting() {
   assert.equal(purchased.success, true, "A town vendor must sell assigned stock when the character can afford it.");
   assert.equal(purchased.state.character.gold, 5, "Town purchases must deduct the full configured Gold Cost.");
   assert.equal(purchased.state.character.inventory[0]?.id, soldItem.id, "A purchased item must enter the persistent Inventory.");
+  assert.equal(purchased.message, `${soldItem.name} added to inventory.`, "Town purchase feedback must use the floating-text copy.");
 
   const recipeItem = getTownCraftingCatalog("blacksmith")[0];
   const recipe = getItemCraftingRecipe(recipeItem);

@@ -119,7 +119,7 @@ export function purchaseTownItem(state: GameState, vendor: ArkenfallVendorId, it
       },
     },
     success: true,
-    message: `${item.name} added to your Inventory.`,
+    message: `${item.name} added to inventory.`,
     item,
   };
 }
