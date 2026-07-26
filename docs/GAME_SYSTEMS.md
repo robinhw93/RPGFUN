@@ -139,6 +139,8 @@ ability damage + enemy Physical Power × physical scaling + enemy Spell Power ×
 
 The result has a minimum of 1 before critical and status modifiers. Guard then absorbs damage before Health is lost. Every enemy ability also declares whether it is Melee or Ranged. Melee attacks use the combat lunge; Ranged attacks use a flavor-specific projectile, beam, or target effect.
 
+Enemy utility abilities can select the most wounded living ally, every living enemy, or every other living enemy. Healing and friendly statuses resolve through the same presentation-event queue as damage, so Health, Guard, Fierce, local text, and VFX appear together rather than changing early. Charged attacks spend their Energy and begin their cooldown when preparation starts, persist visibly between turns, then release before normal ability priorities on the caster's next turn without paying twice.
+
 ## Combat flow
 
 ### Combat start

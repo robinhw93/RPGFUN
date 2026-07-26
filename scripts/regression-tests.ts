@@ -12,7 +12,8 @@ import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { applyAbilityFlatDamage } from "../src/game/combat/damage";
-import { createCombat, getEnemyStartingEnergy, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
+import { createCombat, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
+import { getReadyEnemyAbility } from "../src/game/combat/enemyActions";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
@@ -123,6 +124,69 @@ function testEnemyStartingEnergy() {
   delete (legacyDraft.enemies[0] as Partial<(typeof legacyDraft.enemies)[number]>).startingEnergy;
   const normalizedLegacyDraft = normalizeEnemyExchange(legacyDraft);
   assert.equal(normalizedLegacyDraft.enemies[0].startingEnergy, normalizedLegacyDraft.enemies[0].maxEnergy, "Older Enemy Creator drafts must default Starting Energy to Max Energy.");
+}
+
+function combatWithActiveEnemy(enemyIds: string[], activeEnemyIndex: number) {
+  const combat = createCombat(INITIAL_GAME.character, enemyIds);
+  const activeEnemy = combat.enemies[activeEnemyIndex];
+  return {
+    ...combat,
+    initiativeRevealed: true,
+    activeTurnIndex: combat.turnOrder.findIndex((entry) => entry.actorId === activeEnemy.instanceId),
+  };
+}
+
+function testGoblinEnemyBehaviors() {
+  const longseer = ENEMIES["enemy-ms1ej4re-xskqn"];
+  assert.equal(longseer.startingEnergy, 1, "Goblin Longseer must enter combat with its configured low Starting Energy.");
+  assert.ok(existsSync(join(process.cwd(), "public", longseer.imageUrl)), "Goblin Longseer needs its Highlands bestiary artwork.");
+  assert.ok(existsSync(join(process.cwd(), "public", longseer.portraitUrl)), "Goblin Longseer needs its combat portrait.");
+  Object.values(ENEMIES).filter((enemy) => enemy.id.startsWith("enemy-ms1")).forEach((enemy) => {
+    assert.ok(existsSync(join(process.cwd(), "public", enemy.imageUrl)), `${enemy.name} needs its generated bestiary artwork.`);
+    assert.ok(existsSync(join(process.cwd(), "public", enemy.portraitUrl)), `${enemy.name} needs its generated combat portrait.`);
+  });
+
+  const longseerState = createCombat(INITIAL_GAME.character, [longseer.id]).enemies[0];
+  assert.equal(getReadyEnemyAbility(longseerState)?.name, "Bow Shot", "Longseer must use Bow Shot before reaching full Energy.");
+  assert.equal(getReadyEnemyAbility({ ...longseerState, energy: longseerState.maxEnergy })?.name, "Snipe", "Longseer must replace Bow Shot with Snipe at full Energy.");
+
+  const woundfixerCombat = combatWithActiveEnemy(["enemy-ms1fnbla-fs4ul", "enemy-ms1ej4re-xskqn"], 0);
+  woundfixerCombat.enemies[1] = { ...woundfixerCombat.enemies[1], hp: 10 };
+  const healed = takeEnemyTurn(woundfixerCombat, INITIAL_GAME.character, woundfixerCombat.enemies[0].instanceId);
+  assert.ok(healed.pendingEffects.some((effect) => effect.type === "heal" && effect.targetId === woundfixerCombat.enemies[1].instanceId && effect.amount === 6), "Woundfixer must heal the most wounded friendly target for 100% Spell Power.");
+
+  const biggrownCombat = combatWithActiveEnemy(["enemy-ms1ftdlw-jz5lo", "enemy-ms1ej4re-xskqn"], 0);
+  const protectedCombat = takeEnemyTurn(biggrownCombat, INITIAL_GAME.character, biggrownCombat.enemies[0].instanceId);
+  assert.ok(protectedCombat.pendingEffects.some((effect) => effect.type === "status" && effect.targetId === biggrownCombat.enemies[1].instanceId && effect.status.id === "guard" && effect.status.stacks === 5), "Biggrown Protect must grant 5 Guard to other living enemies.");
+  assert.ok(!protectedCombat.pendingEffects.some((effect) => effect.type === "status" && effect.targetId === biggrownCombat.enemies[0].instanceId && effect.status.id === "guard"), "Biggrown must not grant Protect to itself.");
+
+  const strizCombat = combatWithActiveEnemy(["enemy-ms1fykbj-rhb65"], 0);
+  const striz = strizCombat.enemies[0];
+  strizCombat.enemies[0] = {
+    ...striz,
+    hitChance: 100,
+    abilityCooldowns: {
+      "enemy-ability-ms1g1ysa-6452h": 5,
+      "enemy-ability-ms1g3m9s-n12oq": 5,
+      "enemy-ability-ms1gucm0-0n5ec": 5,
+    },
+  };
+  const charging = takeEnemyTurn(strizCombat, INITIAL_GAME.character, striz.instanceId);
+  assert.ok(charging.floatingEvents.includes("Striz, Goblin Chieftain begins charging an attack."), "Impale must announce its charge with corrected Chieftain spelling.");
+  assert.ok(!charging.pendingEffects.some((effect) => "damage" in effect && effect.targetId === "player"), "Impale must not deal damage on its charge turn.");
+  const charged = resolveCombatEvent(charging, charging.eventId, 0);
+  assert.equal(charged.enemies[0].chargingAbilityId, "enemy-ability-ms1gpjhe-m9ky3", "Impale must remain visibly charged until Striz's next turn.");
+  const releaseState = {
+    ...charged,
+    activeTurnIndex: charged.turnOrder.findIndex((entry) => entry.actorId === striz.instanceId),
+    enemyActionsTaken: 0,
+    floatingEvents: [],
+    pendingEffects: [],
+    enemies: charged.enemies.map((enemy) => ({ ...enemy, hitChance: 100 })),
+  };
+  const released = takeEnemyTurn(releaseState, INITIAL_GAME.character, striz.instanceId);
+  assert.ok(released.pendingEffects.some((effect) => "damage" in effect && effect.targetId === "player" && effect.damage > 0), "Charged Impale must release as a real attack on Striz's next turn.");
+  assert.ok(released.pendingEffects.some((effect) => effect.type === "enemy_charge" && effect.abilityId === undefined), "Impale release must clear the persistent charging presentation at impact.");
 }
 
 function testItemEditorRepairsInternalIds() {
@@ -585,6 +649,7 @@ function testIndependentItemDrops() {
 
 testAbilityFlatDamage();
 testEnemyStartingEnergy();
+testGoblinEnemyBehaviors();
 testIndependentItemDrops();
 testContentIntegrity();
 testGearIconLibrary();

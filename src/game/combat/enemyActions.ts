@@ -15,13 +15,14 @@ import {
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, EnemyAbilityDefinition, EnemyState, InspectableInfo, StatusEffectId } from "../types";
 import { getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
-import { absorptionSuffix, makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueHeal, queueStatus, queueStatusReconciliation, statusInfo } from "./eventQueue";
+import { absorptionSuffix, makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueHeal, queueHealAtEvent, queuePassiveAnimation, queueStatus, queueStatusReconciliation, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, moveToNextActor, processTurnEnd, processTurnStart, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyTargetable, normalizeEnemies } from "./state";
 
-export function getReadyEnemyAbility(enemy: EnemyState): EnemyAbilityDefinition | undefined {
+export function getReadyEnemyAbility(enemy: EnemyState, enemies: EnemyState[] = [enemy]): EnemyAbilityDefinition | undefined {
   const ready = (ability: EnemyAbilityDefinition) => enemy.energy >= ability.energyCost && (enemy.abilityCooldowns[ability.id] ?? 0) <= 0;
   const byName = (name: string) => enemy.abilities.find((ability) => ability.name === name && ready(ability));
+  if (enemy.chargingAbilityId) return enemy.abilities.find((ability) => ability.id === enemy.chargingAbilityId);
   if (enemy.behavior === "rabid_rat") {
     if (!enemy.behaviorPhase) return byName("Bite") ?? byName("Scurry");
     if (enemy.behaviorPhase === "rabid") return byName("Rabid Bite") ?? byName("Scurry");
@@ -40,6 +41,16 @@ export function getReadyEnemyAbility(enemy: EnemyState): EnemyAbilityDefinition 
       ? byName("Burning Glare") ?? byName("Nature's Beam") ?? byName("Shimmer")
       : byName("Nature's Beam") ?? byName("Burning Glare") ?? byName("Shimmer");
   }
+  if (enemy.behavior === "goblin_longseer") return byName("Snipe") ?? byName("Bow Shot");
+  if (enemy.behavior === "goblin_woundfixer") {
+    const hasWoundedFriendly = enemies.some((candidate) => candidate.hp > 0 && candidate.hp < candidate.maxHp);
+    return (hasWoundedFriendly ? byName("Heal") : undefined) ?? byName("Hex");
+  }
+  if (enemy.behavior === "goblin_biggrown") {
+    const hasOtherLivingEnemy = enemies.some((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp > 0);
+    return (hasOtherLivingEnemy ? byName("Protect") : undefined) ?? byName("Heavy Cleave");
+  }
+  if (enemy.behavior === "goblin_chieftain") return byName("Rally") ?? byName("Skewer") ?? byName("Impale") ?? byName("Spear Poke");
   return enemy.abilities.find(ready);
 }
 
@@ -56,6 +67,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
   const displayedEnemyStatuses = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.statuses]));
+  const displayedEnemyCharges = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.chargingAbilityId]));
   const displayedPlayerHp = combat.playerHp;
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
@@ -134,8 +146,9 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     enemy = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId) ?? enemy;
   }
   let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns };
-  const enemyAbility = getReadyEnemyAbility(enemy);
+  const enemyAbility = getReadyEnemyAbility(enemy, enemies);
   let usedAbility = false;
+  let startedCharge = false;
 
   if (enemy.hp <= 0) {
     logs.push(makeLog(`${enemy.name} falls.`));
@@ -164,13 +177,20 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       + enemy.spellPower * (enemyAbility.spellPowerScaling ?? 0)
       + rolledPower * rolledPowerScaling;
     const enemyAttackInfo: InspectableInfo = { title: enemyAbility.name, description: enemyAbility.description, category: "ability" };
+    const releasingChargedAbility = enemy.chargingAbilityId === enemyAbility.id;
+    startedCharge = (enemyAbility.chargeTurns ?? 0) > 0 && !releasingChargedAbility;
     const abilityEventIndex = events.length;
-    events.push(`${enemy.name} uses ${enemyAbility.name}.`);
+    events.push(startedCharge ? enemyAbility.chargeText ?? `${enemy.name} begins charging ${enemyAbility.name}.` : `${enemy.name} uses ${enemyAbility.name}.`);
     const playerDodgeChance = getEffectiveDodgeChance(derived.dodgeChance, getDodgeChanceBonus(playerStatuses));
-    const successfulHits = enemyAbility.damageType
+    const successfulHits = enemyAbility.damageType && !startedCharge
       ? Array.from({ length: abilityHits }, () => rollHit(enemy.hitChance * getHitChanceMultiplier(enemy.statuses), playerDodgeChance)).filter(Boolean).length
       : 0;
-    if (!enemyAbility.damageType) {
+    if (startedCharge) {
+      logs.push(makeLog(enemyAbility.chargeText ?? `${enemy.name} begins charging ${enemyAbility.name}.`, enemyAttackInfo));
+      enemy.chargingAbilityId = enemyAbility.id;
+      pendingEffects.push({ id: `enemy-charge-${Date.now()}-${enemy.instanceId}`, eventIndex: abilityEventIndex, type: "enemy_charge", targetId: enemy.instanceId, abilityId: enemyAbility.id });
+      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.chargeVfx ?? enemyAbility.vfx, enemy.instanceId, enemy.instanceId, true);
+    } else if (!enemyAbility.damageType) {
       logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name}.`, enemyAttackInfo));
       (enemyAbility.statusApplications ?? []).forEach((application) => {
         if (derived.statusImmunities.includes(application.status) || Math.random() >= (application.chance ?? 1)) return;
@@ -184,10 +204,42 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
         queueStatus(events, pendingEffects, `${enemy.name} gains ${status.name}.`, enemy.instanceId, status, application.status === "stunned", abilityEventIndex);
       });
+      const livingFriendlies = enemies.filter((candidate) => candidate.hp > 0);
+      const friendlyTargets = enemyAbility.friendlyTarget === "lowest_health"
+        ? livingFriendlies
+          .filter((candidate) => candidate.hp < candidate.maxHp)
+          .sort((left, right) => (left.hp / left.maxHp) - (right.hp / right.maxHp))
+          .slice(0, 1)
+        : enemyAbility.friendlyTarget === "all_other_enemies"
+          ? livingFriendlies.filter((candidate) => candidate.instanceId !== enemy.instanceId)
+          : enemyAbility.friendlyTarget === "all_enemies"
+            ? livingFriendlies
+            : [];
+      friendlyTargets.forEach((target) => {
+        const healing = Math.min(target.maxHp - target.hp, Math.max(0, Math.round(enemy.spellPower * (enemyAbility.friendlyHealSpellPowerScaling ?? 0))));
+        let nextTarget = target;
+        if (healing > 0) {
+          nextTarget = { ...nextTarget, hp: nextTarget.hp + healing };
+          logs.push(makeLog(`${enemy.name} restores ${healing} Health to ${target.name}.`, enemyAttackInfo));
+          queueHealAtEvent(pendingEffects, abilityEventIndex, target.instanceId, healing);
+          queuePassiveAnimation(pendingEffects, abilityEventIndex, target.instanceId, `+${healing} Health`);
+        }
+        (enemyAbility.friendlyStatusApplications ?? []).forEach((application) => {
+          if (!canApplyStatusEffect(nextTarget.statuses, application.status)) return;
+          const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+          nextTarget = { ...nextTarget, statuses: addOrRefreshStatus(nextTarget.statuses, status) };
+          logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
+          queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status, application.status === "stunned", abilityEventIndex, enemy.instanceId);
+        });
+        enemies = enemies.map((candidate) => candidate.instanceId === target.instanceId ? nextTarget : candidate);
+        if (target.instanceId === enemy.instanceId) enemy = nextTarget;
+        queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, target.instanceId, enemy.instanceId, true);
+      });
       const isSelfUtility = (enemyAbility.selfStatusApplications?.length ?? 0) > 0
         || (enemyAbility.nextTurnEnergyRegen ?? 0) > 0
-        || enemyAbility.restoreFullEnergyNextTurn === true;
-      queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId, true);
+        || enemyAbility.restoreFullEnergyNextTurn === true
+        || Boolean(enemyAbility.friendlyTarget);
+      if (friendlyTargets.length === 0) queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId, true);
     } else if (successfulHits === 0) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, missed: true });
@@ -294,8 +346,13 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         queueAbsorptionChanges(pendingEffects, recoilEventIndex, enemy.instanceId, recoilAbsorption);
       }
     }
-    const energyAfterAbility = Math.max(0, enemy.energy - enemyAbility.energyCost);
-    if (energyAfterAbility === 0) {
+    if (releasingChargedAbility) {
+      enemy.chargingAbilityId = undefined;
+      pendingEffects.push({ id: `enemy-charge-release-${Date.now()}-${enemy.instanceId}`, eventIndex: Math.max(abilityEventIndex, events.length - 1), type: "enemy_charge", targetId: enemy.instanceId });
+    }
+    const spendsResources = !releasingChargedAbility;
+    const energyAfterAbility = spendsResources ? Math.max(0, enemy.energy - enemyAbility.energyCost) : enemy.energy;
+    if (spendsResources && energyAfterAbility === 0) {
       (enemyAbility.selfStatusApplicationsWhenEnergyDepleted ?? []).forEach((application) => {
         if (!canApplyStatusEffect(enemy.statuses, application.status)) return;
         const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
@@ -303,8 +360,10 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         logs.push(makeLog(`${enemy.name} gains ${status.name}.`, statusInfo(status)));
       });
     }
-    enemy.nextTurnEnergyRegenBonus = enemyAbility.restoreFullEnergyNextTurn ? enemy.maxEnergy : enemy.nextTurnEnergyRegenBonus + (enemyAbility.nextTurnEnergyRegen ?? 0);
-    enemy.abilityCooldowns = { ...enemy.abilityCooldowns, [enemyAbility.id]: enemyAbility.cooldownTurns };
+    if (spendsResources) {
+      enemy.nextTurnEnergyRegenBonus = enemyAbility.restoreFullEnergyNextTurn ? enemy.maxEnergy : enemy.nextTurnEnergyRegenBonus + (enemyAbility.nextTurnEnergyRegen ?? 0);
+      enemy.abilityCooldowns = { ...enemy.abilityCooldowns, [enemyAbility.id]: enemyAbility.cooldownTurns };
+    }
     if (enemy.behavior === "rabid_rat") {
       if (enemyAbility.name === "Bite") enemy.behaviorPhase = "rabid";
       if (enemyAbility.name === "Rabid Bite") enemy.behaviorPhase = "bite";
@@ -346,13 +405,14 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
   const enemyActionsTaken = usedAbility ? (combat.enemyActionsTaken ?? 0) + 1 : combat.enemyActionsTaken ?? 0;
   nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, enemyActionsTaken };
-  const nextEnemyAbility = getReadyEnemyAbility(enemy);
+  const nextEnemyAbility = getReadyEnemyAbility(enemy, enemies);
   const nextAbilityBlockedByStealth = Boolean(
     nextEnemyAbility
     && hasStatus(playerStatuses, "stealth")
     && (nextEnemyAbility.damageType || (nextEnemyAbility.statusApplications?.length ?? 0) > 0),
   );
   const canUseAnotherAbility = usedAbility
+    && !startedCharge
     && enemy.hp > 0
     && playerHp > 0
     && enemyActionsTaken < enemy.maxActionsPerTurn
@@ -371,6 +431,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       ...candidate,
       hp: displayedEnemyHp.get(candidate.instanceId) ?? candidate.hp,
       statuses: displayedEnemyStatuses.get(candidate.instanceId) ?? candidate.statuses,
+      chargingAbilityId: displayedEnemyCharges.get(candidate.instanceId),
     }));
     return {
       ...nextBase,
@@ -500,6 +561,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     ...candidate,
     hp: displayedEnemyHp.get(candidate.instanceId) ?? candidate.hp,
     statuses: displayedEnemyStatuses.get(candidate.instanceId) ?? candidate.statuses,
+    chargingAbilityId: displayedEnemyCharges.get(candidate.instanceId),
   }));
   return {
     ...next,

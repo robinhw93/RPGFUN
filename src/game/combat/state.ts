@@ -193,6 +193,9 @@ export function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       abilities: template.abilities,
       abilityCooldowns: enemy.abilityCooldowns ?? {},
       nextTurnEnergyRegenBonus: enemy.nextTurnEnergyRegenBonus ?? 0,
+      chargingAbilityId: template.abilities.some((ability) => ability.id === enemy.chargingAbilityId && (ability.chargeTurns ?? 0) > 0)
+        ? enemy.chargingAbilityId
+        : undefined,
       statuses,
       stunned: hasStatus(statuses, "stunned"),
     };

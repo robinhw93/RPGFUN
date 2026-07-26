@@ -215,6 +215,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const bloodBarrierAnimations = abilityAnimations.filter((animation) => animation.kind === "blood_barrier" && animation.targetId && animation.sourceTargetId);
   const vampirismDrainAnimations = abilityAnimations.filter((animation) => animation.kind === "vampirism_drain" && animation.targetId && animation.sourceTargetId);
   const fireEaterTransferAnimations = abilityAnimations.filter((animation) => animation.kind === "fire_eater_transfer" && animation.targetId && animation.sourceTargetId);
+  const woundfixerHealAnimations = abilityAnimations.filter((animation) => animation.kind === "enemy_woundfixer_heal" && animation.targetId && animation.sourceTargetId && animation.targetId !== animation.sourceTargetId);
   const projectileAnimations = combat.projectileAnimations ?? [];
   const playerStealthed = combat.playerStatuses.some((status) => status.id === "stealth");
   const forcedTargetId = combat.enemies.find((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth") && enemy.statuses.some((status) => status.id === "taunt"))?.instanceId ?? null;
@@ -290,7 +291,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
               tabIndex={enemy.hp > 0 ? 0 : -1}
               aria-disabled={!targetable && !stealthed}
               aria-label={stealthed ? `${enemy.name} cannot be targeted while in stealth` : `Target ${enemy.name}`}
-              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${stealthed ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${utilityCastShake ? `utility-cast-shake cast-cycle-${combat.eventId % 2}` : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
+              className={`compact-combatant enemy-combatant ${activeActor?.actorId === enemy.instanceId ? "active-turn" : ""} ${combat.selectedEnemyId === enemy.instanceId ? "selected" : ""} ${enemy.hp <= 0 ? "dead" : ""} ${!targetable && enemy.hp > 0 ? "untargetable" : ""} ${stealthed ? "stealthed" : ""} ${enemy.statuses.some((status) => status.id === "stunned") ? "is-stunned" : ""} ${enemy.statuses.some((status) => status.id === "frozen") ? "is-frozen" : ""} ${damagedTargets.includes(enemy.instanceId) ? "damaged" : ""} ${combat.attackingActorId === enemy.instanceId ? `attacking-left attack-cycle-${combat.attackAnimationId % 2}` : ""} ${utilityCastShake ? `utility-cast-shake cast-cycle-${combat.eventId % 2}` : ""} ${enemy.chargingAbilityId ? "enemy-charging-attack" : ""} ${neurotoxinEffects.length > 0 ? "neurotoxin-hit" : ""}`}
               style={{ "--enemy-accent": enemy.accent } as React.CSSProperties}
               onClick={() => {
                 if (stealthed && enemy.hp > 0) showStealthTargetFeedback();
@@ -356,6 +357,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       {bloodBarrierAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="blood-barrier-path"><Droplets /><i /><i /><i /></CombatantPathEffect>)}
       {vampirismDrainAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="vampirism-drain-path"><Droplets /><Heart /><i /><i /><i /></CombatantPathEffect>)}
       {fireEaterTransferAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="fire-eater-transfer-path"><Flame /><i /><i /><i /><b /></CombatantPathEffect>)}
+      {woundfixerHealAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="enemy-woundfixer-heal-path"><HeartPulse /><i /><i /><b /></CombatantPathEffect>)}
       {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
       {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}

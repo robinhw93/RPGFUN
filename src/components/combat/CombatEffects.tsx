@@ -126,7 +126,13 @@ export function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
       : kind === "enemy_scurry" ? <Footprints />
       : kind === "enemy_burning_glare" ? <Flame />
       : kind === "enemy_natures_beam" || kind === "enemy_wisp_blast" || kind === "enemy_shimmer" || kind === "enemy_spirit_heal" ? <Sparkles />
-      : kind === "enemy_fade_out" ? <EyeOff />
+      : kind === "enemy_fade_out" || kind === "enemy_quickstabber_stealth" ? <EyeOff />
+      : kind === "enemy_bow_shot" || kind === "enemy_snipe" ? <Crosshair />
+      : kind === "enemy_woundfixer_heal" ? <HeartPulse />
+      : kind === "enemy_hex" ? <Skull />
+      : kind === "enemy_protect" ? <ShieldPlus />
+      : kind === "enemy_rally" ? <Megaphone />
+      : kind === "enemy_impale_charge" ? <Target />
       : <Swords />;
     return <span className={`ability-impact-effect enemy-ability-impact ${kind.replaceAll("_", "-")}`} aria-hidden="true">{icon}<i /><i /><i /><b /></span>;
   }
@@ -459,6 +465,9 @@ export function AbilityProjectileEffect({ animation }: { animation: CombatProjec
   }
   if (kind === "enemy_natures_beam") {
     return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="enemy-natures-beam"><i /><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
+  }
+  if (kind === "enemy_bow_shot" || kind === "enemy_snipe") {
+    return <CombatantPathEffect animation={animation} durationMs={kind === "enemy_snipe" ? durationMs * 0.72 : durationMs} className={`ability-projectile-path ${kind === "enemy_snipe" ? "enemy-snipe-path" : "enemy-bow-shot-path"}`}><Target /><i /><i /><b /></CombatantPathEffect>;
   }
   if (kind === "frostbolt" || kind === "deep_freeze" || (!kind && animation.damageType === "frost")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;

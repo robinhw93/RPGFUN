@@ -408,7 +408,20 @@ export type CombatAbilityVfxKind =
   | "enemy_burning_glare"
   | "enemy_natures_beam"
   | "enemy_shimmer"
-  | "enemy_spirit_heal";
+  | "enemy_spirit_heal"
+  | "enemy_bow_shot"
+  | "enemy_snipe"
+  | "enemy_quickstabber_stealth"
+  | "enemy_shiv"
+  | "enemy_woundfixer_heal"
+  | "enemy_hex"
+  | "enemy_heavy_cleave"
+  | "enemy_protect"
+  | "enemy_skewer"
+  | "enemy_rally"
+  | "enemy_impale_charge"
+  | "enemy_impale"
+  | "enemy_spear_poke";
 
 export type AbilityRange = "melee" | "ranged";
 export type AbilityAttackPresentation = "melee" | "projectile" | "target";
@@ -719,13 +732,35 @@ export interface EnemyAbilityDefinition {
   hits?: number;
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number }>;
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
+  /** Selects living enemy recipients for heals or friendly status applications. */
+  friendlyTarget?: "lowest_health" | "all_enemies" | "all_other_enemies";
+  /** Restores Health to the selected friendly target as a fraction of the caster's Spell Power. */
+  friendlyHealSpellPowerScaling?: number;
+  /** Statuses applied to the selected friendly recipients. */
+  friendlyStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
+  /** Number of the caster's turns spent preparing this ability before it resolves. */
+  chargeTurns?: number;
+  /** Player-facing combat announcement used when the charge begins. */
+  chargeText?: string;
+  /** Presentation emitted while a charged ability is being prepared. */
+  chargeVfx?: CombatAbilityVfxKind;
   selfStatusApplicationsWhenEnergyDepleted?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
   nextTurnEnergyRegen?: number;
   restoreFullEnergyNextTurn?: boolean;
   vfx: CombatAbilityVfxKind;
 }
 
-export type EnemyBehaviorKind = "single" | "rabid_rat" | "priority" | "wisp_barrage" | "brown_bear" | "forest_spirit";
+export type EnemyBehaviorKind =
+  | "single"
+  | "rabid_rat"
+  | "priority"
+  | "wisp_barrage"
+  | "brown_bear"
+  | "forest_spirit"
+  | "goblin_longseer"
+  | "goblin_woundfixer"
+  | "goblin_biggrown"
+  | "goblin_chieftain";
 
 export interface EnemyTemplate {
   id: string;
@@ -767,6 +802,8 @@ export interface EnemyState extends EnemyTemplate {
   abilityCooldowns: Record<string, number>;
   nextTurnEnergyRegenBonus: number;
   behaviorPhase?: string;
+  /** Ability prepared on a previous turn and released before normal priority selection. */
+  chargingAbilityId?: string;
 }
 
 export interface TurnOrderEntry {
@@ -820,6 +857,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "energy_change"; amount: number }
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
+  | { id: string; eventIndex: number; type: "enemy_charge"; targetId: string; abilityId?: string }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatState {

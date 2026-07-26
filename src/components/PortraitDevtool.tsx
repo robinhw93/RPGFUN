@@ -66,6 +66,11 @@ const ENEMY_DEFAULT_CROPS: Record<string, PortraitCrop> = {
   "enemy-mrxk609z-n04fq": { centerX: 49.805, centerY: 30.599, diameter: 50.781 },
   "enemy-mrxkar5z-g9o5d": { centerX: 39.565, centerY: 38.057, diameter: 60.547 },
   "enemy-mrxkjqs3-g7g5i": { centerX: 49.805, centerY: 17.578, diameter: 45.898 },
+  "enemy-ms1ej4re-xskqn": { centerX: 50, centerY: 23.6, diameter: 52.1 },
+  "enemy-ms1fgqar-mafv9": { centerX: 50, centerY: 34.2, diameter: 52.7 },
+  "enemy-ms1fnbla-fs4ul": { centerX: 51.2, centerY: 28.3, diameter: 54.7 },
+  "enemy-ms1ftdlw-jz5lo": { centerX: 50, centerY: 24.5, diameter: 54.1 },
+  "enemy-ms1fykbj-rhb65": { centerX: 50.5, centerY: 27.1, diameter: 53.1 },
 };
 const LEGACY_DEFAULT_CROPS: Record<string, PortraitCrop[]> = {
   "enemy:enemy-mrxiut2a-k4kgv": [{ centerX: 47.852, centerY: 50.13, diameter: 58.594 }],

@@ -440,11 +440,18 @@ Enemy Physical Power, Spell Power, Starting Energy, Max Energy, Energy Regenerat
 | DUMMY | 100 | 1 / 0 | 0 / 0 | 95% / 0% / 0% | 1 / 10 | Training Strike (1 Energy, Melee): 1 base Physical damage. |
 | Rabid Rat | 11 | 1 / 0 | 0 / 0 | 95% / 5% / 10% | 1 / 3 | Bite (2, Melee): 100% Physical Power. Scurry (0, self): +1 Energy next turn. Rabid Bite (3, Melee): 100% Physical Power and 1 Poison. |
 | Windsong Wolf | 20 | 2 / 0 | 0 / 0 | 95% / 10% / 10% | 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
-| Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 5% / 5% | 2 / 4 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
+| Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 5% / 5% | 1 / 4 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
 | Brown Bear | 30 | 3 / 0 | 5 / 0 | 85% / 5% / 5% | 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
 | The Forest Spirit | 40 | 0 / 8 | 1 / 1 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth until the end of its next turn and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
+| Goblin Longseer | 30 | 5 / 0 | 1 / 1 | 95% / 8% / 5% | 1 / 5 | Bow Shot (0, Ranged): 100% Physical Power. Snipe (5, Ranged): 200% Physical Power and Vulnerable. Starts at 1 Energy and replaces Bow Shot with Snipe at full Energy. |
+| Goblin Quickstabber | 24 | 6 / 0 | 1 / 0 | 95% / 10% / 10% | 1 / 5 | Stealth (0, self): Stealth until the end of its next turn. Shiv (2, Melee): 100% Physical Power and 1 Poison. Uses every ready ability, separately, up to two actions. |
+| Goblin Woundfixer | 28 | 2 / 6 | 0 / 3 | 95% / 5% / 5% | 2 / 10 | Heal (3, Ranged): restores 100% Spell Power to the most wounded living ally, including itself. Hex (1, Melee): 50% Spell Power as Spell damage and Slowed. |
+| Goblin Biggrown | 40 | 6 / 0 | 4 / 0 | 95% / 0% / 5% | 1 / 5 | Protect (1, group): grants 5 Guard to every other living enemy. Heavy Cleave (5, Melee): 250% Physical Power and 1 Bleed. Starts at 3 Energy. |
+| Striz, Goblin Chieftain | 80 | 10 / 6 | 4 / 4 | 95% / 5% / 5% | 1 / 10 | Rally (1, group): Fierce for every living enemy. Skewer (1, Melee): 100% Physical Power and 1 Bleed. Impale (3, Melee): charges for one turn, then deals 150% Physical Power and applies 2 Bleed. Spear Poke (2, Melee): 75% Physical Power. Can resolve several ready abilities separately. |
 
 The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
+
+The five goblins use role-specific Highlands artwork set on open green plains rather than forest scenery. Their combat portraits are dedicated square crops from the same designs. Bow Shot and Snipe use distinct arrow/crosshair projectiles, friendly healing travels between combatants, group buffs resolve simultaneously on their recipients, and Striz visibly continues shaking while Impale is charged.
 
 ## Arkenfall Town
 

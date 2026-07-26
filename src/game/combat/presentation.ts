@@ -49,6 +49,12 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     : []);
   matchingEffects.forEach((effect) => {
     if (effect.type === "passive_text" || effect.type === "ability_vfx") return;
+    if (effect.type === "enemy_charge") {
+      enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
+        ? { ...enemy, chargingAbilityId: effect.abilityId }
+        : enemy);
+      return;
+    }
     if (effect.type === "energy_regen_bonus") {
       nextTurnEnergyRegenBonus += effect.amount;
       return;
