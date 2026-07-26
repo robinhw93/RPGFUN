@@ -117,7 +117,7 @@ function TownItemDetails({ item, onClose }: { item: InventoryItem; onClose: () =
       <article className={`town-item-modal rarity-${item.rarity}`} role="dialog" aria-modal="true" aria-labelledby="town-item-title">
         <button type="button" className="town-modal-close" onClick={onClose} aria-label="Close item details"><X /></button>
         <div className="town-item-modal-heading"><ItemIcon item={item} /><div><p className="eyebrow">{item.rarity} {itemSubtitle(item)}</p><h2 className={getItemNameClass(item)} id="town-item-title">{item.name}</h2></div></div>
-        <p>{item.description || "No description has been written for this item yet."}</p>
+        {item.description && <p>{item.description}</p>}
         {isConsumableItem(item) && <ul>{item.effects.map((effect, index) => <li key={index}>{describeConsumableEffect(effect)}</li>)}</ul>}
         {isGearItem(item) && <div className="town-item-stat-list">
           {getItemStatLines(item).map((stat) => <span key={stat.label}><strong>+{formatItemStatValue(stat.value, stat.percent)}</strong> {stat.label}</span>)}
@@ -143,7 +143,7 @@ function VendorItemCard({ item, mode, game, station, actionItemId, onInspect, on
   return (
     <article className={`town-item-card rarity-${item.rarity} ${actionItemId === item.id ? "item-acquired" : ""}`}>
       <button type="button" className="town-item-inspect" onClick={onInspect} aria-label={`Inspect ${item.name}`}><ItemIcon item={item} /></button>
-      <div className="town-item-copy"><p className="eyebrow">{item.rarity} · {itemSubtitle(item)}</p><h3 className={getItemNameClass(item)}>{item.name}</h3><p>{item.description || "A useful item from Arkenfall."}</p></div>
+      <div className="town-item-copy"><p className="eyebrow">{item.rarity} · {itemSubtitle(item)}</p><h3 className={getItemNameClass(item)}>{item.name}</h3>{item.description && <p>{item.description}</p>}</div>
       {mode === "craft" && recipe && <div className="town-recipe-list">{recipe.ingredients.map((ingredient) => {
         const material = ITEM_BY_ID.get(ingredient.itemId);
         const owned = getInventoryItemCount(game.character.inventory, ingredient.itemId);
