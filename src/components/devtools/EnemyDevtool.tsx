@@ -22,6 +22,7 @@ export function canonicalEnemyExchange(): EnemyExchange {
       critChance: enemy.critChance * 100,
       energyRegen: enemy.energyRegen,
       maxEnergy: enemy.maxEnergy,
+      startingEnergy: Math.min(enemy.maxEnergy, Math.max(0, Math.round(enemy.startingEnergy ?? enemy.maxEnergy))),
       dropTable: structuredClone(enemy.dropTable ?? []),
       abilities: enemy.abilities.map((ability) => ({
         id: ability.id,
@@ -77,6 +78,8 @@ export function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
         range: "melee",
         effect: legacyEffect,
       });
+      const maxEnergy = finiteNumber(legacy.maxEnergy, fallback?.maxEnergy ?? 10);
+      const startingEnergy = Math.min(maxEnergy, Math.max(0, Math.round(finiteNumber(legacy.startingEnergy, fallback?.startingEnergy ?? fallback?.maxEnergy ?? maxEnergy))));
       return {
         id: legacy.id ?? makeId("enemy"),
         name: legacy.name ?? "New Enemy",
@@ -90,7 +93,8 @@ export function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
         dodgeChance: finiteNumber(legacy.dodgeChance, fallback ? fallback.dodgeChance * 100 : 5),
         critChance: finiteNumber(legacy.critChance, fallback ? fallback.critChance * 100 : 5),
         energyRegen: finiteNumber(legacy.energyRegen, fallback?.energyRegen ?? 1),
-        maxEnergy: finiteNumber(legacy.maxEnergy, fallback?.maxEnergy ?? 10),
+        maxEnergy,
+        startingEnergy,
         dropTable: Array.isArray(legacy.dropTable)
           ? legacy.dropTable.flatMap((drop) => typeof drop?.itemId === "string" ? [{ itemId: drop.itemId, chance: Math.min(100, Math.max(0, finiteNumber(drop.chance, 0))) }] : [])
           : structuredClone(fallback?.dropTable ?? []),
@@ -147,7 +151,7 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
           const result = await response.json() as { ok?: boolean; error?: string };
           if (!response.ok || !result.ok) throw new Error(result.error ?? "Source sync failed.");
         }
-        store.setMessage("Stats written to src/game/data.ts");
+        store.setMessage("Stats written to src/game/content/enemies.ts");
       } catch (error) {
         store.setMessage(error instanceof Error ? error.message : "Source sync is only available on the local dev server.");
       }
@@ -187,7 +191,7 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
   const addAbility = () => update({ abilities: [...selected.abilities, { id: makeId("enemy-ability"), name: "New Ability", energyCost: 0, cooldownTurns: 0, range: "melee", effect: "" }] });
   const add = () => {
     const id = makeId("enemy");
-    const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, physicalPower: 6, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, dropTable: [], abilities: [], behaviorNotes: "", accent: "#79a86d" };
+    const enemy: EnemyDraft = { id, name: "New Enemy", title: "Creature", maxHp: 30, physicalPower: 6, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 95, dodgeChance: 5, critChance: 5, energyRegen: 1, maxEnergy: 10, startingEnergy: 10, dropTable: [], abilities: [], behaviorNotes: "", accent: "#79a86d" };
     store.setDraft((draft) => ({ ...draft, enemies: [...draft.enemies, enemy] })); setSelectedId(id);
   };
   const remove = () => { if (!selected) return; store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.filter((enemy) => enemy.id !== selected.id) })); setSelectedId(store.draft.enemies.find((enemy) => enemy.id !== selected.id)?.id ?? ""); };
@@ -198,7 +202,8 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
         <TextField label="ID" value={selected.id} onChange={(id) => { update({ id }); setSelectedId(id); }} /><TextField label="Name" value={selected.name} onChange={(name) => update({ name })} /><TextField label="Title" value={selected.title} onChange={(title) => update({ title })} /><TextField label="Accent color" value={selected.accent} onChange={(accent) => update({ accent })} />
         <NumberField label="Health" value={selected.maxHp} min={1} onChange={(maxHp) => updateStats({ maxHp })} /><NumberField label="Physical Power" value={selected.physicalPower} min={0} onChange={(physicalPower) => updateStats({ physicalPower })} /><NumberField label="Spell Power" value={selected.spellPower} min={0} onChange={(spellPower) => updateStats({ spellPower })} /><NumberField label="Armor" value={selected.armor} min={0} onChange={(armor) => updateStats({ armor })} /><NumberField label="Magic Resistance" value={selected.magicResistance} min={0} onChange={(magicResistance) => updateStats({ magicResistance })} />
         <NumberField label="Hit Chance %" value={selected.hitChance} step={0.1} onChange={(hitChance) => updateStats({ hitChance })} /><NumberField label="Dodge Chance %" value={selected.dodgeChance} step={0.1} onChange={(dodgeChance) => updateStats({ dodgeChance })} /><NumberField label="Crit Chance %" value={selected.critChance} step={0.1} onChange={(critChance) => updateStats({ critChance })} /><NumberField label="Energy Regeneration" value={selected.energyRegen} min={0} onChange={(energyRegen) => updateStats({ energyRegen })} />
-        <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => updateStats({ maxEnergy })} />
+        <NumberField label="Max Energy" value={selected.maxEnergy} min={1} onChange={(maxEnergy) => updateStats({ maxEnergy, startingEnergy: Math.min(selected.startingEnergy, maxEnergy) })} />
+        <NumberField label="Starting Energy" value={selected.startingEnergy} min={0} max={selected.maxEnergy} onChange={(startingEnergy) => updateStats({ startingEnergy: Math.min(selected.maxEnergy, Math.max(0, Math.round(startingEnergy))) })} />
         <DropTableEditor entries={selected.dropTable} items={items} onChange={updateDropTable} title="Enemy drop table" />
         <div className="enemy-ability-editor-list wide-field"><div className="enemy-ability-editor-heading"><div><span>Abilities</span><small>Add every ability this enemy can use.</small></div><button type="button" className="secondary-editor-button" onClick={addAbility}><Plus size={14} /> Add ability</button></div>
           {selected.abilities.length === 0 && <p className="empty-editor-copy">No abilities added yet.</p>}

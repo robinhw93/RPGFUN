@@ -743,6 +743,8 @@ export interface EnemyTemplate {
   critChance: number;
   energyRegen: number;
   maxEnergy: number;
+  /** Defaults to Max Energy when omitted by an older enemy definition. */
+  startingEnergy?: number;
   /** Each defeated enemy instance rolls every entry independently. */
   dropTable?: ItemDropDefinition[];
   /** Executable abilities implemented in source after their editor drafts are integrated. */

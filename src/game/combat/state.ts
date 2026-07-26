@@ -10,7 +10,7 @@ import {
   isStatusEffectId,
   STATUS_EFFECTS
 } from "../statusEffects";
-import type { AdventureCombatStartStatus, CharacterState, CombatState, EnemyState, StatusEffect, TurnOrderEntry } from "../types";
+import type { AdventureCombatStartStatus, CharacterState, CombatState, EnemyState, EnemyTemplate, StatusEffect, TurnOrderEntry } from "../types";
 
 import { makeLog } from "./eventQueue";
 
@@ -28,20 +28,25 @@ export function createEventStartStatus(effect: AdventureCombatStartStatus): Stat
   });
 }
 
+export function getEnemyStartingEnergy(enemy: Pick<EnemyTemplate, "maxEnergy" | "startingEnergy">): number {
+  return Math.min(enemy.maxEnergy, Math.max(0, Math.round(enemy.startingEnergy ?? enemy.maxEnergy)));
+}
+
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number, startEffects: CombatStartEffects = {}): CombatState {
   const derived = getDerivedStats(character);
   const features = getCharacterCombatFeatures(character);
   const enemies: EnemyState[] = enemyIds.map((id, index) => {
+    const template = ENEMIES[id];
     const statuses = (startEffects.enemyStatuses ?? []).reduce<StatusEffect[]>((current, effect) => {
       const status = createEventStartStatus(effect);
       return status ? addOrRefreshStatus(current, status) : current;
     }, []);
     return {
-      ...ENEMIES[id],
+      ...template,
       instanceId: `${id}-${index}`,
-      hp: ENEMIES[id].maxHp,
-      energy: ENEMIES[id].maxEnergy,
-      maxEnergy: ENEMIES[id].maxEnergy,
+      hp: template.maxHp,
+      energy: getEnemyStartingEnergy(template),
+      maxEnergy: template.maxEnergy,
       statuses,
       stunned: statuses.some((status) => status.id === "stunned"),
       abilityCooldowns: {},
@@ -179,7 +184,7 @@ export function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       id: template.id,
       // Migrate active training combats created while DUMMY incorrectly had 1000% Hit Chance.
       hitChance: enemy.id === "dummy" && enemy.hitChance === 10 ? template.hitChance : enemy.hitChance ?? template.hitChance,
-      energy: enemy.energy ?? template.maxEnergy,
+      energy: enemy.energy ?? getEnemyStartingEnergy(template),
       maxEnergy: enemy.maxEnergy ?? template.maxEnergy,
       energyRegen: enemy.energyRegen ?? template.energyRegen,
       critChance: enemy.critChance ?? template.critChance,

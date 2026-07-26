@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { moveAdventureStage, normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
+import { canonicalEnemyExchange, normalizeEnemyExchange } from "../src/components/devtools/EnemyDevtool";
 import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
 import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
 import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconChoices } from "../src/components/GearSlotIcon";
@@ -11,7 +12,7 @@ import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { applyAbilityFlatDamage } from "../src/game/combat/damage";
-import { createCombat, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
+import { createCombat, getEnemyStartingEnergy, resolveCombatEvent, useAbility, useConsumable } from "../src/game/engine";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
@@ -110,6 +111,18 @@ function testAbilityFlatDamage() {
   assert.deepEqual(components, [{ damageType: "physical", power: 9, powerScaling: 0.5 }], "Flat Damage must be added once to the primary damage component of every direct hit.");
   assert.equal(ABILITIES.crushingBlow.flatDamage, 12, "Legacy fixed ability damage must migrate without changing its value.");
   assert.equal(ABILITIES.siphon.flatDamage, 7, "Legacy spell fixed damage must migrate without changing its value.");
+}
+
+function testEnemyStartingEnergy() {
+  assert.equal(getEnemyStartingEnergy({ maxEnergy: 7 }), 7, "Older enemies without Starting Energy must still enter combat at full Energy.");
+  assert.equal(getEnemyStartingEnergy({ maxEnergy: 7, startingEnergy: 3 }), 3, "Configured enemy Starting Energy must be used at combat creation.");
+  assert.equal(getEnemyStartingEnergy({ maxEnergy: 7, startingEnergy: 20 }), 7, "Enemy Starting Energy must never exceed Max Energy.");
+  assert.equal(getEnemyStartingEnergy({ maxEnergy: 7, startingEnergy: -2 }), 0, "Enemy Starting Energy must never fall below zero.");
+
+  const legacyDraft = canonicalEnemyExchange();
+  delete (legacyDraft.enemies[0] as Partial<(typeof legacyDraft.enemies)[number]>).startingEnergy;
+  const normalizedLegacyDraft = normalizeEnemyExchange(legacyDraft);
+  assert.equal(normalizedLegacyDraft.enemies[0].startingEnergy, normalizedLegacyDraft.enemies[0].maxEnergy, "Older Enemy Creator drafts must default Starting Energy to Max Energy.");
 }
 
 function testItemEditorRepairsInternalIds() {
@@ -571,6 +584,7 @@ function testIndependentItemDrops() {
 }
 
 testAbilityFlatDamage();
+testEnemyStartingEnergy();
 testContentIntegrity();
 testGearIconLibrary();
 testCraftingMaterialArtworkLibrary();

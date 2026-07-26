@@ -25,6 +25,7 @@ export interface EnemyDraft {
   critChance: number;
   energyRegen: number;
   maxEnergy: number;
+  startingEnergy: number;
   dropTable: ItemDropDefinition[];
   abilities: EnemyAbilityDraft[];
   behaviorNotes: string;
@@ -42,7 +43,7 @@ export interface EnemyAbilityDraft {
 
 export type EnemyEditableStats = Pick<EnemyDraft,
   "maxHp" | "physicalPower" | "spellPower" | "armor" | "magicResistance" |
-  "hitChance" | "dodgeChance" | "critChance" | "energyRegen" | "maxEnergy"
+  "hitChance" | "dodgeChance" | "critChance" | "energyRegen" | "maxEnergy" | "startingEnergy"
 >;
 
 export interface EnemyExchange { format: "arkenfall-enemies"; version: 3; enemies: EnemyDraft[] }

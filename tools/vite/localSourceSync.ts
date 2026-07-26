@@ -22,6 +22,7 @@ const editableEnemyStatFields = [
   "critChance",
   "energyRegen",
   "maxEnergy",
+  "startingEnergy",
 ] as const;
 
 type SourceEdit = { start: number; end: number; text: string };
@@ -453,6 +454,7 @@ export function localSourceSync() {
               const value = payload.stats?.[field];
               if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error(`${field} must be a non-negative number.`);
               if ((field === "maxHp" || field === "maxEnergy") && value < 1) throw new Error(`${field} must be at least 1.`);
+              if (field === "startingEnergy" && !Number.isInteger(value)) throw new Error("startingEnergy must be a whole number.");
               return [field, value];
             }));
 
@@ -467,9 +469,18 @@ export function localSourceSync() {
               let statBlock = source.slice(enemyStart, abilitiesStart);
               suppliedFields.forEach((field) => {
                 const fieldPattern = new RegExp(`\\b${field}:\\s*-?\\d+(?:\\.\\d+)?`);
-                if (!fieldPattern.test(statBlock)) throw new Error(`Could not locate ${field} in the live enemy definition.`);
-                statBlock = statBlock.replace(fieldPattern, `${field}: ${stats[field]}`);
+                if (fieldPattern.test(statBlock)) {
+                  statBlock = statBlock.replace(fieldPattern, `${field}: ${stats[field]}`);
+                } else if (field === "startingEnergy") {
+                  statBlock += `startingEnergy: ${stats[field]}, `;
+                } else {
+                  throw new Error(`Could not locate ${field} in the live enemy definition.`);
+                }
               });
+
+              const maxEnergy = Number(statBlock.match(/\bmaxEnergy:\s*(-?\d+(?:\.\d+)?)/)?.[1]);
+              const startingEnergy = Number(statBlock.match(/\bstartingEnergy:\s*(-?\d+(?:\.\d+)?)/)?.[1] ?? maxEnergy);
+              if (startingEnergy > maxEnergy) throw new Error("startingEnergy cannot exceed maxEnergy.");
 
               await writeFile(enemySourcePath, source.slice(0, enemyStart) + statBlock + source.slice(abilitiesStart), "utf8");
             });

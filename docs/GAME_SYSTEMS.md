@@ -145,7 +145,7 @@ The result has a minimum of 1 before critical and status modifiers. Guard then a
 
 - The player enters with carried Health, limited to current Max Health.
 - Player Energy starts full.
-- Every enemy starts at its configured Max Energy.
+- Every enemy starts at its configured Starting Energy, limited to 0–Max Energy. Older definitions without a separate value start at Max Energy.
 - Starting statuses from talents or gear are added.
 - Every combatant rolls initiative.
 
@@ -303,7 +303,7 @@ This sequencing guarantees that:
 
 - Default Max Energy: 7.
 - Default player Energy regeneration: 2 at the start of the player's own turn.
-- Enemy Energy regeneration and Max Energy come from that enemy's definition.
+- Enemy Starting Energy, Energy regeneration, and Max Energy come from that enemy's definition.
 - Energy cannot exceed Max Energy and cannot be spent below zero.
 - A cooldown is measured in player turns and decreases only when the next player turn begins. The visible counter updates with **Your turn.**, never during the final enemy action.
 - Focus clears every other cooldown, then keeps its own six-turn cooldown.
