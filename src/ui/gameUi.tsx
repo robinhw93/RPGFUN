@@ -330,6 +330,11 @@ export function formatItemStatValue(value: number, percent = false): string {
   return percent ? formatPercent(value) : formatStat(value);
 }
 
+export function formatSignedItemStatValue(value: number, percent = false): string {
+  const formatted = formatItemStatValue(value, percent);
+  return value > 0 ? `+${formatted}` : formatted;
+}
+
 export function getDerivedStatRows(derived: ReturnType<typeof getDerivedStats>): Array<{ icon: DerivedStatIconName; label: string; value: string; tooltip: string }> {
   return [
     { icon: "physicalPower", label: "Physical Power", value: formatStat(derived.physicalPower), tooltip: "Your total power for Physical attacks." },

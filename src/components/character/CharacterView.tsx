@@ -14,7 +14,7 @@ import { describeConsumableEffect, isConsumableItem, isGearItem, isMiscItem } fr
 import { experienceToNextLevel, MAX_LEVEL } from "../../game/progression";
 import type { CharacterState, ConsumableItem, GearItem, GearSlot, MiscItem, StatName } from "../../game/types";
 
-import { ATTRIBUTE_SUMMARIES, ATTRIBUTE_TOOLTIPS, EQUIPMENT_SLOT_ORDER, formatItemStatValue, formatStat, getDerivedStatRows, getItemNameClass, getItemStatLines, INVENTORY_GEAR_FILTERS, itemMatchesInventoryFilter, RARITY_SORT_WEIGHT, SLOT_LABELS, STAT_LABELS, StatIcon, type CharacterSection, type InventoryGearFilter, type InventorySort, type StatIconName } from "../../ui/gameUi";
+import { ATTRIBUTE_SUMMARIES, ATTRIBUTE_TOOLTIPS, EQUIPMENT_SLOT_ORDER, formatItemStatValue, formatSignedItemStatValue, formatStat, getDerivedStatRows, getItemNameClass, getItemStatLines, INVENTORY_GEAR_FILTERS, itemMatchesInventoryFilter, RARITY_SORT_WEIGHT, SLOT_LABELS, STAT_LABELS, StatIcon, type CharacterSection, type InventoryGearFilter, type InventorySort, type StatIconName } from "../../ui/gameUi";
 
 export function CharacterLoadingScreen() {
   return (
@@ -374,7 +374,7 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
 
         <section className="item-detail-section">
           <h3>Item Stats</h3>
-          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</small><strong>+{formatItemStatValue(stat.value, stat.percent)}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
+          {stats.length ? <div className="item-stat-grid">{stats.map((stat) => <span key={stat.label}><small className="item-stat-label">{stat.icon && <StatIcon stat={stat.icon} />}{stat.label}</small><strong>{formatSignedItemStatValue(stat.value, stat.percent)}</strong></span>)}</div> : <p className="item-detail-muted">This item grants no direct stat bonuses.</p>}
         </section>
 
         {item.set && (
