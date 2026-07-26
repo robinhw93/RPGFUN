@@ -11,6 +11,7 @@ import { getGearIconCategory, getGearIconChoices, resolveGearIconUrl } from "../
 import { copyJson, downloadJson, EditorShell, ensureInternalId, ITEM_DRAFT_STORAGE_KEY, makeId, NumberField, saveLiveCatalog, TextField, useLocalDraft, type ItemExchange } from "./shared";
 
 type ItemEditorTab = "gear" | "sets" | "consumables" | "misc";
+export type ItemEditorSortMode = "name_asc" | "name_desc" | "scaling_desc" | "scaling_asc";
 const RARITIES: ItemRarity[] = ["common", "uncommon", "rare", "epic", "legendary"];
 const GEAR_SLOTS: Array<{ id: GearType; label: string }> = [
   { id: "head", label: "Head" }, { id: "chest", label: "Chest" }, { id: "pants", label: "Pants" }, { id: "boots", label: "Boots" },
@@ -202,13 +203,29 @@ function itemsForTab(items: InventoryItem[], tab: Exclude<ItemEditorTab, "sets">
   return items.filter(isMiscItem);
 }
 
+export function sortItemEditorEntries<T extends { id: string; name: string }>(entries: T[], mode: ItemEditorSortMode, getScalingValue?: (entry: T) => number): T[] {
+  const nameDirection = mode === "name_desc" ? -1 : 1;
+  return [...entries].sort((left, right) => {
+    if ((mode === "scaling_desc" || mode === "scaling_asc") && getScalingValue) {
+      const scalingDifference = getScalingValue(left) - getScalingValue(right);
+      if (scalingDifference !== 0) return scalingDifference * (mode === "scaling_desc" ? -1 : 1);
+    }
+    const nameDifference = left.name.localeCompare(right.name, "en", { sensitivity: "base" });
+    return nameDifference !== 0 ? nameDifference * nameDirection : left.id.localeCompare(right.id);
+  });
+}
+
 export function ItemDevtool({ onExit }: { onExit: () => void }) {
   const store = useLocalDraft<ItemExchange>(ITEM_DRAFT_STORAGE_KEY, canonicalItemExchange(), normalizeItemExchange);
   const [tab, setTab] = useState<ItemEditorTab>("gear");
+  const [sortMode, setSortMode] = useState<ItemEditorSortMode>("name_asc");
   const [selectedId, setSelectedId] = useState(() => store.draft.items.find(isGearItem)?.id ?? "");
-  const entries = useMemo(() => tab === "sets" ? store.draft.sets : itemsForTab(store.draft.items, tab), [store.draft, tab]);
+  const entries = useMemo(() => {
+    const source: Array<InventoryItem | GearSetDefinition> = tab === "sets" ? store.draft.sets : itemsForTab(store.draft.items, tab);
+    return sortItemEditorEntries(source, sortMode, tab === "gear" ? (entry) => calculateGearScalingValue(entry as GearItem).value : undefined);
+  }, [store.draft, sortMode, tab]);
   const selected = entries.find((entry) => entry.id === selectedId) ?? entries[0];
-  const chooseTab = (next: ItemEditorTab) => { setTab(next); const list = next === "sets" ? store.draft.sets : itemsForTab(store.draft.items, next); setSelectedId(list[0]?.id ?? ""); };
+  const chooseTab = (next: ItemEditorTab) => { setTab(next); setSortMode((current) => next === "gear" || !current.startsWith("scaling") ? current : "name_asc"); const list = next === "sets" ? store.draft.sets : itemsForTab(store.draft.items, next); setSelectedId(list[0]?.id ?? ""); };
   const prepare = () => { const normalized = normalizeItemExchange(store.draft); store.setDraft(normalized); window.localStorage.setItem(ITEM_DRAFT_STORAGE_KEY, JSON.stringify(normalized)); return normalized; };
   const save = async () => { try { const exchange = prepare(); store.setMessage("Writing items to live source..."); await saveLiveCatalog("items", exchange); store.setMessage("Items and sets saved permanently to the live game"); } catch (error) { store.setMessage(error instanceof Error ? error.message : "Items could not be saved to the live game"); } };
   const copy = async () => { try { await copyJson(prepare()); store.setMessage("JSON copied - paste it into Codex for special mechanics"); } catch { store.setMessage("Clipboard blocked. Use Export JSON instead."); } };
@@ -217,7 +234,7 @@ export function ItemDevtool({ onExit }: { onExit: () => void }) {
   const updateSelected = (change: object) => { if (!selected) return; if (tab === "sets") store.setDraft((draft) => ({ ...draft, sets: draft.sets.map((entry) => entry.id === selected.id ? { ...entry, ...change } : entry) })); else store.setDraft((draft) => ({ ...draft, items: draft.items.map((entry) => entry.id === selected.id ? { ...entry, ...change } as typeof entry : entry) })); };
   return <EditorShell title="Item Editor" description="Create gear, gear sets, combat consumables and other inventory items. Save writes standard mechanics directly to the live game; special notes are exported for Codex." message={store.message} onSave={save} onCopy={copy} onExport={() => { downloadJson("arkenfall-items.json", prepare()); store.setMessage("JSON exported"); }} onExit={onExit}>
     <div className="item-editor-tabs"><button className={tab === "gear" ? "active" : ""} onClick={() => chooseTab("gear")}><Shield size={14} /> Gear</button><button className={tab === "sets" ? "active" : ""} onClick={() => chooseTab("sets")}><Gem size={14} /> Sets</button><button className={tab === "consumables" ? "active" : ""} onClick={() => chooseTab("consumables")}><FlaskConical size={14} /> Consumables</button><button className={tab === "misc" ? "active" : ""} onClick={() => chooseTab("misc")}><Package size={14} /> Other Items</button></div>
-    <div className="content-devtool-layout"><aside className="content-devtool-list"><button className="add-content-button" onClick={add}><Plus size={14} /> New {tab === "consumables" ? "consumable" : tab === "sets" ? "set" : tab === "misc" ? "item" : "gear"}</button>{entries.map((entry) => <button className={entry.id === selected?.id ? "selected" : ""} key={entry.id} onClick={() => setSelectedId(entry.id)}><strong>{entry.name}</strong><small>{entry.id}</small></button>)}</aside>
+    <div className="content-devtool-layout"><aside className="content-devtool-list"><div className="item-editor-list-tools"><label><span>Sort list</span><select aria-label="Sort item list" value={sortMode} onChange={(event) => setSortMode(event.target.value as ItemEditorSortMode)}><option value="name_asc">Name A-Z</option><option value="name_desc">Name Z-A</option><option value="scaling_desc" disabled={tab !== "gear"}>Scaling: high-low</option><option value="scaling_asc" disabled={tab !== "gear"}>Scaling: low-high</option></select></label></div><button className="add-content-button" onClick={add}><Plus size={14} /> New {tab === "consumables" ? "consumable" : tab === "sets" ? "set" : tab === "misc" ? "item" : "gear"}</button>{entries.map((entry) => <button className={entry.id === selected?.id ? "selected" : ""} key={entry.id} onClick={() => setSelectedId(entry.id)}><strong>{entry.name}</strong><small>{entry.id}{tab === "gear" ? ` · SV ${calculateGearScalingValue(entry as GearItem).value.toFixed(1)}` : ""}</small></button>)}</aside>
       {selected && <section className="content-devtool-inspector"><div className="content-editor-heading"><div><p className="eyebrow">{tab === "sets" ? "Gear Set" : tab === "consumables" ? "Consumable Item" : tab === "misc" ? "Other Item" : "Gear Item"}</p><h2>{selected.name}</h2></div><button type="button" className="danger-icon-button" onClick={remove}><Trash2 size={14} /> Delete</button></div>{tab === "gear" ? <GearFields item={selected as GearItem} sets={store.draft.sets} allItems={store.draft.items} onChange={updateSelected} /> : tab === "sets" ? <SetFields set={selected as GearSetDefinition} onChange={updateSelected} /> : tab === "consumables" ? <ConsumableFields item={selected as ConsumableItem} allItems={store.draft.items} onChange={updateSelected} /> : <MiscItemFields item={selected as MiscItem} allItems={store.draft.items} onChange={updateSelected} />}</section>}
     </div>
   </EditorShell>;

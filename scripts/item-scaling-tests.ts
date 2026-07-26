@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { sortItemEditorEntries } from "../src/components/devtools/ItemDevtool";
 import { calculateGearScalingValue, getGearScalingRank } from "../src/game/itemScaling";
 import type { GearItem } from "../src/game/types";
 
@@ -32,3 +33,7 @@ assert.equal(specialResult.hasExcludedEffects, true, "The calculator must flag e
 const weakerGear = { ...scoredGear, id: "weaker-gear", stats: { strength: 1 }, armor: 0, physicalPower: 0, combat: undefined };
 const rank = getGearScalingRank(scoredGear, [weakerGear, scoredGear]);
 assert.deepEqual(rank, { rank: 1, total: 2, average: 6 }, "Same-slot comparison must report rank and average against the current draft catalog.");
+
+const sortedByScaling = sortItemEditorEntries([weakerGear, scoredGear], "scaling_desc", (item) => calculateGearScalingValue(item).value);
+assert.deepEqual(sortedByScaling.map((item) => item.id), [scoredGear.id, weakerGear.id], "Item Editor must sort the strongest Scaling Value first without mutating the catalog.");
+assert.deepEqual(sortItemEditorEntries([{ id: "z", name: "Zed" }, { id: "a", name: "Alpha" }], "name_asc").map((item) => item.id), ["a", "z"], "Item Editor must sort names alphabetically.");
