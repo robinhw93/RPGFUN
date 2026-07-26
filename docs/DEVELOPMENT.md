@@ -135,6 +135,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/items.ts` / `src/game/consumables.ts` | Item classification and descriptions plus executable combat-consumable transitions. |
 | `src/game/town.ts` | Arkenfall vendor/recipe resolution, purchases, exact material consumption, crafted-item grants, and tavern recovery. |
 | `src/game/progression.ts` | Experience thresholds and level rewards. |
+| `src/game/developerTools.ts` | Pure saved-character test transitions used by the developer launcher. |
 | `src/game/rewards.ts` | Grants each combat reward once and captures score-screen data. |
 | `src/game/eventOutcomes.ts` | Normalizes and applies typed event outcomes, queued next-combat statuses, and immediate encounters. |
 | `src/components/adventure/EventPresentation.tsx` | Full-screen staged event title, choice, d100, bonus, and outcome presentation. |
@@ -363,6 +364,8 @@ The developer-tool launcher opens the isolated content editors listed below. It 
 - **Portrait Editor** switches between enemies and player avatars, selects from the generated full-art library, and positions/resizes a square crop directly over the source image. It shows the exact square combat preview and exports normalized percentage coordinates, so the crop is independent of the editor's screen size.
 
 They auto-save and expose Save, Copy for Codex, and Export JSON. Their browser keys include `emberfall.enemy-devtool.v1`, `emberfall.event-devtool.v1`, `emberfall.adventure-devtool.v1`, `emberfall.item-devtool.v1`, and `emberfall.portrait-devtool.v1`. New exports use `arkenfall-*` format names and filenames. Item exports use version 1 and contain both items and sets; Event exports use version 2. Local drafts can reference one another. Event Manager, Adventure Editor, and Item Editor Save post complete drafts to the local Vite server, which validates shapes and references before replacing only the owned catalog initializers. These writes are unavailable in production. Existing-enemy stats and drop tables plus Talent Editor tooltip/Power fields retain narrow direct-write behavior; advanced enemy abilities, portraits, and other new mechanics remain draft-only until implemented.
+
+The launcher-level **Level up** and **Grant item** actions are different from editor source sync. They update the active character through React state and the normal `emberfall-save-v1` autosave; they never write TypeScript source. Level up is unavailable during active combat and at level 50. Grant item remains usable during combat, lists the canonical live `ITEMS` catalog, clamps quantity to 1-99, and adds independent cloned copies.
 
 ## Save compatibility
 

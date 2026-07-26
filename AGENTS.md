@@ -39,6 +39,7 @@ Use the existing module boundaries rather than putting more rules into `App.tsx`
 - `src/game/combatFeatures.ts`: data-driven passives, triggers, damage modifiers, and ability modifiers from talents, gear, and sets.
 - `src/game/items.ts` and `src/game/consumables.ts`: inventory-item classification/pricing helpers and presentation-timed standard consumable effects.
 - `src/game/town.ts`: Arkenfall vendor assignment, crafting/brewing recipes, town purchases, exact material consumption, and tavern healing.
+- `src/game/developerTools.ts`: pure saved-character test transitions for one normal level gain and cloned live-item grants.
 - `src/game/talentRequirements.ts`: bidirectional ANY talent connections.
 - `src/hooks/useCombatActionQueue.ts`: queued player abilities and End Turn projection.
 - `src/hooks/useCombatEventSequencer.ts`: presentation-time event resolution.
@@ -195,10 +196,27 @@ A change is complete only when the applicable items are true:
 
 At the time of this handoff:
 
-- Windsong Forest is the only player-facing adventure. It is the bright-forest story route; the former Shadow Proving Grounds testing route has been removed.
+- Windsong Forest is the only player-facing story adventure. It currently has nine ordered stages, four reusable event definitions, six fixed combat/boss stages, one weighted event-or-combat stage, a dedicated merchant stage, and a berry event. The internal `ENDLESS_ADVENTURE`/DUMMY definition still exists for testing but is not listed as a normal player adventure.
+- The enemy catalog has 11 templates: DUMMY, five Windsong creatures, and five Highlands goblins. The goblins are implemented with executable abilities, dedicated Highlands artwork, portraits, starting Energy, behavior priorities, and independent drop rows, but no current Windsong stage references them.
+- The live item source currently contains 30 definitions: 19 gear, 3 consumables, and 8 ordinary items. Goblin Scavanger and Hexcaster are the two current three-piece sets.
 - Shadow, Arcanist, and Brute each have 87 live nodes including their class node. Shadow's latest extensions add Physical Power, Agility, Intelligence, and Spell Power routes.
 - Arcanist includes Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, Elemental Fury, and later Spell Power, Intelligence, Hit Chance, and Critical Strike routes.
 - Brute includes Fire, Bleed, Armor/Guard, holy-vigor, Smite, Spell Power, and hybrid Power paths. Cultist currently has only its class node.
 - The newest status in the catalog is Diminishing Returns, a three-turn buff granted when Stunned ends that prevents further Stunned applications.
 
 Use `docs/CONTENT_REFERENCE.md` rather than this summary for exact live values and the full catalog.
+
+## Working-tree handoff
+
+At the documentation sync dated 2026-07-26, the owner has uncommitted content changes in:
+
+```text
+src/game/content/abilities.ts
+src/game/content/adventures.ts
+src/game/content/enemies.ts
+src/game/content/gear.ts
+```
+
+Treat them as intentional, user-owned work. They currently contain the 50% Physical Power Quick Slash value, the nine-stage Windsong Forest/event rewrite, expanded goblin drop tables, and the new Goblin Scavanger/Hexcaster gear, materials, and set bonuses. Do not restore, reformat, or include those files in an unrelated commit.
+
+The current full `npm test` run stops at the item-art integrity assertion because eight new item IDs are not yet registered in `ITEM_ICON_URLS`: the three Goblin Scavanger pieces, three Hexcaster pieces, Linen Scraps, and Spider Silk Thread. The two materials have direct `/assets/items/` artwork, but the central map still lacks them; the six gear pieces also lack the fallback used by `ItemIcon`. `npm run docs:check` and `npm run build` pass at this snapshot. This is a known unfinished content-integration task, not a reason to discard the content edits.

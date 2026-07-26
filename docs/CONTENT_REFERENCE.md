@@ -12,7 +12,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 
 | Ability | Energy | Cooldown | Target | Effect |
 | --- | ---: | ---: | --- | --- |
-| Quick Slash | 1 | None | Enemy | Deals 15% Physical Power as Physical damage. |
+| Quick Slash | 1 | None | Enemy | Deals 50% Physical Power as Physical damage. |
 | Twin Strike | 2 | 1 | Enemy | Hits twice for 50% Physical Power per hit. Each hit rolls and triggers on-hit effects separately. |
 | Poison Stab | 3 | None | Enemy | Deals 50% Physical Power as Physical damage and applies 1 Poison. |
 | Poison Cloud | 3 | 2 | All enemies | Applies 2 Poison to every target simultaneously without direct damage. |
@@ -435,23 +435,39 @@ The duration is the default duration created by the status library. Ability or t
 
 Enemy Physical Power, Spell Power, Starting Energy, Max Energy, Energy Regeneration, and Critical Strike Chance are configured per template. Starting Energy defaults to Max Energy for current definitions that omit a separate value. Attacks are implemented as explicit abilities rather than an implicit default attack. Every enemy template owns a full bestiary illustration and a head portrait cropped from the same design. The portrait appears on its combat card and opens the full illustration together with the complete stat and defense summary when pressed. Enemies with more than one action per turn resolve and present each ability separately.
 
-| Enemy | Health | Physical / Spell Power | Armor / Magic Resistance | Hit / Dodge / Crit | Regen / Max | Abilities |
+| Enemy | Health | Physical / Spell Power | Armor / Magic Resistance | Hit / Dodge / Crit | Start / Regen / Max Energy | Abilities |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| DUMMY | 100 | 1 / 0 | 0 / 0 | 95% / 0% / 0% | 1 / 10 | Training Strike (1 Energy, Melee): 1 base Physical damage. |
-| Rabid Rat | 11 | 1 / 0 | 0 / 0 | 95% / 5% / 10% | 1 / 3 | Bite (2, Melee): 100% Physical Power. Scurry (0, self): +1 Energy next turn. Rabid Bite (3, Melee): 100% Physical Power and 1 Poison. |
-| Windsong Wolf | 20 | 2 / 0 | 0 / 0 | 95% / 10% / 10% | 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
-| Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 5% / 5% | 1 / 4 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
-| Brown Bear | 30 | 3 / 0 | 5 / 0 | 85% / 5% / 5% | 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
-| The Forest Spirit | 40 | 0 / 8 | 1 / 1 | 95% / 10% / 10% | 2 / 10 | Fade Out (3, self): Stealth until the end of its next turn and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
-| Goblin Longseer | 30 | 5 / 0 | 1 / 1 | 95% / 8% / 5% | 1 / 5 | Bow Shot (0, Ranged): 100% Physical Power. Snipe (5, Ranged): 200% Physical Power and Vulnerable. Starts at 1 Energy and replaces Bow Shot with Snipe at full Energy. |
-| Goblin Quickstabber | 24 | 6 / 0 | 1 / 0 | 95% / 10% / 10% | 1 / 5 | Stealth (0, self): Stealth until the end of its next turn. Shiv (2, Melee): 100% Physical Power and 1 Poison. Uses every ready ability, separately, up to two actions. |
-| Goblin Woundfixer | 28 | 2 / 6 | 0 / 3 | 95% / 5% / 5% | 2 / 10 | Heal (3, Ranged): restores 100% Spell Power to the most wounded living ally, including itself. Hex (1, Melee): 50% Spell Power as Spell damage and Slowed. |
-| Goblin Biggrown | 40 | 6 / 0 | 4 / 0 | 95% / 0% / 5% | 1 / 5 | Protect (1, group): grants 5 Guard to every other living enemy. Heavy Cleave (5, Melee): 250% Physical Power and 1 Bleed. Starts at 3 Energy. |
-| Striz, Goblin Chieftain | 80 | 10 / 6 | 4 / 4 | 95% / 5% / 5% | 1 / 10 | Rally (1, group): Fierce for every living enemy. Skewer (1, Melee): 100% Physical Power and 1 Bleed. Impale (3, Melee): charges for one turn, then deals 150% Physical Power and applies 2 Bleed. Spear Poke (2, Melee): 75% Physical Power. Can resolve several ready abilities separately. |
+| DUMMY | 100 | 1 / 0 | 0 / 0 | 95% / 0% / 0% | 10 / 1 / 10 | Training Strike (1 Energy, Melee): 1 base Physical damage. |
+| Rabid Rat | 11 | 1 / 0 | 0 / 0 | 95% / 5% / 10% | 3 / 1 / 3 | Bite (2, Melee): 100% Physical Power. Scurry (0, self): +1 Energy next turn. Rabid Bite (3, Melee): 100% Physical Power and 1 Poison. |
+| Windsong Wolf | 20 | 2 / 0 | 0 / 0 | 95% / 10% / 10% | 6 / 1 / 6 | Howl (0, Ranged): Vulnerable. Bite and Claw (2, Melee): two 50% Physical Power hits, each with 20% Bleed chance. |
+| Forest Wisp | 9 | 0 / 2 | 0 / 1 | 95% / 5% / 5% | 4 / 1 / 4 | Wisp Blast (1, Ranged): random 50–100% Spell Power as Arcane damage and 10% Weaken chance; repeats until Energy is spent, then Stuns itself for its next turn. |
+| Brown Bear | 30 | 3 / 0 | 5 / 0 | 85% / 5% / 5% | 6 / 0 / 6 | Maul (3, Melee): 100% Physical Power and 1 Bleed. Hibernate (0, self): Sleep and +6 Energy next turn. Roar (3, Ranged): Weaken and Vulnerable. |
+| The Forest Spirit | 40 | 0 / 8 | 1 / 1 | 95% / 10% / 10% | 10 / 2 / 10 | Fade Out (3, self): Stealth until the end of its next turn and +2 Energy next turn. Burning Glare (2, Ranged beam): 75% Spell Power as Fire damage and 1 Burn. Nature's Beam (3, Ranged beam): 100% Spell Power as Arcane damage and Weaken. Shimmer (0, self): full Energy next turn. |
+| Goblin Longseer | 30 | 5 / 0 | 1 / 1 | 95% / 8% / 5% | 1 / 1 / 5 | Bow Shot (0, Ranged): 100% Physical Power. Snipe (5, Ranged): 200% Physical Power and Vulnerable. Replaces Bow Shot with Snipe at full Energy. |
+| Goblin Quickstabber | 24 | 6 / 0 | 1 / 0 | 95% / 10% / 10% | 5 / 1 / 5 | Stealth (0, self): Stealth until the end of its next turn. Shiv (2, Melee): 100% Physical Power and 1 Poison. Uses every ready ability, separately, up to two actions. |
+| Goblin Woundfixer | 28 | 2 / 6 | 0 / 3 | 95% / 5% / 5% | 10 / 2 / 10 | Heal (3, Ranged): restores 100% Spell Power to the most wounded living ally, including itself. Hex (1, Melee): 50% Spell Power as Spell damage and Slowed. |
+| Goblin Biggrown | 40 | 6 / 0 | 4 / 0 | 95% / 0% / 5% | 3 / 1 / 5 | Protect (1, group): grants 5 Guard to every other living enemy. Heavy Cleave (5, Melee): 250% Physical Power and 1 Bleed. |
+| Striz, Goblin Chieftain | 80 | 10 / 6 | 4 / 4 | 95% / 5% / 5% | 10 / 1 / 10 | Rally (1, group): Fierce for every living enemy. Skewer (1, Melee): 100% Physical Power and 1 Bleed. Impale (3, Melee): charges for one turn, then deals 150% Physical Power and applies 2 Bleed. Spear Poke (2, Melee): 75% Physical Power. Can resolve several ready abilities separately. |
 
 The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
 
 The five goblins use role-specific Highlands artwork set on open green plains rather than forest scenery. Their combat portraits are dedicated square crops from the same designs. Bow Shot and Snipe use distinct arrow/crosshair projectiles, friendly healing travels between combatants, group buffs resolve simultaneously on their recipients, and Striz visibly continues shaking while Impale is charged.
+
+Each enemy drop-table row rolls independently for each defeated instance. Repeating the same item on several rows creates separate chances for additional copies.
+
+| Enemy | Live drop-table rows |
+| --- | --- |
+| DUMMY | None. |
+| Rabid Rat | Rats Tail 80%. |
+| Windsong Wolf | Wolf Fang 20%; Fur 60%. |
+| Forest Wisp | Wisp Essence 50%. |
+| Brown Bear | Bear Claw 50%. |
+| The Forest Spirit | Windsong Staff 100%; Windsong Sword 100%; Windsong Dagger 100%; Wisp Essence 80%. |
+| Goblin Longseer | Metal Scrap 30%; Linen Scraps 80% twice; Goblin Scavanger Hood 20%. |
+| Goblin Quickstabber | Metal Scrap 30%; Minor Healing Potion 10%; Linen Scraps 100%, 80%, and 60%; each Goblin Scavanger set piece 10%. |
+| Goblin Woundfixer | Metal Scrap 20%; Yumberries 5%; Hexcaster Staff 18%; Linen Scraps 80%; Hexcaster Hood 10%. |
+| Goblin Biggrown | Metal Scrap 100%; Linen Scraps 80% twice; each Goblin Scavanger set piece 20%. |
+| Striz, Goblin Chieftain | Minor Healing Potion 60%; Metal Scrap 100%, 100%, and 60%; Linen Scraps 100%; each Goblin Scavanger set piece 20%. |
 
 ## Arkenfall Town
 
@@ -459,31 +475,54 @@ The town hub is listed above adventures and contains six illustrated destination
 
 | Destination | Services | Live default catalog |
 | --- | --- | --- |
-| Blacksmith — Brunhilde von Trott | Repeatable Shop purchases and material-based Crafting. | All legacy gear is sold here. Windsong Staff requires 2 Wisp Essence and 1 Fur; Windsong Sword requires 2 Bear Claws and 1 Fur; Windsong Dagger requires 2 Wolf Fangs and 1 Fur. |
-| Alchemist — Ray Charlston | Repeatable Shop purchases and potion Brewing. | All legacy consumables are sold here. Minor Healing Potion requires 2 Small Bloodberries and 1 Yumberries. |
-| Tailor — Mirelle Threadgold | Repeatable Shop purchases and material-based Tailoring. | Populated through Item Editor vendor and recipe assignments. |
-| Leatherworker — Torren Hidehand | Repeatable Shop purchases and material-based Leatherworking. | Populated through Item Editor vendor and recipe assignments. |
-| Jeweler — Celestine Veyra | Repeatable Shop purchases and material-based Jewelcrafting. | Populated through Item Editor vendor and recipe assignments. |
+| Blacksmith — Brunhilde von Trott | Repeatable Shop purchases and material-based Crafting. | Sells Metal Scrap. Crafts the three Windsong weapons and the four Simple Plate pieces; none currently require adventure completion. |
+| Alchemist — Ray Charlston | Repeatable Shop purchases and potion Brewing. | Sells Minor Healing Potion. Brewing one requires 2 Small Bloodberries and 1 Rats Tail. |
+| Tailor — Mirelle Threadgold | Repeatable Shop purchases and material-based Tailoring. | Sells Spider Silk Thread after Windsong Forest is completed. Crafts Hexcaster Robes and Hexcaster Hood after that completion. |
+| Leatherworker — Torren Hidehand | Repeatable Shop purchases and material-based Leatherworking. | No current stock or recipes. |
+| Jeweler — Celestine Veyra | Repeatable Shop purchases and material-based Jewelcrafting. | No current stock or recipes. |
 | The Resting Hart | Paid full recovery and next-combat meals. | Rest costs 1 Gold per 3 missing Health, rounded up. Ironpot Stew costs 5 Gold and grants Strengthened; Peppercrust Boar costs 8 Gold and grants Fierce; Hartroot Broth costs 10 Gold and grants Regenerate. Each meal benefit is applied when the next combat begins and may be prepared once at a time. |
 
-These legacy defaults keep the original item catalog usable after the hub update. Item Editor writes an explicit vendor or no-vendor value and an explicit recipe or non-craftable value for later edits, so future stock is fully data-driven. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab.
+Explicit item fields are authoritative: `arkenfallVendor: null` means the item is not sold in town, and a missing recipe means it is not craftable. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab. Hexcaster Staff currently has no recipe.
+
+| Craftable item | Station | Ingredients | Adventure requirement |
+| --- | --- | --- | --- |
+| Minor Healing Potion | Alchemist | 2 Small Bloodberries, 1 Rats Tail | None. |
+| Windsong Staff | Blacksmith | 2 Wisp Essence, 1 Fur | None. |
+| Windsong Sword | Blacksmith | 2 Bear Claws, 1 Fur | None. |
+| Windsong Dagger | Blacksmith | 2 Wolf Fangs, 1 Fur | None. |
+| Simple Plate Helmet | Blacksmith | 4 Metal Scrap | None. |
+| Simple Plate Harness | Blacksmith | 5 Metal Scrap, 1 Fur | None. |
+| Simple Plate Boots | Blacksmith | 3 Metal Scrap | None. |
+| Simple Plate Pantaloons | Blacksmith | 5 Metal Scrap | None. |
+| Hexcaster Robes | Tailor | 6 Linen Scraps, 2 Spider Silk Thread | Windsong Forest completed. |
+| Hexcaster Hood | Tailor | 4 Linen Scraps, 1 Spider Silk Thread | Windsong Forest completed. |
 
 ## Adventure: Windsong Forest
 
-Windsong Forest follows six ordered stages. Stages with several possibilities make one weighted roll from the listed chances.
+Windsong Forest follows nine ordered stages. Stages with several possibilities make one weighted roll from the listed chances.
 
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
-| 1 | Rustling in the Clover | 1% | Two Rabid Rats | 50 XP, 3 gold. |
-| 1 | Stalked by Wolves | 99% | Attribute-check event | Outcome-dependent. |
-| 2 | Prowling Ambush | 100% | Windsong Wolf | 53 XP, 8 gold. |
-| 3 | Skittering Rats | 100% | Three Rabid Rats | 73 XP, 6 gold. |
-| 4 | Unwelcome Guest | 100% | Forest Wisp | 36 XP, 5 gold. |
-| 5 | They see you | 50% | Three Forest Wisps | 68 XP, 10 gold. |
-| 5 | Bear Danger | 50% | Brown Bear | 58 XP, 8 gold. |
-| 6 | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 100 XP, 28 gold. |
+| 1 — Forest Edge | Rustling in the Clover | 100% | Two Rabid Rats | 55 XP, 3 gold; stage roll: Mystical Ring 10%. |
+| 2 — Wayfarer's Trail | Prowling Ambush | 100% | Windsong Wolf | 61 XP, 8 gold. |
+| 3 — Thick Forest | Stalked by Wolves | 40% | Attribute-check event | Outcome-dependent. |
+| 3 — Thick Forest | Brown Bear | 20% | Brown Bear | 78 XP, 8 gold. |
+| 3 — Thick Forest | The Bear | 40% | Attribute-check event | Outcome-dependent. |
+| 4 — Mossy Cliffs | Skittering Rats | 100% | Three Rabid Rats | 65 XP, 6 gold. |
+| 5 — Forest Trail | Wandering Merchant | 100% | Direct-choice merchant event | Outcome-dependent. |
+| 6 — Forest Depths | Unwelcome Guest | 100% | Forest Wisp | 49 XP, 5 gold. |
+| 7 — Dense Forest | Colorful Berries | 100% | Attribute-check event | Outcome-dependent. |
+| 8 — Dark Forest | They see you | 100% | Three Forest Wisps | 63 XP, 13 gold. |
+| 9 — The Clearing | The Forest Spirit | 100% | Forest Spirit and two Forest Wisps | 100 XP, 28 gold. |
 
-Event definitions support two or three choices. Each choice can resolve through an attribute check or a direct outcome with no roll. Outcomes contain ordered effect lists that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, immediate rewarded encounters, and Wandering Merchants stocked with selected live items. **Stalked by Wolves** is used at the Forest Edge: the player may test Agility 29, Strength 31, or Intelligence 34 for 10 XP or a next-combat status; failed physical approaches immediately encounter two Windsong Wolves for 71 XP and 5 gold.
+Event definitions support two or three choices. Each choice can resolve through an attribute check or a direct outcome with no roll. Outcomes contain ordered effect lists that can combine Health, gold, current-level experience, Talent Points, Attribute Points, items, statuses carried into the next combat, immediate rewarded encounters, and Wandering Merchants stocked with selected live items.
+
+The four current event definitions are:
+
+- **Stalked by Wolves:** Agility 29, Strength 31, or Intelligence 34. Success grants 10 XP or Fierce for the next combat; failed physical approaches can immediately encounter two Windsong Wolves for 71 XP and 5 gold, while another failure applies Weaken in the next combat.
+- **The Bear:** Strength 40, Agility 40, or Intelligence 40. Successful Strength and Intelligence approaches can grant 10 gold. Failed physical approaches can immediately encounter a Brown Bear for 60 XP and 10 gold; failed Intelligence applies Weaken in the next combat.
+- **Colorful Berries:** two Intelligence 10 choices. Success grants Yumberries or restores 10 Health; failure may do nothing or apply Poison in the next combat.
+- **Wandering Merchant:** a direct choice with no roll. The merchant stocks Minor Healing Potion, Old Robes, Dusty Boots, Old Armor, Dusty Cowl, and Old Leather Pants.
 
 Every Wandering Merchant also buys any gear, consumable, or ordinary item currently in the character's Inventory. One copy is sold per action for 25% of its live Gold Cost, rounded down to whole Gold with a minimum value of 1 Gold for items worth more than zero.
 
@@ -493,9 +532,11 @@ Enemy templates and adventure stages may each define item drop tables. Every con
 
 ### Available gear
 
-New characters begin with no equipped gear and an empty inventory. Every live item below has dedicated generated artwork that follows it through all runtime item surfaces.
+New characters begin with no equipped gear and an empty inventory. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
 
 The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No live item currently uses Legendary.
+
+> **Known integration gap (2026-07-26):** eight newly authored item IDs are not yet present in the shared item-icon catalog: the three Goblin Scavanger pieces, the three Hexcaster pieces, Linen Scraps, and Spider Silk Thread. `npm test` currently stops at this catalog invariant. The six new gear definitions also point at gear-source artwork that the runtime item-icon component does not accept as its direct fallback. The content exists, but a later implementation change must generate/register their inventory icons before the item catalog is fully integrated.
 
 | Item | Slot | Rarity | Gold Cost | Bonuses |
 | --- | --- | --- | ---: | --- |
@@ -508,10 +549,20 @@ The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No l
 | Old Leather Pants | Pants | Common | 8 | +1 Agility. |
 | Old Robes | Chest | Common | 12 | +1 Intelligence. |
 | Mystical Ring | Head | Uncommon | 12 | +1 Agility, +1 Intelligence, +1 Strength, +1 Vitality, and +1 Luck. |
+| Simple Plate Helmet | Head | Common | 12 | +1 Strength, +1 Vitality, and +1 Armor. |
+| Simple Plate Harness | Chest | Common | 24 | +1 Strength, +1 Vitality, +1 Armor, and -1 Energy Regeneration. |
+| Simple Plate Boots | Boots | Common | 18 | +1 Strength, +1 Vitality, +1 Armor, and -2 Initiative. |
+| Simple Plate Pantaloons | Pants | Common | 12 | +1 Strength, +1 Vitality, +1 Armor, and -1% Dodge Chance. |
+| Goblin Scavanger Hood | Head, Leather | Uncommon | 24 | +1 Vitality, +1 Agility, and +1 Armor; Goblin Scavanger set. |
+| Goblin Scavanger Boots | Boots, Leather | Uncommon | 20 | +1 Agility, +1 Vitality, +1 Armor, +5 Initiative, and +2% Dodge Chance; Goblin Scavanger set. |
+| Goblin Scavanger Harness | Chest, Cloth | Uncommon | 30 | +1 Strength, +1 Vitality, +1 Agility, +1 Luck, and +1 Armor; Goblin Scavanger set. |
+| Hexcaster Robes | Chest, Cloth | Uncommon | 36 | +1 Vitality, +1 Intelligence, +1 Magic Resistance, and +1 Spell Power; Hexcaster set. |
+| Hexcaster Hood | Head, Cloth | Uncommon | 12 | +2 Intelligence, +1 Magic Resistance, and +1% Hit Chance; Hexcaster set. |
+| Hexcaster Staff | Two-Hand weapon | Rare | 12 | +1 Intelligence, +2 Vitality, +2 Spell Power, and +1% Hit Chance; Hexcaster set. |
 
 ### Consumables
 
-Consumables use one inventory slot per copy and can be queued from the **Inventory** button during combat without ending the player's turn. Legacy consumables are sold by Ray Charlston in Arkenfall, Minor Healing Potion can also be brewed from its live default recipe, and Event Manager can grant any live item.
+Consumables use one inventory slot per copy and can be queued from the **Inventory** button during combat without ending the player's turn. Ray Charlston sells Minor Healing Potion in Arkenfall and can brew it from 2 Small Bloodberries and 1 Rats Tail. Event Manager can grant any live item.
 
 | Item | Rarity | Gold Cost | Effects |
 | --- | --- | ---: | --- |
@@ -530,7 +581,15 @@ Ordinary items can be carried, granted, dropped, bought, and sold, but cannot be
 | Rats Tail | Common | 4 | The tail of a rat. |
 | Wisp Essence | Common | 20 | Magical essence that brings Wisps to life. |
 | Bear Claw | Common | 10 | A claw as big as your head. |
+| Metal Scrap | Common | 6 | A piece of metal. |
+| Linen Scraps | Common | 0 | A scrap of cloth. |
+| Spider Silk Thread | Uncommon | 15 | No description is currently configured. |
 
 ### Gear set bonuses
 
-Only equipped pieces count. No gear sets are currently defined in the live catalog.
+Only equipped pieces count toward a set bonus.
+
+| Set | Pieces | Bonuses |
+| --- | --- | --- |
+| Goblin Scavanger | Hood, Boots, Harness | 2 pieces: +1 Agility. 3 pieces: +5% Critical Strike Chance. |
+| Hexcaster | Robes, Hood, Staff | 2 pieces: +2 Spell Power. 3 pieces: +2 Intelligence. |
