@@ -55,7 +55,7 @@ The checks run focused gameplay regressions, verify documentation against the li
 - Eight equipment slots, weapon-hand rules, five item rarities from Common through Legendary, generated per-item artwork, item comparison, inventory filtering/sorting, combat consumables, ordinary carried items, item prices, independent enemy/stage item drops, grouped reward presentation, and event-driven single-stock Wandering Merchants with buying, gear inspection, and inventory selling.
 - Experience and level-ups through the level-50 cap, plus stat points, talent points, and gold rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.
-- Password-gated Talent, Enemy, Event, Adventure, Item, and Portrait editors with browser-local drafts and Codex-ready JSON exports. Item Editor includes Arkenfall vendor assignment and typed material recipes. While Vite is running locally, Event Manager, Adventure Editor, and Item Editor Save replace their complete canonical live catalogs; existing ability tooltips, Energy cost, cooldown, Flat Damage, and Power totals plus supported enemy fields use narrower source-sync writes.
+- Password-gated Talent, Enemy, Event, Adventure, Item, and Portrait editors with browser-local drafts and Codex-ready JSON exports, plus saved-character test actions for granting one normal level or selected live items. Item Editor includes Arkenfall vendor assignment and typed material recipes. While Vite is running locally, Event Manager, Adventure Editor, and Item Editor Save replace their complete canonical live catalogs; existing ability tooltips, Energy cost, cooldown, Flat Damage, and Power totals plus supported enemy fields use narrower source-sync writes.
 
 ## Hosting
 

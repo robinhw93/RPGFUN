@@ -14,7 +14,8 @@ import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventure
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
-import { ADVENTURE_EVENTS, TALENTS } from "./game/data";
+import { ADVENTURE_EVENTS, ITEMS, TALENTS } from "./game/data";
+import { grantItemForTesting, levelUpCharacterForTesting } from "./game/developerTools";
 import { createCombat, ensureCombatState, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "./game/eventOutcomes";
 import { equipGearItem, unequipGearItem } from "./game/gear";
@@ -127,6 +128,23 @@ function App() {
     setDevtoolGateOpen(false);
     setView(tool);
     window.scrollTo({ top: 0 });
+  };
+
+  const levelUpForTesting = () => {
+    if (combatLocked) return;
+    setGame((current) => ({
+      ...current,
+      character: levelUpCharacterForTesting(current.character),
+    }));
+  };
+
+  const grantItemFromDevtools = (itemId: string, quantity: number) => {
+    const item = ITEMS.find((candidate) => candidate.id === itemId);
+    if (!item) return;
+    setGame((current) => ({
+      ...current,
+      character: grantItemForTesting(current.character, item, quantity),
+    }));
   };
 
   const markRewardPresented = useCallback((rewardId: string) => {
@@ -573,7 +591,16 @@ function App() {
           onConfirm={returnToCharacterCreation}
         />
       )}
-      {devtoolGateOpen && <DevtoolAccessDialog onClose={() => setDevtoolGateOpen(false)} onOpen={openDevtool} />}
+      {devtoolGateOpen && (
+        <DevtoolAccessDialog
+          onClose={() => setDevtoolGateOpen(false)}
+          onOpen={openDevtool}
+          onLevelUp={levelUpForTesting}
+          onGrantItem={grantItemFromDevtools}
+          characterLevel={game.character.level}
+          levelUpDisabled={combatLocked}
+        />
+      )}
       {travelTransition && (
         <div className={`travel-transition ${travelTransition.phase}`} role="status" aria-live="polite">
           <div className="travel-transition-content">

@@ -1,6 +1,7 @@
-import { BookOpen, Copy, Download, Gem, Image, LockKeyhole, Plus, Save, Skull, Trash2, Wrench, X } from "lucide-react";
+import { ArrowUp, BookOpen, Copy, Download, Gem, Gift, Image, LockKeyhole, Plus, Save, Skull, Trash2, Wrench, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ENEMIES, ITEMS } from "../../game/data";
+import { MAX_LEVEL } from "../../game/progression";
 import type { AbilityRange, AdventureDefinition, AdventureEventDefinition, AdventureEventOutcome, GearSetDefinition, InventoryItem, ItemDropDefinition, StatName } from "../../game/types";
 
 export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool" | "itemDevtool" | "portraitDevtool";
@@ -157,10 +158,28 @@ export function localItems(): Array<{ id: string; name: string }> {
     .map((item) => ({ id: item.id, name: item.name }));
 }
 
-export function DevtoolAccessDialog({ onClose, onOpen }: { onClose: () => void; onOpen: (tool: DevtoolKind) => void }) {
+export function DevtoolAccessDialog({
+  onClose,
+  onOpen,
+  onLevelUp,
+  onGrantItem,
+  characterLevel,
+  levelUpDisabled,
+}: {
+  onClose: () => void;
+  onOpen: (tool: DevtoolKind) => void;
+  onLevelUp: () => void;
+  onGrantItem: (itemId: string, quantity: number) => void;
+  characterLevel: number;
+  levelUpDisabled: boolean;
+}) {
   const [code, setCode] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState("");
+  const [grantItemOpen, setGrantItemOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(ITEMS[0]?.id ?? "");
+  const [itemQuantity, setItemQuantity] = useState(1);
+  const [actionMessage, setActionMessage] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   useModalScrollLock();
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -171,12 +190,28 @@ export function DevtoolAccessDialog({ onClose, onOpen }: { onClose: () => void; 
     setUnlocked(true);
   };
 
+  const levelUp = () => {
+    if (levelUpDisabled || characterLevel >= MAX_LEVEL) return;
+    onLevelUp();
+    setActionMessage(`Level ${characterLevel + 1} reached. +3 Attribute Points and +1 Talent Point.`);
+  };
+
+  const grantItem = (event: React.FormEvent) => {
+    event.preventDefault();
+    const item = ITEMS.find((candidate) => candidate.id === selectedItemId);
+    if (!item) return;
+    const quantity = Math.min(99, Math.max(1, Math.floor(itemQuantity)));
+    onGrantItem(item.id, quantity);
+    setItemQuantity(quantity);
+    setActionMessage(`${item.name}${quantity > 1 ? ` x${quantity}` : ""} added to Inventory.`);
+  };
+
   return <div className="devtool-gate-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="devtool-gate devtool-launcher" role="dialog" aria-modal="true" aria-labelledby="devtool-access-title">
       <button type="button" className="devtool-close" onClick={onClose} aria-label="Close"><X size={17} /></button>
       <span className="devtool-gate-icon">{unlocked ? <Wrench size={22} /> : <LockKeyhole size={22} />}</span>
       <p className="eyebrow">Developer Tools</p>
-      <h2 id="devtool-access-title">{unlocked ? "Choose an editor" : "Restricted Tools"}</h2>
+      <h2 id="devtool-access-title">{unlocked ? "Developer tools" : "Restricted Tools"}</h2>
       {!unlocked ? <>
         <p>Enter the developer code to continue.</p>
         <form onSubmit={submit}>
@@ -185,14 +220,39 @@ export function DevtoolAccessDialog({ onClose, onOpen }: { onClose: () => void; 
           {error && <small className="devtool-gate-error" role="alert">{error}</small>}
           <button type="submit" className="primary-button" disabled={!code}>Unlock tools</button>
         </form>
-      </> : <div className="devtool-launcher-grid">
-        <button onClick={() => onOpen("talentDevtool")}><BookOpen /><span><strong>Talent Editor</strong><small>Talents, abilities and connections</small></span></button>
-        <button onClick={() => onOpen("enemyDevtool")}><Skull /><span><strong>Create Enemy</strong><small>Stats, abilities and behavior</small></span></button>
-        <button onClick={() => onOpen("eventDevtool")}><Copy /><span><strong>Event Manager</strong><small>Choices, checks and merchants</small></span></button>
-        <button onClick={() => onOpen("adventureDevtool")}><Wrench /><span><strong>Adventure Editor</strong><small>Stages, chances and prerequisites</small></span></button>
-        <button onClick={() => onOpen("itemDevtool")}><Gem /><span><strong>Item Editor</strong><small>Gear, sets, consumables and other items</small></span></button>
-        <button onClick={() => onOpen("portraitDevtool")}><Image /><span><strong>Portrait Editor</strong><small>Artwork and combat portrait crops</small></span></button>
-      </div>}
+      </> : <>
+        <div className="devtool-launcher-grid">
+          <button onClick={() => onOpen("talentDevtool")}><BookOpen /><span><strong>Talent Editor</strong><small>Talents, abilities and connections</small></span></button>
+          <button onClick={() => onOpen("enemyDevtool")}><Skull /><span><strong>Create Enemy</strong><small>Stats, abilities and behavior</small></span></button>
+          <button onClick={() => onOpen("eventDevtool")}><Copy /><span><strong>Event Manager</strong><small>Choices, checks and merchants</small></span></button>
+          <button onClick={() => onOpen("adventureDevtool")}><Wrench /><span><strong>Adventure Editor</strong><small>Stages, chances and prerequisites</small></span></button>
+          <button onClick={() => onOpen("itemDevtool")}><Gem /><span><strong>Item Editor</strong><small>Gear, sets, consumables and other items</small></span></button>
+          <button onClick={() => onOpen("portraitDevtool")}><Image /><span><strong>Portrait Editor</strong><small>Artwork and combat portrait crops</small></span></button>
+        </div>
+        <div className="devtool-test-actions">
+          <p>Character testing</p>
+          <div>
+            <button type="button" onClick={levelUp} disabled={levelUpDisabled || characterLevel >= MAX_LEVEL}>
+              <ArrowUp /><span><strong>Level up</strong><small>{characterLevel >= MAX_LEVEL ? "Maximum level reached" : levelUpDisabled ? "Unavailable during active combat" : `Advance from level ${characterLevel}`}</small></span>
+            </button>
+            <button type="button" className={grantItemOpen ? "selected" : ""} onClick={() => { setGrantItemOpen((current) => !current); setActionMessage(""); }}>
+              <Gift /><span><strong>Grant item</strong><small>Choose a live item and quantity</small></span>
+            </button>
+          </div>
+          {grantItemOpen && (
+            <form className="devtool-grant-item" onSubmit={grantItem}>
+              <label htmlFor="devtool-grant-item-select">Item</label>
+              <select id="devtool-grant-item-select" value={selectedItemId} onChange={(event) => setSelectedItemId(event.target.value)}>
+                {[...ITEMS].sort((left, right) => left.name.localeCompare(right.name)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+              <label htmlFor="devtool-grant-item-quantity">Quantity</label>
+              <input id="devtool-grant-item-quantity" type="number" min={1} max={99} step={1} value={itemQuantity} onChange={(event) => setItemQuantity(Number(event.target.value))} />
+              <button type="submit" className="primary-button" disabled={!selectedItemId}>Grant item</button>
+            </form>
+          )}
+          {actionMessage && <small className="devtool-action-message" role="status" aria-live="polite">{actionMessage}</small>}
+        </div>
+      </>}
     </section>
   </div>;
 }

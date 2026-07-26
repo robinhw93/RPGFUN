@@ -9,6 +9,7 @@ import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconCho
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
 import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
+import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { applyAbilityFlatDamage } from "../src/game/combat/damage";
@@ -34,6 +35,30 @@ function testGearIconLibrary() {
   const staff: GearItem = { kind: "gear", id: "test-staff", name: "Test Staff", slot: "mainHand", weaponEquipType: "twoHand", weaponKind: "staff", rarity: "common", description: "", stats: {} };
   assert.equal(getGearIconCategory(staff), "staff", "Weapon kind must drive the focused gear-art category.");
   assert.deepEqual(getGearIconChoices(staff).slice(-5), GEAR_ICON_VARIANTS.staff, "The Staff picker must expose all five generated Staff icons.");
+}
+
+function testDeveloperCharacterTools() {
+  const character = {
+    ...structuredClone(INITIAL_GAME.character),
+    level: 3,
+    xp: 75,
+    unspentStatPoints: 2,
+    talentPoints: 1,
+    inventory: [],
+  };
+  const leveled = levelUpCharacterForTesting(character);
+  assert.equal(leveled.level, 4, "Developer Level up must advance exactly one level.");
+  assert.equal(leveled.xp, 0, "Developer Level up must finish at the start of the new level.");
+  assert.equal(leveled.unspentStatPoints, 5, "Developer Level up must grant the normal three Attribute Points.");
+  assert.equal(leveled.talentPoints, 2, "Developer Level up must grant the normal one Talent Point.");
+
+  const item = ITEMS[0];
+  assert.ok(item, "Developer Grant item requires at least one live item.");
+  const granted = grantItemForTesting(character, item, 3);
+  assert.equal(granted.inventory.length, 3, "Developer Grant item must add the requested quantity.");
+  assert.ok(granted.inventory.every((candidate) => candidate.id === item.id), "Every granted copy must use the selected live item.");
+  assert.notEqual(granted.inventory[0], granted.inventory[1], "Granted inventory copies must not share object identity.");
+  assert.equal(grantItemForTesting(character, item, Number.NaN).inventory.length, 1, "Invalid developer quantities must safely grant one copy.");
 }
 
 function testCraftingMaterialArtworkLibrary() {
@@ -648,6 +673,7 @@ function testIndependentItemDrops() {
 }
 
 testAbilityFlatDamage();
+testDeveloperCharacterTools();
 testEnemyStartingEnergy();
 testGoblinEnemyBehaviors();
 testIndependentItemDrops();
