@@ -7,10 +7,11 @@ import { describeConsumableEffect, getItemGoldCost, isConsumableItem, isGearItem
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_MEALS, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, GameState, InventoryItem } from "../../game/types";
-import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon } from "../../ui/gameUi";
+import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon, RARITY_SORT_WEIGHT } from "../../ui/gameUi";
 
 type TownLocation = "square" | "tavern" | ArkenfallVendorId;
 type VendorTab = "shop" | "craft";
+type VendorSort = "type" | "rarity" | "cost-asc" | "cost-desc" | "name-asc" | "name-desc";
 
 const VENDOR_PRESENTATION: Record<ArkenfallVendorId, {
   profession: string;
@@ -104,6 +105,26 @@ function itemSubtitle(item: InventoryItem): string {
   return "Crafting Material";
 }
 
+function compareVendorItems(left: InventoryItem, right: InventoryItem, sort: VendorSort): number {
+  const compareNames = () => left.name.localeCompare(right.name) || left.id.localeCompare(right.id);
+  const leftCost = getItemGoldCost(left);
+  const rightCost = getItemGoldCost(right);
+  if (sort === "type") {
+    return itemSubtitle(left).localeCompare(itemSubtitle(right))
+      || RARITY_SORT_WEIGHT[right.rarity] - RARITY_SORT_WEIGHT[left.rarity]
+      || compareNames();
+  }
+  if (sort === "rarity") {
+    return RARITY_SORT_WEIGHT[right.rarity] - RARITY_SORT_WEIGHT[left.rarity]
+      || itemSubtitle(left).localeCompare(itemSubtitle(right))
+      || compareNames();
+  }
+  if (sort === "cost-asc") return leftCost - rightCost || compareNames();
+  if (sort === "cost-desc") return rightCost - leftCost || compareNames();
+  if (sort === "name-desc") return right.name.localeCompare(left.name) || right.id.localeCompare(left.id);
+  return compareNames();
+}
+
 function TownItemDetails({ item, onClose }: { item: InventoryItem; onClose: () => void }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -165,11 +186,15 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   onCraft: (station: ArkenfallVendorId, itemId: string) => TownActionResult;
 }) {
   const [tab, setTab] = useState<VendorTab>("shop");
+  const [sort, setSort] = useState<VendorSort>("type");
   const [inspected, setInspected] = useState<InventoryItem | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [actionItemId, setActionItemId] = useState<string | null>(null);
   const { toast: purchaseToast, showToast: showPurchaseToast } = useTownToast<InventoryItem>();
-  const stock = useMemo(() => tab === "shop" ? getTownVendorStock(vendor, game.character.completedAdventureIds) : getTownCraftingCatalog(vendor, game.character.completedAdventureIds), [game.character.completedAdventureIds, tab, vendor]);
+  const stock = useMemo(() => {
+    const items = tab === "shop" ? getTownVendorStock(vendor, game.character.completedAdventureIds) : getTownCraftingCatalog(vendor, game.character.completedAdventureIds);
+    return [...items].sort((left, right) => compareVendorItems(left, right, sort));
+  }, [game.character.completedAdventureIds, sort, tab, vendor]);
   const presentation = VENDOR_PRESENTATION[vendor];
   const runAction = (item: InventoryItem) => {
     const result = tab === "shop" ? onBuy(vendor, item.id) : onCraft(vendor, item.id);
@@ -199,6 +224,17 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
           <button type="button" className={tab === "shop" ? "active" : ""} onClick={() => { setTab("shop"); setFeedback(null); }}><ShoppingBag /> Shop</button>
           <button type="button" className={tab === "craft" ? "active" : ""} onClick={() => { setTab("craft"); setFeedback(null); }}><VendorIcon vendor={vendor} /> {presentation.craftLabel}</button>
         </nav>
+        <label className="town-vendor-sort">
+          <span>Sort items</span>
+          <select aria-label="Sort vendor items" value={sort} onChange={(event) => setSort(event.target.value as VendorSort)}>
+            <option value="type">Item Type</option>
+            <option value="rarity">Rarity</option>
+            <option value="cost-asc">Cost: Low to High</option>
+            <option value="cost-desc">Cost: High to Low</option>
+            <option value="name-asc">Name: A to Z</option>
+            <option value="name-desc">Name: Z to A</option>
+          </select>
+        </label>
         {feedback && <div className="town-feedback" role="status">{feedback}</div>}
         {stock.length > 0 ? <div className="town-item-grid">{stock.map((item) => <VendorItemCard key={item.id} item={item} mode={tab} game={game} station={vendor} actionItemId={actionItemId} onInspect={() => setInspected(item)} onAction={() => runAction(item)} />)}</div> : <div className="town-empty-stock"><Package /><h2>{tab === "shop" ? "Nothing on the shelves yet" : presentation.emptyCraftTitle}</h2><p>Items assigned here in the Item Editor will appear automatically.</p></div>}
       </div>
