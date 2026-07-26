@@ -217,28 +217,31 @@ export function TextField({ label, value, onChange, textarea = false }: { label:
   return <label className={textarea ? "wide-field" : ""}><span>{label}</span>{textarea ? <textarea value={value} onChange={(event) => onChange(event.target.value)} rows={4} /> : <input value={value} onChange={(event) => onChange(event.target.value)} />}</label>;
 }
 
-export function DropTableEditor({ entries, items, onChange, title = "Drop table" }: {
+export function DropTableEditor({ entries, items, onChange, title = "Drop table", allowDuplicateItems = false }: {
   entries: ItemDropDefinition[];
   items: Array<{ id: string; name: string }>;
   onChange: (entries: ItemDropDefinition[]) => void;
   title?: string;
+  allowDuplicateItems?: boolean;
 }) {
   const addDrop = () => {
-    const item = items.find((candidate) => !entries.some((entry) => entry.itemId === candidate.id)) ?? items[0];
+    const item = allowDuplicateItems
+      ? items[0]
+      : items.find((candidate) => !entries.some((entry) => entry.itemId === candidate.id)) ?? items[0];
     if (!item) return;
     onChange([...entries, { itemId: item.id, chance: 1 }]);
   };
   return <fieldset className="drop-table-editor wide-field">
     <legend>{title}</legend>
-    <p>Each item rolls independently. A combat can award several items or none.</p>
+    <p>{allowDuplicateItems ? "Each row rolls independently, including repeated items. A combat can award several items or none." : "Each item rolls independently. A combat can award several items or none."}</p>
     <div className="drop-table-rows">
       {entries.map((entry, index) => <div className="drop-table-row" key={`${entry.itemId}-${index}`}>
-        <label><span>Item</span><select value={entry.itemId} onChange={(event) => onChange(entries.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, itemId: event.target.value } : candidate))}>{items.map((item) => <option value={item.id} key={item.id} disabled={item.id !== entry.itemId && entries.some((candidate) => candidate.itemId === item.id)}>{item.name}</option>)}</select></label>
+        <label><span>Item</span><select value={entry.itemId} onChange={(event) => onChange(entries.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, itemId: event.target.value } : candidate))}>{items.map((item) => <option value={item.id} key={item.id} disabled={!allowDuplicateItems && item.id !== entry.itemId && entries.some((candidate) => candidate.itemId === item.id)}>{item.name}</option>)}</select></label>
         <NumberField label="Drop chance %" value={entry.chance} min={0} max={100} step={0.1} onChange={(chance) => onChange(entries.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, chance: Math.min(100, Math.max(0, chance)) } : candidate))} />
         <button type="button" onClick={() => onChange(entries.filter((_, candidateIndex) => candidateIndex !== index))} aria-label={`Remove ${items.find((item) => item.id === entry.itemId)?.name ?? "item"} drop`}><Trash2 size={14} /> Remove</button>
       </div>)}
       {entries.length === 0 && <span className="empty-editor-copy">Nothing can drop from this table.</span>}
     </div>
-    <button type="button" className="secondary-editor-button" onClick={addDrop} disabled={items.length === 0 || entries.length >= items.length}><Plus size={14} /> Add item drop</button>
+    <button type="button" className="secondary-editor-button" onClick={addDrop} disabled={items.length === 0 || (!allowDuplicateItems && entries.length >= items.length)}><Plus size={14} /> Add item drop</button>
   </fieldset>;
 }

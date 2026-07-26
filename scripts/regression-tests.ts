@@ -553,11 +553,11 @@ function testIndependentItemDrops() {
   assert.ok(firstItem && secondItem, "Drop-table regression requires at least two live items.");
   const enemyTables: ItemDropDefinition[][] = [
     [{ itemId: firstItem.id, chance: 100 }],
-    [{ itemId: firstItem.id, chance: 100 }, { itemId: secondItem.id, chance: 2 }],
+    [{ itemId: firstItem.id, chance: 100 }, { itemId: firstItem.id, chance: 50 }, { itemId: secondItem.id, chance: 2 }],
   ];
-  const rolls = [0.99, 0.5, 0.01, 0.05];
+  const rolls = [0.99, 0.5, 0.49, 0.02, 0.01];
   const loot = rollCombatDropTables(enemyTables, [{ itemId: secondItem.id, chance: 5 }], () => rolls.shift() ?? 1);
-  assert.deepEqual(loot.map((item) => item.id), [firstItem.id, firstItem.id, secondItem.id], "Every enemy instance and stage entry must roll independently, including exact percentage boundaries.");
+  assert.deepEqual(loot.map((item) => item.id), [firstItem.id, firstItem.id, firstItem.id, secondItem.id], "Every enemy instance and repeated drop-table row must roll independently, including exact percentage boundaries.");
 
   const character = { ...structuredClone(INITIAL_GAME.character), inventory: [] };
   const combat = createCombat(character, ["dummy"]);
@@ -585,6 +585,7 @@ function testIndependentItemDrops() {
 
 testAbilityFlatDamage();
 testEnemyStartingEnergy();
+testIndependentItemDrops();
 testContentIntegrity();
 testGearIconLibrary();
 testCraftingMaterialArtworkLibrary();
@@ -607,5 +608,4 @@ testStructuredEventOutcome();
 testDirectEventMerchant();
 testResolvedMerchantPresentation();
 testCombatConsumable();
-testIndependentItemDrops();
 console.log("Arkenfall regression checks passed.");

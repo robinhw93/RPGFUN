@@ -130,7 +130,7 @@ function assertUniqueIds(ids: string[], label: string) {
   if (new Set(ids).size !== ids.length) throw new Error(`${label} IDs must be unique.`);
 }
 
-function validateDropTable(value: unknown, itemIds: Set<string>, label: string): Array<{ itemId: string; chance: number }> {
+function validateDropTable(value: unknown, itemIds: Set<string>, label: string, allowDuplicateItems = false): Array<{ itemId: string; chance: number }> {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new Error(`${label} must be a list.`);
   const drops = value.map((rawDrop, index) => {
@@ -141,7 +141,7 @@ function validateDropTable(value: unknown, itemIds: Set<string>, label: string):
     if (chance > 100) throw new Error(`${label} chance cannot exceed 100%.`);
     return { itemId, chance };
   });
-  assertUniqueIds(drops.map((drop) => drop.itemId), `${label} item`);
+  if (!allowDuplicateItems) assertUniqueIds(drops.map((drop) => drop.itemId), `${label} item`);
   return drops;
 }
 
@@ -524,7 +524,7 @@ export function localSourceSync() {
               const enemy = objectById(enemies, enemyId);
               if (!enemy) throw new Error("This enemy is not part of the live source data.");
               const itemIds = catalogIdsFromArray(variableInitializer(gearSourceFile, "ITEMS"));
-              const dropTable = validateDropTable(payload.dropTable, itemIds, "Enemy drop table");
+              const dropTable = validateDropTable(payload.dropTable, itemIds, "Enemy drop table", true);
               const edits = collectObjectEdits(enemySource, enemySourceFile, enemy, { dropTable: JSON.stringify(dropTable, null, 2) });
               await writeFile(enemySourcePath, applySourceEdits(enemySource, edits), "utf8");
             });

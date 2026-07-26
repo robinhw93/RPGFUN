@@ -480,7 +480,7 @@ Event definitions support two or three choices. Each choice can resolve through 
 
 Every Wandering Merchant also buys any gear, consumable, or ordinary item currently in the character's Inventory. One copy is sold per action for 25% of its live Gold Cost, rounded down to whole Gold with a minimum value of 1 Gold for items worth more than zero.
 
-Enemy templates and adventure stages may each define item drop tables. Every configured item chance is rolled independently; enemy tables roll once per defeated instance and the current stage table rolls once per combat victory. Drop tables may reference any live gear, consumable, or ordinary item.
+Enemy templates and adventure stages may each define item drop tables. Every configured item chance is rolled independently; enemy tables roll once per defeated instance and the current stage table rolls once per combat victory. Enemy tables may repeat an item on several rows to give each possible copy its own chance. Drop tables may reference any live gear, consumable, or ordinary item.
 
 ## Item catalog
 
