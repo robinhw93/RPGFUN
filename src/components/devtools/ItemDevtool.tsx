@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ADVENTURES, GEAR_SETS, ITEMS } from "../../game/data";
 import { getItemGoldCost, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { getItemIconUrl, ITEM_ARTWORK_URLS } from "../../game/itemIcons";
+import { calculateGearScalingValue, getGearScalingRank } from "../../game/itemScaling";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { getArkenfallVendor, getItemCraftingRecipe } from "../../game/town";
 import type { ArkenfallVendorId, ConsumableEffect, ConsumableItem, ConsumableTarget, GearItem, GearSetDefinition, GearType, InventoryItem, ItemCraftingRecipe, ItemRarity, MiscItem, PassiveBonuses, StatName, StatusEffectId, WeaponEquipType, WeaponKind } from "../../game/types";
@@ -117,11 +118,27 @@ function ArkenfallAvailabilityFields({ item, allItems, onChange }: {
 
 function GearFields({ item, sets, allItems, onChange }: { item: GearItem; sets: GearSetDefinition[]; allItems: InventoryItem[]; onChange: (change: Partial<GearItem>) => void }) {
   const updateStat = (stat: StatName, value: number) => onChange({ stats: { ...item.stats, [stat]: value || undefined } });
+  const scaling = calculateGearScalingValue(item);
+  const scalingRank = getGearScalingRank(item, allItems.filter(isGearItem));
   const selectedIconUrl = item.iconUrl ?? resolveGearIconUrl(item.slot, item);
   const iconChoices = getGearIconChoices(item);
   const iconCategory = getGearIconCategory(item);
   const iconCategoryLabel = iconCategory[0].toUpperCase() + iconCategory.slice(1);
   return <>
+    <section className="gear-scaling-card" aria-live="polite">
+      <div className="gear-scaling-summary">
+        <div><span>Scaling Value</span><strong>{scaling.value.toFixed(1)}</strong></div>
+        <p>{scalingRank.total > 1 ? `#${scalingRank.rank} of ${scalingRank.total} ${item.slot === "ring" ? "rings" : `${item.slot} items`} · slot average ${scalingRank.average.toFixed(1)}` : "Add more gear in this slot to compare."}</p>
+      </div>
+      <div className="gear-scaling-components">
+        {scaling.components.length > 0 ? scaling.components.map((component) => <span key={component.id}>{component.label} <b>{component.value >= 0 ? "+" : ""}{component.value.toFixed(1)}</b></span>) : <span>No scored stats yet</span>}
+      </div>
+      <details>
+        <summary>How this is calculated</summary>
+        <p>One attribute point equals 1 Scaling Value. Armor and Magic Resistance use 0.25 each; Physical and Spell Power 0.75; Max Energy 3; Energy Regeneration 4; each Hit, Dodge, or Critical Strike percentage point 0.4; and Initiative 0.25.</p>
+        {scaling.hasExcludedEffects && <p className="gear-scaling-warning">Set bonuses, special notes, and advanced effects are excluded and still need manual evaluation.</p>}
+      </details>
+    </section>
     <div className="content-form-grid">
       <TextField label="Name" value={item.name} onChange={(name) => onChange({ name })} />
       <label><span>Slot</span><select value={item.slot} onChange={(event) => { const slot = event.target.value as GearType; onChange({ slot, iconUrl: undefined, weaponEquipType: slot === "mainHand" ? "oneHand" : slot === "offHand" ? "offHand" : undefined, weaponKind: slot === "mainHand" ? "sword" : slot === "offHand" ? "shield" : undefined, armorMaterial: ["head", "chest", "pants", "boots"].includes(slot) ? (item.armorMaterial ?? "cloth") : undefined }); }} >{GEAR_SLOTS.map((slot) => <option value={slot.id} key={slot.id}>{slot.label}</option>)}</select></label>

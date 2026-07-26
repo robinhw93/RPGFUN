@@ -72,6 +72,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/talentRequirements.ts` owns bidirectional ANY-connection evaluation for both UI state and unlock authorization.
 - `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, and item category normalization.
 - `src/game/items.ts` owns the explicit gear, consumable, and ordinary-item classification plus prices, inventory grouping, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
+- `src/game/itemScaling.ts` owns Item Editor's pure, non-persistent gear comparison index, its centralized stat weights, contribution breakdown, excluded-effect detection, and same-slot ranking.
 - `src/game/itemIcons.ts` maps stable live item IDs to their generated, optimized artwork under `public/assets/items/` and exposes that complete artwork library to Item Editor pickers. Consumables and Other Items persist an optional selected item-art URL; explicit editor selections override their legacy ID mapping at presentation time.
 - `src/components/GearSlotIcon.tsx` owns gear-art fallback resolution and the complete generated gear-icon catalog. Item Editor asks it for the current slot or weapon-kind category, so its picker remains focused while the global URL list still preloads and validates every icon.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
