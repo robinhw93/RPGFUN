@@ -596,7 +596,8 @@ function buildEnemies(spec, items) {
     const boss = index === spec.enemies.length - 1;
     const physical = power !== "spell";
     const magical = power !== "physical";
-    const hp = boss ? Math.round((170 + scale * scale * 26) * 1.3) : 55 + scale * 28 + index * 9;
+    const generatedHp = boss ? Math.round((170 + scale * scale * 26) * 1.3) : 55 + scale * 28 + index * 9;
+    const hp = spec.number >= 7 ? Math.round((generatedHp + 100) * 1.5) : generatedHp;
     const powerValue = 9 + scale * 5 + index;
     const id = enemyId(spec, slug);
     const dropTable = [

@@ -368,6 +368,9 @@ function testContentIntegrity() {
     ["astral-scar", 49, 20, "hollow-crown"],
     ["world-below", 50, 22, "astral-scar"],
   ] as const;
+  const expectedAdventureEnemyHp = (generatedHp: number, adventureNumber: number) => adventureNumber >= 7
+    ? Math.round((generatedHp + 100) * 1.5)
+    : generatedHp;
   assert.equal(ADVENTURES.length, 12, "The complete story route must contain Adventures 1 through 12.");
   lateAdventureExpectations.forEach(([id, level, stageCount, prerequisite]) => {
     const adventure = ADVENTURES.find((candidate) => candidate.id === id);
@@ -392,7 +395,17 @@ function testContentIntegrity() {
     const bossEnemy = ENEMIES[bossEnemyId];
     assert.ok(bossEnemy, `${adventure.name} references missing boss ${bossEnemyId}.`);
     const originalBossHp = 170 + (adventureNumber - 3) ** 2 * 26;
-    assert.equal(bossEnemy.maxHp, Math.round(originalBossHp * 1.3), `${bossEnemy.name} must retain the 30% late-campaign boss Health increase.`);
+    const generatedBossHp = Math.round(originalBossHp * 1.3);
+    assert.equal(bossEnemy.maxHp, expectedAdventureEnemyHp(generatedBossHp, adventureNumber), `${bossEnemy.name} must retain its intended late-campaign Health scaling.`);
+    const regularEnemies = Array.from(enemyIds)
+      .filter((enemyId) => enemyId !== bossEnemyId)
+      .map((enemyId) => ENEMIES[enemyId])
+      .sort((left, right) => left.maxHp - right.maxHp);
+    assert.equal(regularEnemies.length, 6, `${adventure.name} must retain six regular biome enemies.`);
+    regularEnemies.forEach((enemy, enemyIndex) => {
+      const generatedHp = 55 + (adventureNumber - 3) * 28 + enemyIndex * 9;
+      assert.equal(enemy.maxHp, expectedAdventureEnemyHp(generatedHp, adventureNumber), `${enemy.name} must retain its intended late-campaign Health scaling.`);
+    });
     adventure.stages.forEach((stage, stageIndex) => {
       stage.entries.filter((entry) => entry.type === "combat" || entry.type === "boss").forEach((entry) => {
         const originalExperience = entry.type === "boss"
