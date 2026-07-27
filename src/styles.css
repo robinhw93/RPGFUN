@@ -709,6 +709,10 @@ main { min-height: calc(100vh - 68px); }
 .game-dialog-actions button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .game-dialog-actions .danger-button { color: #f3d8d1; border-color: #8b493d; background: #4c211b; }
 .game-dialog-actions .danger-button:hover { border-color: #c36a59; background: #632a22; }
+.game-dialog.warning { border-color: #78673d; background: linear-gradient(155deg, #1b1810, #101311); }
+.game-dialog.warning h2 { color: #f1e4bd; }
+.game-dialog-actions .confirm-button { color: #17130b; border-color: #c7a85e; background: #d8b968; font-weight: 800; }
+.game-dialog-actions .confirm-button:hover { border-color: #f0d58b; background: #e5c979; }
 @keyframes dialog-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dialog-card-in { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 

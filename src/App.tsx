@@ -38,6 +38,7 @@ import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, prelo
 
 type View = "adventure" | "character" | "town" | DevtoolKind;
 type EncounterFlavorPhase = "center" | "lower" | "exit";
+type TownEntryLocation = "square" | "tavern";
 
 const TalentsView = lazy(() => import("./components/talents/TalentsView").then((module) => ({ default: module.TalentsView })));
 const TalentDevtool = lazy(() => import("./components/TalentDevtool").then((module) => ({ default: module.TalentDevtool })));
@@ -71,6 +72,8 @@ function App() {
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; travelLabel: string } | null>(null);
   const [encounterFlavor, setEncounterFlavor] = useState<{ message: string; phase: EncounterFlavorPhase } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [pendingAdventureId, setPendingAdventureId] = useState<string | null>(null);
+  const [townEntryLocation, setTownEntryLocation] = useState<TownEntryLocation>("square");
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
   const [playerTurnReadyEventId, setPlayerTurnReadyEventId] = useState<number | null>(null);
@@ -114,6 +117,7 @@ function App() {
 
   const navigate = (next: View) => {
     if (next === "character") setCharacterSection("overview");
+    if (next === "town") setTownEntryLocation("square");
     setView(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -212,6 +216,24 @@ function App() {
         };
       });
     }, node?.type !== "event");
+  };
+
+  const requestAdventureStart = (adventureId = DEFAULT_ADVENTURE_ID) => {
+    const definition = getAdventureDefinition(adventureId);
+    if (!canStartStoryAdventure(definition, game.character.completedAdventureIds)) return;
+    const startingHp = getAdventureStartingHp(derived.maxHp, game.adventure.carryHp);
+    if (startingHp < derived.maxHp) {
+      setPendingAdventureId(adventureId);
+      return;
+    }
+    beginAdventure(adventureId);
+  };
+
+  const openTavern = () => {
+    setPendingAdventureId(null);
+    setTownEntryLocation("tavern");
+    setView("town");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const returnToAdventureList = () => {
@@ -519,7 +541,7 @@ function App() {
           <AdventureView
             game={game}
             derived={derived}
-            onBegin={beginAdventure}
+            onBegin={requestAdventureStart}
             onTown={() => navigate("town")}
             onSelectEnemy={selectEnemy}
             queuedActions={combatActionQueue.actions}
@@ -565,7 +587,7 @@ function App() {
         )}
         {view === "town" && (
           <Suspense fallback={null}>
-            <TownView game={game} maxHp={derived.maxHp} onExit={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onRest={restInTown} onMeal={eatInTown} />
+            <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} onExit={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onRest={restInTown} onMeal={eatInTown} />
           </Suspense>
         )}
         <Suspense fallback={null}>
@@ -589,6 +611,23 @@ function App() {
           confirmLabel="Erase & Begin Again"
           onCancel={() => setResetDialogOpen(false)}
           onConfirm={returnToCharacterCreation}
+        />
+      )}
+      {pendingAdventureId && (
+        <GameConfirmDialog
+          eyebrow="Adventure Preparation"
+          title="Not at full Health"
+          description={`You have ${getAdventureStartingHp(derived.maxHp, game.adventure.carryHp)} of ${derived.maxHp} Health. Are you sure you want to begin this adventure?`}
+          confirmLabel="Yes"
+          cancelLabel="Go to Tavern"
+          variant="warning"
+          onDismiss={() => setPendingAdventureId(null)}
+          onCancel={openTavern}
+          onConfirm={() => {
+            const adventureId = pendingAdventureId;
+            setPendingAdventureId(null);
+            beginAdventure(adventureId);
+          }}
         />
       )}
       {devtoolGateOpen && (

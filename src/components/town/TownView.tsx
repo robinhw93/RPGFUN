@@ -246,16 +246,17 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   );
 }
 
-export function TownView({ game, maxHp, onExit, onBuy, onCraft, onRest, onMeal }: {
+export function TownView({ game, maxHp, initialLocation = "square", onExit, onBuy, onCraft, onRest, onMeal }: {
   game: GameState;
   maxHp: number;
+  initialLocation?: Extract<TownLocation, "square" | "tavern">;
   onExit: () => void;
   onBuy: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
   onCraft: (station: ArkenfallVendorId, itemId: string) => TownActionResult;
   onRest: () => TownActionResult;
   onMeal: (mealId: TavernMealId) => TownActionResult;
 }) {
-  const [location, setLocation] = useState<TownLocation>("square");
+  const [location, setLocation] = useState<TownLocation>(initialLocation);
   const [serviceFeedback, setServiceFeedback] = useState<string | null>(null);
   const { toast: mealToast, showToast: showMealToast } = useTownToast<string>();
   const currentHp = Math.min(maxHp, game.adventure.carryHp ?? maxHp);
