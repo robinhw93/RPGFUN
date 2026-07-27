@@ -26,7 +26,7 @@ import { fleeCombat } from "../src/game/flee";
 import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
-import { acceptQuest, getQuestAvailability, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
+import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
@@ -382,6 +382,7 @@ function testContentIntegrity() {
     assert.ok(legendaryDropIds.has(item.id) || item.craftingRecipe, `${item.name} must be obtainable from a drop or its endgame recipe.`);
   });
   const questIds = new Set(QUESTS.map((quest) => quest.id));
+  assert.equal(QUESTS.length, 39, "The live Quest Board catalog must contain all campaign quest packs.");
   assert.equal(questIds.size, QUESTS.length, "Quest IDs must be unique.");
   QUESTS.forEach((quest) => {
     assert.ok(quest.title.trim() && quest.description.trim(), `${quest.id} needs a title and description.`);
@@ -395,6 +396,17 @@ function testContentIntegrity() {
   assert.equal(new Set(QUESTLINES.map((questline) => questline.id)).size, QUESTLINES.length, "Questline IDs must be unique.");
   assert.equal(new Set(assignedQuests).size, assignedQuests.length, "A quest can belong to only one questline.");
   assignedQuests.forEach((questId) => assert.ok(questIds.has(questId), `Questline references missing quest ${questId}.`));
+  assert.equal(QUESTLINES.length, 4, "The campaign needs the original notice chain plus three adventure-wide questlines.");
+  ADVENTURES.forEach((adventure) => {
+    const enemyIds = new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.enemyIds ?? [])));
+    const dropItemIds = new Set([
+      ...adventure.stages.flatMap((stage) => stage.dropTable.map((drop) => drop.itemId)),
+      ...[...enemyIds].flatMap((enemyId) => ENEMIES[enemyId]?.dropTable.map((drop) => drop.itemId) ?? []),
+    ]);
+    assert.ok(QUESTS.some((quest) => quest.objective.type === "kill_enemy" && enemyIds.has(quest.objective.enemyId)), `${adventure.name} needs a local enemy bounty.`);
+    assert.ok(QUESTS.some((quest) => quest.objective.type === "collect_item" && dropItemIds.has(quest.objective.itemId)), `${adventure.name} needs a local material requisition.`);
+    assert.ok(QUESTS.some((quest) => quest.objective.type === "complete_adventure" && quest.objective.adventureId === adventure.id), `${adventure.name} needs a completion quest.`);
+  });
 }
 
 function testQuestLifecycle() {
@@ -432,6 +444,16 @@ function testQuestLifecycle() {
   const acceptedAdventure = acceptQuest(adventureState, adventureQuest.id);
   const adventureProgress = recordQuestAdventureCompletion(acceptedAdventure.state.character, adventureQuest.objective.adventureId);
   assert.equal(getQuestAvailability(adventureProgress, adventureQuest), "ready", "Completing the selected adventure must advance its quest.");
+
+  const freshPostings = getQuestBoardPostings(base.character);
+  assert.equal(freshPostings.length, MAX_QUEST_BOARD_POSTINGS, "A populated Quest Board must show six focused postings.");
+  assert.equal(new Set(freshPostings.map((quest) => quest.id)).size, freshPostings.length, "Quest Board postings must not repeat a quest.");
+
+  const fullQuestLog = structuredClone(INITIAL_GAME) as GameState;
+  fullQuestLog.character.acceptedQuestIds = QUESTS.slice(0, MAX_QUEST_BOARD_POSTINGS).map((quest) => quest.id);
+  const additionalQuest = QUESTS.find((quest) => !fullQuestLog.character.acceptedQuestIds.includes(quest.id) && getQuestAvailability(fullQuestLog.character, quest) === "available");
+  assert.ok(additionalQuest, "Quest capacity regression requires another available posting.");
+  assert.equal(acceptQuest(fullQuestLog, additionalQuest.id).success, false, "A character cannot track more than six active quests.");
 }
 
 function testQuestEditorCatalog() {

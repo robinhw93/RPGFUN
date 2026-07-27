@@ -5,6 +5,8 @@ import type { CharacterState, GameState, InventoryItem, QuestDefinition, Questli
 
 export type QuestAvailability = "available" | "accepted" | "ready" | "completed" | "locked";
 
+export const MAX_QUEST_BOARD_POSTINGS = 6;
+
 export interface QuestActionResult {
   state: GameState;
   success: boolean;
@@ -18,6 +20,42 @@ export function getQuestDefinition(questId: string): QuestDefinition | undefined
 
 export function getQuestlineForQuest(questId: string): QuestlineDefinition | undefined {
   return QUESTLINES.find((questline) => questline.questIds.includes(questId));
+}
+
+/**
+ * Keeps the board focused on active work, each questline's current frontier,
+ * and a small preview of what follows. Completed quests only backfill an
+ * otherwise empty slot, so the board never grows with the full campaign.
+ */
+export function getQuestBoardPostings(character: CharacterState, limit = MAX_QUEST_BOARD_POSTINGS): QuestDefinition[] {
+  const maximum = Math.max(0, Math.floor(limit));
+  if (maximum === 0) return [];
+  const questById = new Map(QUESTS.map((quest) => [quest.id, quest]));
+  const selected: QuestDefinition[] = [];
+  const selectedIds = new Set<string>();
+  const add = (quest: QuestDefinition | undefined) => {
+    if (!quest || selectedIds.has(quest.id) || selected.length >= maximum) return;
+    selected.push(quest);
+    selectedIds.add(quest.id);
+  };
+
+  character.acceptedQuestIds.forEach((questId) => add(questById.get(questId)));
+
+  const incompleteByQuestline = QUESTLINES.map((questline) => questline.questIds
+    .filter((questId) => !character.completedQuestIds.includes(questId))
+    .flatMap((questId) => {
+      const quest = questById.get(questId);
+      return quest ? [quest] : [];
+    }));
+  incompleteByQuestline.forEach((quests) => add(quests[0]));
+
+  const questlineQuestIds = new Set(QUESTLINES.flatMap((questline) => questline.questIds));
+  QUESTS.filter((quest) => !questlineQuestIds.has(quest.id) && !character.completedQuestIds.includes(quest.id)).forEach(add);
+
+  incompleteByQuestline.forEach((quests) => add(quests[1]));
+
+  [...QUESTS].reverse().filter((quest) => character.completedQuestIds.includes(quest.id)).forEach(add);
+  return selected;
 }
 
 export function getQuestObjectiveProgress(character: CharacterState, quest: QuestDefinition): number {
@@ -61,6 +99,9 @@ export function acceptQuest(state: GameState, questId: string): QuestActionResul
   const quest = getQuestDefinition(questId);
   if (!quest) return { state, success: false, message: "That quest is no longer posted." };
   if (getQuestAvailability(state.character, quest) !== "available") return { state, success: false, message: "That quest cannot be accepted yet.", quest };
+  if (state.character.acceptedQuestIds.length >= MAX_QUEST_BOARD_POSTINGS) {
+    return { state, success: false, message: `You can track up to ${MAX_QUEST_BOARD_POSTINGS} quests at once.`, quest };
+  }
   return {
     success: true,
     message: `${quest.title} accepted.`,

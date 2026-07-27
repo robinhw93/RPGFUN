@@ -6,7 +6,7 @@ import { ITEMS, QUESTLINES, QUESTS } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
 import { describeConsumableEffect, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem } from "../../game/items";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
-import { describeQuestObjective, getQuestAvailability, getQuestObjectiveProgress, type QuestActionResult } from "../../game/quests";
+import { describeQuestObjective, getQuestAvailability, getQuestBoardPostings, getQuestObjectiveProgress, MAX_QUEST_BOARD_POSTINGS, type QuestActionResult } from "../../game/quests";
 import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_GAMBLING_WAGERS, TAVERN_MEALS, type TavernGamblingResult, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, InventoryItem } from "../../game/types";
 import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon, RARITY_SORT_WEIGHT } from "../../ui/gameUi";
@@ -257,7 +257,13 @@ function QuestBoardView({ game, onBack, onAccept, onTurnIn }: {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [inspected, setInspected] = useState<InventoryItem | null>(null);
   const questlineQuestIds = new Set(QUESTLINES.flatMap((questline) => questline.questIds));
-  const standaloneQuests = QUESTS.filter((quest) => !questlineQuestIds.has(quest.id));
+  const boardQuests = getQuestBoardPostings(game.character);
+  const boardQuestIds = new Set(boardQuests.map((quest) => quest.id));
+  const visibleQuestlines = QUESTLINES.flatMap((questline) => {
+    const questIds = questline.questIds.filter((questId) => boardQuestIds.has(questId));
+    return questIds.length > 0 ? [{ ...questline, questIds }] : [];
+  });
+  const standaloneQuests = boardQuests.filter((quest) => !questlineQuestIds.has(quest.id));
   const runAction = (questId: string, action: "accept" | "turn-in") => {
     const result = action === "accept" ? onAccept(questId) : onTurnIn(questId);
     setFeedback(result.message);
@@ -287,12 +293,15 @@ function QuestBoardView({ game, onBack, onAccept, onTurnIn }: {
   };
   return (
     <section className="town-location town-questboard">
-      <header className="town-location-header"><button type="button" className="town-back-button" onClick={onBack}><ArrowLeft /> Arkenfall</button><div><p className="eyebrow">Adventurers' Notices</p><h1>Quest Board</h1><p>Take a posting, finish its task, and return here to claim the reward.</p></div><span className="town-gold"><ClipboardList /> {game.character.acceptedQuestIds.length} Active</span></header>
+      <header className="town-location-header"><button type="button" className="town-back-button" onClick={onBack}><ArrowLeft /> Arkenfall</button><div><p className="eyebrow">Adventurers' Notices</p><h1>Quest Board</h1><p>Take a posting, finish its task, and return here to claim the reward.</p></div><span className="town-gold"><ClipboardList /> {boardQuests.length}/{MAX_QUEST_BOARD_POSTINGS} Posted</span></header>
       <div className="questboard-panel">
         {feedback && <div className="town-feedback" role="status" aria-live="polite">{feedback}</div>}
-        {QUESTLINES.map((questline) => <section className="questline-section" key={questline.id}><header><div><p className="eyebrow">Questline</p><h2>{questline.title}</h2><p>{questline.description}</p></div><span>{questline.questIds.filter((questId) => game.character.completedQuestIds.includes(questId)).length}/{questline.questIds.length}</span></header><div className="quest-card-grid">{questline.questIds.map(renderQuest)}</div></section>)}
+        {visibleQuestlines.map((questline) => {
+          const completeQuestline = QUESTLINES.find((candidate) => candidate.id === questline.id)!;
+          return <section className="questline-section" key={questline.id}><header><div><p className="eyebrow">Questline</p><h2>{questline.title}</h2><p>{questline.description}</p></div><span>{completeQuestline.questIds.filter((questId) => game.character.completedQuestIds.includes(questId)).length}/{completeQuestline.questIds.length}</span></header><div className="quest-card-grid">{questline.questIds.map(renderQuest)}</div></section>;
+        })}
         {standaloneQuests.length > 0 && <section className="questline-section"><header><div><p className="eyebrow">Open Postings</p><h2>Independent Quests</h2><p>Tasks that do not belong to a longer questline.</p></div></header><div className="quest-card-grid">{standaloneQuests.map((quest) => renderQuest(quest.id))}</div></section>}
-        {QUESTS.length === 0 && <div className="town-empty-stock"><ClipboardList /><h2>The board is empty</h2><p>Create quests in the Quest Editor to post them here.</p></div>}
+        {boardQuests.length === 0 && <div className="town-empty-stock"><ClipboardList /><h2>The board is empty</h2><p>Create quests in the Quest Editor to post them here.</p></div>}
       </div>
       {inspected && <TownItemDetails item={inspected} character={game.character} onClose={() => setInspected(null)} />}
     </section>

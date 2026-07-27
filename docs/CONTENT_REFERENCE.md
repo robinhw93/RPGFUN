@@ -501,13 +501,26 @@ The town hub is listed above adventures and contains seven illustrated destinati
 
 ### Live quests
 
-The current **Storehouse Troubles** questline unlocks in the order below. Required collect-item copies are consumed at turn-in.
+The live catalog contains **39 quests** across four ordered questlines. Quest Board projects at most six relevant postings at once and a character may track at most six accepted quests. Required collect-item copies are consumed at turn-in.
 
-| Quest | Goal | Reward |
-| --- | --- | --- |
-| Rats at the Storehouses | Defeat 3 Rabid Rats. | 35 XP, 1 Minor Healing Potion. |
-| Tails for the Tally | Bring 2 Rats Tails. | 50 XP. |
-| Quiet the Windsong | Complete Windsong Forest once. | 100 XP, 1 Wisp Essence. |
+**Storehouse Troubles** remains the three-part introduction: defeat 3 Rabid Rats for 35 XP and a Minor Healing Potion, bring 2 Rats Tails for 50 XP, then complete Windsong Forest for 100 XP and a Wisp Essence.
+
+The other three questlines each cover all twelve adventures. Every row below represents one enemy bounty in **The Roadwarden's Ledger**, one material hand-in in **Guild Requisitions**, and one completion report in **The Chronicle of Arkenfall**.
+
+| Adventure | Enemy bounty | Material requisition | Completion report reward |
+| --- | --- | --- | --- |
+| Windsong Forest | 3 Windsong Wolves; 60 XP and Minor Healing Potion. | 2 Wisp Essence; 75 XP. | 120 XP and 2 Fur. |
+| Arkenfall Highlands | 4 Goblin Quickstabbers; 160 XP. | 3 Linen Scraps; 190 XP and Spider Silk Thread. | 350 XP and Spider Silk Thread. |
+| Highfall Mountains | 3 Hill Trolls; 300 XP. | 3 Highfall Frostroot; 340 XP and Highfall Restorative. | 650 XP and Stonebloom Draught. |
+| Mirefen Marsh | 4 Mirefen Spitters; 600 XP and Mirefen Antivenom. | 3 Venom Sacs; 650 XP and Mirefen Antivenom. | 1,150 XP and 2 Bog Iron. |
+| Ashen Foundry | 4 Furnace Acolytes; 850 XP and Cooling Salve. | 3 Ember Core Fragments; 900 XP and Cooling Salve. | 1,650 XP and 2 Cindersteel Ore. |
+| Sunken Reliquary | 5 Drowned Acolytes; 1,150 XP and Coagulant Bandage. | 3 Drowned Relic Shards; 1,250 XP and Coagulant Bandage. | 2,300 XP and 2 Abyssal Pearls. |
+| Nightglass Citadel | 5 Mirror Stalkers; 1,500 XP and Bloodstone. | 4 Nightglass Shards; 1,650 XP and Umbral Silk. | 3,200 XP and 2 Bloodstones. |
+| Frostbound Expanse | 5 Icebound Raiders; 2,000 XP and White Pelt. | 4 Frostheart Crystals; 2,200 XP and 2 White Pelts. | 4,200 XP and 2 Rimebone. |
+| Stormspire Aerie | 5 Storm Channelers; 2,700 XP and Cloudfeather. | 4 Condensed Storm Essence; 2,950 XP and 2 Cloudfeathers. | 5,400 XP and 2 Skyiron. |
+| The Hollow Crown | 6 Veilbound Executioners; 3,500 XP and Soul Ash. | 4 Crown Shards; 3,800 XP and 2 Soul Ash. | 6,800 XP and 2 Hollowsteel. |
+| The Astral Scar | 6 Astral Devourers; 4,300 XP and Comet Silk. | 4 Astral Glass; 4,700 XP and 2 Comet Silk. | 8,000 XP and 2 Star Metal. |
+| The World Below | 6 Deep Oracles; 2 Worldroot Heartwood. | 5 First Echoes; 2 Abyssal Hide. | Worldsplitter. |
 
 Explicit item fields are authoritative: `arkenfallVendor: null` means the item is not sold in town, and a missing recipe means it is not craftable. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab. Hexcaster Staff currently has no recipe.
 
