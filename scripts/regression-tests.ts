@@ -739,6 +739,23 @@ function testTacticalEnemyAiCatalogAndSelection() {
   assert.ok(lateRegularEnemies.every((enemy) => enemy.abilities.length >= 3), "Every late-campaign regular enemy needs at least three tactical tools.");
   assert.ok(lateRegularEnemies.every((enemy) => enemy.abilities.every((ability) => !["Savage Strike", "Ruinous Bolt", "Relentless Pressure"].includes(ability.name))), "Late enemies must not retain generic placeholder ability names.");
 
+  const expectedExhaustedEnemies = [
+    "enemy-a7-gloom-archer",
+    "enemy-a8-frost-hermit",
+    "enemy-a9-storm-channeler",
+    "enemy-a10-veilbound-executioner",
+    "enemy-a11-gravity-warden",
+    "enemy-a12-deep-oracle",
+  ];
+  const exhaustedEnemies = Object.values(ENEMIES)
+    .filter((enemy) => enemy.abilities.some((ability) => ability.statusApplications?.some((application) => application.status === "exhausted")))
+    .map((enemy) => enemy.id);
+  assert.deepEqual(exhaustedEnemies, expectedExhaustedEnemies, "Adventures 7-12 must each have exactly one regular enemy that applies Exhausted.");
+  expectedExhaustedEnemies.forEach((enemyId) => {
+    const application = ENEMIES[enemyId].abilities.flatMap((ability) => ability.statusApplications ?? []).find((status) => status.status === "exhausted");
+    assert.equal(application?.duration, 1, `${ENEMIES[enemyId].name}'s Exhausted must last exactly one turn.`);
+  });
+
   const leech = createCombat(INITIAL_GAME.character, ["enemy-a4-bog-leech"]).enemies[0];
   const healthyContext: EnemyAiContext = { playerHp: 100, playerMaxHp: 100, playerStatusIds: [] };
   assert.equal(getReadyEnemyAbility(leech, [leech], healthyContext)?.name, "Open the Vein", "Bog Leech must create Bleed before attempting its payoff.");

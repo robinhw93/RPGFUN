@@ -4753,7 +4753,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a7-gloom-archer-setup",
         "name": "Blackglass Glare",
-        "description": "Deals a lighter hit and applies Blind for 3 turns.",
+        "description": "Deals a lighter hit, applies Blind for 3 turns, and applies Exhausted for 1 turn.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "melee",
@@ -4764,6 +4764,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "blind",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 1
           }
         ],
         "vfx": "enemy_heavy_cleave"
@@ -4785,7 +4790,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Blind with Blackglass Glare, converts it into burst damage with Sightless Volley, and uses Gloam Arrow while either tool is unavailable.",
+    "behaviorNotes": "Sets up Blind and Exhausted with Blackglass Glare, converts Blind into burst damage with Sightless Volley, and uses Gloam Arrow while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#65518c",
@@ -5883,7 +5888,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a8-frost-hermit-setup",
         "name": "Still the Blood",
-        "description": "Deals a lighter hit and applies Frozen for 3 turns.",
+        "description": "Deals a lighter hit, applies Frozen for 3 turns, and applies Exhausted for 1 turn.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -5895,6 +5900,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "frozen",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 1
           }
         ],
         "vfx": "frostbolt"
@@ -5917,7 +5927,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Frozen with Still the Blood, converts it into burst damage with Shatter the Frozen, and uses Hermit's Frost while either tool is unavailable.",
+    "behaviorNotes": "Sets up Frozen and Exhausted with Still the Blood, converts Frozen into burst damage with Shatter the Frozen, and uses Hermit's Frost while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#71a8c8",
@@ -6662,7 +6672,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a9-storm-channeler-setup",
         "name": "Build the Charge",
-        "description": "Deals a lighter hit and applies Electrified for 3 turns.",
+        "description": "Deals a lighter hit, applies Electrified for 3 turns, and applies Exhausted for 1 turn.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -6674,6 +6684,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "electrified",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 1
           }
         ],
         "vfx": "lightning_strike"
@@ -6696,7 +6711,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Electrified with Build the Charge, converts it into burst damage with Grounding Cataclysm, and uses Forked Spark while either tool is unavailable.",
+    "behaviorNotes": "Sets up Electrified and Exhausted with Build the Charge, converts Electrified into burst damage with Grounding Cataclysm, and uses Forked Spark while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#547cb8",
@@ -7545,7 +7560,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a10-veilbound-executioner-setup",
         "name": "Mark for Death",
-        "description": "Deals a lighter hit and applies Bleed for 3 turns.",
+        "description": "Deals a lighter hit, applies Bleed for 3 turns, and applies Exhausted for 1 turn.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "melee",
@@ -7556,6 +7571,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "bleed",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 1
           }
         ],
         "vfx": "enemy_heavy_cleave"
@@ -7577,7 +7597,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Bleed with Mark for Death, converts it into burst damage with Veiled Guillotine, and uses Headsman's Cut while either tool is unavailable.",
+    "behaviorNotes": "Sets up Bleed and Exhausted with Mark for Death, converts Bleed into burst damage with Veiled Guillotine, and uses Headsman's Cut while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#8e714a",
@@ -8703,17 +8723,24 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-gravity-warden-payoff",
         "name": "Singularity Press",
-        "description": "A punishing blow used after taking a defensive stance.",
+        "description": "A punishing blow used after taking a defensive stance that applies Exhausted for 1 turn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
         "spellPowerScaling": 1.9500000000000002,
+        "statusApplications": [
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 1
+          }
+        ],
         "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Uses Event-Horizon Guard once pressured, answers with Singularity Press while protected, and otherwise holds threat with Horizon Maul.",
+    "behaviorNotes": "Uses Event-Horizon Guard once pressured, answers with Singularity Press to apply Exhausted while protected, and otherwise holds threat with Horizon Maul.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#8c69c7",
@@ -9356,7 +9383,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-deep-oracle-setup",
         "name": "Buried Revelation",
-        "description": "Deals a lighter hit and applies Blind for 3 turns.",
+        "description": "Deals a lighter hit, applies Blind for 3 turns, and applies Exhausted for 1 turn.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -9368,6 +9395,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "blind",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 1
           }
         ],
         "vfx": "enemy_hex"
@@ -9390,7 +9422,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Blind with Buried Revelation, converts it into burst damage with Prophetic Chorus, and uses Sightless Word while either tool is unavailable.",
+    "behaviorNotes": "Sets up Blind and Exhausted with Buried Revelation, converts Blind into burst damage with Prophetic Chorus, and uses Sightless Word while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#b17a43",
