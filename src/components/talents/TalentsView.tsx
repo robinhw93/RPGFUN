@@ -276,6 +276,7 @@ export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSe
   const treeZoomRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treeZoomTargetRef = useRef(RUNTIME_TALENT_DEFAULT_ZOOM);
   const treeZoomFrameRef = useRef<number | null>(null);
+  const talentSelectionFrameRef = useRef<number | null>(null);
   const treeDimensionsRef = useRef({ width: 0, height: 0 });
   const treePointersRef = useRef(new Map<number, RuntimeTalentPointer>());
   const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
@@ -296,6 +297,18 @@ export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSe
     y: padding + talent.position.y / 100 * TALENT_TREE_CANVAS.height - minY,
   }]));
   const selectedTalent = TALENTS.find((talent) => talent.id === selectedTalentId) ?? null;
+
+  const openTalentDetailsAfterPointer = useCallback((talentId: string) => {
+    if (talentSelectionFrameRef.current !== null) window.cancelAnimationFrame(talentSelectionFrameRef.current);
+    talentSelectionFrameRef.current = window.requestAnimationFrame(() => {
+      talentSelectionFrameRef.current = null;
+      setSelectedTalentId(talentId);
+    });
+  }, []);
+
+  useEffect(() => () => {
+    if (talentSelectionFrameRef.current !== null) window.cancelAnimationFrame(talentSelectionFrameRef.current);
+  }, []);
 
   const zoomTreeTo = useCallback((requestedZoom: number, anchorClientX?: number, anchorClientY?: number) => {
     const scroller = treeScrollRef.current;
@@ -447,7 +460,7 @@ export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSe
       const selectedId = !gesture.moved && event.pointerId === gesture.primaryPointerId ? gesture.candidateTalentId : null;
       treeGestureRef.current = null;
       setIsPanning(false);
-      if (selectedId) setSelectedTalentId(selectedId);
+      if (selectedId) openTalentDetailsAfterPointer(selectedId);
       return;
     }
 
