@@ -141,7 +141,7 @@ export function CharacterView({ mode, character, locked, introduction = false, l
           {introduction
             ? <div><p className="eyebrow">Getting Started · Step 3 of 3</p><h2>Shape Your Character</h2><p>Spend your 2 Attribute Points. Choose the attributes that best fit the character you want to build.</p></div>
             : <div><p className="eyebrow">Level Up · Step 2 of 2</p><h2>Spend Attribute Points</h2><p>Spend all available Attribute Points before returning to your combat rewards.</p></div>}
-          {(introduction ? character.unspentStatPoints === 0 : true) && <button type="button" className="primary-button introduction-next-button" disabled={character.unspentStatPoints > 0} onClick={onNext}>Next <ChevronRight size={17} /></button>}
+          {character.unspentStatPoints === 0 && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
         </aside>}
         <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{reachedMaxLevel ? "Max Level" : `${character.xp} / ${requiredExperience} XP`}</small></div></div></div>
         <div className="character-layout character-overview-layout">

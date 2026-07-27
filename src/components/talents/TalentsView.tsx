@@ -495,7 +495,7 @@ export function TalentsView({ character, locked, introduction = false, levelUpFl
         {introduction
           ? <div><p className="eyebrow">Getting Started · Step 2 of 3</p><h2>Take Your First Step</h2><p>Spend your starting Talent Point on a node connected to {startingClass?.name ?? "your class"}.</p></div>
           : <div><p className="eyebrow">Level Up · Step 1 of 2</p><h2>Spend Talent {character.talentPoints === 1 ? "Point" : "Points"}</h2><p>Spend all available Talent Points before continuing to your Attributes.</p></div>}
-        {(introduction ? introductionTalentSpent : true) && <button type="button" className="primary-button introduction-next-button" disabled={levelUpFlow && character.talentPoints > 0} onClick={onNext}>Next <ChevronRight size={17} /></button>}
+        {(introduction ? introductionTalentSpent : character.talentPoints === 0) && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
       </aside>}
       {!introduction && !levelUpFlow && <div className="talent-loadout-actions">
         <button type="button" className="talent-loadout-trigger" onClick={() => setAbilityLoadoutOpen(true)}>

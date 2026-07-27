@@ -114,8 +114,8 @@ main { min-height: calc(100vh - 68px); }
 .page-title p:last-child { margin-bottom: 0; }
 .character-introduction-guide { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 1.25rem; margin-bottom: 1.4rem; padding: 1rem 1.1rem; border: 1px solid #79663e; background: linear-gradient(135deg, rgba(38,31,19,.96), rgba(15,19,16,.96)); box-shadow: 0 14px 34px rgba(0,0,0,.3), inset 0 0 24px rgba(201,168,103,.05); }
 .character-introduction-guide .eyebrow { margin-bottom: .3rem; }.character-introduction-guide h2 { margin-bottom: .25rem; font-size: clamp(1.25rem,2.5vw,1.7rem); }.character-introduction-guide p:last-child { max-width: 700px; margin: 0; color: #b8b6ad; font-size: .72rem; line-height: 1.5; }
-.introduction-next-button { min-width: 130px; animation: progression-text-pulse 2.8s cubic-bezier(.37,0,.63,1) infinite; }
-.introduction-next-button:disabled { color: #70746e; border-color: #3b403b; background: #171b18; box-shadow: none; filter: none; animation: none; cursor: not-allowed; }
+.introduction-next-button { min-width: 130px; animation: introduction-next-arrive .52s cubic-bezier(.16,.84,.28,1) both, progression-text-pulse 2.8s .52s cubic-bezier(.37,0,.63,1) infinite; }
+@keyframes introduction-next-arrive { from { opacity:0; transform:translateY(10px) scale(.96); filter:blur(3px); } to { opacity:1; transform:translateY(0) scale(1); filter:blur(0); } }
 .class-selection-page { width:min(1120px,calc(100% - 2rem)); padding-top:clamp(1.8rem,4vw,3.5rem) }
 .class-selection-heading { max-width:760px;margin:0 auto clamp(1.4rem,3vw,2.2rem);text-align:center }.class-selection-heading h1{margin:.35rem 0 .75rem}.class-selection-heading>p:last-child{max-width:680px;margin:0 auto;font-family:Georgia,"Times New Roman",serif;font-size:clamp(.78rem,1.5vw,.92rem)}
 .class-selection-sigil { width:54px;height:54px;display:grid;place-items:center;margin:0 auto 1rem;color:var(--gold-bright);border:1px solid #79663e;background:radial-gradient(circle,#2b2417,#111512 70%);transform:rotate(45deg);box-shadow:0 0 32px rgba(201,168,103,.1) }.class-selection-sigil svg{transform:rotate(-45deg)}
