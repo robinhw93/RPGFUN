@@ -4875,7 +4875,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a7-bloodbound-knight-setup",
         "name": "Crimson Oath",
-        "description": "Deals a lighter hit and applies Bleed for 3 turns.",
+        "description": "Deals a lighter hit, applies Bleed for 3 turns, and has a 15% chance to apply Reckless for 2 turns.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "melee",
@@ -4886,6 +4886,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "bleed",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "reckless",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.15
           }
         ],
         "vfx": "enemy_heavy_cleave"
@@ -4907,7 +4913,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Bleed with Crimson Oath, converts it into burst damage with Sanguine Reaping, and uses Bloodletter while either tool is unavailable.",
+    "behaviorNotes": "Sets up Bleed with Crimson Oath, which can rarely provoke Reckless, converts Bleed into burst damage with Sanguine Reaping, and uses Bloodletter while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#65518c",
@@ -5755,7 +5761,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a8-aurora-wisp-strike",
         "name": "Aurora Ray",
-        "description": "Deals 132% Spell Power as Frost damage and applies Cold.",
+        "description": "Deals 132% Spell Power as Frost damage, applies Cold, and has a 10% chance to apply Sleep for 1 turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
@@ -5767,6 +5773,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "cold",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "sleep",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.1
           }
         ],
         "vfx": "frostbolt"
@@ -5802,7 +5814,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "friendlyHealSpellPowerScaling": 1.17
       }
     ],
-    "behaviorNotes": "Prioritizes Warmth of the Lights for badly wounded allies, maintains Barrier with Boreal Mantle in groups, and attacks with Aurora Ray when support is unnecessary.",
+    "behaviorNotes": "Prioritizes Warmth of the Lights for badly wounded allies, maintains Barrier with Boreal Mantle in groups, and attacks with Aurora Ray, which can rarely induce Sleep, when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#71a8c8",
@@ -6538,7 +6550,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a9-spire-zealot-strike",
         "name": "Zealot's Brand",
-        "description": "Deals 140% Physical Power as Lightning damage and applies Electrified.",
+        "description": "Deals 140% Physical Power as Lightning damage, applies Electrified, and has a 15% chance to apply Reckless for 2 turns.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "melee",
@@ -6549,6 +6561,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "electrified",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "reckless",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.15
           }
         ],
         "vfx": "enemy_heavy_cleave"
@@ -6582,7 +6600,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "friendlyHealSpellPowerScaling": 1.21
       }
     ],
-    "behaviorNotes": "Prioritizes Stormborne Renewal for badly wounded allies, maintains Fierce with Tempest Sermon in groups, and attacks with Zealot's Brand when support is unnecessary.",
+    "behaviorNotes": "Prioritizes Stormborne Renewal for badly wounded allies, maintains Fierce with Tempest Sermon in groups, and attacks with Zealot's Brand, which can rarely provoke Reckless, when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#547cb8",
@@ -7667,7 +7685,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a10-hollow-courtier-strike",
         "name": "Courtly Malice",
-        "description": "Deals 148% Spell Power as Spell damage and applies Weaken.",
+        "description": "Deals 148% Spell Power as Spell damage, applies Weaken, and has a 10% chance to apply Sleep for 1 turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
@@ -7679,6 +7697,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "weaken",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "sleep",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.1
           }
         ],
         "vfx": "enemy_hex"
@@ -7714,7 +7738,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "friendlyHealSpellPowerScaling": 1.25
       }
     ],
-    "behaviorNotes": "Prioritizes Royal Reprieve for badly wounded allies, maintains Enlightened with Hollow Etiquette in groups, and attacks with Courtly Malice when support is unnecessary.",
+    "behaviorNotes": "Prioritizes Royal Reprieve for badly wounded allies, maintains Enlightened with Hollow Etiquette in groups, and attacks with Courtly Malice, which can rarely induce Sleep, when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#8e714a",
@@ -8225,7 +8249,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-starved-pilgrim-setup",
         "name": "Pilgrim's Burden",
-        "description": "Deals a lighter hit and applies Vulnerable for 3 turns.",
+        "description": "Deals a lighter hit, applies Vulnerable for 3 turns, and has a 15% chance to apply Reckless for 2 turns.",
         "energyCost": 3,
         "cooldownTurns": 3,
         "range": "melee",
@@ -8236,6 +8260,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "vulnerable",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "reckless",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.15
           }
         ],
         "vfx": "enemy_heavy_cleave"
@@ -8257,7 +8287,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         }
       }
     ],
-    "behaviorNotes": "Sets up Vulnerable with Pilgrim's Burden, converts it into burst damage with Orbiting Ruin, and uses Gravitic Cut while either tool is unavailable.",
+    "behaviorNotes": "Sets up Vulnerable with Pilgrim's Burden, which can rarely provoke Reckless, converts Vulnerable into burst damage with Orbiting Ruin, and uses Gravitic Cut while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#8c69c7",
@@ -9725,7 +9755,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-abyssal-choir-strike",
         "name": "Unraveling Hymn",
-        "description": "Deals 164% Spell Power as Spell damage and applies Weaken.",
+        "description": "Deals 164% Spell Power as Spell damage, applies Weaken, and has a 10% chance to apply Sleep for 1 turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
@@ -9737,6 +9767,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "weaken",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "sleep",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.1
           }
         ],
         "vfx": "enemy_hex"
@@ -9772,7 +9808,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "friendlyHealSpellPowerScaling": 1.33
       }
     ],
-    "behaviorNotes": "Prioritizes Deep Refrain for badly wounded allies, maintains Enlightened with Choir Without End in groups, and attacks with Unraveling Hymn when support is unnecessary.",
+    "behaviorNotes": "Prioritizes Deep Refrain for badly wounded allies, maintains Enlightened with Choir Without End in groups, and attacks with Unraveling Hymn, which can rarely induce Sleep, when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
     "accent": "#b17a43",

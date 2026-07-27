@@ -756,6 +756,24 @@ function testTacticalEnemyAiCatalogAndSelection() {
     assert.equal(application?.duration, 1, `${ENEMIES[enemyId].name}'s Exhausted must last exactly one turn.`);
   });
 
+  const expectedRareControlSources = [
+    { enemyId: "enemy-a7-bloodbound-knight", status: "reckless", chance: 0.15, duration: 2 },
+    { enemyId: "enemy-a8-aurora-wisp", status: "sleep", chance: 0.1, duration: 1 },
+    { enemyId: "enemy-a9-spire-zealot", status: "reckless", chance: 0.15, duration: 2 },
+    { enemyId: "enemy-a10-hollow-courtier", status: "sleep", chance: 0.1, duration: 1 },
+    { enemyId: "enemy-a11-starved-pilgrim", status: "reckless", chance: 0.15, duration: 2 },
+    { enemyId: "enemy-a12-abyssal-choir", status: "sleep", chance: 0.1, duration: 1 },
+  ] as const;
+  const rareControlEnemies = Object.values(ENEMIES)
+    .filter((enemy) => enemy.abilities.some((ability) => ability.statusApplications?.some((application) => application.status === "sleep" || application.status === "reckless")))
+    .map((enemy) => enemy.id);
+  assert.deepEqual(rareControlEnemies, expectedRareControlSources.map((source) => source.enemyId), "Adventures 7-12 must each have exactly one enemy-inflicted Sleep or Reckless source.");
+  expectedRareControlSources.forEach(({ enemyId, status, chance, duration }) => {
+    const application = ENEMIES[enemyId].abilities.flatMap((ability) => ability.statusApplications ?? []).find((candidate) => candidate.status === status);
+    assert.equal(application?.chance, chance, `${ENEMIES[enemyId].name}'s ${status} proc chance must remain rare.`);
+    assert.equal(application?.duration, duration, `${ENEMIES[enemyId].name}'s ${status} duration changed unexpectedly.`);
+  });
+
   const leech = createCombat(INITIAL_GAME.character, ["enemy-a4-bog-leech"]).enemies[0];
   const healthyContext: EnemyAiContext = { playerHp: 100, playerMaxHp: 100, playerStatusIds: [] };
   assert.equal(getReadyEnemyAbility(leech, [leech], healthyContext)?.name, "Open the Vein", "Bog Leech must create Bleed before attempting its payoff.");
