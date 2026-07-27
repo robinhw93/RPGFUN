@@ -92,7 +92,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `characterCreated`: whether creation has completed.
 - `character`: persistent identity, progression, inventory, equipment, talents, and ability loadout.
 - `adventure`: current node, carried Health, combat, event state, reward snapshot, loot, and completion.
-- `characterIntroductionStep`: the saved new-character route through starting Attributes, the first class talent, and the optional starting-item recommendation in Town. Older saves normalize directly to complete.
+- `characterIntroductionStep`: the saved new-character route through class selection, the first connected Talent, starting Attributes, and the optional starting-item recommendation in Town. Older saves normalize safely around the current step.
 
 `CombatState` contains both authoritative logical results and presentation synchronization state:
 
@@ -397,7 +397,7 @@ Consumables are executable inventory definitions rather than equipment. `useCons
 
 `areTalentRequirementsMet` is shared by visual availability and the actual unlock action. `isAdditionalClassTalentLocked` is applied by both paths as a second gate: once any non-origin class node is unlocked, other class nodes remain unavailable below level 10.
 
-Fresh characters choose Arcanist, Brute, or Shadow before entering the runtime tree; Cultist is visible but unavailable. `characterIntroduction.ts` unlocks the selected canonical class node and equips its granted ability without consuming the separate starting Talent Point. The introductory talent tree centers on that class node and requires the remaining point to be spent on a connected non-class node before continuing to Town.
+Fresh characters choose Arcanist, Brute, or Shadow before entering the runtime tree; Cultist is visible but unavailable. `characterIntroduction.ts` unlocks the selected canonical class node and equips its granted ability without consuming the separate starting Talent Point. The introductory talent tree centers on that class node and requires the remaining point to be spent on a connected non-class node. The flow then requires both starting Attribute Points to be assigned before continuing to Town.
 
 - `getTalentConnectionIds` treats every stored edge as undirected by combining a node's own `requires` IDs with every node that references it.
 - A node with no adjacent connections is available.

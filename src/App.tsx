@@ -69,7 +69,7 @@ function loadInitialGame(): GameState {
 
 function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
-  const [view, setView] = useState<View>(() => game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" ? "character" : game.adventure.active ? "adventure" : game.characterIntroductionStep === "town" ? "town" : "adventure");
+  const [view, setView] = useState<View>(() => game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes" ? "character" : game.adventure.active ? "adventure" : game.characterIntroductionStep === "town" ? "town" : "adventure");
   const [characterSection, setCharacterSection] = useState<CharacterSection>(() => game.characterIntroductionStep === "talents" ? "talents" : "overview");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; travelLabel: string } | null>(null);
   const [encounterFlavor, setEncounterFlavor] = useState<{ message: string; phase: EncounterFlavorPhase } | null>(null);
@@ -87,7 +87,7 @@ function App() {
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = getAdventureNode(game.adventure);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
-  const characterIntroductionActive = game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents";
+  const characterIntroductionActive = game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes";
   const recommendStartingItem = game.characterIntroductionStep === "town" && !Object.values(game.character.equipment).some(Boolean);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ function App() {
   }, [game.character.avatarId]);
 
   const navigate = (next: View) => {
-    if (game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents") {
+    if (game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes") {
       setCharacterSection(game.characterIntroductionStep === "talents" ? "talents" : "overview");
       setView("character");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -543,9 +543,19 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const continueIntroductionToTown = () => {
+  const continueIntroductionToAttributes = () => {
     if (game.characterIntroductionStep !== "talents" || !hasSpentIntroductionTalentPoint(game.character)) return;
     setGame((current) => current.characterIntroductionStep === "talents" && hasSpentIntroductionTalentPoint(current.character)
+      ? { ...current, characterIntroductionStep: "attributes" }
+      : current);
+    setCharacterSection("overview");
+    setView("character");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const continueIntroductionToTown = () => {
+    if (game.characterIntroductionStep !== "attributes" || game.character.unspentStatPoints > 0) return;
+    setGame((current) => current.characterIntroductionStep === "attributes" && current.character.unspentStatPoints === 0
       ? { ...current, characterIntroductionStep: "town" }
       : current);
     setTownEntryLocation("square");
@@ -617,11 +627,11 @@ function App() {
             </nav>}
             {characterSection !== "talents" ? (
               <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
-                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "attributes"} onNext={continueIntroductionToTown} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
               </CharacterAssetBoundary>
             ) : (
               <Suspense fallback={null}>
-                <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} onNext={continueIntroductionToTown} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
+                <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} onNext={continueIntroductionToAttributes} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
               </Suspense>
             )}
             </>}

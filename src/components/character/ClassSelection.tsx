@@ -19,7 +19,7 @@ export function ClassSelection({ onChoose }: { onChoose: (talentId: string) => v
     <section className="page class-selection-page">
       <header className="class-selection-heading">
         <span className="class-selection-sigil"><Sparkles size={24} /></span>
-        <p className="eyebrow">Getting Started · Step 1 of 2</p>
+        <p className="eyebrow">Getting Started · Step 1 of 3</p>
         <h1>Choose Your Class</h1>
         <p>Your class unlocks its first Talent node, grants its passive bonus, and equips its signature ability. This choice cannot be changed.</p>
       </header>

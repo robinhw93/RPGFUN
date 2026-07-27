@@ -931,7 +931,7 @@ export interface CharacterState {
   completedAdventureIds: string[];
 }
 
-export type CharacterIntroductionStep = "class" | "talents" | "town" | "complete";
+export type CharacterIntroductionStep = "class" | "talents" | "attributes" | "town" | "complete";
 
 export interface AdventureNode {
   id: string;

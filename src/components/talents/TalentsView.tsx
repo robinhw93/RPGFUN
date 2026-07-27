@@ -491,7 +491,7 @@ export function TalentsView({ character, locked, introduction = false, onNext, o
   return (
     <section className="page talents-page">
       {introduction && <aside className="character-introduction-guide talent-introduction-guide" aria-label="Talent introduction">
-        <div><p className="eyebrow">Getting Started · Step 2 of 2</p><h2>Take Your First Step</h2><p>Spend your starting Talent Point on a node connected to {startingClass?.name ?? "your class"}.</p></div>
+        <div><p className="eyebrow">Getting Started · Step 2 of 3</p><h2>Take Your First Step</h2><p>Spend your starting Talent Point on a node connected to {startingClass?.name ?? "your class"}.</p></div>
         {introductionTalentSpent && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
       </aside>}
       {!introduction && <div className="talent-loadout-actions">

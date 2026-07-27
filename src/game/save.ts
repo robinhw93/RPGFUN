@@ -16,7 +16,7 @@ const REMOVED_TALENT_COSTS: Record<string, number> = {
   arcanist_3: 2,
 };
 
-const CHARACTER_INTRODUCTION_STEPS = new Set<CharacterIntroductionStep>(["class", "talents", "town", "complete"]);
+const CHARACTER_INTRODUCTION_STEPS = new Set<CharacterIntroductionStep>(["class", "talents", "attributes", "town", "complete"]);
 
 export function loadGame(): GameState | null {
   try {
@@ -66,7 +66,7 @@ export function loadGame(): GameState | null {
     const hasStartingClass = TALENTS.some((talent) => talent.id !== "origin" && talent.kind === "class" && unlockedTalents.includes(talent.id));
     const hasPostClassTalent = TALENTS.some((talent) => talent.id !== "origin" && talent.kind !== "class" && unlockedTalents.includes(talent.id));
     const characterIntroductionStep: CharacterIntroductionStep = savedIntroductionStep === "attributes"
-      ? hasStartingClass ? "talents" : "class"
+      ? hasStartingClass ? "attributes" : "class"
       : typeof savedIntroductionStep === "string" && CHARACTER_INTRODUCTION_STEPS.has(savedIntroductionStep as CharacterIntroductionStep)
         ? savedIntroductionStep === "class" && hasStartingClass
           ? "talents"
