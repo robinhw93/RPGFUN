@@ -10,6 +10,7 @@ import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconCho
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
 import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
+import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
@@ -89,6 +90,38 @@ function testItemNameRarityClasses() {
   (["common", "uncommon", "rare", "epic", "legendary"] as const).forEach((rarity) => {
     assert.equal(getItemNameClass({ rarity }), `item-name item-name-${rarity}`, `${rarity} item names must use the global rarity presentation class.`);
   });
+}
+
+function testPassiveStatAggregationIsPure() {
+  const nimbleCharacter = structuredClone(INITIAL_GAME.character);
+  nimbleCharacter.unlockedTalents = ["origin", "shadow_1", "talent_1", "talent_254", "talent_255", "talent_256"];
+
+  const firstFeatures = getCharacterCombatFeatures(nimbleCharacter);
+  const secondFeatures = getCharacterCombatFeatures(nimbleCharacter);
+  assert.notEqual(firstFeatures.passive, secondFeatures.passive, "Every feature aggregation must create a fresh passive result.");
+  assert.notEqual(firstFeatures.passive.statMultipliers, secondFeatures.passive.statMultipliers, "Percentage attributes must never share mutable accumulator state.");
+  assert.equal(firstFeatures.passive.statMultipliers.agility, 0.1, "Nimble 3 must contribute exactly 10% Agility.");
+  assert.equal(secondFeatures.passive.statMultipliers.agility, 0.1, "Repeated aggregation must not accumulate Nimble 3 again.");
+
+  firstFeatures.passive.statMultipliers.agility = 99;
+  assert.equal(getCharacterCombatFeatures(nimbleCharacter).passive.statMultipliers.agility, 0.1, "Mutating one resolved feature bundle must not contaminate the next result.");
+
+  for (let index = 0; index < 1_000; index += 1) {
+    const derived = getDerivedStats(nimbleCharacter);
+    assert.equal(derived.agility, 14, "Repeated stat reads must keep 13 flat Agility plus Nimble 3 at the same rounded value of 14.");
+  }
+  assert.equal(nimbleCharacter.baseStats.agility, 5, "Derived stat reads must never mutate saved base attributes.");
+
+  const intellectCharacter = structuredClone(INITIAL_GAME.character);
+  intellectCharacter.unlockedTalents = ["origin", "talent_248"];
+  for (let index = 0; index < 100; index += 1) {
+    assert.equal(getDerivedStats(intellectCharacter).intelligence, 6, "Sharpened Intellect 2 must remain a stable 10% Intelligence bonus.");
+  }
+
+  const cleanCharacter = structuredClone(INITIAL_GAME.character);
+  const cleanDerived = getDerivedStats(cleanCharacter);
+  assert.equal(cleanDerived.agility, 5, "One character's Agility multiplier must not leak into another character.");
+  assert.equal(cleanDerived.intelligence, 5, "One character's Intelligence multiplier must not leak into another character.");
 }
 
 function testContentIntegrity() {
@@ -674,6 +707,7 @@ function testIndependentItemDrops() {
 }
 
 testAbilityFlatDamage();
+testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
 testEnemyStartingEnergy();
 testGoblinEnemyBehaviors();
