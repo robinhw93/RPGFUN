@@ -534,10 +534,27 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_snipe"
       }
     ],
-    "behaviorNotes": "Uses Bow Shot once per turn, replacing it with Snipe whenever it reaches 5 Energy.",
+    "behaviorNotes": "Saves Energy for Snipe, then uses Bow Shot while rebuilding.",
     "behavior": "goblin_longseer",
     "maxActionsPerTurn": 1,
-    "accent": "#7f9453"
+    "accent": "#7f9453",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms1fezxg-6sfj6",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 5
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms1ekpk5-l5ft7"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms1fgqar-mafv9": {
     "id": "enemy-ms1fgqar-mafv9",
@@ -623,10 +640,36 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_shiv"
       }
     ],
-    "behaviorNotes": "Uses every available ability each turn, beginning with Stealth when it is ready.",
+    "behaviorNotes": "Enters Stealth before using Shiv, then keeps stabbing while the escape route recovers.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#687b43"
+    "accent": "#687b43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms1fkbg6-tw10h",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "stealth"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms1fjpq2-x44en",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "stealth"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms1fkbg6-tw10h"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms1fnbla-fs4ul": {
     "id": "enemy-ms1fnbla-fs4ul",
@@ -701,10 +744,36 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Prioritizes healing the most wounded living ally, including itself, then uses Hex.",
+    "behaviorNotes": "Heals a wounded ally first and maintains Slowed with Hex when healing is unnecessary.",
     "behavior": "goblin_woundfixer",
     "maxActionsPerTurn": 1,
-    "accent": "#846b9e"
+    "accent": "#846b9e",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms1fpoku-tvscy",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.72
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms1fqn1u-55k6q",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "slowed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms1fqn1u-55k6q"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms1ftdlw-jz5lo": {
     "id": "enemy-ms1ftdlw-jz5lo",
@@ -784,10 +853,31 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_protect"
       }
     ],
-    "behaviorNotes": "Uses Protect whenever it is ready and Heavy Cleave whenever it reaches 5 Energy.",
+    "behaviorNotes": "Protects companions without repeatedly wasting Guard, then uses Heavy Cleave.",
     "behavior": "goblin_biggrown",
     "maxActionsPerTurn": 1,
-    "accent": "#8d6945"
+    "accent": "#8d6945",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms1fwaul-zcws5",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms1fv25a-ukf1s"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms1fykbj-rhb65": {
     "id": "enemy-ms1fykbj-rhb65",
@@ -909,10 +999,49 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_spear_poke"
       }
     ],
-    "behaviorNotes": "Uses every available ability when possible, with Spear Poke as its fallback. Impale is prepared for one turn before release.",
+    "behaviorNotes": "Rallies a group, opens Bleed with Skewer, then prepares Impale; Spear Poke fills recovery turns.",
     "behavior": "goblin_chieftain",
     "maxActionsPerTurn": 4,
-    "accent": "#aa633f"
+    "accent": "#aa633f",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms1g3m9s-n12oq",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "fierce"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms1gpjhe-m9ky3",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "bleed"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms1g1ysa-6452h",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms1gucm0-0n5ec"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2vrqbb-8r5ux": {
     "id": "enemy-ms2vrqbb-8r5ux",
@@ -998,10 +1127,27 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_hibernate"
       }
     ],
-    "behaviorNotes": "Charges Club Smash, releases it on the next turn, then uses Nap before repeating.",
+    "behaviorNotes": "Naps while gathering Energy, then charges Club Smash at full Energy.",
     "behavior": "hill_troll",
     "maxActionsPerTurn": 1,
-    "accent": "#6f735f"
+    "accent": "#6f735f",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2vx10q-s3qsn",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms2vylq4-ubwfz"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2w17p6-txpmq": {
     "id": "enemy-ms2w17p6-txpmq",
@@ -1099,10 +1245,36 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_hibernate"
       }
     ],
-    "behaviorNotes": "Uses Heavy Fists and Roar when available, falling back to Nap when no other ability can be used.",
+    "behaviorNotes": "Uses Heavy Fists whenever fueled, Roars to regain Fierce, and Naps only while rebuilding.",
     "behavior": "mountain_troll",
     "maxActionsPerTurn": 1,
-    "accent": "#5f6657"
+    "accent": "#5f6657",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2w38yw-vp9bu",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2w4zyb-7c0ge",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "fierce"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms2w7zva-lxkg8"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2w93yt-v817a": {
     "id": "enemy-ms2w93yt-v817a",
@@ -1229,10 +1401,49 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_hibernate"
       }
     ],
-    "behaviorNotes": "Prioritizes healing wounded allies, then Regeneration and Greater Hex. Uses Nap when no other ability is available.",
+    "behaviorNotes": "Emergency-heals first, maintains Regenerate in groups, applies Greater Hex, then Naps while support tools recover.",
     "behavior": "troll_shaman",
     "maxActionsPerTurn": 1,
-    "accent": "#75658b"
+    "accent": "#75658b",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2wayvo-rnti2",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.55
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2wbr2c-66kcn",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "regenerate"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2wcm61-4wsw3",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "weaken"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms2we50g-kzi7f"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2wk1ul-6ol9b": {
     "id": "enemy-ms2wk1ul-6ol9b",
@@ -1319,10 +1530,39 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_rabid_bite"
       }
     ],
-    "behaviorNotes": "Uses Steal whenever it is ready, enters Stealth, then follows with Poisoned Stab.",
+    "behaviorNotes": "Steals whenever possible, enters Stealth before Poisoned Stab, and uses direct pressure while repositioning.",
     "behavior": "bandit_enforcer",
     "maxActionsPerTurn": 2,
-    "accent": "#6e5b50"
+    "accent": "#6e5b50",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2wloah-2gx3k"
+        },
+        {
+          "abilityId": "enemy-ability-ms2wng0f-y2n2z",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "stealth"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2wmdjd-22til",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "stealth"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms2wng0f-y2n2z"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2wqzxv-srsgs": {
     "id": "enemy-ms2wqzxv-srsgs",
@@ -1395,10 +1635,25 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_flee"
       }
     ],
-    "behaviorNotes": "Gathers Energy until it can flee. A successful escape removes all of its loot from the reward.",
+    "behaviorNotes": "Builds to full Energy, then flees with every stolen trinket intact.",
     "behavior": "loot_goblin",
     "maxActionsPerTurn": 1,
-    "accent": "#8c7944"
+    "accent": "#8c7944",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2wsv8u-j9a24",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2wuk5j-1ddqa": {
     "id": "enemy-ms2wuk5j-1ddqa",
@@ -1471,20 +1726,50 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-ms2wyie9-iisii",
         "name": "Snipe",
-        "description": "Deals 200% Physical Power as Physical damage.",
+        "description": "Deals 200% Physical Power as Physical damage. Deals 35% more damage while you are Burning.",
         "energyCost": 2,
         "cooldownTurns": 6,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "physical",
         "physicalPowerScaling": 2,
-        "vfx": "enemy_snipe"
+        "vfx": "enemy_snipe",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.35
+        }
       }
     ],
-    "behaviorNotes": "Uses Fire Trap whenever it is ready, then Snipe, with Bow Shot as its fallback.",
+    "behaviorNotes": "Sets Fire Trap, exploits Burn with Snipe, and uses Bow Shot while the combination recovers.",
     "behavior": "bandit_trapper",
     "maxActionsPerTurn": 1,
-    "accent": "#596873"
+    "accent": "#596873",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2wyie9-iisii",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2wxm3t-nrfbj",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms2wwtu0-ustxf"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-ms2xaper-z7o3g": {
     "id": "enemy-ms2xaper-z7o3g",
@@ -1566,10 +1851,53 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "vfx": "enemy_spear_poke"
       }
     ],
-    "behaviorNotes": "Uses Patience until reaching 10 Energy, then No Patience once before using Toying every turn.",
+    "behaviorNotes": "Builds Guard with Patience, unleashes No Patience at full Energy, then permanently switches to Toying.",
     "behavior": "troll_bandit_king",
     "maxActionsPerTurn": 1,
-    "accent": "#8a4d3f"
+    "accent": "#8a4d3f",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-ms2xgcxa-lier7",
+          "all": [
+            {
+              "type": "phase_is",
+              "phase": "toying"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2xe0t2-q41xk",
+          "all": [
+            {
+              "type": "phase_is_not",
+              "phase": "toying"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-ms2xd4iz-c5j5z",
+          "all": [
+            {
+              "type": "phase_is_not",
+              "phase": "toying"
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-ms2xgcxa-lier7"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-reed-stalker": {
     "id": "enemy-a4-reed-stalker",
@@ -1613,39 +1941,73 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a4-reed-stalker-strike",
-        "name": "Savage Strike",
-        "description": "Deals 100% Physical Power as Physical damage and applies Poison.",
+        "name": "Reedknife",
+        "description": "A quick attack used while repositioning.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1,
-        "statusApplications": [
-          {
-            "status": "poison",
-            "stacks": 1,
-            "duration": 3
-          }
-        ],
         "vfx": "enemy_heavy_cleave"
       },
       {
         "id": "enemy-ability-a4-reed-stalker-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Sink Beneath the Reeds",
+        "description": "Gains Stealth for 3 turns before attempting a decisive ambush.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
+        "range": "melee",
+        "vfx": "enemy_bite_claw",
+        "selfStatusApplications": [
+          {
+            "status": "stealth",
+            "stacks": 1,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a4-reed-stalker-ambush",
+        "name": "Ambush from Stillwater",
+        "description": "A high-damage ambush prepared through Sink Beneath the Reeds.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
-        "physicalPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "physicalPowerScaling": 1.35,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Enters Stealth with Sink Beneath the Reeds, immediately looks for Ambush from Stillwater, then falls back to Reedknife.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-reed-stalker-ambush",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "stealth"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-reed-stalker-pressure",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "stealth"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-reed-stalker-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-bog-leech": {
     "id": "enemy-a4-bog-leech",
@@ -1685,10 +2047,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a4-bog-leech-strike",
-        "name": "Savage Strike",
-        "description": "Deals 100% Physical Power as Physical damage and applies Bleed.",
+        "name": "Clinging Bite",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a4-bog-leech-setup",
+        "name": "Open the Vein",
+        "description": "Deals a lighter hit and applies Bleed for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1,
@@ -1703,21 +2076,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a4-bog-leech-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Blood-Swollen Lunge",
+        "description": "A heavy attack that deals 32% more damage while you have Bleed.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "bleed",
+          "multiplier": 1.32
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Bleed with Open the Vein, converts it into burst damage with Blood-Swollen Lunge, and uses Clinging Bite while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-bog-leech-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "bleed"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-bog-leech-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-bog-leech-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-mirefen-spitter": {
     "id": "enemy-a4-mirefen-spitter",
@@ -1761,10 +2164,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a4-mirefen-spitter-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 100% Spell Power as Spell damage and applies Poison.",
+        "name": "Bog Spittle",
+        "description": "Deals reliable Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1,
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a4-mirefen-spitter-setup",
+        "name": "Venom Saturation",
+        "description": "Deals a lighter hit and applies Poison for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -1780,8 +2195,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a4-mirefen-spitter-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Septic Burst",
+        "description": "A heavy attack that deals 32% more damage while you have Poison.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -1789,13 +2204,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "poison",
+          "multiplier": 1.32
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Poison with Venom Saturation, converts it into burst damage with Septic Burst, and uses Bog Spittle while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-mirefen-spitter-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "poison"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-mirefen-spitter-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "poison"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-mirefen-spitter-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-drowned-warden": {
     "id": "enemy-a4-drowned-warden",
@@ -1835,10 +2280,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a4-drowned-warden-strike",
-        "name": "Savage Strike",
-        "description": "Deals 100% Physical Power as Physical damage and applies Wet.",
+        "name": "Waterlogged Cleave",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1,
@@ -1853,21 +2298,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a4-drowned-warden-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Drowned Bulwark",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
+        "range": "melee",
+        "vfx": "enemy_bite_claw",
+        "selfStatusApplications": [
+          {
+            "status": "guard",
+            "stacks": 12,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a4-drowned-warden-payoff",
+        "name": "Undertow Crush",
+        "description": "A punishing blow used after taking a defensive stance.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
-        "physicalPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "physicalPowerScaling": 1.25,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Drowned Bulwark once pressured, answers with Undertow Crush while protected, and otherwise holds threat with Waterlogged Cleave.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-drowned-warden-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-drowned-warden-pressure",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-drowned-warden-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-fen-witch": {
     "id": "enemy-a4-fen-witch",
@@ -1911,10 +2401,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a4-fen-witch-strike",
-        "name": "Ruinous Bolt",
+        "name": "Crooked Hex",
         "description": "Deals 100% Spell Power as Spell damage and applies Weaken.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -1930,22 +2420,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a4-fen-witch-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Fenward Covenant",
+        "description": "Grants Barrier to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "barrier",
+            "stacks": 14,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a4-fen-witch-aid",
+        "name": "Mire Mending",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.01
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Mire Mending for badly wounded allies, maintains Barrier with Fenward Covenant in groups, and attacks with Crooked Hex when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-fen-witch-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-fen-witch-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "barrier"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-fen-witch-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-brood-guard": {
     "id": "enemy-a4-brood-guard",
@@ -1985,10 +2522,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a4-brood-guard-strike",
-        "name": "Savage Strike",
-        "description": "Deals 100% Physical Power as Physical damage.",
+        "name": "Carapace Bash",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1,
@@ -1996,25 +2533,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a4-brood-guard-stance",
-        "name": "Hold the Line",
-        "description": "Gains Guard.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Guard the Brood",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "guard",
-            "stacks": 16,
+            "stacks": 12,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a4-brood-guard-payoff",
+        "name": "Mandible Lock",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.25,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Guard the Brood once pressured, answers with Mandible Lock while protected, and otherwise holds threat with Carapace Bash.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-brood-guard-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-brood-guard-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-brood-guard-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a4-vespara-broodmother": {
     "id": "enemy-a4-vespara-broodmother",
@@ -2089,7 +2667,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a4-vespara-broodmother-execution",
         "name": "Venom Deluge",
-        "description": "Charges for one turn, then deals 260% Physical Power as Physical damage.",
+        "description": "Charges for one turn, then deals 260% Physical Power as Physical damage. Deals 45% more damage while you have Poison.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "melee",
@@ -2098,7 +2676,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Vespara, Broodmother begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "enemy_impale"
+        "vfx": "enemy_impale",
+        "targetStatusDamageBonus": {
+          "status": "poison",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a4-vespara-broodmother-recover",
@@ -2116,12 +2698,96 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a4-vespara-broodmother-phase",
+        "name": "Matriarch's Fury",
+        "description": "Below 40% Health, gains Fierce for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a4-vespara-broodmother-basic",
+        "name": "Broodfang",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.56,
+        "vfx": "enemy_impale"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Brood Call, converts Poison into Venom Deluge, protects itself with Sovereign Recovery under pressure, and enters Matriarch's Fury below 40% Health. Broodfang prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#5f8a58"
+    "accent": "#5f8a58",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a4-vespara-broodmother-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "fierce"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-vespara-broodmother-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-vespara-broodmother-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "poison"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a4-vespara-broodmother-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "poison"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a4-vespara-broodmother-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-ash-hound": {
     "id": "enemy-a5-ash-hound",
@@ -2165,10 +2831,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a5-ash-hound-strike",
-        "name": "Savage Strike",
-        "description": "Deals 108% Physical Power as Fire damage and applies Burn.",
+        "name": "Cinder Fang",
+        "description": "Deals reliable Fire damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "fire",
+        "physicalPowerScaling": 1.08,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a5-ash-hound-setup",
+        "name": "Searing Scent",
+        "description": "Deals a lighter hit and applies Burn for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "fire",
         "physicalPowerScaling": 1.08,
@@ -2183,21 +2860,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a5-ash-hound-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Furnace Pounce",
+        "description": "A heavy attack that deals 35% more damage while you have Burn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.345
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Burn with Searing Scent, converts it into burst damage with Furnace Pounce, and uses Cinder Fang while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-ash-hound-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-ash-hound-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-ash-hound-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-cinder-smith": {
     "id": "enemy-a5-cinder-smith",
@@ -2237,10 +2944,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a5-cinder-smith-strike",
-        "name": "Savage Strike",
+        "name": "Hammer Spark",
         "description": "Deals 108% Physical Power as Fire damage and applies Charred.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "fire",
         "physicalPowerScaling": 1.08,
@@ -2255,21 +2962,67 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a5-cinder-smith-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Temper the Line",
+        "description": "Grants Fierce to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "melee",
-        "damageType": "physical",
-        "physicalPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a5-cinder-smith-aid",
+        "name": "Emergency Quench",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.05
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Emergency Quench for badly wounded allies, maintains Fierce with Temper the Line in groups, and attacks with Hammer Spark when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-cinder-smith-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-cinder-smith-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "fierce"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-cinder-smith-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-slag-elemental": {
     "id": "enemy-a5-slag-elemental",
@@ -2313,10 +3066,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a5-slag-elemental-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 108% Spell Power as Fire damage and applies Burn.",
+        "name": "Molten Knuckle",
+        "description": "Deals reliable Fire damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "fire",
+        "spellPowerScaling": 1.08,
+        "vfx": "fireball"
+      },
+      {
+        "id": "enemy-ability-a5-slag-elemental-setup",
+        "name": "Slag Coating",
+        "description": "Deals a lighter hit and applies Burn for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "fire",
@@ -2332,8 +3097,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a5-slag-elemental-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Crucible Rupture",
+        "description": "A heavy attack that deals 35% more damage while you have Burn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -2341,13 +3106,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.345
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Burn with Slag Coating, converts it into burst damage with Crucible Rupture, and uses Molten Knuckle while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-slag-elemental-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-slag-elemental-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-slag-elemental-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-furnace-acolyte": {
     "id": "enemy-a5-furnace-acolyte",
@@ -2387,10 +3182,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a5-furnace-acolyte-strike",
-        "name": "Ruinous Bolt",
+        "name": "Ember Scripture",
         "description": "Deals 108% Spell Power as Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -2399,25 +3194,68 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a5-furnace-acolyte-stance",
-        "name": "Dark Insight",
-        "description": "Gains Enlightened.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Furnace Litany",
+        "description": "Grants Enlightened to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "melee",
-        "selfStatusApplications": [
+        "vfx": "enemy_protect",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
           {
             "status": "enlightened",
             "stacks": 1,
             "duration": 3
           }
-        ],
-        "vfx": "enemy_protect"
+        ]
+      },
+      {
+        "id": "enemy-ability-a5-furnace-acolyte-aid",
+        "name": "Cauterizing Prayer",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.05
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Cauterizing Prayer for badly wounded allies, maintains Enlightened with Furnace Litany in groups, and attacks with Ember Scripture when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-furnace-acolyte-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-furnace-acolyte-stance",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "enlightened"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-furnace-acolyte-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-ironbound-overseer": {
     "id": "enemy-a5-ironbound-overseer",
@@ -2461,10 +3299,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a5-ironbound-overseer-strike",
-        "name": "Savage Strike",
-        "description": "Deals 108% Physical Power as Physical damage.",
+        "name": "Chain Command",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.08,
@@ -2472,25 +3310,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a5-ironbound-overseer-stance",
-        "name": "Hold the Line",
-        "description": "Gains Guard.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Overseer's Wall",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "guard",
-            "stacks": 18,
+            "stacks": 14,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a5-ironbound-overseer-payoff",
+        "name": "Punitive Slam",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.35,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Overseer's Wall once pressured, answers with Punitive Slam while protected, and otherwise holds threat with Chain Command.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-ironbound-overseer-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-ironbound-overseer-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-ironbound-overseer-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-spark-swarm": {
     "id": "enemy-a5-spark-swarm",
@@ -2530,10 +3409,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a5-spark-swarm-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 108% Spell Power as Fire damage and applies Burn.",
+        "name": "Spark Kiss",
+        "description": "Deals reliable Fire damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "fire",
+        "spellPowerScaling": 1.08,
+        "vfx": "fireball"
+      },
+      {
+        "id": "enemy-ability-a5-spark-swarm-setup",
+        "name": "Static Kindling",
+        "description": "Deals a lighter hit and applies Burn for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "fire",
@@ -2549,8 +3440,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a5-spark-swarm-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Flashover",
+        "description": "A heavy attack that deals 35% more damage while you have Burn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -2558,13 +3449,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.345
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Burn with Static Kindling, converts it into burst damage with Flashover, and uses Spark Kiss while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-spark-swarm-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-spark-swarm-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-spark-swarm-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a5-furnace-tyrant": {
     "id": "enemy-a5-furnace-tyrant",
@@ -2639,7 +3560,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a5-furnace-tyrant-execution",
         "name": "Core Meltdown",
-        "description": "Charges for one turn, then deals 260% Spell Power as Fire damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Fire damage. Deals 45% more damage while you have Burn.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -2649,7 +3570,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "The Furnace Tyrant begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "firestorm"
+        "vfx": "firestorm",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a5-furnace-tyrant-recover",
@@ -2667,12 +3592,97 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a5-furnace-tyrant-phase",
+        "name": "Unsealed Core",
+        "description": "Below 40% Health, gains Fierce for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a5-furnace-tyrant-basic",
+        "name": "Tyrant's Hammer",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "fire",
+        "spellPowerScaling": 1.56,
+        "vfx": "firestorm"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Stoke the Furnace, converts Burn into Core Meltdown, protects itself with Sovereign Recovery under pressure, and enters Unsealed Core below 40% Health. Tyrant's Hammer prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#a75835"
+    "accent": "#a75835",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a5-furnace-tyrant-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "fierce"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-furnace-tyrant-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-furnace-tyrant-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a5-furnace-tyrant-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a5-furnace-tyrant-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-brine-crawler": {
     "id": "enemy-a6-brine-crawler",
@@ -2716,10 +3726,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a6-brine-crawler-strike",
-        "name": "Savage Strike",
-        "description": "Deals 116% Physical Power as Physical damage and applies Wet.",
+        "name": "Brine Claw",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.16,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a6-brine-crawler-setup",
+        "name": "Drenching Grasp",
+        "description": "Deals a lighter hit and applies Wet for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.16,
@@ -2734,21 +3755,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a6-brine-crawler-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Pressure-Shell Crush",
+        "description": "A heavy attack that deals 37% more damage while you have Wet.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "wet",
+          "multiplier": 1.37
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Wet with Drenching Grasp, converts it into burst damage with Pressure-Shell Crush, and uses Brine Claw while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-brine-crawler-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "wet"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-brine-crawler-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "wet"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-brine-crawler-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-drowned-acolyte": {
     "id": "enemy-a6-drowned-acolyte",
@@ -2788,10 +3839,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a6-drowned-acolyte-strike",
-        "name": "Ruinous Bolt",
+        "name": "Saltwater Curse",
         "description": "Deals 116% Spell Power as Spell damage and applies Wet.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -2807,22 +3858,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a6-drowned-acolyte-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Reliquary Hymn",
+        "description": "Grants Barrier to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "barrier",
+            "stacks": 18,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a6-drowned-acolyte-aid",
+        "name": "Tidal Restoration",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.0899999999999999
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Tidal Restoration for badly wounded allies, maintains Barrier with Reliquary Hymn in groups, and attacks with Saltwater Curse when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-drowned-acolyte-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-drowned-acolyte-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "barrier"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-drowned-acolyte-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-relic-sentinel": {
     "id": "enemy-a6-relic-sentinel",
@@ -2866,10 +3964,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a6-relic-sentinel-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 116% Spell Power as Spell damage.",
+        "name": "Relic Pulse",
+        "description": "Deals steady Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -2878,25 +3976,67 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a6-relic-sentinel-stance",
-        "name": "Hold the Line",
-        "description": "Gains Barrier.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Ancient Aegis",
+        "description": "Gains Barrier and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "barrier",
-            "stacks": 20,
+            "stacks": 16,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a6-relic-sentinel-payoff",
+        "name": "Vaultbreaker",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.45,
+        "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Ancient Aegis once pressured, answers with Vaultbreaker while protected, and otherwise holds threat with Relic Pulse.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-relic-sentinel-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "barrier"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-relic-sentinel-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "barrier"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-relic-sentinel-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-shock-eel": {
     "id": "enemy-a6-shock-eel",
@@ -2936,10 +4076,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a6-shock-eel-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 116% Spell Power as Lightning damage and applies Electrified.",
+        "name": "Galvanic Bite",
+        "description": "Deals reliable Lightning damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "lightning",
+        "spellPowerScaling": 1.16,
+        "vfx": "lightning_strike"
+      },
+      {
+        "id": "enemy-ability-a6-shock-eel-setup",
+        "name": "Conductive Flood",
+        "description": "Deals a lighter hit and applies Electrified for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "lightning",
@@ -2955,8 +4107,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a6-shock-eel-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Chain Discharge",
+        "description": "A heavy attack that deals 37% more damage while you have Electrified.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -2964,13 +4116,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "electrified",
+          "multiplier": 1.37
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Electrified with Conductive Flood, converts it into burst damage with Chain Discharge, and uses Galvanic Bite while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-shock-eel-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "electrified"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-shock-eel-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "electrified"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-shock-eel-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-tidebound-knight": {
     "id": "enemy-a6-tidebound-knight",
@@ -3014,10 +4196,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a6-tidebound-knight-strike",
-        "name": "Savage Strike",
-        "description": "Deals 116% Physical Power as Physical damage and applies Shatter.",
+        "name": "Corroded Thrust",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.16,
@@ -3032,21 +4214,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a6-tidebound-knight-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Tidewall Stance",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
+        "range": "melee",
+        "vfx": "enemy_bite_claw",
+        "selfStatusApplications": [
+          {
+            "status": "guard",
+            "stacks": 16,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a6-tidebound-knight-payoff",
+        "name": "Armor-Rending Surge",
+        "description": "A punishing blow used after taking a defensive stance.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
-        "physicalPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "physicalPowerScaling": 1.45,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Tidewall Stance once pressured, answers with Armor-Rending Surge while protected, and otherwise holds threat with Corroded Thrust.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-tidebound-knight-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-tidebound-knight-pressure",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-tidebound-knight-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-siren-oracle": {
     "id": "enemy-a6-siren-oracle",
@@ -3086,10 +4313,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a6-siren-oracle-strike",
-        "name": "Ruinous Bolt",
+        "name": "Siren's Rebuke",
         "description": "Deals 116% Spell Power as Spell damage and applies Wet.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -3105,22 +4332,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a6-siren-oracle-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Choir of the Deep",
+        "description": "Grants Regenerate to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "regenerate",
+            "stacks": 1,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a6-siren-oracle-aid",
+        "name": "Restorative Verse",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.0899999999999999
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Restorative Verse for badly wounded allies, maintains Regenerate with Choir of the Deep in groups, and attacks with Siren's Rebuke when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-siren-oracle-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-siren-oracle-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "regenerate"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-siren-oracle-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a6-nhalos-drowned-seer": {
     "id": "enemy-a6-nhalos-drowned-seer",
@@ -3195,7 +4469,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a6-nhalos-drowned-seer-execution",
         "name": "Foretold Tempest",
-        "description": "Charges for one turn, then deals 260% Spell Power as Lightning damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Lightning damage. Deals 45% more damage while you have Wet.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -3205,7 +4479,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Nhalos, the Drowned Seer begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "thunderstorm"
+        "vfx": "thunderstorm",
+        "targetStatusDamageBonus": {
+          "status": "wet",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a6-nhalos-drowned-seer-recover",
@@ -3223,12 +4501,97 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a6-nhalos-drowned-seer-phase",
+        "name": "The Tide Remembers",
+        "description": "Below 40% Health, gains Enlightened for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "enlightened",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a6-nhalos-drowned-seer-basic",
+        "name": "Drowned Scepter",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "lightning",
+        "spellPowerScaling": 1.56,
+        "vfx": "thunderstorm"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Drown the Future, converts Wet into Foretold Tempest, protects itself with Sovereign Recovery under pressure, and enters The Tide Remembers below 40% Health. Drowned Scepter prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#397f91"
+    "accent": "#397f91",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a6-nhalos-drowned-seer-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "enlightened"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-nhalos-drowned-seer-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-nhalos-drowned-seer-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "wet"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a6-nhalos-drowned-seer-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "wet"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a6-nhalos-drowned-seer-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-mirror-stalker": {
     "id": "enemy-a7-mirror-stalker",
@@ -3272,10 +4635,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a7-mirror-stalker-strike",
-        "name": "Savage Strike",
-        "description": "Deals 124% Physical Power as Physical damage.",
+        "name": "Silvered Claw",
+        "description": "A quick attack used while repositioning.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.24,
@@ -3283,10 +4646,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a7-mirror-stalker-stance",
-        "name": "Vanish",
-        "description": "Gains Stealth.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Step Through Glass",
+        "description": "Gains Stealth for 3 turns before attempting a decisive ambush.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
@@ -3296,12 +4659,49 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_quickstabber_stealth"
+      },
+      {
+        "id": "enemy-ability-a7-mirror-stalker-ambush",
+        "name": "Reflected Ambush",
+        "description": "A high-damage ambush prepared through Step Through Glass.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6740000000000002,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Enters Stealth with Step Through Glass, immediately looks for Reflected Ambush, then falls back to Silvered Claw.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-mirror-stalker-ambush",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "stealth"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-mirror-stalker-stance",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "stealth"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-mirror-stalker-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-gloom-archer": {
     "id": "enemy-a7-gloom-archer",
@@ -3341,10 +4741,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a7-gloom-archer-strike",
-        "name": "Savage Strike",
-        "description": "Deals 124% Physical Power as Physical damage and applies Blind.",
+        "name": "Gloam Arrow",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.24,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a7-gloom-archer-setup",
+        "name": "Blackglass Glare",
+        "description": "Deals a lighter hit and applies Blind for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.24,
@@ -3359,21 +4770,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a7-gloom-archer-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Sightless Volley",
+        "description": "A heavy attack that deals 40% more damage while you have Blind.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "blind",
+          "multiplier": 1.395
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Blind with Blackglass Glare, converts it into burst damage with Sightless Volley, and uses Gloam Arrow while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-gloom-archer-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "blind"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-gloom-archer-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "blind"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-gloom-archer-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-bloodbound-knight": {
     "id": "enemy-a7-bloodbound-knight",
@@ -3417,10 +4858,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a7-bloodbound-knight-strike",
-        "name": "Savage Strike",
-        "description": "Deals 124% Physical Power as Physical damage and applies Bleed.",
+        "name": "Bloodletter",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.24,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a7-bloodbound-knight-setup",
+        "name": "Crimson Oath",
+        "description": "Deals a lighter hit and applies Bleed for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.24,
@@ -3435,21 +4887,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a7-bloodbound-knight-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Sanguine Reaping",
+        "description": "A heavy attack that deals 40% more damage while you have Bleed.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "bleed",
+          "multiplier": 1.395
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Bleed with Crimson Oath, converts it into burst damage with Sanguine Reaping, and uses Bloodletter while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-bloodbound-knight-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "bleed"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-bloodbound-knight-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-bloodbound-knight-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-shard-magus": {
     "id": "enemy-a7-shard-magus",
@@ -3489,10 +4971,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a7-shard-magus-strike",
-        "name": "Ruinous Bolt",
+        "name": "Shard Lance",
         "description": "Deals 124% Spell Power as Spell damage and applies Shatter.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -3508,22 +4990,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a7-shard-magus-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Prismatic Ward",
+        "description": "Grants Barrier to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "barrier",
+            "stacks": 20,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a7-shard-magus-aid",
+        "name": "Glassweave Mend",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.13
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Glassweave Mend for badly wounded allies, maintains Barrier with Prismatic Ward in groups, and attacks with Shard Lance when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-shard-magus-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-shard-magus-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "barrier"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-shard-magus-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-veil-dancer": {
     "id": "enemy-a7-veil-dancer",
@@ -3567,10 +5096,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a7-veil-dancer-strike",
-        "name": "Savage Strike",
-        "description": "Deals 124% Physical Power as Physical damage.",
+        "name": "Veil Cut",
+        "description": "A quick attack used while repositioning.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.24,
@@ -3578,10 +5107,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a7-veil-dancer-stance",
-        "name": "Gale Step",
-        "description": "Gains Evasion.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Impossible Step",
+        "description": "Gains Evasion for 3 turns before attempting a decisive ambush.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
@@ -3591,12 +5120,49 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "evasion"
+      },
+      {
+        "id": "enemy-ability-a7-veil-dancer-ambush",
+        "name": "Dance Behind the Blade",
+        "description": "A high-damage ambush prepared through Impossible Step.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6740000000000002,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Enters Evasion with Impossible Step, immediately looks for Dance Behind the Blade, then falls back to Veil Cut.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-veil-dancer-ambush",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "evasion"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-veil-dancer-stance",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "evasion"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-veil-dancer-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-reflection-wraith": {
     "id": "enemy-a7-reflection-wraith",
@@ -3636,10 +5202,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a7-reflection-wraith-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 124% Spell Power as Spell damage and applies Weaken.",
+        "name": "Echoing Touch",
+        "description": "Deals reliable Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.24,
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a7-reflection-wraith-setup",
+        "name": "Fracture Resolve",
+        "description": "Deals a lighter hit and applies Weaken for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -3655,8 +5233,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a7-reflection-wraith-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Reverberating Ruin",
+        "description": "A heavy attack that deals 40% more damage while you have Weaken.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -3664,13 +5242,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "weaken",
+          "multiplier": 1.395
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Weaken with Fracture Resolve, converts it into burst damage with Reverberating Ruin, and uses Echoing Touch while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-reflection-wraith-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "weaken"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-reflection-wraith-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "weaken"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-reflection-wraith-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a7-lady-noctra": {
     "id": "enemy-a7-lady-noctra",
@@ -3747,7 +5355,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a7-lady-noctra-execution",
         "name": "Shatter the Self",
-        "description": "Charges for one turn, then deals 260% Physical Power as Physical damage.",
+        "description": "Charges for one turn, then deals 260% Physical Power as Physical damage. Deals 45% more damage while you have Blind.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "melee",
@@ -3756,7 +5364,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Lady Noctra, the Last Reflection begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "enemy_impale"
+        "vfx": "enemy_impale",
+        "targetStatusDamageBonus": {
+          "status": "blind",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a7-lady-noctra-recover",
@@ -3774,12 +5386,96 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a7-lady-noctra-phase",
+        "name": "Perfect Reflection",
+        "description": "Below 40% Health, gains Evasion for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "evasion",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a7-lady-noctra-basic",
+        "name": "Noctra's Shard",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.56,
+        "vfx": "enemy_impale"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Hall of Mirrors, converts Blind into Shatter the Self, protects itself with Sovereign Recovery under pressure, and enters Perfect Reflection below 40% Health. Noctra's Shard prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#65518c"
+    "accent": "#65518c",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a7-lady-noctra-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "evasion"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-lady-noctra-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-lady-noctra-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "blind"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a7-lady-noctra-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "blind"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a7-lady-noctra-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-rime-wolf": {
     "id": "enemy-a8-rime-wolf",
@@ -3823,10 +5519,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a8-rime-wolf-strike",
-        "name": "Savage Strike",
-        "description": "Deals 132% Physical Power as Frost damage and applies Cold.",
+        "name": "Rime Fang",
+        "description": "Deals reliable Frost damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "frost",
+        "physicalPowerScaling": 1.32,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a8-rime-wolf-setup",
+        "name": "Winter's Scent",
+        "description": "Deals a lighter hit and applies Cold for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "frost",
         "physicalPowerScaling": 1.32,
@@ -3841,21 +5548,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a8-rime-wolf-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "White-Fang Rend",
+        "description": "A heavy attack that deals 42% more damage while you have Cold.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "cold",
+          "multiplier": 1.42
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Cold with Winter's Scent, converts it into burst damage with White-Fang Rend, and uses Rime Fang while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-rime-wolf-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "cold"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-rime-wolf-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "cold"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-rime-wolf-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-icebound-raider": {
     "id": "enemy-a8-icebound-raider",
@@ -3895,10 +5632,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a8-icebound-raider-strike",
-        "name": "Savage Strike",
-        "description": "Deals 132% Physical Power as Physical damage and applies Shatter.",
+        "name": "Ice-Axe Chop",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.32,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a8-icebound-raider-setup",
+        "name": "Crack the Guard",
+        "description": "Deals a lighter hit and applies Shatter for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.32,
@@ -3913,21 +5661,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a8-icebound-raider-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Glacial Execution",
+        "description": "A heavy attack that deals 42% more damage while you have Shatter.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "shatter",
+          "multiplier": 1.42
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Shatter with Crack the Guard, converts it into burst damage with Glacial Execution, and uses Ice-Axe Chop while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-icebound-raider-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "shatter"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-icebound-raider-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "shatter"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-icebound-raider-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-aurora-wisp": {
     "id": "enemy-a8-aurora-wisp",
@@ -3971,10 +5749,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a8-aurora-wisp-strike",
-        "name": "Ruinous Bolt",
+        "name": "Aurora Ray",
         "description": "Deals 132% Spell Power as Frost damage and applies Cold.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "frost",
@@ -3990,22 +5768,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a8-aurora-wisp-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Boreal Mantle",
+        "description": "Grants Barrier to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "barrier",
+            "stacks": 22,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a8-aurora-wisp-aid",
+        "name": "Warmth of the Lights",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "frostbolt",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.17
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Warmth of the Lights for badly wounded allies, maintains Barrier with Boreal Mantle in groups, and attacks with Aurora Ray when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-aurora-wisp-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-aurora-wisp-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "barrier"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-aurora-wisp-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-frost-hermit": {
     "id": "enemy-a8-frost-hermit",
@@ -4045,10 +5870,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a8-frost-hermit-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 132% Spell Power as Frost damage and applies Frozen.",
+        "name": "Hermit's Frost",
+        "description": "Deals reliable Frost damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "frost",
+        "spellPowerScaling": 1.32,
+        "vfx": "frostbolt"
+      },
+      {
+        "id": "enemy-ability-a8-frost-hermit-setup",
+        "name": "Still the Blood",
+        "description": "Deals a lighter hit and applies Frozen for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "frost",
@@ -4064,8 +5901,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a8-frost-hermit-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Shatter the Frozen",
+        "description": "A heavy attack that deals 42% more damage while you have Frozen.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -4073,13 +5910,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "frozen",
+          "multiplier": 1.42
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Frozen with Still the Blood, converts it into burst damage with Shatter the Frozen, and uses Hermit's Frost while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-frost-hermit-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "frozen"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-frost-hermit-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "frozen"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-frost-hermit-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-glacier-golem": {
     "id": "enemy-a8-glacier-golem",
@@ -4123,10 +5990,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a8-glacier-golem-strike",
-        "name": "Savage Strike",
-        "description": "Deals 132% Physical Power as Physical damage.",
+        "name": "Glacier Fist",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.32,
@@ -4134,25 +6001,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a8-glacier-golem-stance",
-        "name": "Hold the Line",
-        "description": "Gains Guard.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Permafrost Shell",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "guard",
-            "stacks": 24,
+            "stacks": 20,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a8-glacier-golem-payoff",
+        "name": "Calving Blow",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6500000000000001,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Permafrost Shell once pressured, answers with Calving Blow while protected, and otherwise holds threat with Glacier Fist.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-glacier-golem-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-glacier-golem-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-glacier-golem-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-snowblind-harrier": {
     "id": "enemy-a8-snowblind-harrier",
@@ -4192,10 +6100,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a8-snowblind-harrier-strike",
-        "name": "Savage Strike",
-        "description": "Deals 132% Physical Power as Physical damage and applies Blind.",
+        "name": "Snowknife",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.32,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a8-snowblind-harrier-setup",
+        "name": "Whiteout Feint",
+        "description": "Deals a lighter hit and applies Blind for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.32,
@@ -4210,21 +6129,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a8-snowblind-harrier-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Blindside Barrage",
+        "description": "A heavy attack that deals 42% more damage while you have Blind.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "blind",
+          "multiplier": 1.42
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Blind with Whiteout Feint, converts it into burst damage with Blindside Barrage, and uses Snowknife while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-snowblind-harrier-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "blind"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-snowblind-harrier-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "blind"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-snowblind-harrier-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a8-skara-white-maw": {
     "id": "enemy-a8-skara-white-maw",
@@ -4299,7 +6248,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a8-skara-white-maw-execution",
         "name": "Whiteout Devour",
-        "description": "Charges for one turn, then deals 260% Spell Power as Frost damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Frost damage. Deals 45% more damage while you have Cold.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -4309,7 +6258,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Skara, the White Maw begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "absolute_zero"
+        "vfx": "absolute_zero",
+        "targetStatusDamageBonus": {
+          "status": "cold",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a8-skara-white-maw-recover",
@@ -4327,12 +6280,97 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a8-skara-white-maw-phase",
+        "name": "Starving Winter",
+        "description": "Below 40% Health, gains Fierce for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a8-skara-white-maw-basic",
+        "name": "Rimeclaw",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "frost",
+        "spellPowerScaling": 1.56,
+        "vfx": "absolute_zero"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Absolute Winter, converts Cold into Whiteout Devour, protects itself with Sovereign Recovery under pressure, and enters Starving Winter below 40% Health. Rimeclaw prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#71a8c8"
+    "accent": "#71a8c8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a8-skara-white-maw-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "fierce"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-skara-white-maw-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-skara-white-maw-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "cold"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a8-skara-white-maw-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "cold"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a8-skara-white-maw-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-thunder-talon": {
     "id": "enemy-a9-thunder-talon",
@@ -4376,10 +6414,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a9-thunder-talon-strike",
-        "name": "Savage Strike",
-        "description": "Deals 140% Physical Power as Lightning damage and applies Electrified.",
+        "name": "Thunderclaw",
+        "description": "Deals reliable Lightning damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "lightning",
+        "physicalPowerScaling": 1.4,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a9-thunder-talon-setup",
+        "name": "Mark with Lightning",
+        "description": "Deals a lighter hit and applies Electrified for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "lightning",
         "physicalPowerScaling": 1.4,
@@ -4394,21 +6443,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a9-thunder-talon-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Sky-Splitter Dive",
+        "description": "A heavy attack that deals 45% more damage while you have Electrified.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "electrified",
+          "multiplier": 1.445
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Electrified with Mark with Lightning, converts it into burst damage with Sky-Splitter Dive, and uses Thunderclaw while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-thunder-talon-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "electrified"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-thunder-talon-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "electrified"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-thunder-talon-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-spire-zealot": {
     "id": "enemy-a9-spire-zealot",
@@ -4448,10 +6527,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a9-spire-zealot-strike",
-        "name": "Savage Strike",
+        "name": "Zealot's Brand",
         "description": "Deals 140% Physical Power as Lightning damage and applies Electrified.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "lightning",
         "physicalPowerScaling": 1.4,
@@ -4466,21 +6545,67 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a9-spire-zealot-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Tempest Sermon",
+        "description": "Grants Fierce to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "melee",
-        "damageType": "physical",
-        "physicalPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a9-spire-zealot-aid",
+        "name": "Stormborne Renewal",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.21
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Stormborne Renewal for badly wounded allies, maintains Fierce with Tempest Sermon in groups, and attacks with Zealot's Brand when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-spire-zealot-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-spire-zealot-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "fierce"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-spire-zealot-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-storm-channeler": {
     "id": "enemy-a9-storm-channeler",
@@ -4524,10 +6649,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a9-storm-channeler-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 140% Spell Power as Lightning damage and applies Electrified.",
+        "name": "Forked Spark",
+        "description": "Deals reliable Lightning damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "lightning",
+        "spellPowerScaling": 1.4,
+        "vfx": "lightning_strike"
+      },
+      {
+        "id": "enemy-ability-a9-storm-channeler-setup",
+        "name": "Build the Charge",
+        "description": "Deals a lighter hit and applies Electrified for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "lightning",
@@ -4543,8 +6680,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a9-storm-channeler-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Grounding Cataclysm",
+        "description": "A heavy attack that deals 45% more damage while you have Electrified.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -4552,13 +6689,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "electrified",
+          "multiplier": 1.445
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Electrified with Build the Charge, converts it into burst damage with Grounding Cataclysm, and uses Forked Spark while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-storm-channeler-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "electrified"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-storm-channeler-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "electrified"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-storm-channeler-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-cloud-djinn": {
     "id": "enemy-a9-cloud-djinn",
@@ -4598,10 +6765,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a9-cloud-djinn-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 140% Spell Power as Spell damage.",
+        "name": "Cloudlash",
+        "description": "A quick attack used while repositioning.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -4610,10 +6777,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a9-cloud-djinn-stance",
-        "name": "Gale Step",
-        "description": "Gains Evasion.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Become the Gale",
+        "description": "Gains Evasion for 3 turns before attempting a decisive ambush.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
@@ -4623,12 +6790,50 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "evasion"
+      },
+      {
+        "id": "enemy-ability-a9-cloud-djinn-ambush",
+        "name": "Eye-of-the-Storm Strike",
+        "description": "A high-damage ambush prepared through Become the Gale.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.89,
+        "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Enters Evasion with Become the Gale, immediately looks for Eye-of-the-Storm Strike, then falls back to Cloudlash.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-cloud-djinn-ambush",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "evasion"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-cloud-djinn-stance",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "evasion"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-cloud-djinn-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-thunderhead-colossus": {
     "id": "enemy-a9-thunderhead-colossus",
@@ -4672,10 +6877,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a9-thunderhead-colossus-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 140% Spell Power as Spell damage.",
+        "name": "Thunderhead Fist",
+        "description": "Deals steady Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -4684,25 +6889,67 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a9-thunderhead-colossus-stance",
-        "name": "Hold the Line",
-        "description": "Gains Guard.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Stormfront Bulwark",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "guard",
-            "stacks": 26,
+            "stacks": 22,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a9-thunderhead-colossus-payoff",
+        "name": "Pressure Collapse",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.75,
+        "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Stormfront Bulwark once pressured, answers with Pressure Collapse while protected, and otherwise holds threat with Thunderhead Fist.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-thunderhead-colossus-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-thunderhead-colossus-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-thunderhead-colossus-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-chainwing-matron": {
     "id": "enemy-a9-chainwing-matron",
@@ -4742,10 +6989,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a9-chainwing-matron-strike",
-        "name": "Savage Strike",
-        "description": "Deals 140% Physical Power as Lightning damage and applies Stunned.",
+        "name": "Chainwing Rake",
+        "description": "Deals reliable Lightning damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "lightning",
+        "physicalPowerScaling": 1.4,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a9-chainwing-matron-setup",
+        "name": "Lock the Nerves",
+        "description": "Deals a lighter hit and applies Stunned for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "lightning",
         "physicalPowerScaling": 1.4,
@@ -4760,21 +7018,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a9-chainwing-matron-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Matron's Thunderfall",
+        "description": "A heavy attack that deals 45% more damage while you have Stunned.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "stunned",
+          "multiplier": 1.445
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Stunned with Lock the Nerves, converts it into burst damage with Matron's Thunderfall, and uses Chainwing Rake while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-chainwing-matron-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "stunned"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-chainwing-matron-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "stunned"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-chainwing-matron-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a9-vaelith-tempest-roc": {
     "id": "enemy-a9-vaelith-tempest-roc",
@@ -4849,7 +7137,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a9-vaelith-tempest-roc-execution",
         "name": "Heavenfall",
-        "description": "Charges for one turn, then deals 260% Spell Power as Lightning damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Lightning damage. Deals 45% more damage while you have Electrified.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -4859,7 +7147,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Vaelith, the Tempest Roc begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "thunderstorm"
+        "vfx": "thunderstorm",
+        "targetStatusDamageBonus": {
+          "status": "electrified",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a9-vaelith-tempest-roc-recover",
@@ -4877,12 +7169,97 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a9-vaelith-tempest-roc-phase",
+        "name": "Eye of the Tempest",
+        "description": "Below 40% Health, gains Charged Up for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "chargedUp",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a9-vaelith-tempest-roc-basic",
+        "name": "Stormbeak",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "lightning",
+        "spellPowerScaling": 1.56,
+        "vfx": "thunderstorm"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Storm Chains, converts Electrified into Heavenfall, protects itself with Sovereign Recovery under pressure, and enters Eye of the Tempest below 40% Health. Stormbeak prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#547cb8"
+    "accent": "#547cb8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a9-vaelith-tempest-roc-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "chargedUp"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-vaelith-tempest-roc-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-vaelith-tempest-roc-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "electrified"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a9-vaelith-tempest-roc-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "electrified"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a9-vaelith-tempest-roc-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-crownless-guard": {
     "id": "enemy-a10-crownless-guard",
@@ -4926,10 +7303,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a10-crownless-guard-strike",
-        "name": "Savage Strike",
-        "description": "Deals 148% Physical Power as Physical damage.",
+        "name": "Oathless Slash",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.48,
@@ -4937,25 +7314,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a10-crownless-guard-stance",
-        "name": "Hold the Line",
-        "description": "Gains Guard.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Broken Formation",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "guard",
-            "stacks": 28,
+            "stacks": 24,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a10-crownless-guard-payoff",
+        "name": "Crowncrusher",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.85,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Broken Formation once pressured, answers with Crowncrusher while protected, and otherwise holds threat with Oathless Slash.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-crownless-guard-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-crownless-guard-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-crownless-guard-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-ashen-confessor": {
     "id": "enemy-a10-ashen-confessor",
@@ -4995,10 +7413,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a10-ashen-confessor-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 148% Spell Power as Fire damage and applies Burn.",
+        "name": "Cinder Confession",
+        "description": "Deals reliable Fire damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "fire",
+        "spellPowerScaling": 1.48,
+        "vfx": "fireball"
+      },
+      {
+        "id": "enemy-ability-a10-ashen-confessor-setup",
+        "name": "Name the Sin",
+        "description": "Deals a lighter hit and applies Burn for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "fire",
@@ -5014,8 +7444,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a10-ashen-confessor-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Pyre Absolution",
+        "description": "A heavy attack that deals 47% more damage while you have Burn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -5023,13 +7453,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.47
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Burn with Name the Sin, converts it into burst damage with Pyre Absolution, and uses Cinder Confession while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-ashen-confessor-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-ashen-confessor-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-ashen-confessor-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-veilbound-executioner": {
     "id": "enemy-a10-veilbound-executioner",
@@ -5073,10 +7533,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a10-veilbound-executioner-strike",
-        "name": "Savage Strike",
-        "description": "Deals 148% Physical Power as Physical damage and applies Bleed.",
+        "name": "Headsman's Cut",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.48,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a10-veilbound-executioner-setup",
+        "name": "Mark for Death",
+        "description": "Deals a lighter hit and applies Bleed for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.48,
@@ -5091,21 +7562,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a10-veilbound-executioner-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Veiled Guillotine",
+        "description": "A heavy attack that deals 47% more damage while you have Bleed.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "bleed",
+          "multiplier": 1.47
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Bleed with Mark for Death, converts it into burst damage with Veiled Guillotine, and uses Headsman's Cut while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-veilbound-executioner-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "bleed"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-veilbound-executioner-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-veilbound-executioner-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-hollow-courtier": {
     "id": "enemy-a10-hollow-courtier",
@@ -5145,10 +7646,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a10-hollow-courtier-strike",
-        "name": "Ruinous Bolt",
+        "name": "Courtly Malice",
         "description": "Deals 148% Spell Power as Spell damage and applies Weaken.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -5164,22 +7665,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a10-hollow-courtier-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Hollow Etiquette",
+        "description": "Grants Enlightened to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "enlightened",
+            "stacks": 1,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a10-hollow-courtier-aid",
+        "name": "Royal Reprieve",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.25
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Royal Reprieve for badly wounded allies, maintains Enlightened with Hollow Etiquette in groups, and attacks with Courtly Malice when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-hollow-courtier-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-hollow-courtier-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "enlightened"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-hollow-courtier-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-crown-seraph": {
     "id": "enemy-a10-crown-seraph",
@@ -5223,10 +7771,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a10-crown-seraph-strike",
-        "name": "Ruinous Bolt",
-        "description": "Deals 148% Spell Power as Spell damage and applies Vulnerable.",
+        "name": "Fallen Radiance",
+        "description": "Deals reliable Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.48,
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a10-crown-seraph-setup",
+        "name": "Strip the Halo",
+        "description": "Deals a lighter hit and applies Vulnerable for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -5242,21 +7802,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a10-crown-seraph-pressure",
-        "name": "Relentless Pressure",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Judgment Without Mercy",
+        "description": "A heavy attack that deals 47% more damage while you have Vulnerable.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "vulnerable",
+          "multiplier": 1.47
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Vulnerable with Strip the Halo, converts it into burst damage with Judgment Without Mercy, and uses Fallen Radiance while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-crown-seraph-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "vulnerable"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-crown-seraph-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-crown-seraph-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-royal-shadow": {
     "id": "enemy-a10-royal-shadow",
@@ -5296,10 +7886,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a10-royal-shadow-strike",
-        "name": "Savage Strike",
-        "description": "Deals 148% Physical Power as Physical damage.",
+        "name": "Royal Knife",
+        "description": "A quick attack used while repositioning.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.48,
@@ -5307,10 +7897,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a10-royal-shadow-stance",
-        "name": "Vanish",
-        "description": "Gains Stealth.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Disappear Between Heartbeats",
+        "description": "Gains Stealth for 3 turns before attempting a decisive ambush.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
@@ -5320,12 +7910,49 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_quickstabber_stealth"
+      },
+      {
+        "id": "enemy-ability-a10-royal-shadow-ambush",
+        "name": "The King's Blind Spot",
+        "description": "A high-damage ambush prepared through Disappear Between Heartbeats.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.998,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Enters Stealth with Disappear Between Heartbeats, immediately looks for The King's Blind Spot, then falls back to Royal Knife.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-royal-shadow-ambush",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "stealth"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-royal-shadow-stance",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "stealth"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-royal-shadow-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a10-aldren-hollow-king": {
     "id": "enemy-a10-aldren-hollow-king",
@@ -5400,7 +8027,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a10-aldren-hollow-king-execution",
         "name": "The Last Night",
-        "description": "Charges for one turn, then deals 260% Spell Power as Shadow damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Shadow damage. Deals 45% more damage while you have Vulnerable.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -5410,7 +8037,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Aldren, the Hollow King begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "enemy_impale"
+        "vfx": "enemy_impale",
+        "targetStatusDamageBonus": {
+          "status": "vulnerable",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a10-aldren-hollow-king-recover",
@@ -5428,12 +8059,97 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a10-aldren-hollow-king-phase",
+        "name": "The Empty Throne",
+        "description": "Below 40% Health, gains Fierce for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a10-aldren-hollow-king-basic",
+        "name": "Royal Severance",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "shadow",
+        "spellPowerScaling": 1.56,
+        "vfx": "enemy_impale"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Royal Decree, converts Vulnerable into The Last Night, protects itself with Sovereign Recovery under pressure, and enters The Empty Throne below 40% Health. Royal Severance prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#8e714a"
+    "accent": "#8e714a",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a10-aldren-hollow-king-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "fierce"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-aldren-hollow-king-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-aldren-hollow-king-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "vulnerable"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a10-aldren-hollow-king-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a10-aldren-hollow-king-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-starved-pilgrim": {
     "id": "enemy-a11-starved-pilgrim",
@@ -5478,9 +8194,20 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-starved-pilgrim-strike",
         "name": "Gravitic Cut",
-        "description": "Deals 156% Physical Power as Physical damage and applies Vulnerable.",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.56,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a11-starved-pilgrim-setup",
+        "name": "Pilgrim's Burden",
+        "description": "Deals a lighter hit and applies Vulnerable for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.56,
@@ -5496,20 +8223,50 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-starved-pilgrim-pressure",
         "name": "Orbiting Ruin",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "description": "A heavy attack that deals 50% more damage while you have Vulnerable.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "vulnerable",
+          "multiplier": 1.495
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Vulnerable with Pilgrim's Burden, converts it into burst damage with Orbiting Ruin, and uses Gravitic Cut while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-starved-pilgrim-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "vulnerable"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-starved-pilgrim-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-starved-pilgrim-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-glasswing-moth": {
     "id": "enemy-a11-glasswing-moth",
@@ -5553,10 +8310,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a11-glasswing-moth-strike",
-        "name": "Prismatic Dust",
-        "description": "Deals 156% Spell Power as Spell damage and applies Blind.",
+        "name": "Glasswing Flit",
+        "description": "Deals reliable Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.56,
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a11-glasswing-moth-setup",
+        "name": "Prismatic Dust",
+        "description": "Deals a lighter hit and applies Blind for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -5572,8 +8341,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a11-glasswing-moth-pressure",
-        "name": "Glasswing Flurry",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "name": "Thousand-Facet Flurry",
+        "description": "A heavy attack that deals 50% more damage while you have Blind.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -5581,13 +8350,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "blind",
+          "multiplier": 1.495
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Blind with Prismatic Dust, converts it into burst damage with Thousand-Facet Flurry, and uses Glasswing Flit while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-glasswing-moth-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "blind"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-glasswing-moth-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "blind"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-glasswing-moth-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-fallen-astrologer": {
     "id": "enemy-a11-fallen-astrologer",
@@ -5631,10 +8430,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a11-fallen-astrologer-strike",
-        "name": "Forbidden Constellation",
-        "description": "Deals 156% Spell Power as Arcane damage and applies ArcaneWound.",
+        "name": "Starless Ray",
+        "description": "Deals reliable Arcane damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "arcane",
+        "spellPowerScaling": 1.56,
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a11-fallen-astrologer-setup",
+        "name": "Forbidden Constellation",
+        "description": "Deals a lighter hit and applies Arcane Wound for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "arcane",
@@ -5651,7 +8462,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-fallen-astrologer-pressure",
         "name": "Orrery Barrage",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "description": "A heavy attack that deals 50% more damage while you have Arcane Wound.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -5659,13 +8470,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "arcaneWound",
+          "multiplier": 1.495
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Arcane Wound with Forbidden Constellation, converts it into burst damage with Orrery Barrage, and uses Starless Ray while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-fallen-astrologer-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "arcaneWound"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-fallen-astrologer-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "arcaneWound"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-fallen-astrologer-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-comet-hound": {
     "id": "enemy-a11-comet-hound",
@@ -5709,10 +8550,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a11-comet-hound-strike",
-        "name": "Meteor Fang",
-        "description": "Deals 156% Physical Power as Fire damage and applies Burn.",
+        "name": "Comet Fang",
+        "description": "Deals reliable Fire damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "fire",
+        "physicalPowerScaling": 1.56,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a11-comet-hound-setup",
+        "name": "Meteor Scent",
+        "description": "Deals a lighter hit and applies Burn for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "fire",
         "physicalPowerScaling": 1.56,
@@ -5727,21 +8579,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a11-comet-hound-pressure",
-        "name": "Comet Rush",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Perihelion Rush",
+        "description": "A heavy attack that deals 50% more damage while you have Burn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.495
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Burn with Meteor Scent, converts it into burst damage with Perihelion Rush, and uses Comet Fang while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-comet-hound-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-comet-hound-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-comet-hound-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-gravity-warden": {
     "id": "enemy-a11-gravity-warden",
@@ -5785,10 +8667,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a11-gravity-warden-strike",
-        "name": "Crushing Horizon",
-        "description": "Deals 156% Spell Power as Spell damage and applies Slowed.",
+        "name": "Horizon Maul",
+        "description": "Deals steady Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -5804,21 +8686,67 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a11-gravity-warden-pressure",
+        "name": "Event-Horizon Guard",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
+        "range": "melee",
+        "vfx": "enemy_bite_claw",
+        "selfStatusApplications": [
+          {
+            "status": "guard",
+            "stacks": 26,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a11-gravity-warden-payoff",
         "name": "Singularity Press",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "description": "A punishing blow used after taking a defensive stance.",
         "energyCost": 4,
         "cooldownTurns": 3,
-        "range": "melee",
-        "damageType": "physical",
-        "physicalPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.9500000000000002,
+        "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Event-Horizon Guard once pressured, answers with Singularity Press while protected, and otherwise holds threat with Horizon Maul.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-gravity-warden-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-gravity-warden-pressure",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-gravity-warden-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-astral-devourer": {
     "id": "enemy-a11-astral-devourer",
@@ -5865,7 +8793,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "name": "Consume Light",
         "description": "Deals 156% Spell Power as Spell damage and applies Weaken.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -5881,22 +8809,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a11-astral-devourer-pressure",
-        "name": "Many-Jawed Hunger",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Starless Communion",
+        "description": "Grants Barrier to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "barrier",
+            "stacks": 28,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a11-astral-devourer-aid",
+        "name": "Devourer's Renewal",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.29
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Devourer's Renewal for badly wounded allies, maintains Barrier with Starless Communion in groups, and attacks with Consume Light when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-astral-devourer-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-astral-devourer-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "barrier"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-astral-devourer-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a11-seraphel-fallen-star": {
     "id": "enemy-a11-seraphel-fallen-star",
@@ -5971,7 +8946,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-seraphel-fallen-star-execution",
         "name": "Starfall Extinction",
-        "description": "Charges for one turn, then deals 260% Spell Power as Arcane damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Arcane damage. Deals 45% more damage while you have Arcane Wound.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -5981,7 +8956,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Seraphel, the Fallen Star begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "elemental_fury"
+        "vfx": "elemental_fury",
+        "targetStatusDamageBonus": {
+          "status": "arcaneWound",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a11-seraphel-fallen-star-recover",
@@ -5999,12 +8978,97 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a11-seraphel-fallen-star-phase",
+        "name": "Supernova Heart",
+        "description": "Below 40% Health, gains Enlightened for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "enlightened",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a11-seraphel-fallen-star-basic",
+        "name": "Falling-Star Spear",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "arcane",
+        "spellPowerScaling": 1.56,
+        "vfx": "elemental_fury"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Collapse the Heavens, converts Arcane Wound into Starfall Extinction, protects itself with Sovereign Recovery under pressure, and enters Supernova Heart below 40% Health. Falling-Star Spear prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#8c69c7"
+    "accent": "#8c69c7",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a11-seraphel-fallen-star-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "enlightened"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-seraphel-fallen-star-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-seraphel-fallen-star-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "arcaneWound"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a11-seraphel-fallen-star-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "arcaneWound"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a11-seraphel-fallen-star-basic"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-rootless-titan": {
     "id": "enemy-a12-rootless-titan",
@@ -6049,9 +9113,9 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-rootless-titan-strike",
         "name": "Worldstone Blow",
-        "description": "Deals 164% Physical Power as Physical damage.",
+        "description": "Deals steady Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.6400000000000001,
@@ -6059,25 +9123,66 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a12-rootless-titan-stance",
-        "name": "Hold the Line",
-        "description": "Gains Guard.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Continental Stance",
+        "description": "Gains Guard and prepares to punish an exposed target.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
             "status": "guard",
-            "stacks": 32,
+            "stacks": 28,
             "duration": 3
           }
         ],
         "vfx": "enemy_protect"
+      },
+      {
+        "id": "enemy-ability-a12-rootless-titan-payoff",
+        "name": "Faultline Verdict",
+        "description": "A punishing blow used after taking a defensive stance.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 2.0500000000000003,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Uses Continental Stance once pressured, answers with Faultline Verdict while protected, and otherwise holds threat with Worldstone Blow.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-rootless-titan-payoff",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-rootless-titan-stance",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.78
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-rootless-titan-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-pale-burrower": {
     "id": "enemy-a12-pale-burrower",
@@ -6121,10 +9226,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a12-pale-burrower-strike",
-        "name": "Heartseeker Claw",
-        "description": "Deals 164% Physical Power as Physical damage and applies Bleed.",
+        "name": "Pale Claw",
+        "description": "Deals reliable Physical damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6400000000000001,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a12-pale-burrower-setup",
+        "name": "Heartseeker Wound",
+        "description": "Deals a lighter hit and applies Bleed for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.6400000000000001,
@@ -6140,20 +9256,50 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-pale-burrower-pressure",
         "name": "Burrowing Frenzy",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "description": "A heavy attack that deals 52% more damage while you have Bleed.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "bleed",
+          "multiplier": 1.52
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Bleed with Heartseeker Wound, converts it into burst damage with Burrowing Frenzy, and uses Pale Claw while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-pale-burrower-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "bleed"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-pale-burrower-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-pale-burrower-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-deep-oracle": {
     "id": "enemy-a12-deep-oracle",
@@ -6197,10 +9343,22 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "abilities": [
       {
         "id": "enemy-ability-a12-deep-oracle-strike",
-        "name": "Buried Revelation",
-        "description": "Deals 164% Spell Power as Spell damage and applies Blind.",
+        "name": "Sightless Word",
+        "description": "Deals reliable Spell damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.6400000000000001,
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a12-deep-oracle-setup",
+        "name": "Buried Revelation",
+        "description": "Deals a lighter hit and applies Blind for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -6217,7 +9375,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-deep-oracle-pressure",
         "name": "Prophetic Chorus",
-        "description": "Strikes twice for 65% Spell Power per hit.",
+        "description": "A heavy attack that deals 52% more damage while you have Blind.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "ranged",
@@ -6225,13 +9383,43 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "damageType": "spell",
         "spellPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "targetStatusDamageBonus": {
+          "status": "blind",
+          "multiplier": 1.52
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Blind with Buried Revelation, converts it into burst damage with Prophetic Chorus, and uses Sightless Word while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-deep-oracle-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "blind"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-deep-oracle-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "blind"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-deep-oracle-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-worldvein-elemental": {
     "id": "enemy-a12-worldvein-elemental",
@@ -6276,9 +9464,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-worldvein-elemental-strike",
         "name": "Worldvein Fist",
-        "description": "Deals 164% Spell Power as Fire damage and applies Burn.",
+        "description": "Deals reliable Fire damage.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "fire",
+        "spellPowerScaling": 1.6400000000000001,
+        "vfx": "fireball"
+      },
+      {
+        "id": "enemy-ability-a12-worldvein-elemental-setup",
+        "name": "Magma in the Blood",
+        "description": "Deals a lighter hit and applies Burn for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 3,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "fire",
@@ -6294,21 +9494,51 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a12-worldvein-elemental-pressure",
-        "name": "Magma Pulse",
-        "description": "Strikes twice for 65% Physical Power per hit.",
+        "name": "Mantle-Rift Pulse",
+        "description": "A heavy attack that deals 52% more damage while you have Burn.",
         "energyCost": 4,
         "cooldownTurns": 3,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 0.65,
         "hits": 2,
-        "vfx": "enemy_bite_claw"
+        "vfx": "enemy_bite_claw",
+        "targetStatusDamageBonus": {
+          "status": "burn",
+          "multiplier": 1.52
+        }
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Sets up Burn with Magma in the Blood, converts it into burst damage with Mantle-Rift Pulse, and uses Worldvein Fist while either tool is unavailable.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-worldvein-elemental-pressure",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "burn"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-worldvein-elemental-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-worldvein-elemental-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-firstborn-shade": {
     "id": "enemy-a12-firstborn-shade",
@@ -6353,9 +9583,9 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-firstborn-shade-strike",
         "name": "Before Memory",
-        "description": "Deals 164% Physical Power as Physical damage.",
+        "description": "A quick attack used while repositioning.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.6400000000000001,
@@ -6363,10 +9593,10 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a12-firstborn-shade-stance",
-        "name": "Vanish",
-        "description": "Gains Stealth.",
-        "energyCost": 1,
-        "cooldownTurns": 3,
+        "name": "Return to Nothing",
+        "description": "Gains Stealth for 3 turns before attempting a decisive ambush.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
         "range": "melee",
         "selfStatusApplications": [
           {
@@ -6376,12 +9606,49 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_quickstabber_stealth"
+      },
+      {
+        "id": "enemy-ability-a12-firstborn-shade-ambush",
+        "name": "First Murder",
+        "description": "A high-damage ambush prepared through Return to Nothing.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 2.2140000000000004,
+        "vfx": "enemy_heavy_cleave"
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Enters Stealth with Return to Nothing, immediately looks for First Murder, then falls back to Before Memory.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-firstborn-shade-ambush",
+          "all": [
+            {
+              "type": "self_has_status",
+              "status": "stealth"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-firstborn-shade-stance",
+          "all": [
+            {
+              "type": "self_missing_status",
+              "status": "stealth"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-firstborn-shade-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-abyssal-choir": {
     "id": "enemy-a12-abyssal-choir",
@@ -6428,7 +9695,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "name": "Unraveling Hymn",
         "description": "Deals 164% Spell Power as Spell damage and applies Weaken.",
         "energyCost": 2,
-        "cooldownTurns": 1,
+        "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
@@ -6444,22 +9711,69 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       },
       {
         "id": "enemy-ability-a12-abyssal-choir-pressure",
-        "name": "Fivefold Dirge",
-        "description": "Strikes twice for 65% Spell Power per hit.",
-        "energyCost": 4,
-        "cooldownTurns": 3,
+        "name": "Choir Without End",
+        "description": "Grants Enlightened to every living enemy for 3 turns.",
+        "energyCost": 3,
+        "cooldownTurns": 4,
         "range": "ranged",
         "rangedPresentation": "projectile",
-        "damageType": "spell",
-        "spellPowerScaling": 0.65,
-        "hits": 2,
-        "vfx": "enemy_natures_beam"
+        "vfx": "enemy_natures_beam",
+        "friendlyTarget": "all_enemies",
+        "friendlyStatusApplications": [
+          {
+            "status": "enlightened",
+            "stacks": 1,
+            "duration": 3
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a12-abyssal-choir-aid",
+        "name": "Deep Refrain",
+        "description": "Restores Health to the most wounded living enemy.",
+        "energyCost": 4,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "vfx": "enemy_hex",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 1.33
       }
     ],
-    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behaviorNotes": "Prioritizes Deep Refrain for badly wounded allies, maintains Enlightened with Choir Without End in groups, and attacks with Unraveling Hymn when support is unnecessary.",
     "behavior": "priority",
     "maxActionsPerTurn": 1,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-abyssal-choir-aid",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.58
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-abyssal-choir-pressure",
+          "all": [
+            {
+              "type": "living_allies_at_least",
+              "count": 2
+            },
+            {
+              "type": "any_ally_missing_status",
+              "status": "enlightened"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-abyssal-choir-strike"
+      ],
+      "fallback": "ordered"
+    }
   },
   "enemy-a12-eidolon-first-hunger": {
     "id": "enemy-a12-eidolon-first-hunger",
@@ -6534,7 +9848,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-eidolon-first-hunger-execution",
         "name": "The World Devours",
-        "description": "Charges for one turn, then deals 260% Spell Power as Shadow damage.",
+        "description": "Charges for one turn, then deals 260% Spell Power as Shadow damage. Deals 45% more damage while you have Vulnerable.",
         "energyCost": 7,
         "cooldownTurns": 5,
         "range": "ranged",
@@ -6544,7 +9858,11 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
         "chargeTurns": 1,
         "chargeText": "Eidolon, the First Hunger begins preparing a devastating attack.",
         "chargeVfx": "enemy_impale_charge",
-        "vfx": "enemy_hex"
+        "vfx": "enemy_hex",
+        "targetStatusDamageBonus": {
+          "status": "vulnerable",
+          "multiplier": 1.45
+        }
       },
       {
         "id": "enemy-ability-a12-eidolon-first-hunger-recover",
@@ -6562,11 +9880,96 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           }
         ],
         "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a12-eidolon-first-hunger-phase",
+        "name": "Hunger Without End",
+        "description": "Below 40% Health, gains Fierce for 3 turns and accelerates the final sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 8,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "fierce",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      },
+      {
+        "id": "enemy-ability-a12-eidolon-first-hunger-basic",
+        "name": "First Bite",
+        "description": "A reliable attack used while the boss rebuilds its tactical sequence.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "shadow",
+        "spellPowerScaling": 1.56,
+        "vfx": "enemy_hex"
       }
     ],
-    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behaviorNotes": "Opens with Unmake the Living, converts Vulnerable into The World Devours, protects itself with Sovereign Recovery under pressure, and enters Hunger Without End below 40% Health. First Bite prevents dead turns while key abilities recover.",
     "behavior": "priority",
     "maxActionsPerTurn": 2,
-    "accent": "#b17a43"
+    "accent": "#b17a43",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a12-eidolon-first-hunger-phase",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.4
+            },
+            {
+              "type": "self_missing_status",
+              "status": "fierce"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-eidolon-first-hunger-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            },
+            {
+              "type": "self_missing_status",
+              "status": "guard"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-eidolon-first-hunger-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "vulnerable"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a12-eidolon-first-hunger-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a12-eidolon-first-hunger-basic"
+      ],
+      "fallback": "ordered"
+    }
   }
 };

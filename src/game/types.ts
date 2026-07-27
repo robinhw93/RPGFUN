@@ -732,6 +732,8 @@ export interface EnemyAbilityDefinition {
   /** Adds one randomly rolled Power-scaling component to each ability use. */
   powerScalingRange?: { power: "physical" | "spell"; min: number; max: number };
   hits?: number;
+  /** Multiplies this ability's resolved damage while the player has the named status. */
+  targetStatusDamageBonus?: { status: StatusEffectId; multiplier: number };
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number }>;
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
   /** Selects living enemy recipients for heals or friendly status applications. */
@@ -758,6 +760,30 @@ export interface EnemyAbilityDefinition {
   nextTurnEnergyRegen?: number;
   restoreFullEnergyNextTurn?: boolean;
   vfx: CombatAbilityVfxKind;
+}
+
+export type EnemyAiCondition =
+  | { type: "self_hp_below" | "self_hp_above" | "player_hp_below" | "player_hp_above"; ratio: number }
+  | { type: "self_has_status" | "self_missing_status" | "player_has_status" | "player_missing_status"; status: StatusEffectId }
+  | { type: "any_ally_hp_below"; ratio: number }
+  | { type: "any_ally_missing_status"; status: StatusEffectId }
+  | { type: "living_allies_at_least"; count: number }
+  | { type: "no_other_living_allies" }
+  | { type: "energy_at_least"; amount: number }
+  | { type: "phase_is" | "phase_is_not"; phase: string };
+
+export interface EnemyAiRule {
+  abilityId: string;
+  /** Every condition must be true before this priority can select the ability. */
+  all?: EnemyAiCondition[];
+}
+
+export interface EnemyAiProfile {
+  /** Evaluated from first to last before the fallback pool is considered. */
+  rules: EnemyAiRule[];
+  /** Optional ordered subset used when no conditional priority is currently valid. */
+  fallbackAbilityIds?: string[];
+  fallback: "ordered" | "cycle";
 }
 
 export type EnemyBehaviorKind =
@@ -804,6 +830,8 @@ export interface EnemyTemplate {
   /** Free-form design notes describing intended ability priorities and conditions. */
   behaviorNotes: string;
   behavior: EnemyBehaviorKind;
+  /** Data-owned tactical ability selection used before legacy named behaviors. */
+  ai?: EnemyAiProfile;
   maxActionsPerTurn: number;
   healOnAllyDeath?: { allyId: string; maxHpRatio: number; vfx: CombatAbilityVfxKind };
   accent: string;
@@ -819,6 +847,8 @@ export interface EnemyState extends EnemyTemplate {
   abilityCooldowns: Record<string, number>;
   nextTurnEnergyRegenBonus: number;
   behaviorPhase?: string;
+  /** Last resolved ability, used by data-owned fallback rotations. */
+  lastAbilityId?: string;
   /** Ability prepared on a previous turn and released before normal priority selection. */
   chargingAbilityId?: string;
   /** True when this enemy escaped rather than being defeated. */

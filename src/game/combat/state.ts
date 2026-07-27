@@ -192,7 +192,9 @@ export function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       physicalPower: enemy.physicalPower ?? template.physicalPower,
       spellPower: enemy.spellPower ?? template.spellPower,
       abilities: template.abilities,
+      ai: template.ai,
       abilityCooldowns: enemy.abilityCooldowns ?? {},
+      lastAbilityId: template.abilities.some((ability) => ability.id === enemy.lastAbilityId) ? enemy.lastAbilityId : undefined,
       nextTurnEnergyRegenBonus: enemy.nextTurnEnergyRegenBonus ?? 0,
       chargingAbilityId: template.abilities.some((ability) => ability.id === enemy.chargingAbilityId && (ability.chargeTurns ?? 0) > 0)
         ? enemy.chargingAbilityId

@@ -701,7 +701,7 @@ The final stage of each late adventure contains its boss plus two role-complemen
 | The Astral Scar | Starved Pilgrim; Glasswing Moth; Fallen Astrologer; Comet Hound; Gravity Warden; Astral Devourer; Seraphel, the Fallen Star. |
 | The World Below | Rootless Titan; Pale Burrower; Deep Oracle; Worldvein Elemental; Firstborn Shade; Abyssal Choir; Eidolon, the First Hunger. |
 
-All 63 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy has two ordered executable abilities. Every boss has three tactical abilities, explicit priority behavior, and dedicated status/damage presentation.
+All 63 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy now has at least three named executable abilities and one of four readable tactical roles: status setup/payoff, defensive stance, evasive ambush, or ally support. The former Savage Strike, Ruinous Bolt, and Relentless Pressure placeholders are no longer used in this route. Every boss has five abilities: its setup, status-amplified charged execution, defensive recovery, unique below-40%-Health phase, and a basic recovery-turn attack. Together with the twelve distinct Highlands and Highfall templates, 75 enemies from recommended level 4 onward use editable data-owned tactical AI.
 
 ### Late-campaign loot and crafting
 

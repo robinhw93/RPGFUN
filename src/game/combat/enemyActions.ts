@@ -13,16 +13,68 @@ import {
   getHitChanceMultiplier,
   hasStatus
 } from "../statusEffects";
-import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, EnemyAbilityDefinition, EnemyState, InspectableInfo, StatusEffectId } from "../types";
+import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, EnemyAbilityDefinition, EnemyAiCondition, EnemyState, InspectableInfo, StatusEffectId } from "../types";
 import { getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
 import { absorptionSuffix, makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueHeal, queueHealAtEvent, queuePassiveAnimation, queueStatus, queueStatusReconciliation, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, moveToNextActor, processTurnEnd, processTurnStart, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyTargetable, normalizeEnemies } from "./state";
 
-export function getReadyEnemyAbility(enemy: EnemyState, enemies: EnemyState[] = [enemy]): EnemyAbilityDefinition | undefined {
+export interface EnemyAiContext {
+  playerHp: number;
+  playerMaxHp: number;
+  playerStatusIds: StatusEffectId[];
+}
+
+function enemyAiConditionMatches(condition: EnemyAiCondition, enemy: EnemyState, enemies: EnemyState[], context?: EnemyAiContext): boolean {
+  const selfHealthRatio = enemy.maxHp > 0 ? enemy.hp / enemy.maxHp : 0;
+  const playerHealthRatio = context && context.playerMaxHp > 0 ? context.playerHp / context.playerMaxHp : 0;
+  switch (condition.type) {
+    case "self_hp_below": return selfHealthRatio < condition.ratio;
+    case "self_hp_above": return selfHealthRatio > condition.ratio;
+    case "player_hp_below": return Boolean(context) && playerHealthRatio < condition.ratio;
+    case "player_hp_above": return Boolean(context) && playerHealthRatio > condition.ratio;
+    case "self_has_status": return hasStatus(enemy.statuses, condition.status);
+    case "self_missing_status": return !hasStatus(enemy.statuses, condition.status);
+    case "player_has_status": return Boolean(context?.playerStatusIds.includes(condition.status));
+    case "player_missing_status": return context !== undefined && !context.playerStatusIds.includes(condition.status);
+    case "any_ally_hp_below": return enemies.some((candidate) => candidate.hp > 0 && candidate.hp / candidate.maxHp < condition.ratio);
+    case "any_ally_missing_status": return enemies.some((candidate) => candidate.hp > 0 && !candidate.fled && !hasStatus(candidate.statuses, condition.status));
+    case "living_allies_at_least": return enemies.filter((candidate) => candidate.hp > 0 && !candidate.fled).length >= condition.count;
+    case "no_other_living_allies": return !enemies.some((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp > 0 && !candidate.fled);
+    case "energy_at_least": return enemy.energy >= condition.amount;
+    case "phase_is": return enemy.behaviorPhase === condition.phase;
+    case "phase_is_not": return enemy.behaviorPhase !== condition.phase;
+  }
+}
+
+function getDataOwnedEnemyAbility(enemy: EnemyState, enemies: EnemyState[], context: EnemyAiContext | undefined, ready: (ability: EnemyAbilityDefinition) => boolean): EnemyAbilityDefinition | undefined {
+  if (!enemy.ai) return undefined;
+  const byId = new Map(enemy.abilities.map((ability) => [ability.id, ability]));
+  for (const rule of enemy.ai.rules) {
+    const ability = byId.get(rule.abilityId);
+    if (ability && ready(ability) && (rule.all ?? []).every((condition) => enemyAiConditionMatches(condition, enemy, enemies, context))) return ability;
+  }
+  const fallbackIds = enemy.ai.fallbackAbilityIds?.length ? enemy.ai.fallbackAbilityIds : enemy.abilities.map((ability) => ability.id);
+  if (enemy.ai.fallback === "ordered") {
+    const ability = fallbackIds.map((id) => byId.get(id)).find((candidate): candidate is EnemyAbilityDefinition => Boolean(candidate && ready(candidate)));
+    if (ability) return ability;
+  } else {
+    const previousIndex = fallbackIds.indexOf(enemy.lastAbilityId ?? "");
+    for (let offset = 1; offset <= fallbackIds.length; offset += 1) {
+      const ability = byId.get(fallbackIds[(Math.max(previousIndex, -1) + offset) % fallbackIds.length]);
+      if (ability && ready(ability)) return ability;
+    }
+  }
+  // Never waste a turn when every configured fallback is unavailable; the first
+  // remaining ready ability is still safer than silently gathering Energy.
+  return enemy.abilities.find(ready);
+}
+
+export function getReadyEnemyAbility(enemy: EnemyState, enemies: EnemyState[] = [enemy], context?: EnemyAiContext): EnemyAbilityDefinition | undefined {
   const ready = (ability: EnemyAbilityDefinition) => enemy.energy >= ability.energyCost && (enemy.abilityCooldowns[ability.id] ?? 0) <= 0;
   const byName = (name: string) => enemy.abilities.find((ability) => ability.name === name && ready(ability));
   if (enemy.chargingAbilityId) return enemy.abilities.find((ability) => ability.id === enemy.chargingAbilityId);
+  if (enemy.ai) return getDataOwnedEnemyAbility(enemy, enemies, context, ready);
   if (enemy.behavior === "rabid_rat") {
     if (!enemy.behaviorPhase) return byName("Bite") ?? byName("Scurry");
     if (enemy.behaviorPhase === "rabid") return byName("Rabid Bite") ?? byName("Scurry");
@@ -168,7 +220,8 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     enemy = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId) ?? enemy;
   }
   let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, goldStolen };
-  const enemyAbility = getReadyEnemyAbility(enemy, enemies);
+  const aiContext = (): EnemyAiContext => ({ playerHp, playerMaxHp: combat.playerMaxHp, playerStatusIds: playerStatuses.map((status) => status.id) });
+  const enemyAbility = getReadyEnemyAbility(enemy, enemies, aiContext());
   let usedAbility = false;
   let startedCharge = false;
 
@@ -309,13 +362,16 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       playerEnergy = missedTriggers.state.energy;
     } else {
       const defense = getDefense(derived.armor, derived.magicResistance, playerStatuses, enemyAbility.damageType);
+      const targetStatusDamageMultiplier = enemyAbility.targetStatusDamageBonus && hasStatus(playerStatuses, enemyAbility.targetStatusDamageBonus.status)
+        ? Math.max(0, enemyAbility.targetStatusDamageBonus.multiplier)
+        : 1;
       const criticalChance = enemy.critChance + getCriticalChanceBonus(enemy.statuses);
       let criticalHits = 0;
       let baseIncoming = 0;
       for (let hit = 0; hit < successfulHits; hit += 1) {
         const hitCritical = Math.random() < criticalChance;
         if (hitCritical) criticalHits += 1;
-        baseIncoming += Math.max(1, Math.round((enemyAbilityPower - Math.floor(defense * 0.35)) * (hitCritical ? 1.6 : 1)));
+        baseIncoming += Math.max(1, Math.round((enemyAbilityPower * targetStatusDamageMultiplier - Math.floor(defense * 0.35)) * (hitCritical ? 1.6 : 1)));
       }
       const critical = criticalHits > 0;
       const incoming = Math.max(0, Math.round(getModifiedDamage(baseIncoming, enemy.statuses, playerStatuses, enemyAbility.damageType) * getEnergyDefenseMultiplier(derived, playerEnergy, playerStatuses)));
@@ -419,6 +475,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       enemy.nextTurnEnergyRegenBonus = enemyAbility.restoreFullEnergyNextTurn ? enemy.maxEnergy : enemy.nextTurnEnergyRegenBonus + (enemyAbility.nextTurnEnergyRegen ?? 0);
       enemy.abilityCooldowns = { ...enemy.abilityCooldowns, [enemyAbility.id]: enemyAbility.cooldownTurns };
     }
+    enemy.lastAbilityId = enemyAbility.id;
     if (enemy.behavior === "rabid_rat") {
       if (enemyAbility.name === "Bite") enemy.behaviorPhase = "rabid";
       if (enemyAbility.name === "Rabid Bite") enemy.behaviorPhase = "bite";
@@ -461,7 +518,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
   const enemyActionsTaken = usedAbility ? (combat.enemyActionsTaken ?? 0) + 1 : combat.enemyActionsTaken ?? 0;
   nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, enemyActionsTaken, goldStolen };
-  const nextEnemyAbility = getReadyEnemyAbility(enemy, enemies);
+  const nextEnemyAbility = getReadyEnemyAbility(enemy, enemies, aiContext());
   const nextAbilityBlockedByStealth = Boolean(
     nextEnemyAbility
     && hasStatus(playerStatuses, "stealth")

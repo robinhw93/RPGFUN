@@ -5,7 +5,7 @@ import type { AbilityRange, EnemyBehaviorKind } from "../../game/types";
 import { copyJson, downloadJson, DropTableEditor, EditorShell, ENEMY_DRAFT_STORAGE_KEY, finiteNumber, JsonObjectField, localItems, makeId, NumberField, saveLiveCatalog, TextField, useLocalDraft, type EnemyAbilityDraft, type EnemyDraft, type EnemyEditableStats, type EnemyExchange } from "./shared";
 
 const ENEMY_DRAFT_CATALOG_SIGNATURE_KEY = `${ENEMY_DRAFT_STORAGE_KEY}.live-catalog-signature`;
-const ENEMY_DRAFT_CATALOG_REVISION = "windsong-uncommon-drops-v1";
+const ENEMY_DRAFT_CATALOG_REVISION = "tactical-enemy-ai-v2";
 const CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS = new Set([
   "enemy-mrxiut2a-k4kgv",
   "enemy-mrxj4o6o-o45ia",
@@ -45,6 +45,7 @@ export function canonicalEnemyExchange(): EnemyExchange {
       abilities: enemy.abilities.map(({ description, ...ability }) => ({ ...structuredClone(ability), effect: description })),
       behaviorNotes: enemy.behaviorNotes,
       behavior: enemy.behavior,
+      ai: structuredClone(enemy.ai),
       maxActionsPerTurn: enemy.maxActionsPerTurn,
       healOnAllyDeath: structuredClone(enemy.healOnAllyDeath),
       accent: enemy.accent,
@@ -66,8 +67,18 @@ export function synchronizeEnemyDraftWithCanonical(draft: EnemyExchange, canonic
   return {
     ...merged,
     enemies: merged.enemies.map((enemy) => {
-      const liveEnemy = CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS.has(enemy.id) ? canonicalEnemies.get(enemy.id) : undefined;
-      return liveEnemy ? { ...enemy, dropTable: structuredClone(liveEnemy.dropTable) } : enemy;
+      const liveEnemy = canonicalEnemies.get(enemy.id);
+      return {
+        ...enemy,
+        ...(liveEnemy?.ai ? {
+          abilities: structuredClone(liveEnemy.abilities),
+          behaviorNotes: liveEnemy.behaviorNotes,
+          behavior: liveEnemy.behavior,
+          ai: structuredClone(liveEnemy.ai),
+          maxActionsPerTurn: liveEnemy.maxActionsPerTurn,
+        } : {}),
+        ...(liveEnemy && CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS.has(enemy.id) ? { dropTable: structuredClone(liveEnemy.dropTable) } : {}),
+      };
     }),
   };
 }
@@ -142,6 +153,7 @@ export function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
         abilities,
         behaviorNotes: legacy.behaviorNotes ?? fallback?.behaviorNotes ?? "",
         behavior: legacy.behavior ?? fallback?.behavior ?? "priority",
+        ai: legacy.ai ?? fallback?.ai,
         maxActionsPerTurn: Math.max(1, Math.round(finiteNumber(legacy.maxActionsPerTurn, fallback?.maxActionsPerTurn ?? 1))),
         healOnAllyDeath: legacy.healOnAllyDeath ?? fallback?.healOnAllyDeath,
         accent: legacy.accent ?? fallback?.accent ?? "#79a86d",
@@ -262,7 +274,7 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
           {selected.abilities.length === 0 && <p className="empty-editor-copy">No abilities added yet.</p>}
           {selected.abilities.map((ability, index) => { const { id: _id, name: _name, energyCost: _energyCost, cooldownTurns: _cooldownTurns, range: _range, effect: _effect, ...advanced } = ability; return <article className="enemy-ability-editor" key={ability.id}><header><strong>Ability {index + 1}</strong><button type="button" onClick={() => update({ abilities: selected.abilities.filter((item) => item.id !== ability.id) })}><Trash2 size={14} /> Remove</button></header><div className="content-form-grid"><TextField label="Name" value={ability.name} onChange={(name) => updateAbility(ability.id, { name })} /><NumberField label="Energy Cost" value={ability.energyCost} min={0} onChange={(energyCost) => updateAbility(ability.id, { energyCost })} /><NumberField label="Cooldown" value={ability.cooldownTurns} min={0} onChange={(cooldownTurns) => updateAbility(ability.id, { cooldownTurns })} /><label><span>Attack Type</span><select value={ability.range} onChange={(event) => updateAbility(ability.id, { range: event.target.value as AbilityRange })}><option value="melee">Melee</option><option value="ranged">Ranged</option></select></label><TextField label="Effect" value={ability.effect} onChange={(effect) => updateAbility(ability.id, { effect })} textarea /><JsonObjectField label="Advanced executable ability fields (JSON)" value={advanced} onCommit={(fields) => updateAbility(ability.id, fields as Partial<EnemyAbilityDraft>)} /></div></article>; })}
         </div>
-        <label><span>Behavior</span><select value={selected.behavior} onChange={(event) => update({ behavior: event.target.value as EnemyBehaviorKind })}><option value="priority">Priority (first ready ability)</option><option value="single">Single ability</option><option value="rabid_rat">Rabid Rat</option><option value="brown_bear">Brown Bear</option><option value="forest_spirit">Forest Spirit</option><option value="goblin_longseer">Goblin Longseer</option><option value="goblin_woundfixer">Goblin Woundfixer</option><option value="goblin_biggrown">Goblin Biggrown</option><option value="goblin_chieftain">Goblin Chieftain</option><option value="hill_troll">Hill Troll</option><option value="mountain_troll">Mountain Troll</option><option value="troll_shaman">Troll Shaman</option><option value="bandit_enforcer">Bandit Enforcer</option><option value="loot_goblin">Loot Goblin</option><option value="bandit_trapper">Bandit Trapper</option><option value="troll_bandit_king">Troll Bandit King</option></select></label><NumberField label="Maximum actions per turn" value={selected.maxActionsPerTurn} min={1} onChange={(maxActionsPerTurn) => update({ maxActionsPerTurn: Math.max(1, Math.round(maxActionsPerTurn)) })} /><JsonObjectField label="Advanced enemy fields (JSON)" value={{ ...(selected.healOnAllyDeath ? { healOnAllyDeath: selected.healOnAllyDeath } : {}) }} onCommit={(fields) => update({ healOnAllyDeath: fields.healOnAllyDeath as EnemyDraft["healOnAllyDeath"] })} /><TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
+        <label><span>Behavior</span><select value={selected.behavior} onChange={(event) => update({ behavior: event.target.value as EnemyBehaviorKind })}><option value="priority">Data-owned tactics / priority</option><option value="single">Single ability</option><option value="rabid_rat">Rabid Rat</option><option value="brown_bear">Brown Bear</option><option value="forest_spirit">Forest Spirit</option><option value="goblin_longseer">Goblin Longseer</option><option value="goblin_woundfixer">Goblin Woundfixer</option><option value="goblin_biggrown">Goblin Biggrown</option><option value="goblin_chieftain">Goblin Chieftain</option><option value="hill_troll">Hill Troll</option><option value="mountain_troll">Mountain Troll</option><option value="troll_shaman">Troll Shaman</option><option value="bandit_enforcer">Bandit Enforcer</option><option value="loot_goblin">Loot Goblin</option><option value="bandit_trapper">Bandit Trapper</option><option value="troll_bandit_king">Troll Bandit King</option></select></label><NumberField label="Maximum actions per turn" value={selected.maxActionsPerTurn} min={1} onChange={(maxActionsPerTurn) => update({ maxActionsPerTurn: Math.max(1, Math.round(maxActionsPerTurn)) })} /><JsonObjectField label="Advanced enemy fields and tactical AI (JSON)" value={{ ...(selected.ai ? { ai: selected.ai } : {}), ...(selected.healOnAllyDeath ? { healOnAllyDeath: selected.healOnAllyDeath } : {}) }} onCommit={(fields) => update({ ai: fields.ai as EnemyDraft["ai"], healOnAllyDeath: fields.healOnAllyDeath as EnemyDraft["healOnAllyDeath"] })} /><TextField label="How they use their abilities" value={selected.behaviorNotes} onChange={(behaviorNotes) => update({ behaviorNotes })} textarea />
       </div></section>}
     </div>
   </EditorShell>;

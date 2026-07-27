@@ -34,6 +34,7 @@ export interface EnemyDraft {
   abilities: EnemyAbilityDraft[];
   behaviorNotes: string;
   behavior: EnemyBehaviorKind;
+  ai?: EnemyTemplate["ai"];
   maxActionsPerTurn: number;
   healOnAllyDeath?: EnemyTemplate["healOnAllyDeath"];
   accent: string;

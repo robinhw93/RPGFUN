@@ -19,8 +19,8 @@ import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/dev
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { applyAbilityFlatDamage } from "../src/game/combat/damage";
-import { createCombat, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
-import { getReadyEnemyAbility } from "../src/game/combat/enemyActions";
+import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
+import { getReadyEnemyAbility, type EnemyAiContext } from "../src/game/combat/enemyActions";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { fleeCombat } from "../src/game/flee";
 import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
@@ -717,6 +717,65 @@ function testHighfallEnemyBehaviorsAndLoot() {
   const runewovenTrigger = GEAR_SETS.find((set) => set.id === "set-runewoven")!.bonuses.find((bonus) => bonus.requiredPieces === 4)?.triggers?.[0];
   assert.deepEqual(runewovenTrigger?.conditions?.damageTypes, ["spell", "arcane", "fire", "frost", "lightning"], "Runewoven must cover every Magic damage school.");
   assert.equal(runewovenTrigger?.oncePerTurn, true, "Runewoven Energy restoration must trigger at most once per turn.");
+}
+
+function testTacticalEnemyAiCatalogAndSelection() {
+  const tacticalEnemies = Object.values(ENEMIES).filter((enemy) => enemy.ai);
+  assert.equal(tacticalEnemies.length, 75, "Every distinct enemy introduced from recommended level 4 onward needs data-owned tactical AI.");
+  tacticalEnemies.forEach((enemy) => {
+    const abilityIds = new Set(enemy.abilities.map((ability) => ability.id));
+    enemy.ai!.rules.forEach((rule) => assert.ok(abilityIds.has(rule.abilityId), `${enemy.name}'s tactical AI references a missing ability.`));
+    (enemy.ai!.fallbackAbilityIds ?? []).forEach((abilityId) => assert.ok(abilityIds.has(abilityId), `${enemy.name}'s tactical fallback references a missing ability.`));
+  });
+
+  const lateRegularEnemies = tacticalEnemies.filter((enemy) => /^enemy-a(?:[4-9]|1[0-2])-/.test(enemy.id) && !enemy.title.toLowerCase().includes("boss"));
+  assert.ok(lateRegularEnemies.every((enemy) => enemy.abilities.length >= 3), "Every late-campaign regular enemy needs at least three tactical tools.");
+  assert.ok(lateRegularEnemies.every((enemy) => enemy.abilities.every((ability) => !["Savage Strike", "Ruinous Bolt", "Relentless Pressure"].includes(ability.name))), "Late enemies must not retain generic placeholder ability names.");
+
+  const leech = createCombat(INITIAL_GAME.character, ["enemy-a4-bog-leech"]).enemies[0];
+  const healthyContext: EnemyAiContext = { playerHp: 100, playerMaxHp: 100, playerStatusIds: [] };
+  assert.equal(getReadyEnemyAbility(leech, [leech], healthyContext)?.name, "Open the Vein", "Bog Leech must create Bleed before attempting its payoff.");
+  assert.equal(getReadyEnemyAbility(leech, [leech], { ...healthyContext, playerStatusIds: ["bleed"] })?.name, "Blood-Swollen Lunge", "Bog Leech must exploit an existing Bleed with its payoff.");
+  const payoffCombat = combatWithActiveEnemy(["enemy-a4-bog-leech"], 0);
+  const payoffEnemy = payoffCombat.enemies[0];
+  const forcedPayoff = {
+    ...payoffCombat,
+    enemies: [{
+      ...payoffEnemy,
+      energy: payoffEnemy.maxEnergy,
+      hitChance: 100,
+      critChance: 0,
+      abilityCooldowns: {
+        "enemy-ability-a4-bog-leech-strike": 5,
+        "enemy-ability-a4-bog-leech-setup": 5,
+      },
+    }],
+  };
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    const plainPayoff = takeEnemyTurn(forcedPayoff, INITIAL_GAME.character, payoffEnemy.instanceId);
+    const bleedingPayoff = takeEnemyTurn({ ...forcedPayoff, playerStatuses: [createStatusEffect("bleed", { stacks: 1, duration: 3 })] }, INITIAL_GAME.character, payoffEnemy.instanceId);
+    const plainDamage = Math.max(...plainPayoff.pendingEffects.filter((effect) => "damage" in effect && effect.targetId === "player").map((effect) => "damage" in effect ? effect.damage : 0));
+    const bleedingDamage = Math.max(...bleedingPayoff.pendingEffects.filter((effect) => "damage" in effect && effect.targetId === "player").map((effect) => "damage" in effect ? effect.damage : 0));
+    assert.ok(bleedingDamage > plainDamage, "A status payoff must apply its executable target-status damage multiplier in real enemy-turn resolution.");
+    assert.equal(bleedingPayoff.enemies[0].lastAbilityId, "enemy-ability-a4-bog-leech-pressure", "Enemy turns must remember the resolved ability for cycling tactical fallbacks.");
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  const fenCombat = createCombat(INITIAL_GAME.character, ["enemy-a4-fen-witch", "enemy-a4-brood-guard"]);
+  const fenWitch = fenCombat.enemies[0];
+  assert.equal(getReadyEnemyAbility(fenWitch, fenCombat.enemies, healthyContext)?.name, "Fenward Covenant", "Fen Witch must protect an unwarded group before attacking.");
+  const woundedGroup = fenCombat.enemies.map((enemy, index) => index === 1 ? { ...enemy, hp: Math.floor(enemy.maxHp * 0.4) } : enemy);
+  assert.equal(getReadyEnemyAbility(fenWitch, woundedGroup, healthyContext)?.name, "Mire Mending", "Fen Witch must prioritize emergency healing over its group ward.");
+
+  const vespara = createCombat(INITIAL_GAME.character, ["enemy-a4-vespara-broodmother"]).enemies[0];
+  const setupStatus = vespara.abilities[0].statusApplications![0].status;
+  assert.equal(getReadyEnemyAbility(vespara, [vespara], healthyContext)?.name, "Brood Call", "A late boss must begin by applying its setup status.");
+  assert.equal(getReadyEnemyAbility(vespara, [vespara], { ...healthyContext, playerStatusIds: [setupStatus] })?.name, "Venom Deluge", "A late boss must convert its setup status into the charged execution.");
+  const woundedVespara = { ...vespara, hp: Math.floor(vespara.maxHp * 0.3) };
+  assert.equal(getReadyEnemyAbility(woundedVespara, [woundedVespara], healthyContext)?.name, "Matriarch's Fury", "A late boss must enter its unique low-Health phase before restarting the normal sequence.");
 }
 
 function testWindsongUncommonItemCollection() {
@@ -1455,6 +1514,32 @@ function testCombatConsumable() {
   assert.equal(remedyResolved.playerStatuses.some((status) => status.id === "poison"), false, "A status-removal consumable must clear its configured status at presentation time.");
 }
 
+function testStealthPotionLastsThroughNextTurn() {
+  const item = ITEMS.find((candidate): candidate is ConsumableItem => candidate.id === "consumable-ms2vgbcc-5hb8n" && isConsumableItem(candidate));
+  assert.ok(item, "The live Potion of Invisibility must exist as a consumable.");
+  assert.equal(item.description, "Gain Stealth until the end of your next turn.", "The potion must state Stealth's exact lifetime.");
+
+  const character = { ...structuredClone(INITIAL_GAME.character), name: "Stealth Tester", inventory: [structuredClone(item)] };
+  const created = createCombat(character, ["dummy"]);
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const combat = { ...created, turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")], activeTurnIndex: 0, initiativeRevealed: true };
+  const used = useConsumable(combat, character, item);
+  const resolved = resolveCombatEvent(used.combat, used.combat.eventId, 0);
+  assert.equal(resolved.playerStatuses.find((status) => status.id === "stealth")?.duration, 2, "Stealth used during the player's turn must cover the current and next turn-end ticks.");
+
+  const afterCurrentTurn = endPlayerTurn(resolved, used.character);
+  assert.equal(afterCurrentTurn.playerStatuses.find((status) => status.id === "stealth")?.duration, 1, "Stealth must remain after ending the turn in which the potion was used.");
+
+  const nextPlayerTurn = {
+    ...afterCurrentTurn,
+    activeTurnIndex: afterCurrentTurn.turnOrder.findIndex((entry) => entry.kind === "player"),
+    floatingEvents: [],
+    pendingEffects: [],
+  };
+  const afterNextTurn = endPlayerTurn(nextPlayerTurn, used.character);
+  assert.equal(afterNextTurn.playerStatuses.some((status) => status.id === "stealth"), false, "Stealth must expire when the player's next turn ends.");
+}
+
 function testIndependentItemDrops() {
   const firstItem = ITEMS.find((item) => !isGearItem(item));
   const secondItem = ITEMS.find((item) => !isGearItem(item) && item.id !== firstItem?.id);
@@ -1519,6 +1604,7 @@ testEnemyStartingEnergy();
 testEnemyEditorSynchronizesLiveDropTables();
 testGoblinEnemyBehaviors();
 testHighfallEnemyBehaviorsAndLoot();
+testTacticalEnemyAiCatalogAndSelection();
 testWindsongUncommonItemCollection();
 testIndependentItemDrops();
 testFleeCombatLossesAndReset();
@@ -1553,4 +1639,5 @@ testStructuredEventOutcome();
 testDirectEventMerchant();
 testResolvedMerchantPresentation();
 testCombatConsumable();
+testStealthPotionLastsThroughNextTurn();
 console.log("Arkenfall regression checks passed.");

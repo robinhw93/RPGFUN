@@ -193,11 +193,56 @@ function validateEnemyExchange(exchangeValue: unknown, itemIds: Set<string>, sta
           if (!statusIds.has(status)) throw new Error(`${name} references unknown status ${status}.`);
         });
       });
+      if (ability.targetStatusDamageBonus !== undefined) {
+        const bonus = catalogObject(ability.targetStatusDamageBonus, `${name} target status damage bonus`);
+        const status = catalogId(bonus.status, `${name} target bonus status`);
+        if (!statusIds.has(status)) throw new Error(`${name} references unknown target bonus status ${status}.`);
+        const multiplier = catalogNumber(bonus.multiplier, `${name} target status damage multiplier`, 0);
+        if (multiplier > 5) throw new Error(`${name} target status damage multiplier is too large.`);
+      }
       const { effect, ...sourceAbility } = ability;
       return { ...sourceAbility, description: effect };
     });
     catalogString(enemy.behaviorNotes, `${name} behavior notes`, true);
     if (!enemyBehaviors.has(enemy.behavior as string)) throw new Error(`${name} behavior is invalid.`);
+    if (enemy.ai !== undefined) {
+      const ai = catalogObject(enemy.ai, `${name} tactical AI`);
+      if (ai.fallback !== "ordered" && ai.fallback !== "cycle") throw new Error(`${name} tactical AI fallback is invalid.`);
+      if (!Array.isArray(ai.rules)) throw new Error(`${name} tactical AI rules must be a list.`);
+      const knownAbilityIds = new Set(abilityIds);
+      ai.rules.forEach((rawRule: unknown) => {
+        const rule = catalogObject(rawRule, `${name} tactical AI rule`);
+        const abilityId = catalogId(rule.abilityId, `${name} tactical AI ability ID`);
+        if (!knownAbilityIds.has(abilityId)) throw new Error(`${name} tactical AI references unknown ability ${abilityId}.`);
+        if (rule.all !== undefined && !Array.isArray(rule.all)) throw new Error(`${name} tactical AI conditions must be a list.`);
+        (rule.all ?? []).forEach((rawCondition: unknown) => {
+          const condition = catalogObject(rawCondition, `${name} tactical AI condition`);
+          const type = catalogString(condition.type, `${name} tactical AI condition type`);
+          if (["self_hp_below", "self_hp_above", "player_hp_below", "player_hp_above", "any_ally_hp_below"].includes(type)) {
+            const ratio = catalogNumber(condition.ratio, `${name} tactical AI health ratio`, 0);
+            if (ratio > 1) throw new Error(`${name} tactical AI health ratio cannot exceed 1.`);
+          } else if (["self_has_status", "self_missing_status", "player_has_status", "player_missing_status", "any_ally_missing_status"].includes(type)) {
+            const status = catalogId(condition.status, `${name} tactical AI status`);
+            if (!statusIds.has(status)) throw new Error(`${name} tactical AI references unknown status ${status}.`);
+          } else if (type === "living_allies_at_least") {
+            const count = catalogNumber(condition.count, `${name} tactical AI ally count`, 1);
+            if (!Number.isInteger(count)) throw new Error(`${name} tactical AI ally count must be a whole number.`);
+          } else if (type === "energy_at_least") {
+            catalogNumber(condition.amount, `${name} tactical AI Energy threshold`, 0);
+          } else if (type === "phase_is" || type === "phase_is_not") {
+            catalogString(condition.phase, `${name} tactical AI phase`);
+          } else if (type !== "no_other_living_allies") throw new Error(`${name} tactical AI condition ${type} is invalid.`);
+        });
+      });
+      if (ai.fallbackAbilityIds !== undefined) {
+        if (!Array.isArray(ai.fallbackAbilityIds)) throw new Error(`${name} tactical AI fallback abilities must be a list.`);
+        const fallbackIds = ai.fallbackAbilityIds.map((value: unknown) => catalogId(value, `${name} tactical AI fallback ability ID`));
+        assertUniqueIds(fallbackIds, `${name} tactical AI fallback ability`);
+        fallbackIds.forEach((abilityId: string) => {
+          if (!knownAbilityIds.has(abilityId)) throw new Error(`${name} tactical AI references unknown fallback ability ${abilityId}.`);
+        });
+      }
+    }
     const maxActionsPerTurn = catalogNumber(enemy.maxActionsPerTurn, `${name} maximum actions`, 1);
     if (!Number.isInteger(maxActionsPerTurn)) throw new Error(`${name} maximum actions must be a whole number.`);
     catalogString(enemy.accent, `${name} accent`);
