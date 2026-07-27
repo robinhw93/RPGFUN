@@ -63,6 +63,17 @@ function testDeveloperCharacterTools() {
   assert.equal(grantItemForTesting(character, item, Number.NaN).inventory.length, 1, "Invalid developer quantities must safely grant one copy.");
 }
 
+function testNewCharacterIntroductionDefaults() {
+  assert.equal(INITIAL_GAME.characterIntroductionStep, "attributes", "A new character must begin at the Attribute introduction step.");
+  assert.equal(INITIAL_GAME.character.unspentStatPoints, 2, "A new character must receive two starting Attribute Points.");
+  assert.equal(INITIAL_GAME.character.talentPoints, 1, "A new character must receive one starting Talent Point.");
+  assert.deepEqual(INITIAL_GAME.character.unlockedTalents, ["origin"], "Only Wayfarer's Spark may be unlocked before choosing a class.");
+  assert.equal(Object.values(INITIAL_GAME.character.equipment).filter(Boolean).length, 0, "The starting-item recommendation requires a new character to begin without equipped gear.");
+  const startingClasses = TALENTS.filter((talent) => talent.id !== "origin" && talent.kind === "class" && talent.requires.includes("origin"));
+  assert.equal(startingClasses.length, 4, "The introduction must offer four class nodes connected to Wayfarer's Spark.");
+  assert.ok(startingClasses.every((talent) => talent.cost === 1), "Every starting class node must cost the single starting Talent Point.");
+}
+
 function testCraftingMaterialArtworkLibrary() {
   assert.equal(CRAFTING_MATERIAL_ARTWORK_URLS.length, 21, "Metal Scrap and twenty reusable crafting-material icons must be available.");
   assert.equal(new Set(CRAFTING_MATERIAL_ARTWORK_URLS).size, CRAFTING_MATERIAL_ARTWORK_URLS.length, "Crafting-material icon URLs must be unique.");
@@ -709,6 +720,7 @@ function testIndependentItemDrops() {
 testAbilityFlatDamage();
 testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
+testNewCharacterIntroductionDefaults();
 testEnemyStartingEnergy();
 testGoblinEnemyBehaviors();
 testIndependentItemDrops();

@@ -18,12 +18,14 @@ Death is permanent. When combat reaches defeat, the browser save is deleted. The
 
 Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a compact clipped square image with clearance above the Health bar; enemies always use a thin dark-red portrait frame. Clicking the player's portrait opens the character's five current Attributes plus combat-adjusted stats such as Spell Power, Hit Chance, Critical Strike Chance, defenses, Initiative, and Energy. Temporary statuses are included there through the same rules used by combat, so Fierce raises the displayed Critical Strike Chance while Blind, Shatter, Slowed, Evasion, and Exhausted adjust their corresponding values. Clicking an enemy portrait opens the enemy's equally icon-led, combat-adjusted information.
 
+After creation, a new character follows a saved two-step introduction. The first step opens the Character stats page with 2 Attribute Points and reveals **Next** only after both are assigned. The second step opens Talents and reveals **Next** after the starting Talent Point is spent on one of the four non-origin class nodes. **Next** then opens Arkenfall Town. The Town **Shops** destination remains highlighted with a starting-item recommendation until the character equips an item for the first time. Buying an item is recommended but never required, so Adventures and every other Town destination remain available.
+
 Every new character starts with:
 
 - Level 1 and 0 experience.
 - 18 gold.
 - 1 talent point.
-- No unspent attribute points.
+- 2 unspent attribute points, assigned during the introduction.
 - Wayfarer's Spark unlocked.
 - No abilities equipped until the first class node is unlocked.
 - Strength 5, Agility 5, Intelligence 5, Vitality 5, and Luck 5.
@@ -367,7 +369,7 @@ The result is then multiplied by the target's healing-received multiplier and li
 
 ## Arkenfall Town
 
-**Arkenfall Town** is a persistent non-adventure hub shown above the adventure list. Its entry uses a cropped cover treatment of the town artwork without a category label or gradient background. Entering it does not start a stage or travel transition. Its generated environment artwork uses crop-safe focal points for desktop and narrow mobile screens. Vendor backgrounds are viewport-locked so changing between Shop and crafting tabs cannot alter their zoom: the Blacksmith keeps its tighter crop, the Alchemist keeps its wider crop, and the Tailor, Leatherworker, and Jeweler use centered cover crops. The environment image itself remains still; only separate ambient particles and interface entrances animate, with reduced-motion fallbacks.
+**Arkenfall Town** is a persistent non-adventure hub opened after the new-character introduction and available above the adventure list afterward. Its entry uses a cropped cover treatment of the town artwork without a category label or gradient background. Entering it does not start a stage or travel transition. Its generated environment artwork uses crop-safe focal points for desktop and narrow mobile screens. Vendor backgrounds are viewport-locked so changing between Shop and crafting tabs cannot alter their zoom: the Blacksmith keeps its tighter crop, the Alchemist keeps its wider crop, and the Tailor, Leatherworker, and Jeweler use centered cover crops. The environment image itself remains still; only separate ambient particles and interface entrances animate, with reduced-motion fallbacks.
 
 - **Blacksmith — Brunhilde von Trott** has **Shop** and **Crafting** tabs. Shop purchases deduct the item's configured Gold Cost and add a fresh copy to Inventory. A successful vendor purchase confirms the item with centered, non-blocking **“Item Name added to inventory.”** text that rises and fades; the item name keeps its rarity color. Errors and crafting results remain in the vendor's regular feedback panel. Crafting consumes the exact item quantities in the selected recipe and adds one crafted item.
 - **Alchemist — Ray Charlston** has **Shop** and **Brew** tabs. Purchases use the same persistent Inventory/gold rules, while Brew uses recipes assigned to the Alchemist. Selected vendor-service tabs use the shared gold interface treatment at all five vendors.
@@ -510,6 +512,6 @@ Gold is stored on the character and displayed in the top bar, the in-combat **In
 - Saves are local to the browser profile and exact site origin; they are not cloud-synced.
 - The reset button uses a game-owned confirmation dialog and deletes the save.
 - Defeat deletes the save without retaining a recoverable character.
-- Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, and reward state where possible.
+- Loading migrates older avatar, equipment metadata, removed talent refunds, two-hand/off-hand conflicts, ability loadouts, introduction state, and reward state where possible. Saves created before the introduction existed remain complete and are not redirected into it.
 
 Developer Talent, Enemy, Event, Adventure, Item, and Portrait Editor drafts use separate local-storage keys and are not deleted by the normal game-save reset. The developer launcher can also advance the current character by exactly one normal level, including the normal three Attribute Points and one Talent Point, or add 1–99 copies of any live item directly to the saved Inventory. Level grants are unavailable during active combat and stop at level 50; item grants remain available for consumable testing. While the local Vite server is running, Event Manager, Adventure Editor, and Item Editor Save validate and replace their complete canonical live catalogs. Restricted fields for existing enemies and existing talent/ability pairs use narrower direct writes; enemy ability mechanics still require implementation. Free-form item/set special notes are saved and exported but remain non-executable until implemented. Portrait crops use source-image percentage coordinates so the same selection renders consistently across desktop and mobile editor sizes.

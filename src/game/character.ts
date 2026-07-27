@@ -8,7 +8,7 @@ export const INITIAL_CHARACTER: CharacterState = {
   avatarId: DEFAULT_CHARACTER_AVATAR_ID,
   level: 1,
   xp: 0,
-  unspentStatPoints: 0,
+  unspentStatPoints: 2,
   gold: 18,
   baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 5, luck: 5 },
   talentPoints: 1,
@@ -21,6 +21,7 @@ export const INITIAL_CHARACTER: CharacterState = {
 
 export const INITIAL_GAME: GameState = {
   characterCreated: false,
+  characterIntroductionStep: "attributes",
   character: INITIAL_CHARACTER,
   adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
 };

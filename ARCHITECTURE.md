@@ -92,6 +92,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `characterCreated`: whether creation has completed.
 - `character`: persistent identity, progression, inventory, equipment, talents, and ability loadout.
 - `adventure`: current node, carried Health, combat, event state, reward snapshot, loot, and completion.
+- `characterIntroductionStep`: the saved new-character route through starting Attributes, the first class talent, and the optional starting-item recommendation in Town. Older saves normalize directly to complete.
 
 `CombatState` contains both authoritative logical results and presentation synchronization state:
 

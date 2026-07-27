@@ -265,7 +265,15 @@ export function AbilityLoadoutModal({ character, locked, onClose, onSelectSlot }
   );
 }
 
-export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSetAbilitySlot }: { character: CharacterState; locked: boolean; onUnlock: (id: string) => void; onToggleAbility: (id: string) => void; onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void }) {
+export function TalentsView({ character, locked, introduction = false, onNext, onUnlock, onToggleAbility, onSetAbilitySlot }: {
+  character: CharacterState;
+  locked: boolean;
+  introduction?: boolean;
+  onNext?: () => void;
+  onUnlock: (id: string) => void;
+  onToggleAbility: (id: string) => void;
+  onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void;
+}) {
   const [selectedTalentId, setSelectedTalentId] = useState<string | null>(null);
   const [selectedAbilitySlot, setSelectedAbilitySlot] = useState<number | null>(null);
   const [abilityLoadoutOpen, setAbilityLoadoutOpen] = useState(false);
@@ -282,6 +290,7 @@ export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSe
   const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
   const closeTalentDetails = useCallback(() => setSelectedTalentId(null), []);
   const closeAbilityLoadout = useCallback(() => setAbilityLoadoutOpen(false), []);
+  const startingClassUnlocked = TALENTS.some((talent) => talent.id !== "origin" && talent.kind === "class" && character.unlockedTalents.includes(talent.id));
   const padding = 260;
   const xs = TALENTS.map((talent) => talent.position.x / 100 * TALENT_TREE_CANVAS.width);
   const ys = TALENTS.map((talent) => talent.position.y / 100 * TALENT_TREE_CANVAS.height);
@@ -479,14 +488,18 @@ export function TalentsView({ character, locked, onUnlock, onToggleAbility, onSe
 
   return (
     <section className="page talents-page">
-      <div className="talent-loadout-actions">
+      {introduction && <aside className="character-introduction-guide talent-introduction-guide" aria-label="Talent introduction">
+        <div><p className="eyebrow">Getting Started · Step 2 of 2</p><h2>Choose Your First Path</h2><p>Spend your starting Talent Point on one of the four class nodes connected to Wayfarer's Spark.</p></div>
+        {startingClassUnlocked && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
+      </aside>}
+      {!introduction && <div className="talent-loadout-actions">
         <button type="button" className="talent-loadout-trigger" onClick={() => setAbilityLoadoutOpen(true)}>
           <Swords size={18} />
           <span><small>Combat Loadout</small><strong>Equipped Abilities</strong></span>
           <em>{character.equippedAbilities.length} / 6</em>
           <ChevronRight size={17} />
         </button>
-      </div>
+      </div>}
       {locked && <div className="lock-banner"><Shield size={15} /> Talents and ability loadouts are locked during combat.</div>}
       <div className="runtime-talent-stage">
         <div ref={treeScrollRef} className="talent-tree runtime-talent-tree" aria-label="Talent tree">

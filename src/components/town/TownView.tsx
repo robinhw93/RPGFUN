@@ -246,10 +246,11 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
   );
 }
 
-export function TownView({ game, maxHp, initialLocation = "square", onExit, onBuy, onCraft, onRest, onMeal }: {
+export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onExit, onBuy, onCraft, onRest, onMeal }: {
   game: GameState;
   maxHp: number;
   initialLocation?: Extract<TownLocation, "square" | "tavern">;
+  recommendStartingItem?: boolean;
   onExit: () => void;
   onBuy: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
   onCraft: (station: ArkenfallVendorId, itemId: string) => TownActionResult;
@@ -288,6 +289,7 @@ export function TownView({ game, maxHp, initialLocation = "square", onExit, onBu
     <section className="town-location town-square">
       <div className="town-square-light" aria-hidden="true" />
       <header className="town-square-header"><button type="button" className="town-back-button" onClick={onExit}><ArrowLeft /> Adventures</button><p className="eyebrow">Safe Haven</p><h1>Arkenfall</h1><p>Trade, craft, replenish your supplies, and rest before the road calls again.</p><div className="town-square-resources"><span><GoldIcon /> {game.character.gold} Gold</span><span><HeartPulse /> {currentHp} / {maxHp} Health</span></div></header>
+      {recommendStartingItem && <aside className="town-starting-item-prompt" aria-label="Starting item recommendation"><div><p className="eyebrow">Shops</p><h2>Choose a Starting Item</h2><small>It is recommended that you purchase one starting item before going on an adventure.</small></div></aside>}
       <div className="town-destination-grid">
         {(["blacksmith", "alchemist", "tailor", "leatherworker", "jeweler"] as ArkenfallVendorId[]).map((vendor) => {
           const presentation = VENDOR_PRESENTATION[vendor];

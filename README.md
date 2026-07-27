@@ -45,7 +45,7 @@ The checks run focused gameplay regressions, verify documentation against the li
 
 ## Current playable scope
 
-- Character creation with ten selectable appearances and permadeath.
+- Character creation with ten selectable appearances, a guided Attribute/Talent introduction, and permadeath.
 - Five base attributes and ten displayed derived combat stats.
 - Windsong Forest: a nine-stage story route mixing fixed combats, weighted combat/event stages, a Wandering Merchant, and a final Forest Spirit encounter; completed story adventures remain visible and can be replayed for 10% of their original XP and 50% of their original combat Gold rewards.
 - Arkenfall Town: a responsive illustrated hub above the adventure list with dedicated Blacksmith, Alchemist, Tailor, Leatherworker, Jeweler, and tavern destinations; five data-driven shops/crafting stations; paid recovery; and next-combat meals.

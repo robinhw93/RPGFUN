@@ -931,6 +931,8 @@ export interface CharacterState {
   completedAdventureIds: string[];
 }
 
+export type CharacterIntroductionStep = "attributes" | "talents" | "town" | "complete";
+
 export interface AdventureNode {
   id: string;
   type: "combat" | "event" | "boss";
@@ -1101,6 +1103,7 @@ export interface AdventureProgress {
 
 export interface GameState {
   characterCreated: boolean;
+  characterIntroductionStep: CharacterIntroductionStep;
   character: CharacterState;
   adventure: AdventureProgress;
 }

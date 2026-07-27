@@ -1,4 +1,4 @@
-import type { GameState } from "./types";
+import type { CharacterIntroductionStep, GameState } from "./types";
 import { ITEMS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
@@ -15,6 +15,8 @@ const REMOVED_TALENT_COSTS: Record<string, number> = {
   arcanist_2: 1,
   arcanist_3: 2,
 };
+
+const CHARACTER_INTRODUCTION_STEPS = new Set<CharacterIntroductionStep>(["attributes", "talents", "town", "complete"]);
 
 export function loadGame(): GameState | null {
   try {
@@ -60,9 +62,16 @@ export function loadGame(): GameState | null {
       inventory.push(equipment.offHand);
       delete equipment.offHand;
     }
+    const savedIntroductionStep = (state as { characterIntroductionStep?: unknown }).characterIntroductionStep;
+    const characterIntroductionStep = typeof savedIntroductionStep === "string" && CHARACTER_INTRODUCTION_STEPS.has(savedIntroductionStep as CharacterIntroductionStep)
+      ? savedIntroductionStep as CharacterIntroductionStep
+      : "complete";
     return {
       ...state,
       characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
+      characterIntroductionStep: characterIntroductionStep === "town" && Object.values(equipment).some(Boolean)
+        ? "complete"
+        : characterIntroductionStep,
       character: {
         ...state.character,
         avatarId: normalizeCharacterAvatarId(state.character.avatarId),
