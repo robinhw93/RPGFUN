@@ -14,8 +14,8 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, EnemyAbilityDefinition, EnemyAiCondition, EnemyState, InspectableInfo, StatusEffectId } from "../types";
-import { getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
-import { absorptionSuffix, makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueHeal, queueHealAtEvent, queuePassiveAnimation, queueStatus, queueStatusReconciliation, statusInfo } from "./eventQueue";
+import { applyDamageToPlayer, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, isPlayerActionBlockingStatus, wakeFromDamage } from "./damage";
+import { absorptionSuffix, makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueHeal, queueHealAtEvent, queuePassiveAnimation, queuePlayerSurvivalWindow, queueStatus, queueStatusReconciliation, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, moveToNextActor, processTurnEnd, processTurnStart, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyTargetable, normalizeEnemies } from "./state";
 
@@ -155,6 +155,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   const displayedPlayerStatuses = combat.playerStatuses;
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
+  let playerActionSurvivalPending = combat.playerActionSurvivalPending ?? false;
   let playerEnergy = combat.energy;
   let goldStolen = combat.goldStolen ?? 0;
   let playerAbilityCooldowns = combat.abilityCooldowns;
@@ -166,7 +167,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   const continuingEnemyTurn = (combat.enemyActionsTaken ?? 0) > 0;
   let statusResolutionEventIndex: number | null = null;
   const enemyStart = continuingEnemyTurn
-    ? { hp: originalEnemy.hp, statuses: originalEnemy.statuses, burnDamage: 0, burnEventIndex: null, skipTurn: false }
+    ? { hp: originalEnemy.hp, statuses: originalEnemy.statuses, burnDamage: 0, burnEventIndex: null, skipTurn: false, playerActionSurvivalPending: false }
     : processTurnStart(
       originalEnemy.hp,
       originalEnemy.maxHp,
@@ -229,7 +230,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     playerAbilityCooldowns = burnTriggers.state.abilityCooldowns ?? playerAbilityCooldowns;
     enemy = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId) ?? enemy;
   }
-  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, goldStolen };
+  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, playerActionSurvivalPending, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, goldStolen };
   const aiContext = (): EnemyAiContext => ({ playerHp, playerMaxHp: combat.playerMaxHp, playerStatusIds: playerStatuses.map((status) => status.id) });
   const enemyAbility = getReadyEnemyAbility(enemy, enemies, aiContext());
   let usedAbility = false;
@@ -278,7 +279,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     } else if (!enemyAbility.damageType) {
       logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name}.`, enemyAttackInfo));
       (enemyAbility.statusApplications ?? []).forEach((application) => {
-        if (derived.statusImmunities.includes(application.status) || Math.random() >= (application.chance ?? 1)) return;
+        if (derived.statusImmunities.includes(application.status) || (playerActionSurvivalPending && isPlayerActionBlockingStatus(application.status)) || Math.random() >= (application.chance ?? 1)) return;
         const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
         playerStatuses = addOrRefreshStatus(playerStatuses, status);
         logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
@@ -392,12 +393,18 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       const blocked = absorption.absorbed;
       const damage = absorption.damage;
       const hpBefore = playerHp;
-      playerHp = Math.max(0, playerHp - damage);
-      playerStatuses = wakeFromDamage(absorption.statuses, damage);
+      const playerDamage = applyDamageToPlayer(playerHp, combat.playerMaxHp, absorption.statuses, damage, playerActionSurvivalPending);
+      playerHp = playerDamage.hp;
+      playerStatuses = playerDamage.statuses;
+      playerActionSurvivalPending = playerDamage.survivalPending;
       logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name} for ${damage}${critical ? " critical" : ""}${blocked ? ` (${blocked} blocked)` : ""} damage.`, enemyAttackInfo));
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, sourceLabel: critical ? "Crit" : undefined });
       queueAbilityVfx(pendingEffects, damageEventIndex, enemyAbility.vfx, "player", enemy.instanceId);
       queueAbsorptionChanges(pendingEffects, damageEventIndex, "player", absorption);
+      if (playerDamage.removedStatusIds.length > 0) {
+        logs.push(makeLog("Heavy damage breaks your control effects and gives you a chance to act."));
+        queuePlayerSurvivalWindow(pendingEffects, damageEventIndex, playerDamage.removedStatusIds);
+      }
       const stolen = Math.min(Math.max(0, enemyAbility.stealGold ?? 0), Math.max(0, character.gold));
       if (stolen > 0) {
         goldStolen += stolen;
@@ -417,7 +424,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         queueStatus(events, pendingEffects, "You become Chained.", "player", chained, false, damageEventIndex, enemy.instanceId);
       }
       if (damage > 0) (enemyAbility.statusApplications ?? []).forEach((application) => {
-        if (derived.statusImmunities.includes(application.status)) return;
+        if (derived.statusImmunities.includes(application.status) || (playerActionSurvivalPending && isPlayerActionBlockingStatus(application.status))) return;
         let applications = 0;
         for (let hit = 0; hit < successfulHits; hit += 1) if (Math.random() < (application.chance ?? 1)) applications += application.stacks ?? 1;
         if (applications <= 0) return;
@@ -538,7 +545,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
 
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
   const enemyActionsTaken = usedAbility ? (combat.enemyActionsTaken ?? 0) + 1 : combat.enemyActionsTaken ?? 0;
-  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, enemyActionsTaken, goldStolen };
+  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, playerActionSurvivalPending, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, enemyActionsTaken, goldStolen };
   const nextEnemyAbility = getReadyEnemyAbility(enemy, enemies, aiContext());
   const nextAbilityBlockedByStealth = Boolean(
     nextEnemyAbility
@@ -678,7 +685,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   } else {
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, statuses: decrementStatusDurations(candidate.statuses) } : candidate);
   }
-  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage };
+  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, playerActionSurvivalPending, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage };
 
   const resolvedEnemyStatuses = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId)?.statuses ?? [];
   const reconciliationEventIndex = statusResolutionEventIndex ?? events.length - 1;

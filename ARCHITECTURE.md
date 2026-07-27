@@ -165,7 +165,7 @@ Passives aggregate additively into:
 - Status-preservation behavior.
 - Status immunities, guaranteed and chance-based companion applications, and additional applied stacks.
 - Starting combat statuses, Max-Health-scaled Guard/Barrier, and full-Health combat-start self damage that bypasses absorption.
-- Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, reusable first-lethal-hit prevention, status-consuming death prevention, and guaranteed hits above configured status-stack thresholds.
+- Energy-based incoming-damage reduction, Stunned-state incoming-damage multipliers, reusable first-lethal-hit prevention, status-consuming death prevention, the player-only post-control survival window, and guaranteed hits above configured status-stack thresholds.
 - Percentage Armor bonuses, applied after flat and Strength-derived Armor.
 
 New generally reusable static bonuses belong in `PassiveBonuses`, not UI conditions or talent-ID branches.
@@ -321,7 +321,7 @@ Abilities may declare a data-driven `vfx` kind. Resolution converts its `ability
 Direct attack damage has two presentation phases:
 
 1. `primeCombatAttack` runs as the damage message appears, marks the attacker, and starts the backstep/charge animation.
-2. After `attackImpactMs`, `resolveCombatEvent` applies damage, wakes Sleep or Frozen when relevant, marks the damaged target, and updates the HP bar.
+2. After `attackImpactMs`, `resolveCombatEvent` applies damage, resolves enemy wake-up or the player's low-Health control break when relevant, marks the damaged target, and updates the HP bar.
 
 Statuses attached to that same event index resolve at impact with damage. Non-attack effects resolve as soon as their floating message appears.
 

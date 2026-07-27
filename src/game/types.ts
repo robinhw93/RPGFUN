@@ -915,6 +915,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "enemy_charge"; targetId: string; abilityId?: string }
   | { id: string; eventIndex: number; type: "enemy_flee"; targetId: string }
+  | { id: string; eventIndex: number; type: "player_survival_window"; removedStatusIds: StatusEffectId[] }
   | { id: string; eventIndex: number; type: "outcome"; outcome: "victory" | "defeat" }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
@@ -945,6 +946,8 @@ export interface CombatState {
   pendingEffects: CombatPendingEffect[];
   procUsage: Record<string, { lastTriggeredTurn: number; eventCount?: number; eventCountTurn?: number }>;
   deathPreventionUsed: boolean;
+  /** Keeps the player at 1 Health after control is broken until they complete a real action. */
+  playerActionSurvivalPending: boolean;
   playerHasTakenDamage: boolean;
   playerHasMissed: boolean;
   nextTurnEnergyRegenBonus: number;

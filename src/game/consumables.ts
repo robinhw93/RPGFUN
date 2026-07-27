@@ -147,6 +147,7 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
       floatingEvents: events,
       pendingEffects,
       playerActed: true,
+      playerActionSurvivalPending: false,
       damagedTargets: [],
       missedTargets: [],
       damageAmounts: {},

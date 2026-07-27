@@ -13,8 +13,8 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "../types";
-import { createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
-import { absorptionSuffix, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueOutcome, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueTurn, queueTurnAtEvent, statusInfo } from "./eventQueue";
+import { applyDamageToPlayer, createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
+import { absorptionSuffix, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueOutcome, queuePassiveAnimation, queuePlayerSurvivalWindow, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueTurn, queueTurnAtEvent, statusInfo } from "./eventQueue";
 import { reorderCombat } from "./state";
 
 export interface StatusTurnResult {
@@ -25,6 +25,7 @@ export interface StatusTurnResult {
   burnEventIndex: number | null;
   healing: number;
   healingEventIndex: number | null;
+  playerActionSurvivalPending: boolean;
 }
 
 export function processTurnStart(
@@ -41,6 +42,7 @@ export function processTurnStart(
   armor = 0,
   magicResistance = 0,
   playerStatusDamageMultiplier = 1,
+  playerActionSurvivalPending = false,
 ): StatusTurnResult {
   let nextHp = hp;
   let nextStatuses = [...statuses];
@@ -48,6 +50,7 @@ export function processTurnStart(
   let burnEventIndex: number | null = null;
   let healing = 0;
   let healingEventIndex: number | null = null;
+  let survivalPending = playerActionSurvivalPending;
   // One-round defensive effects protect the owner until their next turn begins.
   nextStatuses = nextStatuses.filter((status) => status.expiresAtTurnStart !== true && (status.id !== "stealth" || status.expiresAtTurnStart === false) && status.id !== "guard");
   const burn = nextStatuses.find((status) => status.id === "burn");
@@ -56,13 +59,21 @@ export function processTurnStart(
     const absorption = absorbIncomingDamage(nextStatuses, Math.round(getAfflictionDamage(burn, nextStatuses, sourceMultiplier, armor, magicResistance) * incomingDamageMultiplier));
     const damage = absorption.damage;
     burnDamage = damage;
-    nextHp = Math.max(0, nextHp - damage);
-    nextStatuses = wakeFromDamage(absorption.statuses, damage);
+    const playerDamage = targetId === "player"
+      ? applyDamageToPlayer(nextHp, maxHp, absorption.statuses, damage, survivalPending)
+      : null;
+    nextHp = playerDamage?.hp ?? Math.max(0, nextHp - damage);
+    nextStatuses = playerDamage?.statuses ?? wakeFromDamage(absorption.statuses, damage);
+    survivalPending = playerDamage?.survivalPending ?? survivalPending;
     const text = targetId === "player" ? `You take ${damage} damage from Burn${absorptionSuffix(absorption.absorbed)}.` : `${targetName} takes ${damage} damage from Burn${absorptionSuffix(absorption.absorbed)}.`;
     logs.push(makeLog(text, statusInfo(burn)));
     const damageEventIndex = queueDamage(events, pendingEffects, text, targetId, damage, { sourceLabel: burn.name });
     burnEventIndex = damageEventIndex;
     queueAbsorptionChanges(pendingEffects, damageEventIndex, targetId, absorption);
+    if (playerDamage?.removedStatusIds.length) {
+      logs.push(makeLog("Heavy damage breaks your control effects and gives you a chance to act."));
+      queuePlayerSurvivalWindow(pendingEffects, damageEventIndex, playerDamage.removedStatusIds);
+    }
   }
 
   const regenerate = nextStatuses.find((status) => status.id === "regenerate");
@@ -86,7 +97,7 @@ export function processTurnStart(
       const eventText = targetId === "player" ? "You are asleep and skip the turn." : `${targetName} is asleep and skips the turn.`;
       logs.push(makeLog(logText, statusInfo(sleeping)));
       events.push(eventText);
-      return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
+      return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
     }
   }
 
@@ -96,7 +107,7 @@ export function processTurnStart(
     const eventText = targetId === "player" ? "You are Stunned and skip the turn." : `${targetName} is Stunned and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(stunned)));
     events.push(eventText);
-    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
+    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
   }
 
   const frozen = nextStatuses.find((status) => status.id === "frozen");
@@ -105,19 +116,19 @@ export function processTurnStart(
     const eventText = targetId === "player" ? "You are Frozen and skip the turn." : `${targetName} is Frozen and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(frozen)));
     events.push(eventText);
-    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
+    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
   }
 
   const electrified = nextStatuses.find((status) => status.id === "electrified");
-  if (electrified && canApplyStatusEffect(nextStatuses, "stunned") && Math.random() < 0.1) {
+  if (electrified && !(targetId === "player" && survivalPending) && canApplyStatusEffect(nextStatuses, "stunned") && Math.random() < 0.1) {
     nextStatuses = addOrRefreshStatus(nextStatuses, createStatusEffect("stunned", { sourceId: electrified.sourceId }));
     const logText = targetId === "player" ? "You are Stunned by Electrified." : `${targetName} is Stunned by Electrified.`;
     const eventText = targetId === "player" ? "You are Stunned by Electrified and skip the turn." : `${targetName} is Stunned by Electrified and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(electrified)));
     events.push(eventText);
-    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex };
+    return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
   }
-  return { hp: nextHp, statuses: nextStatuses, skipTurn: false, burnDamage, burnEventIndex, healing, healingEventIndex };
+  return { hp: nextHp, statuses: nextStatuses, skipTurn: false, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
 }
 
 export function processTurnEnd(
@@ -226,6 +237,7 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
   if (completedActorId) actedActorIds.add(completedActorId);
   combat = { ...combat, actedActorIds: [...actedActorIds], enemyActionsTaken: 0 };
   combat = reorderCombat(combat);
+  if (combat.playerActionSurvivalPending && combat.playerHp <= 0) combat = { ...combat, playerHp: 1 };
   const derived = getDerivedStats(character);
   const saved = applyPlayerDeathPrevention(combat.playerHp, combat.playerStatuses, combat.deathPreventionUsed, combat.playerMaxHp, derived, logs, events, pendingEffects, 1);
   const savedTriggers = runDeathPreventionHealingTriggers(
@@ -308,7 +320,7 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
     );
     const playerTurnEventIndex = events.length;
     queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy, 0, refreshedCooldowns, nextActor.actorId);
-    const playerStart = processTurnStart(next.playerHp, next.playerMaxHp, next.playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier, getEnergyDefenseMultiplier(derived, next.energy, next.playerStatuses), derived.armor, derived.magicResistance, derived.statusDamageMultipliers.burn ?? 1);
+    const playerStart = processTurnStart(next.playerHp, next.playerMaxHp, next.playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier, getEnergyDefenseMultiplier(derived, next.energy, next.playerStatuses), derived.armor, derived.magicResistance, derived.statusDamageMultipliers.burn ?? 1, next.playerActionSurvivalPending);
     const burnTriggers = playerStart.burnDamage > 0 && playerStart.burnEventIndex !== null
       ? runPlayerTriggerEvent(
         "damage_taken",
@@ -362,6 +374,7 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
       energy: startSavedTriggers.state.energy,
       procUsage: startSavedTriggers.procUsage,
       playerHasTakenDamage: next.playerHasTakenDamage || playerStart.burnDamage > 0,
+      playerActionSurvivalPending: playerStart.playerActionSurvivalPending,
       deathPreventionUsed: startSaved.used,
       nextTurnEnergyRegenBonus: 0,
       playerActed: false,
@@ -382,7 +395,8 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
     if (playerStart.skipTurn) {
       const decrementedStatuses = decrementStatusDurations(next.playerStatuses);
       if (events.length > 0) queueStatusReconciliation(pendingEffects, events.length - 1, "player", next.playerStatuses, decrementedStatuses);
-      const skipped = moveToNextActor({ ...next, activeTurnIndex: nextIndex, turn: nextTurn, playerStatuses: decrementedStatuses }, character, logs, events, pendingEffects);
+      if (!next.playerActionSurvivalPending && events.length > 0) queuePlayerSurvivalWindow(pendingEffects, events.length - 1);
+      const skipped = moveToNextActor({ ...next, activeTurnIndex: nextIndex, turn: nextTurn, playerStatuses: decrementedStatuses, playerActionSurvivalPending: true }, character, logs, events, pendingEffects);
       return { ...skipped, activeTurnIndex: combat.activeTurnIndex, turn: combat.turn };
     }
   } else if (events.length > 0) {

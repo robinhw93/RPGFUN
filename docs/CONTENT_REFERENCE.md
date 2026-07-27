@@ -417,7 +417,7 @@ The duration is the default duration created by the status library. Ability or t
 | Shatter | 3 turns | No | Effective Armor is reduced by 50%. |
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |
 | Chained | 2 turns | No | Cannot flee. Enemy attack abilities in recommended-level-6-and-higher story encounters have one 10% chance to apply it when at least one hit lands. |
-| Stunned | 1 turn | No | Skips the next turn, then grants Diminishing Returns for 3 turns. |
+| Stunned | 1 turn | No | Skips the next turn, then grants Diminishing Returns for 3 turns. On the player, breaks when damage leaves them below 30% Health. |
 | Exhausted | 1 turn | No | Energy regeneration is limited to 1 on the next turn. |
 | Slowed | 1 turn | No | Sets Initiative to 0 until the end of the affected combatant's next turn. It cannot grant another action in the current round. |
 | Reckless | 3 turns | No | Takes damage equal to 50% of direct damage it deals, rounded with a minimum of 1. |
@@ -425,14 +425,16 @@ The duration is the default duration created by the status library. Ability or t
 | Electrified | 3 turns | No | Has a 10% chance at turn start to become Stunned and skip that turn. |
 | Cold | 3 turns | No | Takes 50% more Frost damage and 50% less Lightning damage. |
 | Charred | 3 turns | No | Takes 50% more Fire damage and 50% less Frost damage. |
-| Frozen | 1 turn | No | Cannot act and skips the next turn; ends immediately when damage is taken. |
+| Frozen | 1 turn | No | Cannot act and skips the next turn. Enemies thaw upon taking damage; the player breaks free when damage leaves them below 30% Health. |
 | Blind | 3 turns | No | Raw Hit Chance is reduced by 75% before the target's Dodge Chance and the global 20% minimum final Hit Chance are applied. |
 | Nullify | Until the end of your next turn | No | Spell Power is reduced by 90%. |
 | Disarm | Until the end of your next turn | No | Physical Power is reduced by 90%. |
 | Arcane Wound | 3 turns | Yes | Each existing stack adds 10% of the caster's Spell Power to Arcane Blast against the afflicted target; Arcane Knowledge raises this to 15%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Smite | 3 turns | No | Whenever the player restores Health, takes Magic damage equal to 50% of the Health actually restored. |
-| Sleep | 3 turns | No | Cannot act; has a 20% chance to wake at turn start and wakes immediately when taking damage. |
+| Sleep | 3 turns | No | Cannot act and has a 20% chance to wake at turn start. Enemies wake upon taking damage; the player wakes when damage leaves them below 30% Health. |
+
+For the player only, crossing below 30% Health while affected by Stunned, Frozen, or Sleep removes all three action-blocking controls and starts a survival window. The player remains at a minimum of 1 Health and cannot receive another action-blocking control until using an ability or consumable, or ending the turn. The same window starts when one of these effects actually skips the player's turn. Enemies receive neither the low-Health control break nor the survival window.
 
 ## Enemies
 

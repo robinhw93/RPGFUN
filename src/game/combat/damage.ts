@@ -5,10 +5,47 @@ import {
   getIncomingDamageMultiplier,
   getOutgoingDamageMultiplier,
   getStatusDamage,
+  grantDiminishingReturnsAfterStun,
   hasStatus,
   isMagicalDamage
 } from "../statusEffects";
-import type { Ability, DamageType, StatusEffect } from "../types";
+import type { Ability, DamageType, StatusEffect, StatusEffectId } from "../types";
+
+export const PLAYER_ACTION_BLOCKING_STATUS_IDS = ["sleep", "stunned", "frozen"] as const satisfies readonly StatusEffectId[];
+
+export function isPlayerActionBlockingStatus(statusId: StatusEffectId): boolean {
+  return PLAYER_ACTION_BLOCKING_STATUS_IDS.some((candidate) => candidate === statusId);
+}
+
+export interface PlayerDamageResult {
+  hp: number;
+  statuses: StatusEffect[];
+  survivalPending: boolean;
+  removedStatusIds: StatusEffectId[];
+}
+
+/** Player-only low-Health control break. Enemy wake-up rules remain unchanged. */
+export function applyDamageToPlayer(
+  hp: number,
+  maxHp: number,
+  statuses: StatusEffect[],
+  damage: number,
+  survivalPending = false,
+): PlayerDamageResult {
+  const projectedHp = Math.max(0, hp - Math.max(0, damage));
+  const blockingStatuses = statuses.filter((status) => isPlayerActionBlockingStatus(status.id));
+  const breaksControl = damage > 0 && blockingStatuses.length > 0 && projectedHp < maxHp * 0.3;
+  const nextSurvivalPending = survivalPending || breaksControl;
+  const statusesWithoutControl = breaksControl
+    ? statuses.filter((status) => !isPlayerActionBlockingStatus(status.id))
+    : statuses;
+  return {
+    hp: nextSurvivalPending ? Math.max(1, projectedHp) : projectedHp,
+    statuses: breaksControl ? grantDiminishingReturnsAfterStun(statuses, statusesWithoutControl) : statusesWithoutControl,
+    survivalPending: nextSurvivalPending,
+    removedStatusIds: breaksControl ? blockingStatuses.map((status) => status.id) : [],
+  };
+}
 
 export function getOffensivePower(derived: ReturnType<typeof getDerivedStats>, damageType?: DamageType): number {
   return isMagicalDamage(damageType) ? derived.magicalPower : derived.physicalPower;

@@ -35,7 +35,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   weaken: { id: "weaken", name: "Weaken", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Deals 25% less damage." },
   shatter: { id: "shatter", name: "Shatter", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Armor is reduced by 50%." },
   vulnerable: { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 25% more damage from all sources." },
-  stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stackable: false, description: "Skips the next turn. When Stunned ends, gain Diminishing Returns for 3 turns." },
+  stunned: { id: "stunned", name: "Stunned", kind: "debuff", duration: 1, stackable: false, description: "Skips the next turn. For players, heavy damage below 30% Health breaks Stunned. When Stunned ends, gain Diminishing Returns for 3 turns." },
   diminishingReturns: { id: "diminishingReturns", name: "Diminishing Returns", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Cannot become Stunned." },
   exhausted: { id: "exhausted", name: "Exhausted", kind: "debuff", duration: 1, description: "Regains only 1 Energy at the start of the next turn." },
   slowed: { id: "slowed", name: "Slowed", kind: "debuff", duration: 1, description: "Initiative is reduced to 0 until the end of the next turn." },
@@ -50,13 +50,13 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   chargedUp: { id: "chargedUp", name: "Charged Up", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 2, description: "Each stack grants +2 Initiative until combat ends." },
   burningMomentum: { id: "burningMomentum", name: "Burning Momentum", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, stackable: true, initiativePerStack: 1, description: "Each stack grants +1 Initiative until combat ends." },
   smite: { id: "smite", name: "Smite", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Whenever the player restores Health, take Magic Damage equal to 50% of the Health restored." },
-  frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
+  frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Enemies thaw upon taking damage; players break free when damage leaves them below 30% Health." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },
   nullify: { id: "nullify", name: "Nullify", kind: "debuff", duration: 1, description: "Spell Power is reduced by 90% until the end of your next turn." },
   disarm: { id: "disarm", name: "Disarm", kind: "debuff", duration: 1, description: "Physical Power is reduced by 90% until the end of your next turn." },
   chained: { id: "chained", name: "Chained", kind: "debuff", duration: 2, description: "Cannot flee for 2 turns." },
-  sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
+  sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn. Enemies wake upon taking damage; players wake when damage leaves them below 30% Health." },
 };
 
 export function createStatusEffect(id: StatusEffectId, options: Partial<Pick<StatusEffect, "duration" | "stacks" | "description" | "sourcePower" | "sourceId" | "magnitude" | "expiresAtTurnStart">> = {}): StatusEffect {

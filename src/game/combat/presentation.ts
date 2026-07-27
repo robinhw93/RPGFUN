@@ -5,7 +5,7 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CombatPendingEffect, CombatState } from "../types";
-import { wakeFromDamage } from "./damage";
+import { isPlayerActionBlockingStatus, wakeFromDamage } from "./damage";
 import { isEnemyTargetable, reorderCombat } from "./state";
 
 export function resolveCombatEvent(combat: CombatState, eventId: number, eventIndex: number): CombatState {
@@ -22,6 +22,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let energy = combat.energy;
   let abilityCooldowns = combat.abilityCooldowns;
   let nextTurnEnergyRegenBonus = combat.nextTurnEnergyRegenBonus ?? 0;
+  let playerActionSurvivalPending = combat.playerActionSurvivalPending ?? false;
   let playerHasTakenDamage = combat.playerHasTakenDamage ?? false;
   let attackingActorId = combat.attackingActorId;
   let activeActorId = combat.turnOrder[combat.activeTurnIndex]?.actorId;
@@ -62,6 +63,13 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
         : enemy);
       return;
     }
+    if (effect.type === "player_survival_window") {
+      const nextStatuses = playerStatuses.filter((status) => !effect.removedStatusIds.includes(status.id));
+      playerStatuses = grantDiminishingReturnsAfterStun(playerStatuses, nextStatuses);
+      playerActionSurvivalPending = true;
+      playerHp = Math.max(1, playerHp);
+      return;
+    }
     if (effect.type === "outcome") {
       explicitOutcome = effect.outcome;
       return;
@@ -76,6 +84,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     }
     if (effect.type === "set_status") {
       if (effect.targetId === "player") {
+        if (playerActionSurvivalPending && isPlayerActionBlockingStatus(effect.status.id)) return;
         if (canApplyStatusEffect(playerStatuses, effect.status.id)) {
           playerStatuses = [...playerStatuses.filter((status) => status.id !== effect.status.id), effect.status];
         }
@@ -103,6 +112,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     }
     if (effect.type === "status") {
       if (effect.targetId === "player") {
+        if (playerActionSurvivalPending && isPlayerActionBlockingStatus(effect.status.id)) return;
         playerStatuses = addOrRefreshStatus(playerStatuses, effect.status);
       } else {
         enemies = enemies.map((enemy) => {
@@ -134,8 +144,8 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       return;
     }
     if (effect.targetId === "player") {
-      playerHp = Math.max(0, playerHp - effect.damage);
-      playerStatuses = wakeFromDamage(playerStatuses, effect.damage);
+      const projectedHp = Math.max(0, playerHp - effect.damage);
+      playerHp = playerActionSurvivalPending ? Math.max(1, projectedHp) : projectedHp;
       if (effect.damage > 0) {
         damagedTargets.push("player");
         playerHasTakenDamage = true;
@@ -181,7 +191,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const stableActiveTurnIndex = activeActorId
     ? Math.max(0, combat.turnOrder.findIndex((actor) => actor.actorId === activeActorId))
     : activeTurnIndex;
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageAmounts, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerActionSurvivalPending, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageAmounts, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {

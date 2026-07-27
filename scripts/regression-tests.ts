@@ -19,7 +19,8 @@ import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
-import { applyAbilityFlatDamage } from "../src/game/combat/damage";
+import { applyAbilityFlatDamage, applyDamageToPlayer, wakeFromDamage } from "../src/game/combat/damage";
+import { moveToNextActor } from "../src/game/combat/flow";
 import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
 import { CHAINED_ENEMY_MIN_LEVEL, CHAINED_ON_ATTACK_CHANCE, getReadyEnemyAbility, shouldApplyChainedOnEnemyAttack, type EnemyAiContext } from "../src/game/combat/enemyActions";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
@@ -30,7 +31,7 @@ import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getStatusDamage } from "../src/game/statusEffects";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
-import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
+import type { AdventureEventChoice, CombatState, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
 
 function testGearIconLibrary() {
@@ -1534,6 +1535,71 @@ function testStatusContracts() {
   assert.equal(canApplyStatusEffect(protectedStatuses, "stunned"), false, "Diminishing Returns must block Stunned.");
 }
 
+function testPlayerControlBreakSurvival() {
+  const stunned = createStatusEffect("stunned");
+  const aboveThreshold = applyDamageToPlayer(100, 100, [stunned], 70);
+  assert.equal(aboveThreshold.hp, 30, "Exactly 30% Health must not trigger the low-Health control break.");
+  assert.equal(aboveThreshold.statuses.some((status) => status.id === "stunned"), true, "Control must remain at exactly 30% Health.");
+  assert.equal(aboveThreshold.survivalPending, false, "The survival window must not begin before Health falls below 30%.");
+
+  const lethal = applyDamageToPlayer(40, 100, [stunned, createStatusEffect("frozen"), createStatusEffect("sleep")], 50);
+  assert.equal(lethal.hp, 1, "A controlled player must survive lethal threshold-crossing damage at 1 Health.");
+  assert.equal(lethal.survivalPending, true, "Breaking control below 30% Health must start the survival window.");
+  assert.deepEqual(new Set(lethal.removedStatusIds), new Set(["stunned", "frozen", "sleep"]), "Every action-blocking control must break together.");
+  assert.equal(lethal.statuses.some((status) => status.id === "stunned" || status.id === "frozen" || status.id === "sleep"), false, "No action-blocking control may remain after the break.");
+  assert.equal(lethal.statuses.some((status) => status.id === "diminishingReturns"), true, "Breaking Stunned must still grant Diminishing Returns.");
+
+  const protectedDamage = applyDamageToPlayer(lethal.hp, 100, lethal.statuses, 999, lethal.survivalPending);
+  assert.equal(protectedDamage.hp, 1, "Further damage must not kill the player before their next action.");
+  assert.equal(wakeFromDamage([createStatusEffect("frozen")], 1).some((status) => status.id === "frozen"), false, "Enemy Frozen must retain its normal wake-on-damage rule.");
+
+  const character = { ...structuredClone(INITIAL_GAME.character), name: "Control Break Tester" };
+  const created = createCombat(character, ["dummy"]);
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const enemyEntry = created.turnOrder.find((entry) => entry.kind === "enemy")!;
+  const queuedBreak: CombatState = {
+    ...created,
+    eventId: created.eventId + 1,
+    playerHp: 40,
+    playerMaxHp: 100,
+    playerStatuses: [stunned],
+    floatingEvents: ["Heavy hit."],
+    pendingEffects: [
+      { id: "control-break-damage", eventIndex: 0, type: "damage", targetId: "player", damage: 50 },
+      { id: "control-break-window", eventIndex: 0, type: "player_survival_window", removedStatusIds: ["stunned"] },
+    ],
+  };
+  const presentedBreak = resolveCombatEvent(queuedBreak, queuedBreak.eventId, 0);
+  assert.equal(presentedBreak.playerHp, 1, "Presentation-time lethal damage must honor the survival floor.");
+  assert.equal(presentedBreak.outcome, "active", "The control break must prevent presentation-time defeat.");
+  assert.equal(presentedBreak.playerActionSurvivalPending, true, "The survival window must become authoritative at the damage event.");
+  assert.equal(presentedBreak.playerStatuses.some((status) => status.id === "stunned"), false, "The control icon must disappear at damage impact.");
+
+  const actionable = {
+    ...presentedBreak,
+    turnOrder: [playerEntry, enemyEntry],
+    activeTurnIndex: 0,
+    initiativeRevealed: true,
+    floatingEvents: [],
+    pendingEffects: [],
+  };
+  const acted = useAbility(actionable, character, "quickSlash");
+  assert.equal(acted.playerActionSurvivalPending, false, "Using an ability must consume the survival window.");
+
+  const skippedEvents: string[] = [];
+  const skippedEffects: CombatState["pendingEffects"] = [];
+  const skipped = moveToNextActor({
+    ...created,
+    turnOrder: [enemyEntry, playerEntry],
+    activeTurnIndex: 0,
+    actedActorIds: [],
+    initiativeRevealed: true,
+    playerStatuses: [stunned],
+  }, character, [], skippedEvents, skippedEffects);
+  assert.equal(skipped.playerActionSurvivalPending, true, "Actually losing a turn to control must protect the player until their next action.");
+  assert.equal(skippedEffects.some((effect) => effect.type === "player_survival_window"), true, "The skipped-turn survival window must resolve through the presentation queue.");
+}
+
 function testBasicPlayerAbility() {
   const character = { ...structuredClone(INITIAL_GAME.character), name: "Regression Hero" };
   const created = createCombat(character, ["dummy"]);
@@ -1900,6 +1966,7 @@ testTownAdventureRequirements();
 testProgressiveTownStock();
 testArkenfallTownCommerceAndCrafting();
 testStatusContracts();
+testPlayerControlBreakSurvival();
 testBasicPlayerAbility();
 testShadowPoisonAbilityBalance();
 testCooldownsCarryBetweenAdventureCombats();

@@ -93,6 +93,17 @@ export function queuePassiveAnimation(pendingEffects: CombatPendingEffect[], eve
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "passive_text", targetId, text, lane: combatEffectSequence % 3 });
 }
 
+export function queuePlayerSurvivalWindow(pendingEffects: CombatPendingEffect[], eventIndex: number, removedStatusIds: StatusEffect["id"][] = []): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({
+    id: `combat-effect-${Date.now()}-${combatEffectSequence}`,
+    eventIndex,
+    type: "player_survival_window",
+    removedStatusIds: [...new Set(removedStatusIds)],
+  });
+  if (removedStatusIds.length > 0) queuePassiveAnimation(pendingEffects, eventIndex, "player", "Control broken");
+}
+
 export function queueAbilityVfx(pendingEffects: CombatPendingEffect[], eventIndex: number, kind: CombatAbilityVfxKind, targetId?: "player" | string, sourceTargetId?: "player" | string, shakeSource = false): void {
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "ability_vfx", kind, targetId, sourceTargetId, shakeSource });
