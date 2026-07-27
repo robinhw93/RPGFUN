@@ -1,4 +1,5 @@
 import { addExperience, experienceForLevelGains, MAX_LEVEL } from "./progression";
+import { acquireItems } from "./items";
 import type { CharacterState, InventoryItem } from "./types";
 
 export function levelUpCharacterForTesting(character: CharacterState): CharacterState {
@@ -15,11 +16,5 @@ export function grantItemForTesting(
   const safeQuantity = Number.isFinite(quantity)
     ? Math.min(99, Math.max(1, Math.floor(quantity)))
     : 1;
-  return {
-    ...character,
-    inventory: [
-      ...character.inventory,
-      ...Array.from({ length: safeQuantity }, () => structuredClone(item)),
-    ],
-  };
+  return acquireItems(character, Array.from({ length: safeQuantity }, () => item));
 }

@@ -448,39 +448,66 @@ Enemy Physical Power, Spell Power, Starting Energy, Max Energy, Energy Regenerat
 | Goblin Woundfixer | 28 | 2 / 6 | 0 / 3 | 95% / 5% / 5% | 10 / 2 / 10 | Heal (3, Ranged): restores 100% Spell Power to the most wounded living ally, including itself. Hex (1, Melee): 50% Spell Power as Spell damage and Slowed. |
 | Goblin Biggrown | 40 | 6 / 0 | 4 / 0 | 95% / 0% / 5% | 3 / 1 / 5 | Protect (1, group): grants 5 Guard to every other living enemy. Heavy Cleave (5, Melee): 250% Physical Power and 1 Bleed. |
 | Striz, Goblin Chieftain | 80 | 10 / 6 | 4 / 4 | 95% / 5% / 5% | 10 / 1 / 10 | Rally (1, group): Fierce for every living enemy. Skewer (1, Melee): 100% Physical Power and 1 Bleed. Impale (3, Melee): charges for one turn, then deals 150% Physical Power and applies 2 Bleed. Spear Poke (2, Melee): 75% Physical Power. Can resolve several ready abilities separately. |
+| Hill Troll | 98 | 10 / 0 | 2 / 2 | 90% / 5% / 5% | 10 / 1 / 10 | Club Smash (10, Melee): charges for one turn, then deals 250% Physical Power. Nap (1, self): restores 15% maximum Health, gains Sleep, and gains +10 Energy regeneration next turn. |
+| Mountain Troll | 121 | 10 / 0 | 4 / 1 | 80% / 0% / 5% | 10 / 1 / 10 | Heavy Fists (5, Melee): four 80% Physical Power hits. Roar (2, self): Fierce. Nap (0, self): restores 15% maximum Health, gains Sleep, and gains +10 Energy regeneration next turn. |
+| Hill Troll Shaman | 79 | 6 / 10 | 1 / 4 | 95% / 5% / 5% | 10 / 1 / 10 | Heal (2, Ranged): restores 200% Spell Power to the most wounded ally. Regeneration (2, Ranged): Regenerate on the most wounded other enemy. Greater Hex (1, Ranged): 150% Spell Power, Weaken, and Slowed. Nap (0, self): restores 15% maximum Health and gains Sleep. |
+| Highfall Bandit Enforcer | 54 | 8 / 0 | 4 / 1 | 95% / 5% / 5% | 5 / 1 / 10 | Steal (1, Melee): 100% Physical Power and steals up to 10 Gold. Stealth (1, self): Stealth and restores 10 Energy. Poisoned Stab (6, Melee): 50% Physical Power and 3 Poison. Can resolve up to two ready abilities separately. |
+| Highfall Loot Goblin | 40 | 0 / 0 | 0 / 0 | 95% / 10% / 5% | 5 / 1 / 10 | Flee (10, self): escapes combat with all of its loot. |
+| Highfall Bandit Trapper | 46 | 10 / 0 | 2 / 1 | 95% / 5% / 5% | 10 / 1 / 10 | Bow Shot (2, Ranged): 80% Physical Power. Fire Trap (2, Ranged): 1 Burn. Snipe (2, Ranged): 200% Physical Power. |
+| Troll Bandit King, Klaus | 198 | 15 / 0 | 0 / 0 | 95% / 0% / 5% | 0 / 2 / 10 | Patience (0, self): 10 Guard. No Patience (10, Melee): 150% Physical Power and permanently changes behavior. Toying (1, Melee): 50% Physical Power and 20% Vulnerable chance. |
 
 The Forest Spirit always enters with two Forest Wisps and restores 25% of maximum Health whenever one of those allies dies.
 
 The five goblins use role-specific Highlands artwork set on open green plains rather than forest scenery. Their combat portraits are dedicated square crops from the same designs. Bow Shot and Snipe use distinct arrow/crosshair projectiles, friendly healing travels between combatants, group buffs resolve simultaneously on their recipients, and Striz visibly continues shaking while Impale is charged.
+
+The seven Highfall enemies use dedicated full illustrations and matching combat portraits. Bandits, trolls, the Loot Goblin, and Klaus are staged on a steep mountain path. Their abilities reuse distinct impact, projectile, healing, status, charge, and escape VFX; a Loot Goblin that successfully flees is removed from combat and awards neither its item drops nor enemy-defeat quest progress.
 
 Each enemy drop-table row rolls independently for each defeated instance. Repeating the same item on several rows creates separate chances for additional copies.
 
 | Enemy | Live drop-table rows |
 | --- | --- |
 | DUMMY | None. |
-| Rabid Rat | Rats Tail 80%. |
-| Windsong Wolf | Wolf Fang 20%; Fur 60%. |
-| Forest Wisp | Wisp Essence 50%. |
-| Brown Bear | Bear Claw 50%. |
-| The Forest Spirit | Windsong Staff 100%; Windsong Sword 100%; Windsong Dagger 100%; Wisp Essence 80%. |
+| Rabid Rat | Rats Tail 80%; Galehide Striders 1%; Wolfstep Loop 1%. |
+| Windsong Wolf | Wolf Fang 20%; Fur 60%; Galehide Jerkin 4%; Bramblefang 3%. |
+| Forest Wisp | Wisp Essence 50%; Wispwoven Leggings 0.8%; Wispwoven Band 0.8%; Moondrop Wand 0.8%; Whisperbloom Tonic 2%. |
+| Brown Bear | Bear Claw 50%; Thornbark Visor 8%; Thornbark Buckler 8%. |
+| The Forest Spirit | Windsong Staff 100%; Windsong Sword 100%; Windsong Dagger 100%; Wisp Essence 80%; Thornbark Visor 2%; Thornbark Buckler 2%. |
 | Goblin Longseer | Metal Scrap 30%; Linen Scraps 80% twice; Goblin Scavanger Hood 20%. |
 | Goblin Quickstabber | Metal Scrap 30%; Minor Healing Potion 10%; Linen Scraps 100%, 80%, and 60%; each Goblin Scavanger set piece 10%. |
 | Goblin Woundfixer | Metal Scrap 20%; Yumberries 5%; Hexcaster Staff 18%; Linen Scraps 80%; Hexcaster Hood 10%. |
 | Goblin Biggrown | Metal Scrap 100%; Linen Scraps 80% twice; each Goblin Scavanger set piece 20%. |
 | Striz, Goblin Chieftain | Minor Healing Potion 60%; Metal Scrap 100%, 100%, and 60%; Linen Scraps 100%; each Goblin Scavanger set piece 20%. |
+| Hill Troll | Bear Claw 10%; Simple Plate Pantaloons 10%; Spider Silk Thread 10%; Metal Scrap 10%; Trollbane 4%; Trollforged Greathelm 5%; Trollforged Warboots 5%; Highfall Frostroot 18%. |
+| Mountain Troll | Simple Plate Boots 10%; Metal Scrap 10%; Healing Potion 5%; Spider Silk Thread 20%; Small Bloodberry 50%; Trollbane 5%; Trollforged Breastplate 5%; Trollforged Legguards 5%. |
+| Hill Troll Shaman | Hexcaster Staff 5%; Spider Silk Thread 10%; Metal Scrap 10%; Healing Potion 10%; Trollbane 4%; Mountain Staff 8%; Runewoven Cowl 5%; Runewoven Boots 5%; Highfall Frostroot 30%; Stonebloom Draught 8%. |
+| Highfall Bandit Enforcer | Spider Silk Thread 10%; Metal Scrap 10%; Bandits Kiss 6%; Nightveil Cowl 5%; Nightveil Jerkin 5%. |
+| Highfall Loot Goblin | Every Goblin Scavanger and Platemonger piece 20%; Hexcaster Robes and Hood 20%; Hexcaster Staff 10%. All rows are lost if it flees. |
+| Highfall Bandit Trapper | Bear Claw 10%; Spider Silk Thread 10%; Bandits Kiss 5%; Nightveil Legwraps 5%; Nightveil Treads 5%. |
+| Troll Bandit King, Klaus | Trollbane 7%; Bandits Kiss 7%; Runewoven Robes 5%; Runewoven Leggings 5%. |
 
 ## Arkenfall Town
 
-The town hub is listed above adventures and contains six illustrated destinations:
+The town hub is listed above adventures and contains seven illustrated destinations. Each of the five item vendors buys one Inventory copy at a time for 25% of its Gold Cost, rounded down, with a minimum return of 1 Gold for a positive-value item.
 
 | Destination | Services | Live default catalog |
 | --- | --- | --- |
-| Blacksmith — Brunhilde von Trott | Repeatable Shop purchases and material-based Crafting. | Sells Metal Scrap. Crafts the three Windsong weapons and the four Simple Plate pieces; none currently require adventure completion. |
-| Alchemist — Ray Charlston | Repeatable Shop purchases and potion Brewing. | Sells Minor Healing Potion. Brewing one requires 2 Small Bloodberries and 1 Rats Tail. |
-| Tailor — Mirelle Threadgold | Repeatable Shop purchases and material-based Tailoring. | Sells Spider Silk Thread after Windsong Forest is completed. Crafts Hexcaster Robes and Hexcaster Hood after that completion. |
-| Leatherworker — Torren Hidehand | Repeatable Shop purchases and material-based Leatherworking. | No current stock or recipes. |
-| Jeweler — Celestine Veyra | Repeatable Shop purchases and material-based Jewelcrafting. | No current stock or recipes. |
+| Blacksmith — Brunhilde von Trott | Repeatable Shop purchases, material-based Crafting, and Inventory selling. | Sells Metal Scrap. Crafts the three original Windsong weapons, Thornbark Visor, Thornbark Buckler, Bramblefang, and the four Simple Plate pieces. |
+| Alchemist — Ray Charlston | Repeatable Shop purchases, potion Brewing, and Inventory selling. | Sells Minor Healing Potion. Brews Minor Healing Potion and Whisperbloom Tonic. |
+| Tailor — Mirelle Threadgold | Repeatable Shop purchases, material-based Tailoring, and Inventory selling. | Sells Spider Silk Thread after Windsong Forest is completed. Crafts Wispwoven Leggings immediately and Hexcaster Robes and Hood after that completion. |
+| Leatherworker — Torren Hidehand | Repeatable Shop purchases, material-based Leatherworking, and Inventory selling. | Crafts Galehide Jerkin and Galehide Striders. |
+| Jeweler — Celestine Veyra | Repeatable Shop purchases, material-based Jewelcrafting, and Inventory selling. | Crafts Wispwoven Band, Moondrop Wand, and Wolfstep Loop. |
 | The Resting Hart | Paid full recovery and next-combat meals. | Rest costs 1 Gold per 3 missing Health, rounded up. Ironpot Stew costs 5 Gold and grants Strengthened; Peppercrust Boar costs 8 Gold and grants Fierce; Hartroot Broth costs 10 Gold and grants Regenerate. Each meal benefit is applied when the next combat begins and may be prepared once at a time. |
+| Quest Board | Accepting, tracking, inspecting rewards, and turning in quests and questlines. | Uses dedicated generated town artwork. Rewards are withheld until a ready quest is turned in at the board. |
+
+### Live quests
+
+The current **Storehouse Troubles** questline unlocks in the order below. Required collect-item copies are consumed at turn-in.
+
+| Quest | Goal | Reward |
+| --- | --- | --- |
+| Rats at the Storehouses | Defeat 3 Rabid Rats. | 35 XP, 1 Minor Healing Potion. |
+| Tails for the Tally | Bring 2 Rats Tails. | 50 XP. |
+| Quiet the Windsong | Complete Windsong Forest once. | 100 XP, 1 Wisp Essence. |
 
 Explicit item fields are authoritative: `arkenfallVendor: null` means the item is not sold in town, and a missing recipe means it is not craftable. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab. Hexcaster Staff currently has no recipe.
 
@@ -496,10 +523,20 @@ Explicit item fields are authoritative: `arkenfallVendor: null` means the item i
 | Simple Plate Pantaloons | Blacksmith | 5 Metal Scrap | None. |
 | Hexcaster Robes | Tailor | 6 Linen Scraps, 2 Spider Silk Thread | Windsong Forest completed. |
 | Hexcaster Hood | Tailor | 4 Linen Scraps, 1 Spider Silk Thread | Windsong Forest completed. |
+| Thornbark Visor | Blacksmith | 1 Bear Claw, 2 Fur | None. |
+| Thornbark Buckler | Blacksmith | 1 Bear Claw, 3 Fur | None. |
+| Galehide Jerkin | Leatherworker | 3 Fur, 1 Wolf Fang | None. |
+| Galehide Striders | Leatherworker | 2 Fur, 2 Rats Tails | None. |
+| Wispwoven Leggings | Tailor | 2 Fur, 2 Wisp Essence | None. |
+| Wispwoven Band | Jeweler | 2 Wisp Essence, 1 Wolf Fang | None. |
+| Bramblefang | Blacksmith | 2 Wolf Fangs, 1 Bear Claw | None. |
+| Moondrop Wand | Jeweler | 2 Wisp Essence, 1 Wolf Fang | None. |
+| Wolfstep Loop | Jeweler | 2 Wolf Fangs, 1 Rats Tail | None. |
+| Whisperbloom Tonic | Alchemist | 1 Rats Tail, 1 Wisp Essence | None. |
 
 ## Adventure: Windsong Forest
 
-Windsong Forest follows nine ordered stages. Stages with several possibilities make one weighted roll from the listed chances.
+Windsong Forest uses the travel loading text **“Walking beneath the Windsong canopy”** and follows nine ordered stages. Stages with several possibilities make one weighted roll from the listed chances.
 
 | Stage | Possibility | Chance | Enemies/event | Reward |
 | ---: | --- | ---: | --- | --- |
@@ -524,9 +561,54 @@ The four current event definitions are:
 - **Colorful Berries:** two Intelligence 10 choices. Success grants Yumberries or restores 10 Health; failure may do nothing or apply Poison in the next combat.
 - **Wandering Merchant:** a direct choice with no roll. The merchant stocks Minor Healing Potion, Old Robes, Dusty Boots, Old Armor, Dusty Cowl, and Old Leather Pants.
 
+The ten Uncommon Windsong additions use low, creature-themed enemy drops. Repeated rats and Wisps use 0.8–2% rows per defeated instance, the single Windsong Wolf uses 3–4%, Brown Bear uses 8% for each Thornbark piece because its normal stage appearance is only a 20% possibility, and The Forest Spirit adds a separate 2% chance for each Thornbark piece.
+
 Every Wandering Merchant also buys any gear, consumable, or ordinary item currently in the character's Inventory. One copy is sold per action for 25% of its live Gold Cost, rounded down to whole Gold with a minimum value of 1 Gold for items worth more than zero.
 
 Enemy templates and adventure stages may each define item drop tables. Every configured item chance is rolled independently; enemy tables roll once per defeated instance and the current stage table rolls once per combat victory. Enemy tables may repeat an item on several rows to give each possible copy its own chance. Drop tables may reference any live gear, consumable, or ordinary item.
+
+## Adventure: Arkenfall Highlands
+
+Arkenfall Highlands uses the travel loading text **“Crossing the windswept highlands”**, contains nine ordered stages, and unlocks after Windsong Forest is completed. Its adventure card and combat board use dedicated open-highland artwork with rolling grassland, exposed stone, distant mountains, sparse trees, and far-off travelers.
+
+| Stage | Possibility | Chance | Enemies/event | Reward |
+| ---: | --- | ---: | --- | --- |
+| 1 — Entering the Highlands | Encounter | 100% | Goblin Longseer + Windsong Wolf | 81 XP, 8 gold. |
+| 2 — Stage 2 | New Encounter | 100% | Goblin Quickstabber | 95 XP, 8 gold. |
+| 3 — Stage 3 | The Collapsed Watchtower | 100% | Event | Choice-dependent; stage entry lists 50 XP and 8 gold. |
+| 4 — Stage 4 | Goblin patrol | 50% | Goblin Longseer + Goblin Woundfixer + Goblin Quickstabber | 121 XP, 16 gold. |
+| 4 — Stage 4 | Goblin patrol | 50% | Goblin Biggrown + 2 Goblin Woundfixers | 121 XP, 16 gold. |
+| 5 — Stage 5 | Highlands Merchant | 100% | Event | Choice-dependent; stage entry lists 50 XP and 8 gold. |
+| 6 — Stage 6 | Encounter | 100% | 2 Goblin Biggrowns | 88 XP, 12 gold. |
+| 7 — Stage 7 | Goblin Toll Bridge | 100% | Event | Choice-dependent; stage entry lists 50 XP and 8 gold. |
+| 8 — Stage 8 | Large Goblin Patrol | 50% | Event | Choice-dependent; stage entry lists 50 XP and 8 gold. |
+| 8 — Stage 8 | Large Goblin Patrol | 25% | 2 Goblin Longseers + Goblin Woundfixer | 111 XP, 16 gold. |
+| 8 — Stage 8 | Large Goblin Patrol | 25% | 2 Goblin Woundfixers + Goblin Quickstabber | 111 XP, 16 gold. |
+| 9 — Stage 9 | Boss | 100% | Goblin Biggrown + Striz, Goblin Chieftain + Goblin Woundfixer | 215 XP, 85 gold. |
+
+## Adventure: Highfall Mountains
+
+Highfall Mountains uses the travel loading text **“Climbing into the Highfall Mountains”**, contains eleven ordered stages, and unlocks after Arkenfall Highlands is completed. Stages 2 and 6 are recovery-focused events, stage 8 is an ancient cairn event, stage 9 is the Highfall Merchant, and stage 11 is the final boss.
+
+| Stage | Possibility | Chance | Enemies/event | Reward |
+| ---: | --- | ---: | --- | --- |
+| 1 — The Lower Pass | The Bandit's Toll | 100% | Highfall Bandit Enforcer + Trapper | 145 XP, 22 gold; stage roll: Highfall Frostroot 15%. |
+| 2 — The Sheltered Spring | The Sheltered Spring | 100% | Recovery event | Guaranteed 30-Health option; high-chance potion and Frostroot choices. |
+| 3 — Troll Country | Troll Country | 100% | Hill Troll | 135 XP, 20 gold; stage roll: Highfall Restorative 8%. |
+| 4 — Cliffside Ambush | Cliffside Crossfire | 50% | Highfall Bandit Enforcer + Trapper | 155 XP, 28 gold; stage roll: Highfall Frostroot 20%. |
+| 4 — Cliffside Ambush | Tripwire Alley | 50% | 2 Highfall Bandit Trappers | 165 XP, 30 gold; stage roll: Highfall Frostroot 20%. |
+| 5 — The Broken Causeway | The Broken Causeway | 90% | Hill Troll | 140 XP, 22 gold; stage roll: Highfall Restorative 10%. |
+| 5 — The Broken Causeway | A Goblin and Its Bodyguard | 10% | Hill Troll + Highfall Loot Goblin | 190 XP, 40 gold; stage roll: Highfall Restorative 10%. |
+| 6 — Stormbound Camp | Stormbound Camp | 100% | Recovery event | Guaranteed 25-Health option; the medic's crate always awards one Highfall potion. |
+| 7 — The High Slopes | The Mountain Stirs | 65% | Mountain Troll | 180 XP, 32 gold; stage roll: Stonebloom Draught 10%. |
+| 7 — The High Slopes | Rites of the High Slopes | 35% | Mountain Troll + Hill Troll Shaman | 260 XP, 48 gold; stage roll: Stonebloom Draught 10%. |
+| 8 — The Frozen Cairn | The Frozen Cairn | 100% | Rune and offering event | Choice-dependent; can award Cairnkeeper's Loop. |
+| 9 — The Last Trading Post | Highfall Merchant | 100% | Direct-choice merchant event | Sells the four new Highfall items and three rare Highfall weapons. |
+| 10 — The King's Guard | The King's Trolls | 60% | Mountain Troll + Hill Troll Shaman | 270 XP, 55 gold; stage roll: Cairnkeeper's Loop 5%. |
+| 10 — The King's Guard | The King's Cutthroats | 40% | Highfall Bandit Enforcer + 2 Trappers | 250 XP, 60 gold; stage roll: Cairnkeeper's Loop 5%. |
+| 11 — The Crown of Highfall | Troll Bandit King, Klaus | 100% | Troll Bandit King, Klaus | 420 XP, 140 gold; stage rolls: Cairnkeeper's Loop 20%, Stonebloom Draught 35%. |
+
+The Highfall events are **The Sheltered Spring**, **Stormbound Camp**, **The Frozen Cairn**, and **Highfall Merchant**. Their choices combine direct recovery, high-probability healing-item finds, attribute checks, next-combat statuses, the Cairnkeeper's Loop reward, and the adventure's dedicated merchant stock.
 
 ## Item catalog
 
@@ -534,9 +616,7 @@ Enemy templates and adventure stages may each define item drop tables. Every con
 
 New characters begin with no equipped gear and an empty inventory. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
 
-The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No live item currently uses Legendary.
-
-> **Known integration gap (2026-07-26):** eight newly authored item IDs are not yet present in the shared item-icon catalog: the three Goblin Scavanger pieces, the three Hexcaster pieces, Linen Scraps, and Spider Silk Thread. `npm test` currently stops at this catalog invariant. The six new gear definitions also point at gear-source artwork that the runtime item-icon component does not accept as its direct fallback. The content exists, but a later implementation change must generate/register their inventory icons before the item catalog is fully integrated.
+The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No live item currently uses Legendary. Every live item ID is registered in the shared optimized icon catalog.
 
 | Item | Slot | Rarity | Gold Cost | Bonuses |
 | --- | --- | --- | ---: | --- |
@@ -559,6 +639,31 @@ The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No l
 | Hexcaster Robes | Chest, Cloth | Uncommon | 36 | +1 Vitality, +1 Intelligence, +1 Magic Resistance, and +1 Spell Power; Hexcaster set. |
 | Hexcaster Hood | Head, Cloth | Uncommon | 12 | +2 Intelligence, +1 Magic Resistance, and +1% Hit Chance; Hexcaster set. |
 | Hexcaster Staff | Two-Hand weapon | Rare | 12 | +1 Intelligence, +2 Vitality, +2 Spell Power, and +1% Hit Chance; Hexcaster set. |
+| Nightveil Cowl | Head, Leather | Rare | 130 | +3 Agility, +1 Vitality, +1 Armor, and +2% Critical Strike Chance; Nightveil set. |
+| Nightveil Jerkin | Chest, Leather | Rare | 190 | +3 Agility, +2 Vitality, +1 Luck, +2 Armor, and +1% Dodge Chance; Nightveil set. |
+| Nightveil Legwraps | Pants, Leather | Rare | 165 | +3 Agility, +1 Vitality, +1 Luck, and +1 Armor; Nightveil set. |
+| Nightveil Treads | Boots, Leather | Rare | 150 | +3 Agility, +1 Vitality, +1 Armor, +6 Initiative, and +2% Dodge Chance; Nightveil set. |
+| Trollforged Greathelm | Head, Plate | Rare | 160 | +3 Strength, +2 Vitality, and +4 Armor; Trollforged set. |
+| Trollforged Breastplate | Chest, Plate | Rare | 230 | +3 Strength, +3 Vitality, and +4 Armor; Trollforged set. |
+| Trollforged Legguards | Pants, Plate | Rare | 200 | +2 Strength, +2 Vitality, +1 Luck, and +3 Armor; Trollforged set. |
+| Trollforged Warboots | Boots, Plate | Rare | 175 | +2 Strength, +2 Vitality, +3 Armor, +1 Initiative, and +1% Hit Chance; Trollforged set. |
+| Runewoven Cowl | Head, Cloth | Rare | 145 | +3 Intelligence, +1 Vitality, +1 Magic Resistance, and +1 Spell Power; Runewoven set. |
+| Runewoven Robes | Chest, Cloth | Rare | 210 | +3 Intelligence, +2 Vitality, +1 Magic Resistance, and +1 Spell Power; Runewoven set. |
+| Runewoven Leggings | Pants, Cloth | Rare | 185 | +3 Intelligence, +1 Vitality, +1 Luck, +1 Magic Resistance, and +1 Spell Power; Runewoven set. |
+| Runewoven Boots | Boots, Cloth | Rare | 170 | +2 Intelligence, +1 Vitality, +1 Luck, +1 Magic Resistance, +1 Spell Power, and +2 Initiative; Runewoven set. |
+| Trollbane | Two-Hand weapon | Rare | 120 | +4 Strength, +2 Vitality, and +1 Luck. |
+| Bandits Kiss | One-Hand weapon | Rare | 90 | +3 Agility, +2 Vitality, and +2% Critical Strike Chance. |
+| Mountain Staff | Two-Hand weapon | Rare | 120 | +2 Intelligence and +5 Vitality. |
+| Cairnkeeper's Loop | Ring | Rare | 145 | +2 Intelligence, +1 Vitality, +2 Luck, +1 Magic Resistance, and +2 Initiative. |
+| Thornbark Visor | Head, Plate | Uncommon | 38 | +1 Strength and +1 Armor; Thornbark Bulwark set. |
+| Thornbark Buckler | Off Hand, Shield | Uncommon | 42 | +1 Strength and +1 Armor; Thornbark Bulwark set. |
+| Galehide Jerkin | Chest, Leather | Uncommon | 40 | +1 Agility and +1 Armor; Galehide set. |
+| Galehide Striders | Boots, Leather | Uncommon | 34 | +1 Agility and +2 Initiative; Galehide set. |
+| Wispwoven Leggings | Pants, Cloth | Uncommon | 44 | +1 Intelligence and +1 Magic Resistance; Wispwoven set. |
+| Wispwoven Band | Ring | Uncommon | 46 | +1 Intelligence and +1 Spell Power; Wispwoven set. |
+| Bramblefang | One-Hand weapon | Uncommon | 48 | +1 Strength and +1 Physical Power. |
+| Moondrop Wand | One-Hand weapon | Uncommon | 48 | +1 Intelligence and +1 Spell Power. |
+| Wolfstep Loop | Ring | Uncommon | 36 | +1 Agility and +2 Initiative. |
 
 ### Consumables
 
@@ -569,6 +674,9 @@ Consumables use one inventory slot per copy and can be queued from the **Invento
 | Yumberries | Common | 25 | Applies Regenerate to the player for 3 turns. |
 | Minor Healing Potion | Common | 20 | Restores 20 Health. |
 | Small Bloodberry | Common | 8 | Restores 5 Health. |
+| Highfall Restorative | Uncommon | 55 | Restores 65 Health. |
+| Stonebloom Draught | Rare | 60 | Restores 30 Health and applies Regenerate for 3 turns. |
+| Whisperbloom Tonic | Uncommon | 30 | Restores 12 Health and 2 Energy. |
 
 ### Other items
 
@@ -583,7 +691,8 @@ Ordinary items can be carried, granted, dropped, bought, and sold, but cannot be
 | Bear Claw | Common | 10 | A claw as big as your head. |
 | Metal Scrap | Common | 6 | A piece of metal. |
 | Linen Scraps | Common | 0 | A scrap of cloth. |
-| Spider Silk Thread | Uncommon | 15 | No description is currently configured. |
+| Spider Silk Thread | Uncommon | 15 | — |
+| Highfall Frostroot | Uncommon | 18 | A hardy mountain root prized for its restorative properties. |
 
 ### Gear set bonuses
 
@@ -593,3 +702,10 @@ Only equipped pieces count toward a set bonus.
 | --- | --- | --- |
 | Goblin Scavanger | Hood, Boots, Harness | 2 pieces: +1 Agility. 3 pieces: +5% Critical Strike Chance. |
 | Hexcaster | Robes, Hood, Staff | 2 pieces: +2 Spell Power. 3 pieces: +2 Intelligence. |
+| Platemonger | Helmet, Chestplate, Sabatons | 2 pieces: +2 Strength. 3 pieces: +2 Vitality and +1 Armor. |
+| Nightveil | Cowl, Jerkin, Legwraps, Treads | 2 pieces: +2 Agility. 3 pieces: +6% Critical Strike Chance. 4 pieces: Critical Strikes grant +20% Dodge Chance until the next turn. |
+| Trollforged | Greathelm, Breastplate, Legguards, Warboots | 2 pieces: +3 Strength. 3 pieces: +3 Vitality and +2 Armor. 4 pieces: once per turn, taking Health damage grants 3 Guard. |
+| Runewoven | Cowl, Robes, Leggings, Boots | 2 pieces: +3 Spell Power. 3 pieces: +3 Intelligence. 4 pieces: once per turn, dealing Magic damage restores 1 Energy. |
+| Thornbark Bulwark | Visor, Buckler | 2 pieces: +1 Vitality. |
+| Galehide | Jerkin, Striders | 2 pieces: +1 Vitality. |
+| Wispwoven | Leggings, Band | 2 pieces: +1 Vitality. |

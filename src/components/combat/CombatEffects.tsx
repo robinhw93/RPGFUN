@@ -123,7 +123,7 @@ export function AbilityImpactEffect({ kind }: { kind: CombatAbilityVfxKind }) {
   if (kind.startsWith("enemy_")) {
     const icon = kind === "enemy_howl" || kind === "enemy_roar" ? <Megaphone />
       : kind === "enemy_hibernate" ? <Moon />
-      : kind === "enemy_scurry" ? <Footprints />
+      : kind === "enemy_scurry" || kind === "enemy_flee" ? <Footprints />
       : kind === "enemy_burning_glare" ? <Flame />
       : kind === "enemy_natures_beam" || kind === "enemy_wisp_blast" || kind === "enemy_shimmer" || kind === "enemy_spirit_heal" ? <Sparkles />
       : kind === "enemy_fade_out" || kind === "enemy_quickstabber_stealth" ? <EyeOff />

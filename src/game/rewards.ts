@@ -1,6 +1,8 @@
 import { getAdventureDefinition, getAdventureExperienceReward, getAdventureGoldReward, getAdventureNode } from "./adventures";
 import { ITEMS } from "./data";
+import { acquireItems } from "./items";
 import { addExperience } from "./progression";
+import { recordQuestEnemyDefeats } from "./quests";
 import type { CombatReward, GameState, InventoryItem, ItemDropDefinition } from "./types";
 
 export function rollItemDropTable(
@@ -17,7 +19,7 @@ export function rollItemDropTable(
 }
 
 export function rollCombatLoot(state: GameState, random: () => number = Math.random): InventoryItem[] {
-  const enemyDropTables = state.adventure.combat?.enemies.map((enemy) => enemy.dropTable) ?? [];
+  const enemyDropTables = state.adventure.combat?.enemies.filter((enemy) => !enemy.fled).map((enemy) => enemy.dropTable) ?? [];
   const stageDropTable = getAdventureDefinition(state.adventure.adventureId).stages[state.adventure.nodeIndex]?.dropTable;
   return rollCombatDropTables(enemyDropTables, stageDropTable, random);
 }
@@ -43,7 +45,8 @@ export function grantCombatReward(state: GameState, timestamp = Date.now(), rand
 
   const experienceReward = getAdventureExperienceReward(rewardDefinition.experience, adventure, state.character.completedAdventureIds);
   const goldReward = getAdventureGoldReward(rewardDefinition.gold, adventure, state.character.completedAdventureIds);
-  const experience = addExperience(state.character, experienceReward);
+  const questCharacter = recordQuestEnemyDefeats(state.character, adventure.combat.enemies.filter((enemy) => !enemy.fled).map((enemy) => enemy.id));
+  const experience = addExperience(questCharacter, experienceReward);
   const loot = rollCombatLoot(state, random);
   const reward: CombatReward = {
     id: `combat-reward-${adventure.nodeIndex}-${timestamp}`,
@@ -58,13 +61,14 @@ export function grantCombatReward(state: GameState, timestamp = Date.now(), rand
     levelsGained: experience.levelsGained,
   };
 
+  const rewardedCharacter = acquireItems({
+    ...experience.character,
+    gold: experience.character.gold + goldReward,
+  }, loot);
+
   return {
     ...state,
-    character: {
-      ...experience.character,
-      gold: experience.character.gold + goldReward,
-      inventory: [...experience.character.inventory, ...loot.map((item) => structuredClone(item))],
-    },
+    character: rewardedCharacter,
     adventure: { ...adventure, latestLoot: loot.length > 0 ? loot : null, pendingReward: reward },
   };
 }

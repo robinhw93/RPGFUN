@@ -10,6 +10,7 @@ const talentSourcePath = fileURLToPath(new URL("../../src/game/content/talents.t
 const enemySourcePath = fileURLToPath(new URL("../../src/game/content/enemies.ts", import.meta.url));
 const gearSourcePath = fileURLToPath(new URL("../../src/game/content/gear.ts", import.meta.url));
 const adventureSourcePath = fileURLToPath(new URL("../../src/game/content/adventures.ts", import.meta.url));
+const questSourcePath = fileURLToPath(new URL("../../src/game/content/quests.ts", import.meta.url));
 const statusEffectsSourcePath = fileURLToPath(new URL("../../src/game/statusEffects.ts", import.meta.url));
 const editableEnemyStatFields = [
   "maxHp",
@@ -242,7 +243,8 @@ function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>
     catalogString(adventure.name, "Adventure name");
     catalogString(adventure.description, "Adventure description");
     catalogNumber(adventure.recommendedLevel, "Recommended level", 1);
-    if (adventure.theme !== "windsong_forest") throw new Error("Adventure theme is invalid.");
+    if (adventure.theme !== "windsong_forest" && adventure.theme !== "arkenfall_highlands" && adventure.theme !== "highfall_mountains") throw new Error("Adventure theme is invalid.");
+    if (adventure.travelText !== undefined) catalogString(adventure.travelText, "Travel loading text");
     catalogString(adventure.completionTitle, "Completion title");
     catalogString(adventure.completionDescription, "Completion description", true);
     if (adventure.prerequisiteAdventureId !== undefined && !knownAdventureIds.has(catalogId(adventure.prerequisiteAdventureId, "Prerequisite adventure ID"))) throw new Error("Prerequisite adventure does not exist.");
@@ -416,6 +418,61 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>, ad
     if (item.specialEffectNotes !== undefined) catalogString(item.specialEffectNotes, "Gear special effect notes", true);
   });
   return { items: exchange.items, sets: exchange.sets };
+}
+
+function validateQuestExchange(exchangeValue: unknown, enemyIds: Set<string>, itemIds: Set<string>, adventureIds: Set<string>): { quests: unknown[]; questlines: unknown[] } {
+  const exchange = catalogObject(exchangeValue, "Quest exchange");
+  if (exchange.format !== "arkenfall-quests" || exchange.version !== 1 || !Array.isArray(exchange.quests) || !Array.isArray(exchange.questlines)) throw new Error("Unsupported quest exchange format.");
+  const questIds = exchange.quests.map((raw: unknown) => catalogId(catalogObject(raw, "Quest").id, "Quest ID"));
+  const questlineIds = exchange.questlines.map((raw: unknown) => catalogId(catalogObject(raw, "Questline").id, "Questline ID"));
+  assertUniqueIds([...questIds, ...questlineIds], "Quest and questline");
+  const knownQuestIds = new Set(questIds);
+  exchange.quests.forEach((raw: unknown) => {
+    const quest = catalogObject(raw, "Quest");
+    catalogString(quest.title, "Quest title");
+    catalogString(quest.description, `${quest.title} description`);
+    const objective = catalogObject(quest.objective, `${quest.title} goal`);
+    const objectiveType = catalogString(objective.type, "Quest goal type");
+    const quantity = catalogNumber(objective.quantity, "Quest goal quantity", 1);
+    if (!Number.isInteger(quantity)) throw new Error(`${quest.title} goal quantity must be a whole number.`);
+    if (objectiveType === "kill_enemy") {
+      if (!enemyIds.has(catalogId(objective.enemyId, "Quest enemy ID"))) throw new Error(`${quest.title} references an enemy that is not saved in the live game.`);
+    } else if (objectiveType === "collect_item") {
+      if (!itemIds.has(catalogId(objective.itemId, "Quest item ID"))) throw new Error(`${quest.title} references an item that is not saved in the live game.`);
+    } else if (objectiveType === "complete_adventure") {
+      if (!adventureIds.has(catalogId(objective.adventureId, "Quest adventure ID"))) throw new Error(`${quest.title} references an adventure that is not saved in the live game.`);
+    } else {
+      throw new Error(`${quest.title} has an invalid goal type.`);
+    }
+    const reward = catalogObject(quest.reward, `${quest.title} reward`);
+    const experience = catalogNumber(reward.experience, "Quest experience reward");
+    if (!Number.isInteger(experience)) throw new Error(`${quest.title} experience reward must be a whole number.`);
+    if (!Array.isArray(reward.items)) throw new Error(`${quest.title} reward items must be a list.`);
+    const rewardItemIds = reward.items.map((rawReward: unknown, index: number) => {
+      const itemReward = catalogObject(rawReward, `${quest.title} reward item ${index + 1}`);
+      const itemId = catalogId(itemReward.itemId, "Quest reward item ID");
+      if (!itemIds.has(itemId)) throw new Error(`${quest.title} rewards an item that is not saved in the live game.`);
+      const rewardQuantity = catalogNumber(itemReward.quantity, "Quest reward item quantity", 1);
+      if (!Number.isInteger(rewardQuantity)) throw new Error(`${quest.title} reward item quantities must be whole numbers.`);
+      return itemId;
+    });
+    assertUniqueIds(rewardItemIds, `${quest.title} reward item`);
+  });
+  const assignedQuestIds = new Set<string>();
+  exchange.questlines.forEach((raw: unknown) => {
+    const questline = catalogObject(raw, "Questline");
+    catalogString(questline.title, "Questline title");
+    catalogString(questline.description, `${questline.title} description`);
+    if (!Array.isArray(questline.questIds)) throw new Error(`${questline.title} quests must be a list.`);
+    const orderedQuestIds = questline.questIds.map((rawId: unknown) => catalogId(rawId, "Questline quest ID"));
+    assertUniqueIds(orderedQuestIds, `${questline.title} quest`);
+    orderedQuestIds.forEach((questId: string) => {
+      if (!knownQuestIds.has(questId)) throw new Error(`${questline.title} references a quest that does not exist.`);
+      if (assignedQuestIds.has(questId)) throw new Error(`${questId} appears in more than one questline.`);
+      assignedQuestIds.add(questId);
+    });
+  });
+  return { quests: exchange.quests, questlines: exchange.questlines };
 }
 
 export function localSourceSync() {
@@ -658,24 +715,27 @@ export function localSourceSync() {
         request.on("end", async () => {
           try {
             const payload = JSON.parse(body) as { kind?: unknown; exchange?: unknown };
-            if (payload.kind !== "events" && payload.kind !== "adventures" && payload.kind !== "items") throw new Error("Unknown live content catalog.");
+            if (payload.kind !== "events" && payload.kind !== "adventures" && payload.kind !== "items" && payload.kind !== "quests") throw new Error("Unknown live content catalog.");
 
             await enqueueSourceMutation(async () => {
-              const [adventureSource, enemySource, gearSource, statusSource] = await Promise.all([
+              const [adventureSource, enemySource, gearSource, statusSource, questSource] = await Promise.all([
                 readFile(adventureSourcePath, "utf8"),
                 readFile(enemySourcePath, "utf8"),
                 readFile(gearSourcePath, "utf8"),
                 readFile(statusEffectsSourcePath, "utf8"),
+                readFile(questSourcePath, "utf8"),
               ]);
               const adventureSourceFile = ts.createSourceFile(adventureSourcePath, adventureSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
               const enemySourceFile = ts.createSourceFile(enemySourcePath, enemySource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
               const gearSourceFile = ts.createSourceFile(gearSourcePath, gearSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
               const statusSourceFile = ts.createSourceFile(statusEffectsSourcePath, statusSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+              const questSourceFile = ts.createSourceFile(questSourcePath, questSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
               const enemyIds = new Set(catalogObjectsFromRecord(variableInitializer(enemySourceFile, "ENEMIES")).flatMap((object) => {
                 const id = objectStringProperty(object, "id");
                 return id ? [id] : [];
               }));
               const itemIds = catalogIdsFromArray(variableInitializer(gearSourceFile, "ITEMS"));
+              const adventureIds = catalogIdsFromArray(variableInitializer(adventureSourceFile, "ADVENTURES"));
               const eventObjects = catalogObjectsFromRecord(variableInitializer(adventureSourceFile, "ADVENTURE_EVENTS"));
               const currentEventIds = new Set(eventObjects.flatMap((object) => {
                 const id = objectStringProperty(object, "id");
@@ -688,7 +748,6 @@ export function localSourceSync() {
               }));
 
               if (payload.kind === "items") {
-                const adventureIds = new Set(catalogIdsFromArray(variableInitializer(adventureSourceFile, "ADVENTURES")));
                 const itemCatalog = validateItemExchange(payload.exchange, new Set(statusKinds.keys()), adventureIds);
                 const itemsInitializer = variableInitializer(gearSourceFile, "ITEMS");
                 const setsInitializer = variableInitializer(gearSourceFile, "GEAR_SETS");
@@ -698,6 +757,19 @@ export function localSourceSync() {
                   { start: setsInitializer.getStart(gearSourceFile), end: setsInitializer.getEnd(), text: JSON.stringify(itemCatalog.sets, null, 2) },
                 ]);
                 await writeFile(gearSourcePath, updatedGearSource, "utf8");
+                return;
+              }
+
+              if (payload.kind === "quests") {
+                const questCatalog = validateQuestExchange(payload.exchange, enemyIds, itemIds, adventureIds);
+                const questsInitializer = variableInitializer(questSourceFile, "QUESTS");
+                const questlinesInitializer = variableInitializer(questSourceFile, "QUESTLINES");
+                if (!questsInitializer || !questlinesInitializer) throw new Error("The live quest catalog could not be located.");
+                const updatedQuestSource = applySourceEdits(questSource, [
+                  { start: questsInitializer.getStart(questSourceFile), end: questsInitializer.getEnd(), text: JSON.stringify(questCatalog.quests, null, 2) },
+                  { start: questlinesInitializer.getStart(questSourceFile), end: questlinesInitializer.getEnd(), text: JSON.stringify(questCatalog.questlines, null, 2) },
+                ]);
+                await writeFile(questSourcePath, updatedQuestSource, "utf8");
                 return;
               }
 

@@ -56,10 +56,10 @@ function resolveAbilityTypes(ability: AbilityDefinition): DamageType[] {
 
 const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   quickSlash: {
-    physicalPowerScaling: 0.15,
+    physicalPowerScaling: 0.4,
     spellPowerScaling: 0,
     range: "melee",
-    id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 15% of your Physical Power. Quick Slash has no cooldown.", energyCost: 1,
+    id: "quickSlash", name: "Quick Slash", description: "Deal Physical Damage equal to 40% of your Physical Power. Quick Slash has no cooldown.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 0.15, icon: "◢", branch: "shadow",
   },
   TwinStrike: {
@@ -68,8 +68,10 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.5, hits: 2, icon: "⫸", branch: "shadow",
   },
   PoisonStab: {
+    physicalPowerScaling: 0.6,
+    spellPowerScaling: 0,
     range: "melee",
-    id: "PoisonStab", name: "Poison Stab", description: "Deal Physical Damage equal to 50% of your Physical Power and apply 1 Poison.", energyCost: 3,
+    id: "PoisonStab", name: "Poison Stab", description: "Deal Physical Damage equal to 60% of your Physical Power and apply 1 Poison.", energyCost: 2,
     target: "enemy", damageType: "physical", powerScaling: 0.5, icon: "†", branch: "shadow", effect: "poison",
   },
   PoisonCloud: {
@@ -402,8 +404,10 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
     cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.6, icon: "✦", branch: "brute", vfx: "bash",
   },
   WoundingStrike: {
+    physicalPowerScaling: 0.6,
+    spellPowerScaling: 0,
     range: "melee",
-    id: "WoundingStrike", name: "Wounding Strike", description: "Deal Physical Damage equal to 40% of your Physical Power and apply 1 Bleed.", energyCost: 2,
+    id: "WoundingStrike", name: "Wounding Strike", description: "Deal Physical Damage equal to 60% of your Physical Power and apply 1 Bleed.", energyCost: 2,
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, statusApplications: [{ status: "bleed" }], icon: "✦", branch: "brute", vfx: "wounding_strike",
   },
   SwiftBlade: {

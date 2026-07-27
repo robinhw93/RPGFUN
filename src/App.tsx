@@ -10,7 +10,7 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { DevtoolAccessDialog, type DevtoolKind } from "./components/devtools/shared";
-import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getAdventureStartingHp, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
+import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getAdventureStartingHp, getAdventureTravelText, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -18,17 +18,20 @@ import { ADVENTURE_EVENTS, ITEMS, TALENTS } from "./game/data";
 import { grantItemForTesting, levelUpCharacterForTesting } from "./game/developerTools";
 import { createCombat, ensureCombatState, selectEnemyTarget, takeEnemyTurn } from "./game/engine";
 import { purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "./game/eventOutcomes";
+import { fleeCombat, type CombatFleeResult } from "./game/flee";
 import { equipGearItem, unequipGearItem } from "./game/gear";
 import { grantCombatReward } from "./game/rewards";
+import { acceptQuest, recordQuestAdventureCompletion, turnInQuest, type QuestActionResult } from "./game/quests";
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
-import { craftTownItem, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, type TavernMealId, type TownActionResult } from "./game/town";
+import { craftTownItem, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, sellTownItem, type TavernMealId, type TownActionResult } from "./game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
 import { useCombatActionQueue } from "./hooks/useCombatActionQueue";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
 import { AdventureView } from "./components/adventure/AdventureView";
+import { FleeResultDialog } from "./components/adventure/FleeResultDialog";
 
 import { CharacterCreation } from "./components/character/CharacterCreation";
 import { ClassSelection } from "./components/character/ClassSelection";
@@ -49,6 +52,7 @@ const EnemyDevtool = lazy(() => import("./components/devtools/EnemyDevtool").the
 const EventDevtool = lazy(() => import("./components/devtools/EventDevtool").then((module) => ({ default: module.EventDevtool })));
 const AdventureDevtool = lazy(() => import("./components/devtools/AdventureDevtool").then((module) => ({ default: module.AdventureDevtool })));
 const ItemDevtool = lazy(() => import("./components/devtools/ItemDevtool").then((module) => ({ default: module.ItemDevtool })));
+const QuestDevtool = lazy(() => import("./components/devtools/QuestDevtool").then((module) => ({ default: module.QuestDevtool })));
 const PortraitDevtool = lazy(() => import("./components/PortraitDevtool").then((module) => ({ default: module.PortraitDevtool })));
 const TownView = lazy(() => import("./components/town/TownView").then((module) => ({ default: module.TownView })));
 
@@ -70,18 +74,21 @@ function loadInitialGame(): GameState {
 
 function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
-  const [view, setView] = useState<View>(() => game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes" ? "character" : game.adventure.active ? "adventure" : game.characterIntroductionStep === "town" ? "town" : "adventure");
+  const [view, setView] = useState<View>(() => game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes" ? "character" : game.adventure.active ? "adventure" : "town");
   const [characterSection, setCharacterSection] = useState<CharacterSection>(() => game.characterIntroductionStep === "talents" ? "talents" : "overview");
   const [levelUpFlowStep, setLevelUpFlowStep] = useState<LevelUpFlowStep | null>(null);
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; travelLabel: string } | null>(null);
   const [encounterFlavor, setEncounterFlavor] = useState<{ message: string; phase: EncounterFlavorPhase } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [fleeResult, setFleeResult] = useState<CombatFleeResult | null>(null);
   const [pendingAdventureId, setPendingAdventureId] = useState<string | null>(null);
   const [townEntryLocation, setTownEntryLocation] = useState<TownEntryLocation>("square");
+  const [preserveTownSession, setPreserveTownSession] = useState(false);
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
   const [playerTurnReadyEventId, setPlayerTurnReadyEventId] = useState<number | null>(null);
   const travelTimers = useRef<number[]>([]);
+  const townScrollPosition = useRef(0);
   const presentedRewardIds = useRef(new Set<string>());
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
   const combatSequencer = useCombatEventSequencer(game, setGame);
@@ -89,6 +96,7 @@ function App() {
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = getAdventureNode(game.adventure);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
+  const primaryView: View = game.adventure.active ? "adventure" : "town";
   const characterIntroductionActive = game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes";
   const guidedCharacterFlowActive = characterIntroductionActive || levelUpFlowStep !== null;
   const recommendStartingItem = game.characterIntroductionStep === "town" && !Object.values(game.character.equipment).some(Boolean);
@@ -135,10 +143,28 @@ function App() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    const leavingTownForCharacter = view === "town" && next === "character" && !game.adventure.active;
+    const returningToPreservedTown = view === "character" && next === "town" && preserveTownSession && !game.adventure.active;
+    if (leavingTownForCharacter) {
+      townScrollPosition.current = window.scrollY;
+      setPreserveTownSession(true);
+    } else if (next !== "character" && next !== "town") {
+      setPreserveTownSession(false);
+      townScrollPosition.current = 0;
+    }
     if (next === "character") setCharacterSection("overview");
-    if (next === "town") setTownEntryLocation("square");
+    if (next === "town" && !returningToPreservedTown) {
+      setTownEntryLocation("square");
+      townScrollPosition.current = 0;
+    }
     setView(next);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (returningToPreservedTown) {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => window.scrollTo({ top: townScrollPosition.current, behavior: "auto" }));
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: leavingTownForCharacter ? "auto" : "smooth" });
+    }
   };
 
   const openCharacterSection = (section: CharacterSection) => {
@@ -174,9 +200,8 @@ function App() {
     presentedRewardIds.current.add(rewardId);
   }, []);
 
-  const playTravelTransition = (message: string, onComplete: () => void, revealMessage = true) => {
+  const playTravelTransition = (travelLabel: string, message: string, onComplete: () => void, revealMessage = true) => {
     if (travelTransition || encounterFlavor) return;
-    const travelLabel = "Walking beneath the windsong canopy";
     setTravelTransition({ phase: "travel", dots: 1, travelLabel });
     const dotInterval = window.setInterval(() => {
       setTravelTransition((current) => current?.phase === "travel" ? { ...current, dots: Math.min(5, current.dots + 1) } : current);
@@ -221,7 +246,7 @@ function App() {
     const node = entry ? entryToNode(entry) : null;
     const generatedEncounter = enemyIds?.length ? describeEnemyEncounter(enemyIds) : "";
     const message = node ? getStoryNodeIntroduction(node, generatedEncounter) : "You discover a new path.";
-    playTravelTransition(message, () => {
+    playTravelTransition(getAdventureTravelText(definition), message, () => {
       setGame((current) => {
         const maxHp = getDerivedStats(current.character).maxHp;
         const startingHp = getAdventureStartingHp(maxHp, current.adventure.carryHp);
@@ -250,12 +275,14 @@ function App() {
 
   const openTavern = () => {
     setPendingAdventureId(null);
+    setPreserveTownSession(false);
+    townScrollPosition.current = 0;
     setTownEntryLocation("tavern");
     setView("town");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const returnToAdventureList = () => {
+  const returnToArkenfall = () => {
     setGame((current) => ({
       ...current,
       adventure: {
@@ -269,6 +296,25 @@ function App() {
         pendingReward: null,
       },
     }));
+    setPreserveTownSession(false);
+    townScrollPosition.current = 0;
+    setTownEntryLocation("square");
+    setView("town");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const fleeCurrentCombat = () => {
+    const result = fleeCombat(game);
+    if (!result) return;
+    setGame(result.state);
+    setFleeResult(result);
+  };
+
+  const acknowledgeFleeResult = () => {
+    setFleeResult(null);
+    setTownEntryLocation("square");
+    setView("town");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const selectEnemy = (enemyId: string) => {
@@ -281,9 +327,15 @@ function App() {
   const runEnemyTurn = (actorId: string) => {
     setGame((current) => {
       if (!current.adventure.combat) return current;
+      const previousGoldStolen = current.adventure.combat.goldStolen ?? 0;
+      const combat = takeEnemyTurn(current.adventure.combat, current.character, actorId);
+      const newlyStolenGold = Math.max(0, (combat.goldStolen ?? 0) - previousGoldStolen);
       return {
         ...current,
-        adventure: { ...current.adventure, combat: takeEnemyTurn(current.adventure.combat, current.character, actorId) },
+        character: newlyStolenGold > 0
+          ? { ...current.character, gold: Math.max(0, current.character.gold - newlyStolenGold) }
+          : current.character,
+        adventure: { ...current.adventure, combat },
       };
     });
   };
@@ -313,9 +365,10 @@ function App() {
 
       const definition = getAdventureDefinition(adventure.adventureId);
       if (adventure.nodeIndex >= definition.stages.length - 1) {
+        const questCharacter = recordQuestAdventureCompletion(character, definition.id);
         return {
           ...current,
-          character: { ...character, completedAdventureIds: [...new Set([...character.completedAdventureIds, definition.id])] },
+          character: { ...questCharacter, completedAdventureIds: [...new Set([...questCharacter.completedAdventureIds, definition.id])] },
           adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null, eventEncounter: null, eventMerchant: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
         };
       }
@@ -379,7 +432,7 @@ function App() {
     const nextEntry = selectStageEntry(definition, game.adventure.nodeIndex + 1);
     const nextNode = entryToNode(nextEntry);
     const message = getStoryNodeIntroduction(nextNode, nextNode.enemies?.length ? describeEnemyEncounter(nextNode.enemies) : "");
-    playTravelTransition(message, () => {
+    playTravelTransition(getAdventureTravelText(definition), message, () => {
       advanceJourney(nextEntry.id);
     }, nextNode.type !== "event");
   };
@@ -411,8 +464,16 @@ function App() {
 
   const buyTownItem = (vendor: ArkenfallVendorId, itemId: string) => runTownAction((current) => purchaseTownItem(current, vendor, itemId));
   const makeTownItem = (station: ArkenfallVendorId, itemId: string) => runTownAction((current) => craftTownItem(current, station, itemId));
+  const sellItemInTown = (vendor: ArkenfallVendorId, itemId: string) => runTownAction((current) => sellTownItem(current, vendor, itemId));
   const restInTown = () => runTownAction(restAtArkenfallTavern);
   const eatInTown = (mealId: TavernMealId) => runTownAction((current) => purchaseTavernMeal(current, mealId));
+  const runQuestAction = (action: (current: GameState) => QuestActionResult): QuestActionResult => {
+    const result = action(game);
+    if (result.success) setGame(result.state);
+    return result;
+  };
+  const acceptTownQuest = (questId: string) => runQuestAction((current) => acceptQuest(current, questId));
+  const turnInTownQuest = (questId: string) => runQuestAction((current) => turnInQuest(current, questId));
 
   const unlockTalent = (talentId: string) => {
     setGame((current) => {
@@ -522,10 +583,10 @@ function App() {
   const returnToCharacterCreation = () => {
     clearSave();
     setGame(cloneInitial());
-    setView("adventure");
+    setView("town");
     setCharacterSection("overview");
-    setTravelTransition(null);
     setLevelUpFlowStep(null);
+    setTravelTransition(null);
     setResetDialogOpen(false);
   };
 
@@ -537,8 +598,8 @@ function App() {
       character: { ...current.character, name: name.trim(), avatarId, unspentStatPoints: 2 },
     }));
     setCharacterSection("overview");
-    setView("character");
     setLevelUpFlowStep(null);
+    setView("character");
     window.scrollTo({ top: 0 });
   };
 
@@ -569,12 +630,13 @@ function App() {
     setGame((current) => current.characterIntroductionStep === "attributes" && current.character.unspentStatPoints === 0
       ? { ...current, characterIntroductionStep: "town" }
       : current);
+    setPreserveTownSession(false);
+    townScrollPosition.current = 0;
     setTownEntryLocation("square");
     setView("town");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (!game.characterCreated) return <CharacterCreation onCreate={createCharacter} />;
   const openScoreCharacter = () => {
     const reward = game.adventure.pendingReward;
     if (reward?.levelsGained && (game.character.talentPoints > 0 || game.character.unspentStatPoints > 0)) {
@@ -603,6 +665,7 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  if (!game.characterCreated) return <CharacterCreation onCreate={createCharacter} />;
 
   return (
     <div
@@ -610,12 +673,12 @@ function App() {
       style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs * Math.max(0.1, game.adventure.combat?.attackAnimationDurationMultiplier ?? 1) / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1)}ms` } as React.CSSProperties}
     >
       <header className="topbar">
-        <button className="brand" onClick={() => navigate("adventure")} aria-label={characterIntroductionActive ? "Introduction in progress" : levelUpFlowStep ? "Level up in progress" : "Go to adventure"}>
+        <button className="brand" onClick={() => navigate(primaryView)} aria-label={characterIntroductionActive ? "Introduction in progress" : levelUpFlowStep ? "Level up in progress" : primaryView === "town" ? "Go to Arkenfall Town" : "Return to adventure"}>
           <span className="brand-mark"><Sparkles size={17} /></span>
           <span><strong>ARKENFALL</strong></span>
         </button>
         {!guidedCharacterFlowActive && <nav className="desktop-nav" aria-label="Main navigation">
-          <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Footprints size={17} />} label="Adventure" />
+          <NavButton active={view === primaryView} onClick={() => navigate(primaryView)} icon={primaryView === "town" ? <Home size={17} /> : <Footprints size={17} />} label={primaryView === "town" ? "Town" : "Adventure"} />
           <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={17} />} label="Character" />
         </nav>}
         <div className="resources">
@@ -644,14 +707,15 @@ function App() {
             onInitiativeOrderStart={beginInitiativeOrder}
             onInitiativeComplete={finishInitiativeRoll}
             onContinue={continueJourney}
-            onReturnToAdventures={returnToAdventureList}
+            onFlee={fleeCurrentCombat}
+            onReturnToArkenfall={returnToArkenfall}
             onEvent={resolveEvent}
             onMerchantPurchase={buyMerchantItem}
             onMerchantSell={sellMerchantItem}
             onPermadeath={returnToCharacterCreation}
-            onTalents={() => openCharacterSection("talents")}
             onCharacter={openScoreCharacter}
             onInventory={() => openCharacterSection("equipment")}
+            onEquip={equipItem}
             rewardPresentationPlayed={Boolean(game.adventure.pendingReward && presentedRewardIds.current.has(game.adventure.pendingReward.id))}
             onRewardPresentationStart={markRewardPresented}
           />
@@ -676,25 +740,29 @@ function App() {
             </>}
           </>
         )}
-        {view === "town" && (
-          <Suspense fallback={null}>
-            <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onExit={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onRest={restInTown} onMeal={eatInTown} />
-          </Suspense>
+        {(view === "town" || (view === "character" && preserveTownSession && !game.adventure.active)) && (
+          <div className="town-view-host" hidden={view !== "town"}>
+            <Suspense fallback={null}>
+              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
+            </Suspense>
+          </div>
         )}
         <Suspense fallback={null}>
-          {view === "talentDevtool" && <TalentDevtool onExit={() => navigate("adventure")} />}
-          {view === "enemyDevtool" && <EnemyDevtool onExit={() => navigate("adventure")} />}
-          {view === "eventDevtool" && <EventDevtool onExit={() => navigate("adventure")} />}
-          {view === "adventureDevtool" && <AdventureDevtool onExit={() => navigate("adventure")} />}
-          {view === "itemDevtool" && <ItemDevtool onExit={() => navigate("adventure")} />}
-          {view === "portraitDevtool" && <PortraitDevtool onExit={() => navigate("adventure")} />}
+          {view === "talentDevtool" && <TalentDevtool onExit={() => navigate(primaryView)} />}
+          {view === "enemyDevtool" && <EnemyDevtool onExit={() => navigate(primaryView)} />}
+          {view === "eventDevtool" && <EventDevtool onExit={() => navigate(primaryView)} />}
+          {view === "adventureDevtool" && <AdventureDevtool onExit={() => navigate(primaryView)} />}
+          {view === "itemDevtool" && <ItemDevtool onExit={() => navigate(primaryView)} />}
+          {view === "questDevtool" && <QuestDevtool onExit={() => navigate(primaryView)} />}
+          {view === "portraitDevtool" && <PortraitDevtool onExit={() => navigate(primaryView)} />}
         </Suspense>
       </main>
 
       {!guidedCharacterFlowActive && <nav className="mobile-nav" aria-label="Mobile navigation">
-        <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Home size={19} />} label="Adventure" />
+        <NavButton active={view === primaryView} onClick={() => navigate(primaryView)} icon={primaryView === "town" ? <Home size={19} /> : <Footprints size={19} />} label={primaryView === "town" ? "Town" : "Adventure"} />
         <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={19} />} label="Character" />
       </nav>}
+      {fleeResult && <FleeResultDialog result={fleeResult} onAcknowledge={acknowledgeFleeResult} />}
       {resetDialogOpen && (
         <GameConfirmDialog
           title="Erase this character?"

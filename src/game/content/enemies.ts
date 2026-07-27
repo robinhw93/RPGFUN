@@ -10,8 +10,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-mrxiut2a-k4kgv": {
     id: "enemy-mrxiut2a-k4kgv", name: "Rabid Rat", title: "Creature", imageUrl: "/assets/enemies/full/rabid-rat.webp", portraitUrl: "/assets/enemies/portraits/rabid-rat.webp",
-    maxHp: 11, physicalPower: 1, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.1,
-    energyRegen: 1, maxEnergy: 3, startingEnergy: 3, dropTable: [{ itemId: "item-ms0jej41-7sii2", chance: 80 }],
+    maxHp: 9, physicalPower: 1, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.1,
+    energyRegen: 1, maxEnergy: 3, startingEnergy: 3, dropTable: [
+      { itemId: "item-ms0jej41-7sii2", chance: 80 },
+      { itemId: "gear-windsong-galehide-striders", chance: 1 },
+      { itemId: "gear-windsong-wolfstep-loop", chance: 1 },
+    ],
     abilities: [
       { id: "enemy-ability-mrxjymmz-fomw6", name: "Bite", description: "Deals 100% Physical Power as Physical damage.", energyCost: 2, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 1, vfx: "enemy_bite" },
       { id: "enemy-ability-mrxk052s-zrgdh", name: "Scurry", description: "Recovers 1 extra Energy next turn.", energyCost: 0, cooldownTurns: 1, range: "melee", nextTurnEnergyRegen: 1, vfx: "enemy_scurry" },
@@ -21,8 +25,13 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-mrxj4o6o-o45ia": {
     id: "enemy-mrxj4o6o-o45ia", name: "Windsong Wolf", title: "Creature", imageUrl: "/assets/enemies/full/windsong-wolf.webp", portraitUrl: "/assets/enemies/portraits/windsong-wolf.webp",
-    maxHp: 20, physicalPower: 2, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.1,
-    energyRegen: 1, maxEnergy: 6, startingEnergy: 6, dropTable: [{ itemId: "item-ms0jdzsp-pnyoa", chance: 20 }, { itemId: "item-ms0jd8ky-lu2zb", chance: 60 }],
+    maxHp: 16, physicalPower: 2, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.1,
+    energyRegen: 1, maxEnergy: 6, startingEnergy: 6, dropTable: [
+      { itemId: "item-ms0jdzsp-pnyoa", chance: 20 },
+      { itemId: "item-ms0jd8ky-lu2zb", chance: 60 },
+      { itemId: "gear-windsong-galehide-jerkin", chance: 4 },
+      { itemId: "gear-windsong-bramblefang", chance: 3 },
+    ],
     abilities: [
       { id: "enemy-ability-mrxjymmz-6ubjd", name: "Howl", description: "Applies Vulnerable.", energyCost: 0, cooldownTurns: 5, range: "ranged", rangedPresentation: "target", statusApplications: [{ status: "vulnerable" }], vfx: "enemy_howl" },
       { id: "enemy-ability-mrxk2rt1-qaobv", name: "Bite and Claw", description: "Strikes twice for 50% Physical Power as Physical damage per hit. Each hit has a 20% chance to apply Bleed.", energyCost: 2, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 0.5, hits: 2, statusApplications: [{ status: "bleed", chance: 0.2 }], vfx: "enemy_bite_claw" },
@@ -31,15 +40,25 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-mrxk609z-n04fq": {
     id: "enemy-mrxk609z-n04fq", name: "Forest Wisp", title: "Creature", imageUrl: "/assets/enemies/full/forest-wisp.webp", portraitUrl: "/assets/enemies/portraits/forest-wisp.webp",
-    maxHp: 9, physicalPower: 0, spellPower: 2, armor: 0, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
-    energyRegen: 1, maxEnergy: 4, startingEnergy: 4, dropTable: [{ itemId: "item-ms0jf0sp-z8hcl", chance: 50 }],
+    maxHp: 8, physicalPower: 0, spellPower: 2, armor: 0, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 2, startingEnergy: 2, dropTable: [
+      { itemId: "item-ms0jf0sp-z8hcl", chance: 50 },
+      { itemId: "gear-windsong-wispwoven-leggings", chance: 0.8 },
+      { itemId: "gear-windsong-wispwoven-band", chance: 0.8 },
+      { itemId: "gear-windsong-moondrop-wand", chance: 0.8 },
+      { itemId: "consumable-windsong-whisperbloom-tonic", chance: 2 },
+    ],
     abilities: [{ id: "enemy-ability-mrxk7ose-fc13q", name: "Wisp Blast", description: "Deals Arcane damage equal to a random 50–100% of Spell Power and has a 10% chance to apply Weaken. When its final blast spends all Energy, the Forest Wisp becomes Stunned for 1 turn.", energyCost: 1, cooldownTurns: 0, range: "ranged", rangedPresentation: "projectile", damageType: "arcane", powerScalingRange: { power: "spell", min: 0.5, max: 1 }, statusApplications: [{ status: "weaken", chance: 0.1 }], selfStatusApplicationsWhenEnergyDepleted: [{ status: "stunned", duration: 2 }], vfx: "enemy_wisp_blast" }],
     behaviorNotes: "Uses Wisp Blast repeatedly until its Energy is empty, then becomes Stunned for its next turn.", behavior: "wisp_barrage", maxActionsPerTurn: 10, accent: "#79a86d",
   },
   "enemy-mrxkar5z-g9o5d": {
     id: "enemy-mrxkar5z-g9o5d", name: "Brown Bear", title: "Creature", imageUrl: "/assets/enemies/full/brown-bear.webp", portraitUrl: "/assets/enemies/portraits/brown-bear.webp",
     maxHp: 30, physicalPower: 3, spellPower: 0, armor: 5, magicResistance: 0, hitChance: 0.85, dodgeChance: 0.05, critChance: 0.05,
-    energyRegen: 0, maxEnergy: 6, startingEnergy: 6, dropTable: [{ itemId: "item-ms0jgblm-ko16i", chance: 50 }],
+    energyRegen: 0, maxEnergy: 6, startingEnergy: 6, dropTable: [
+      { itemId: "item-ms0jgblm-ko16i", chance: 50 },
+      { itemId: "gear-windsong-thornbark-visor", chance: 8 },
+      { itemId: "gear-windsong-thornbark-buckler", chance: 8 },
+    ],
     abilities: [
       { id: "enemy-ability-mrxkdwnl-vont1", name: "Maul", description: "Deals 100% Physical Power as Physical damage and applies 1 Bleed.", energyCost: 3, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 1, statusApplications: [{ status: "bleed", stacks: 1 }], vfx: "enemy_maul" },
       { id: "enemy-ability-mrxkeegm-8fny8", name: "Hibernate", description: "Gains Sleep and recovers 6 extra Energy next turn.", energyCost: 0, cooldownTurns: 1, range: "melee", selfStatusApplications: [{ status: "sleep", duration: 2 }], nextTurnEnergyRegen: 6, vfx: "enemy_hibernate" },
@@ -49,8 +68,15 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-mrxkjqs3-g7g5i": {
     id: "enemy-mrxkjqs3-g7g5i", name: "The Forest Spirit", title: "Creature", imageUrl: "/assets/enemies/full/forest-spirit.webp", portraitUrl: "/assets/enemies/portraits/forest-spirit.webp",
-    maxHp: 40, physicalPower: 0, spellPower: 8, armor: 1, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.1,
-    energyRegen: 2, maxEnergy: 10, startingEnergy: 10, dropTable: [{ itemId: "gear-ms0h89t2-sczql", chance: 100 }, { itemId: "gear-ms0h9jvh-cpg4y", chance: 100 }, { itemId: "gear-ms0haj6d-e8pmv", chance: 100 }, { itemId: "item-ms0jf0sp-z8hcl", chance: 80 }],
+    maxHp: 36, physicalPower: 0, spellPower: 5, armor: 1, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.1,
+    energyRegen: 2, maxEnergy: 10, startingEnergy: 10, dropTable: [
+      { itemId: "gear-ms0h89t2-sczql", chance: 100 },
+      { itemId: "gear-ms0h9jvh-cpg4y", chance: 100 },
+      { itemId: "gear-ms0haj6d-e8pmv", chance: 100 },
+      { itemId: "item-ms0jf0sp-z8hcl", chance: 80 },
+      { itemId: "gear-windsong-thornbark-visor", chance: 2 },
+      { itemId: "gear-windsong-thornbark-buckler", chance: 2 },
+    ],
     abilities: [
       { id: "enemy-ability-mrxkkzcu-tqzsj", name: "Fade Out", description: "Gains Stealth until the end of its next turn and recovers 2 extra Energy next turn.", energyCost: 3, cooldownTurns: 5, range: "ranged", rangedPresentation: "target", selfStatusApplications: [{ status: "stealth" }], nextTurnEnergyRegen: 2, vfx: "enemy_fade_out" },
       { id: "enemy-ability-mrxkmol2-9006k", name: "Burning Glare", description: "Deals 75% Spell Power as Fire damage and applies 1 Burn.", energyCost: 2, cooldownTurns: 2, range: "ranged", rangedPresentation: "projectile", damageType: "fire", spellPowerScaling: 0.75, statusApplications: [{ status: "burn", stacks: 1 }], vfx: "enemy_burning_glare" },
@@ -62,8 +88,25 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-ms1ej4re-xskqn": {
     id: "enemy-ms1ej4re-xskqn", name: "Goblin Longseer", title: "Creature", imageUrl: "/assets/enemies/full/goblin-longseer.webp", portraitUrl: "/assets/enemies/portraits/goblin-longseer.webp",
-    maxHp: 30, physicalPower: 5, spellPower: 0, armor: 1, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.08, critChance: 0.05,
-    energyRegen: 1, maxEnergy: 5, startingEnergy: 1, dropTable: [{ itemId: "item-ms0ss0dt-z4bke", chance: 30 }],
+    maxHp: 32, physicalPower: 5, spellPower: 0, armor: 1, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.08, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 5, startingEnergy: 1, dropTable: [
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 30
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 80
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 80
+  },
+  {
+    "itemId": "gear-ms1i1671-yxsnp",
+    "chance": 10
+  }
+],
     abilities: [
       { id: "enemy-ability-ms1ekpk5-l5ft7", name: "Bow Shot", description: "Deals 100% Physical Power as Physical damage.", energyCost: 0, cooldownTurns: 1, range: "ranged", rangedPresentation: "projectile", damageType: "physical", physicalPowerScaling: 1, vfx: "enemy_bow_shot" },
       { id: "enemy-ability-ms1fezxg-6sfj6", name: "Snipe", description: "Deals 200% Physical Power as Physical damage and applies Vulnerable.", energyCost: 5, cooldownTurns: 1, range: "ranged", rangedPresentation: "projectile", damageType: "physical", physicalPowerScaling: 2, statusApplications: [{ status: "vulnerable" }], vfx: "enemy_snipe" },
@@ -72,8 +115,41 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-ms1fgqar-mafv9": {
     id: "enemy-ms1fgqar-mafv9", name: "Goblin Quickstabber", title: "Creature", imageUrl: "/assets/enemies/full/goblin-quickstabber.webp", portraitUrl: "/assets/enemies/portraits/goblin-quickstabber.webp",
-    maxHp: 24, physicalPower: 6, spellPower: 0, armor: 1, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.1,
-    energyRegen: 1, maxEnergy: 5, startingEnergy: 5, dropTable: [{ itemId: "item-ms0ss0dt-z4bke", chance: 30 }, { itemId: "consumable-ms0e551z-v6qcf", chance: 10 }],
+    maxHp: 28, physicalPower: 6, spellPower: 0, armor: 1, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.1,
+    energyRegen: 1, maxEnergy: 5, startingEnergy: 5, dropTable: [
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 30
+  },
+  {
+    "itemId": "consumable-ms0e551z-v6qcf",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 100
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 80
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 60
+  },
+  {
+    "itemId": "gear-ms1i1671-yxsnp",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms1i5k37-1rg9d",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms1i77n7-j9o2s",
+    "chance": 10
+  }
+],
     abilities: [
       { id: "enemy-ability-ms1fjpq2-x44en", name: "Stealth", description: "Gains Stealth until the end of its next turn.", energyCost: 0, cooldownTurns: 5, range: "melee", selfStatusApplications: [{ status: "stealth" }], vfx: "enemy_quickstabber_stealth" },
       { id: "enemy-ability-ms1fkbg6-tw10h", name: "Shiv", description: "Deals 100% Physical Power as Physical damage and applies 1 Poison.", energyCost: 2, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 1, statusApplications: [{ status: "poison", stacks: 1 }], vfx: "enemy_shiv" },
@@ -82,8 +158,33 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-ms1fnbla-fs4ul": {
     id: "enemy-ms1fnbla-fs4ul", name: "Goblin Woundfixer", title: "Creature", imageUrl: "/assets/enemies/full/goblin-woundfixer.webp", portraitUrl: "/assets/enemies/portraits/goblin-woundfixer.webp",
-    maxHp: 28, physicalPower: 2, spellPower: 6, armor: 0, magicResistance: 3, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
-    energyRegen: 2, maxEnergy: 10, startingEnergy: 10, dropTable: [{ itemId: "item-ms0ss0dt-z4bke", chance: 20 }, { itemId: "consumable-ms0e3hjh-5bewd", chance: 5 }],
+    maxHp: 34, physicalPower: 2, spellPower: 6, armor: 0, magicResistance: 3, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
+    energyRegen: 2, maxEnergy: 10, startingEnergy: 10, dropTable: [
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 20
+  },
+  {
+    "itemId": "consumable-ms0e3hjh-5bewd",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-ms1id4sv-l0ihy",
+    "chance": 18
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 80
+  },
+  {
+    "itemId": "gear-ms1iccqm-4yu0n",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms1iadb1-2snx8",
+    "chance": 10
+  }
+],
     abilities: [
       { id: "enemy-ability-ms1fpoku-tvscy", name: "Heal", description: "Restores Health to the most wounded friendly target equal to 100% of Spell Power.", energyCost: 3, cooldownTurns: 2, range: "ranged", rangedPresentation: "target", friendlyTarget: "lowest_health", friendlyHealSpellPowerScaling: 1, vfx: "enemy_woundfixer_heal" },
       { id: "enemy-ability-ms1fqn1u-55k6q", name: "Hex", description: "Deals 50% Spell Power as Spell damage and applies Slowed.", energyCost: 1, cooldownTurns: 1, range: "melee", damageType: "spell", spellPowerScaling: 0.5, statusApplications: [{ status: "slowed" }], vfx: "enemy_hex" },
@@ -92,8 +193,33 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
   },
   "enemy-ms1ftdlw-jz5lo": {
     id: "enemy-ms1ftdlw-jz5lo", name: "Goblin Biggrown", title: "Creature", imageUrl: "/assets/enemies/full/goblin-biggrown.webp", portraitUrl: "/assets/enemies/portraits/goblin-biggrown.webp",
-    maxHp: 40, physicalPower: 6, spellPower: 0, armor: 4, magicResistance: 0, hitChance: 0.95, dodgeChance: 0, critChance: 0.05,
-    energyRegen: 1, maxEnergy: 5, startingEnergy: 3, dropTable: [{ itemId: "item-ms0ss0dt-z4bke", chance: 50 }],
+    maxHp: 46, physicalPower: 6, spellPower: 0, armor: 4, magicResistance: 0, hitChance: 0.95, dodgeChance: 0, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 5, startingEnergy: 3, dropTable: [
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 100
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 80
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 80
+  },
+  {
+    "itemId": "gear-ms1i1671-yxsnp",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms1i5k37-1rg9d",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms1i77n7-j9o2s",
+    "chance": 20
+  }
+],
     abilities: [
       { id: "enemy-ability-ms1fv25a-ukf1s", name: "Heavy Cleave", description: "Deals 250% Physical Power as Physical damage and applies 1 Bleed.", energyCost: 5, cooldownTurns: 0, range: "melee", damageType: "physical", physicalPowerScaling: 2.5, statusApplications: [{ status: "bleed", stacks: 1 }], vfx: "enemy_heavy_cleave" },
       { id: "enemy-ability-ms1fwaul-zcws5", name: "Protect", description: "Grants 5 Guard to every other living enemy.", energyCost: 1, cooldownTurns: 3, range: "melee", friendlyTarget: "all_other_enemies", friendlyStatusApplications: [{ status: "guard", stacks: 5 }], vfx: "enemy_protect" },
@@ -104,7 +230,44 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     id: "enemy-ms1fykbj-rhb65", name: "Striz, Goblin Chieftain", title: "Creature", imageUrl: "/assets/enemies/full/striz-goblin-chieftain.webp", portraitUrl: "/assets/enemies/portraits/striz-goblin-chieftain.webp",
     maxHp: 80, physicalPower: 10, spellPower: 6, armor: 4, magicResistance: 4, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
     energyRegen: 1, maxEnergy: 10, startingEnergy: 10,
-    dropTable: [{ itemId: "consumable-ms0e551z-v6qcf", chance: 60 }, { itemId: "item-ms0ss0dt-z4bke", chance: 100 }, { itemId: "item-ms0ss0dt-z4bke", chance: 100 }, { itemId: "item-ms0ss0dt-z4bke", chance: 60 }],
+    dropTable: [
+  {
+    "itemId": "consumable-ms0e551z-v6qcf",
+    "chance": 60
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 100
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 100
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 60
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 100
+  },
+  {
+    "itemId": "gear-ms1i1671-yxsnp",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1i5k37-1rg9d",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1i77n7-j9o2s",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1id4sv-l0ihy",
+    "chance": 10
+  }
+],
     abilities: [
       { id: "enemy-ability-ms1g1ysa-6452h", name: "Skewer", description: "Deals 100% Physical Power as Physical damage and applies 1 Bleed.", energyCost: 1, cooldownTurns: 3, range: "melee", damageType: "physical", physicalPowerScaling: 1, statusApplications: [{ status: "bleed", stacks: 1 }], vfx: "enemy_skewer" },
       { id: "enemy-ability-ms1g3m9s-n12oq", name: "Rally", description: "Grants Fierce to every living enemy.", energyCost: 1, cooldownTurns: 5, range: "melee", friendlyTarget: "all_enemies", friendlyStatusApplications: [{ status: "fierce" }], vfx: "enemy_rally" },
@@ -112,5 +275,294 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       { id: "enemy-ability-ms1gucm0-0n5ec", name: "Spear Poke", description: "Deals 75% Physical Power as Physical damage.", energyCost: 2, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 0.75, vfx: "enemy_spear_poke" },
     ],
     behaviorNotes: "Uses every available ability when possible, with Spear Poke as its fallback. Impale is prepared for one turn before release.", behavior: "goblin_chieftain", maxActionsPerTurn: 4, accent: "#aa633f",
+  },
+  "enemy-ms2vrqbb-8r5ux": {
+    id: "enemy-ms2vrqbb-8r5ux", name: "Hill Troll", title: "Creature", imageUrl: "/assets/enemies/full/hill-troll.webp", portraitUrl: "/assets/enemies/portraits/hill-troll.webp",
+    maxHp: 98, physicalPower: 10, spellPower: 0, armor: 2, magicResistance: 2, hitChance: 0.9, dodgeChance: 0.05, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 10, startingEnergy: 10,
+    dropTable: [
+  {
+    "itemId": "item-ms0jd8ky-lu2zb",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms0sx064-zq3n5",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms30095w-ci3mw",
+    "chance": 4
+  },
+  {
+    "itemId": "gear-trollforged-greathelm",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-trollforged-warboots",
+    "chance": 5
+  },
+  {
+    "itemId": "item-highfall-frostroot",
+    "chance": 18
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2vx10q-s3qsn", name: "Club Smash", description: "Charges for one turn, then deals 250% Physical Power as Physical damage.", energyCost: 10, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 2.5, chargeTurns: 1, chargeText: "Hill Troll begins winding up a crushing blow.", chargeVfx: "enemy_impale_charge", vfx: "enemy_heavy_cleave" },
+      { id: "enemy-ability-ms2vylq4-ubwfz", name: "Nap", description: "Restores 15% maximum Health, gains Sleep, and recovers 10 extra Energy next turn.", energyCost: 1, cooldownTurns: 1, range: "melee", selfHealMaxHpRatio: 0.15, selfStatusApplications: [{ status: "sleep", duration: 2 }], nextTurnEnergyRegen: 10, vfx: "enemy_hibernate" },
+    ],
+    behaviorNotes: "Charges Club Smash, releases it on the next turn, then uses Nap before repeating.", behavior: "hill_troll", maxActionsPerTurn: 1, accent: "#6f735f",
+  },
+  "enemy-ms2w17p6-txpmq": {
+    id: "enemy-ms2w17p6-txpmq", name: "Mountain Troll", title: "Creature", imageUrl: "/assets/enemies/full/mountain-troll.webp", portraitUrl: "/assets/enemies/portraits/mountain-troll.webp",
+    maxHp: 121, physicalPower: 10, spellPower: 0, armor: 4, magicResistance: 1, hitChance: 0.8, dodgeChance: 0, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 10, startingEnergy: 10,
+    dropTable: [
+  {
+    "itemId": "gear-ms0hfvkg-yni9w",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 10
+  },
+  {
+    "itemId": "consumable-ms2v69ag-xp79t",
+    "chance": 5
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 20
+  },
+  {
+    "itemId": "consumable-ms0ifcle-isww5",
+    "chance": 50
+  },
+  {
+    "itemId": "gear-ms30095w-ci3mw",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-trollforged-breastplate",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-trollforged-legguards",
+    "chance": 5
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2w38yw-vp9bu", name: "Heavy Fists", description: "Strikes four times for 80% Physical Power as Physical damage per hit.", energyCost: 5, cooldownTurns: 3, range: "melee", damageType: "physical", physicalPowerScaling: 0.8, hits: 4, vfx: "enemy_bite_claw" },
+      { id: "enemy-ability-ms2w4zyb-7c0ge", name: "Roar", description: "Gains Fierce.", energyCost: 2, cooldownTurns: 2, range: "melee", selfStatusApplications: [{ status: "fierce" }], vfx: "enemy_roar" },
+      { id: "enemy-ability-ms2w7zva-lxkg8", name: "Nap", description: "Restores 15% maximum Health, gains Sleep, and recovers 10 extra Energy next turn.", energyCost: 0, cooldownTurns: 1, range: "melee", selfHealMaxHpRatio: 0.15, selfStatusApplications: [{ status: "sleep", duration: 2 }], nextTurnEnergyRegen: 10, vfx: "enemy_hibernate" },
+    ],
+    behaviorNotes: "Uses Heavy Fists and Roar when available, falling back to Nap when no other ability can be used.", behavior: "mountain_troll", maxActionsPerTurn: 1, accent: "#5f6657",
+  },
+  "enemy-ms2w93yt-v817a": {
+    id: "enemy-ms2w93yt-v817a", name: "Hill Troll Shaman", title: "Creature", imageUrl: "/assets/enemies/full/hill-troll-shaman.webp", portraitUrl: "/assets/enemies/portraits/hill-troll-shaman.webp",
+    maxHp: 79, physicalPower: 6, spellPower: 10, armor: 1, magicResistance: 4, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 10, startingEnergy: 10,
+    dropTable: [
+  {
+    "itemId": "gear-ms1id4sv-l0ihy",
+    "chance": 5
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 10
+  },
+  {
+    "itemId": "consumable-ms2v69ag-xp79t",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms30095w-ci3mw",
+    "chance": 4
+  },
+  {
+    "itemId": "gear-ms307fr5-vebz0",
+    "chance": 8
+  },
+  {
+    "itemId": "gear-runewoven-cowl",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-runewoven-boots",
+    "chance": 5
+  },
+  {
+    "itemId": "item-highfall-frostroot",
+    "chance": 30
+  },
+  {
+    "itemId": "consumable-stonebloom-draught",
+    "chance": 8
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2wayvo-rnti2", name: "Heal", description: "Restores Health to the most wounded friendly target equal to 200% of Spell Power.", energyCost: 2, cooldownTurns: 3, range: "ranged", rangedPresentation: "target", friendlyTarget: "lowest_health", friendlyHealSpellPowerScaling: 2, vfx: "enemy_woundfixer_heal" },
+      { id: "enemy-ability-ms2wbr2c-66kcn", name: "Regeneration", description: "Grants Regenerate to the most wounded other enemy.", energyCost: 2, cooldownTurns: 4, range: "ranged", rangedPresentation: "target", friendlyTarget: "lowest_health_other", friendlyStatusApplications: [{ status: "regenerate" }], vfx: "enemy_spirit_heal" },
+      { id: "enemy-ability-ms2wcm61-4wsw3", name: "Greater Hex", description: "Deals 150% Spell Power as Spell damage and applies Weaken and Slowed.", energyCost: 1, cooldownTurns: 4, range: "ranged", rangedPresentation: "projectile", damageType: "spell", spellPowerScaling: 1.5, statusApplications: [{ status: "weaken" }, { status: "slowed" }], vfx: "enemy_hex" },
+      { id: "enemy-ability-ms2we50g-kzi7f", name: "Nap", description: "Restores 15% maximum Health and gains Sleep.", energyCost: 0, cooldownTurns: 1, range: "melee", selfHealMaxHpRatio: 0.15, selfStatusApplications: [{ status: "sleep", duration: 2 }], vfx: "enemy_hibernate" },
+    ],
+    behaviorNotes: "Prioritizes healing wounded allies, then Regeneration and Greater Hex. Uses Nap when no other ability is available.", behavior: "troll_shaman", maxActionsPerTurn: 1, accent: "#75658b",
+  },
+  "enemy-ms2wk1ul-6ol9b": {
+    id: "enemy-ms2wk1ul-6ol9b", name: "Highfall Bandit Enforcer", title: "Creature", imageUrl: "/assets/enemies/full/highfall-bandit-enforcer.webp", portraitUrl: "/assets/enemies/portraits/highfall-bandit-enforcer.webp",
+    maxHp: 54, physicalPower: 8, spellPower: 0, armor: 4, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 10, startingEnergy: 5,
+    dropTable: [
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms0ss0dt-z4bke",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms3054kn-cs3uu",
+    "chance": 6
+  },
+  {
+    "itemId": "gear-nightveil-cowl",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-nightveil-jerkin",
+    "chance": 5
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2wloah-2gx3k", name: "Steal", description: "Deals 100% Physical Power as Physical damage and steals up to 10 Gold.", energyCost: 1, cooldownTurns: 2, range: "melee", damageType: "physical", physicalPowerScaling: 1, stealGold: 10, vfx: "enemy_shiv" },
+      { id: "enemy-ability-ms2wmdjd-22til", name: "Stealth", description: "Gains Stealth until the end of the next turn and restores 10 Energy.", energyCost: 1, cooldownTurns: 3, range: "melee", selfStatusApplications: [{ status: "stealth" }], selfEnergyGain: 10, vfx: "enemy_quickstabber_stealth" },
+      { id: "enemy-ability-ms2wng0f-y2n2z", name: "Poisoned Stab", description: "Deals 50% Physical Power as Physical damage and applies 3 Poison.", energyCost: 6, cooldownTurns: 2, range: "melee", damageType: "physical", physicalPowerScaling: 0.5, statusApplications: [{ status: "poison", stacks: 3 }], vfx: "enemy_rabid_bite" },
+    ],
+    behaviorNotes: "Uses Steal whenever it is ready, enters Stealth, then follows with Poisoned Stab.", behavior: "bandit_enforcer", maxActionsPerTurn: 2, accent: "#6e5b50",
+  },
+  "enemy-ms2wqzxv-srsgs": {
+    id: "enemy-ms2wqzxv-srsgs", name: "Highfall Loot Goblin", title: "Creature", imageUrl: "/assets/enemies/full/highfall-loot-goblin.webp", portraitUrl: "/assets/enemies/portraits/highfall-loot-goblin.webp",
+    maxHp: 40, physicalPower: 0, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0.1, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 10, startingEnergy: 5,
+    dropTable: [
+  {
+    "itemId": "gear-ms1i1671-yxsnp",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1i5k37-1rg9d",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1i77n7-j9o2s",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1iadb1-2snx8",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1iccqm-4yu0n",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms1id4sv-l0ihy",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms27p0je-if2hq",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms27lxuu-3o5xy",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms27upmg-hxmuw",
+    "chance": 20
+  },
+  {
+    "itemId": "gear-ms307fr5-vebz0",
+    "chance": 10
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2wsv8u-j9a24", name: "Flee", description: "Escapes combat with all of its loot.", energyCost: 10, cooldownTurns: 0, range: "melee", fleeCombat: true, vfx: "enemy_flee" },
+    ],
+    behaviorNotes: "Gathers Energy until it can flee. A successful escape removes all of its loot from the reward.", behavior: "loot_goblin", maxActionsPerTurn: 1, accent: "#8c7944",
+  },
+  "enemy-ms2wuk5j-1ddqa": {
+    id: "enemy-ms2wuk5j-1ddqa", name: "Highfall Bandit Trapper", title: "Creature", imageUrl: "/assets/enemies/full/highfall-bandit-trapper.webp", portraitUrl: "/assets/enemies/portraits/highfall-bandit-trapper.webp",
+    maxHp: 46, physicalPower: 10, spellPower: 0, armor: 2, magicResistance: 1, hitChance: 0.95, dodgeChance: 0.05, critChance: 0.05,
+    energyRegen: 1, maxEnergy: 10, startingEnergy: 10,
+    dropTable: [
+  {
+    "itemId": "item-ms0jd8ky-lu2zb",
+    "chance": 10
+  },
+  {
+    "itemId": "item-ms1if1q6-746wi",
+    "chance": 10
+  },
+  {
+    "itemId": "gear-ms3054kn-cs3uu",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-nightveil-legwraps",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-nightveil-treads",
+    "chance": 5
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2wwtu0-ustxf", name: "Bow Shot", description: "Deals 80% Physical Power as Physical damage.", energyCost: 2, cooldownTurns: 1, range: "ranged", rangedPresentation: "projectile", damageType: "physical", physicalPowerScaling: 0.8, vfx: "enemy_bow_shot" },
+      { id: "enemy-ability-ms2wxm3t-nrfbj", name: "Fire Trap", description: "Applies 1 Burn.", energyCost: 2, cooldownTurns: 3, range: "ranged", rangedPresentation: "target", statusApplications: [{ status: "burn", stacks: 1 }], vfx: "enemy_burning_glare" },
+      { id: "enemy-ability-ms2wyie9-iisii", name: "Snipe", description: "Deals 200% Physical Power as Physical damage.", energyCost: 2, cooldownTurns: 6, range: "ranged", rangedPresentation: "projectile", damageType: "physical", physicalPowerScaling: 2, vfx: "enemy_snipe" },
+    ],
+    behaviorNotes: "Uses Fire Trap whenever it is ready, then Snipe, with Bow Shot as its fallback.", behavior: "bandit_trapper", maxActionsPerTurn: 1, accent: "#596873",
+  },
+  "enemy-ms2xaper-z7o3g": {
+    id: "enemy-ms2xaper-z7o3g", name: "Troll Bandit King, Klaus", title: "Creature", imageUrl: "/assets/enemies/full/troll-bandit-king-klaus.webp", portraitUrl: "/assets/enemies/portraits/troll-bandit-king-klaus.webp",
+    maxHp: 198, physicalPower: 15, spellPower: 0, armor: 0, magicResistance: 0, hitChance: 0.95, dodgeChance: 0, critChance: 0.05,
+    energyRegen: 2, maxEnergy: 10, startingEnergy: 0,
+    dropTable: [
+  {
+    "itemId": "gear-ms30095w-ci3mw",
+    "chance": 7
+  },
+  {
+    "itemId": "gear-ms3054kn-cs3uu",
+    "chance": 7
+  },
+  {
+    "itemId": "gear-runewoven-robes",
+    "chance": 5
+  },
+  {
+    "itemId": "gear-runewoven-leggings",
+    "chance": 5
+  }
+],
+    abilities: [
+      { id: "enemy-ability-ms2xd4iz-c5j5z", name: "Patience", description: "Gains 10 Guard while waiting.", energyCost: 0, cooldownTurns: 1, range: "melee", selfStatusApplications: [{ status: "guard", stacks: 10 }], vfx: "enemy_protect" },
+      { id: "enemy-ability-ms2xe0t2-q41xk", name: "No Patience", description: "Deals 150% Physical Power as Physical damage.", energyCost: 10, cooldownTurns: 5, range: "melee", damageType: "physical", physicalPowerScaling: 1.5, vfx: "enemy_heavy_cleave" },
+      { id: "enemy-ability-ms2xgcxa-lier7", name: "Toying", description: "Deals 50% Physical Power as Physical damage and has a 20% chance to apply Vulnerable.", energyCost: 1, cooldownTurns: 1, range: "melee", damageType: "physical", physicalPowerScaling: 0.5, statusApplications: [{ status: "vulnerable", chance: 0.2 }], vfx: "enemy_spear_poke" },
+    ],
+    behaviorNotes: "Uses Patience until reaching 10 Energy, then No Patience once before using Toying every turn.", behavior: "troll_bandit_king", maxActionsPerTurn: 1, accent: "#8a4d3f",
   },
 };

@@ -1,6 +1,6 @@
 # Arkenfall
 
-Arkenfall is a mobile-first, build-focused, text RPG made with React, TypeScript, and Vite. The current vertical slice follows one permadeath character through **Windsong Forest** in the world of Arkenfall, with turn-based combat, a classless talent tree, equipment, leveling, and browser-local saving.
+Arkenfall is a mobile-first, build-focused, text RPG made with React, TypeScript, and Vite. The current vertical slice follows one permadeath character through **Windsong Forest**, **Arkenfall Highlands**, and **Highfall Mountains**, with turn-based combat, a classless talent tree, equipment, leveling, and browser-local saving.
 
 The game UI and all player-facing text are in English. Project documentation is also kept in English so names and rules match the game exactly.
 
@@ -47,15 +47,15 @@ The checks run focused gameplay regressions, verify documentation against the li
 
 - Character creation with ten selectable appearances, a guided Class/Talent/Attribute introduction, and permadeath.
 - Five base attributes and ten displayed derived combat stats.
-- Windsong Forest: a nine-stage story route mixing fixed combats, weighted combat/event stages, a Wandering Merchant, and a final Forest Spirit encounter; completed story adventures remain visible and can be replayed for 10% of their original XP and 50% of their original combat Gold rewards.
-- Arkenfall Town: a responsive illustrated hub above the adventure list with dedicated Blacksmith, Alchemist, Tailor, Leatherworker, Jeweler, and tavern destinations; five data-driven shops/crafting stations; paid recovery; and next-combat meals.
-- Initiative-based combat against up to three enemies in current content; the state model supports larger groups.
+- The story route progresses through nine-stage Windsong Forest, nine-stage Arkenfall Highlands, and the eleven-stage Highfall Mountains. Highfall mixes bandit and troll encounters, two recovery events, a rare Loot Goblin battle, the Highfall Merchant, and Troll Bandit King Klaus as its final boss. Completed story adventures remain visible and can be replayed for 10% of their original XP and 50% of their original combat Gold rewards.
+- Arkenfall Town: the responsive illustrated main hub, with Adventures, Shops, Tavern and Inn, and Quest Board as its four destinations. Shops opens the dedicated Blacksmith, Alchemist, Tailor, Leatherworker, and Jeweler locations; the five data-driven shops/crafting stations support Inventory selling, while the tavern provides paid recovery and next-combat meals and persistent quests are accepted and turned in at the board.
+- Initiative-based combat against up to three enemies in current content; the state model supports larger groups. Combat can be fled at the cost of 50–90% of current Gold and a 50% risk of losing one equipped item, returning the character to town and resetting the active adventure.
 - Energy, cooldowns, multi-action player turns, buffs, debuffs, damage-over-time effects, enemy intent, floating combat text, and an inspectable combat log.
 - A 263-node classless talent tree with bidirectional ANY connections, pan, zoom, and a six-slot ability loadout.
-- Eight equipment slots, weapon-hand rules, five item rarities from Common through Legendary, 30 current item definitions, two three-piece gear sets, item comparison, inventory filtering/sorting, combat consumables, ordinary carried items, item prices, independent enemy/stage item drops, grouped reward presentation, and event-driven single-stock Wandering Merchants with buying, gear inspection, and inventory selling.
+- Eight equipment slots, weapon-hand rules, automatic empty-slot equipping for newly acquired gear, five item rarities from Common through Legendary, 81 current item definitions, three two-piece, three three-piece, and three four-piece gear sets, item comparison, inventory filtering/sorting, combat consumables, ordinary carried items, item prices, independent enemy/stage item drops, grouped reward presentation, and event-driven single-stock Wandering Merchants with buying, gear inspection, inventory selling.
 - Experience and level-ups through the level-50 cap, plus stat points, talent points, and gold rewards.
 - Automatic local browser saves plus save migration for older talent and gear data.
-- Password-gated Talent, Enemy, Event, Adventure, Item, and Portrait editors with browser-local drafts and Codex-ready JSON exports, plus saved-character test actions for granting one normal level or selected live items. Item Editor includes Arkenfall vendor assignment and typed material recipes. While Vite is running locally, Event Manager, Adventure Editor, and Item Editor Save replace their complete canonical live catalogs; existing ability tooltips, Energy cost, cooldown, Flat Damage, and Power totals plus supported enemy fields use narrower source-sync writes.
+- Password-gated Talent, Enemy, Event, Adventure, Item, Quest, and Portrait editors with browser-local drafts and Codex-ready JSON exports, plus saved-character test actions for granting one normal level or selected live items. Quest Editor creates ordered questlines, enemy/item/adventure goals, and XP/item rewards. Item Editor includes Arkenfall vendor assignment and typed material recipes. While Vite is running locally, Event Manager, Adventure Editor, Item Editor, and Quest Editor Save replace their complete canonical live catalogs; existing ability tooltips, Energy cost, cooldown, Flat Damage, and Power totals plus supported enemy fields use narrower source-sync writes.
 
 ## Hosting
 

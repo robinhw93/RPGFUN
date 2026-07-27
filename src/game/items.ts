@@ -1,5 +1,6 @@
 import { STATUS_EFFECTS } from "./statusEffects";
-import type { ConsumableEffect, ConsumableItem, GearItem, InventoryItem, MiscItem } from "./types";
+import { getWeaponEquipType, isEquipmentSlotLocked } from "./gear";
+import type { CharacterState, ConsumableEffect, ConsumableItem, GearItem, GearSlot, InventoryItem, MiscItem } from "./types";
 
 const DEFAULT_GEAR_COSTS = { common: 12, uncommon: 28, rare: 65, epic: 140, legendary: 300 } as const;
 const DEFAULT_CONSUMABLE_COSTS = { common: 8, uncommon: 15, rare: 30, epic: 60, legendary: 120 } as const;
@@ -14,6 +15,63 @@ export function isGearItem(item: InventoryItem): item is GearItem {
 
 export function isMiscItem(item: InventoryItem): item is MiscItem {
   return item.kind === "misc";
+}
+
+/** Returns a compatible empty slot without replacing any currently equipped gear. */
+export function getAutomaticEquipSlot(character: CharacterState, item: InventoryItem): GearSlot | null {
+  if (!isGearItem(item)) return null;
+  const equipment = character.equipment;
+
+  if (item.slot === "ring") {
+    if (!equipment.ring1) return "ring1";
+    if (!equipment.ring2) return "ring2";
+    return null;
+  }
+
+  const weaponEquipType = getWeaponEquipType(item);
+  if (weaponEquipType === "twoHand") {
+    return !equipment.mainHand && !equipment.offHand ? "mainHand" : null;
+  }
+  if (weaponEquipType === "mainHand") return !equipment.mainHand ? "mainHand" : null;
+  if (weaponEquipType === "offHand") {
+    return !equipment.offHand && !isEquipmentSlotLocked("offHand", equipment) ? "offHand" : null;
+  }
+  if (weaponEquipType === "oneHand") {
+    if (!equipment.mainHand) return "mainHand";
+    if (!equipment.offHand && !isEquipmentSlotLocked("offHand", equipment)) return "offHand";
+    return null;
+  }
+
+  const slot = item.slot as GearSlot;
+  return equipment[slot] ? null : slot;
+}
+
+export interface ItemAcquisitionResult {
+  character: CharacterState;
+  equippedSlot: GearSlot | null;
+}
+
+/** Adds a newly acquired independent copy, equipping gear only when its compatible slot is empty. */
+export function acquireItem(character: CharacterState, item: InventoryItem): ItemAcquisitionResult {
+  const receivedItem = structuredClone(item);
+  const equippedSlot = getAutomaticEquipSlot(character, receivedItem);
+  if (equippedSlot) {
+    return {
+      equippedSlot,
+      character: {
+        ...character,
+        equipment: { ...character.equipment, [equippedSlot]: receivedItem },
+      },
+    };
+  }
+  return {
+    equippedSlot: null,
+    character: { ...character, inventory: [...character.inventory, receivedItem] },
+  };
+}
+
+export function acquireItems(character: CharacterState, items: InventoryItem[]): CharacterState {
+  return items.reduce((current, item) => acquireItem(current, item).character, character);
 }
 
 export interface GroupedInventoryItem {

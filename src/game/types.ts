@@ -421,7 +421,8 @@ export type CombatAbilityVfxKind =
   | "enemy_rally"
   | "enemy_impale_charge"
   | "enemy_impale"
-  | "enemy_spear_poke";
+  | "enemy_spear_poke"
+  | "enemy_flee";
 
 export type AbilityRange = "melee" | "ranged";
 export type AbilityAttackPresentation = "melee" | "projectile" | "target";
@@ -733,11 +734,19 @@ export interface EnemyAbilityDefinition {
   statusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number; chance?: number }>;
   selfStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
   /** Selects living enemy recipients for heals or friendly status applications. */
-  friendlyTarget?: "lowest_health" | "all_enemies" | "all_other_enemies";
+  friendlyTarget?: "lowest_health" | "lowest_health_other" | "all_enemies" | "all_other_enemies";
   /** Restores Health to the selected friendly target as a fraction of the caster's Spell Power. */
   friendlyHealSpellPowerScaling?: number;
   /** Statuses applied to the selected friendly recipients. */
   friendlyStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
+  /** Restores this fraction of the caster's maximum Health when the ability resolves. */
+  selfHealMaxHpRatio?: number;
+  /** Restores Energy to the caster immediately after paying the ability cost. */
+  selfEnergyGain?: number;
+  /** Gold removed from the player after this ability deals damage. */
+  stealGold?: number;
+  /** Removes the caster from combat without counting it for loot or kill objectives. */
+  fleeCombat?: boolean;
   /** Number of the caster's turns spent preparing this ability before it resolves. */
   chargeTurns?: number;
   /** Player-facing combat announcement used when the charge begins. */
@@ -760,7 +769,14 @@ export type EnemyBehaviorKind =
   | "goblin_longseer"
   | "goblin_woundfixer"
   | "goblin_biggrown"
-  | "goblin_chieftain";
+  | "goblin_chieftain"
+  | "hill_troll"
+  | "mountain_troll"
+  | "troll_shaman"
+  | "bandit_enforcer"
+  | "loot_goblin"
+  | "bandit_trapper"
+  | "troll_bandit_king";
 
 export interface EnemyTemplate {
   id: string;
@@ -804,6 +820,8 @@ export interface EnemyState extends EnemyTemplate {
   behaviorPhase?: string;
   /** Ability prepared on a previous turn and released before normal priority selection. */
   chargingAbilityId?: string;
+  /** True when this enemy escaped rather than being defeated. */
+  fled?: boolean;
 }
 
 export interface TurnOrderEntry {
@@ -858,6 +876,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "enemy_charge"; targetId: string; abilityId?: string }
+  | { id: string; eventIndex: number; type: "enemy_flee"; targetId: string }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatState {
@@ -869,6 +888,8 @@ export interface CombatState {
   playerActed: boolean;
   /** Number of separate abilities the active enemy has resolved during its current turn. */
   enemyActionsTaken: number;
+  /** Total Gold already stolen and applied to the character during this combat. */
+  goldStolen?: number;
   abilityCooldowns: Record<string, number>;
   eventId: number;
   completedSequenceEventId: number;
@@ -929,9 +950,42 @@ export interface CharacterState {
   inventory: InventoryItem[];
   equipment: Partial<Record<GearSlot, GearItem>>;
   completedAdventureIds: string[];
+  acceptedQuestIds: string[];
+  completedQuestIds: string[];
+  questProgress: Record<string, number>;
 }
 
 export type CharacterIntroductionStep = "class" | "talents" | "attributes" | "town" | "complete";
+
+export type QuestObjective =
+  | { type: "kill_enemy"; enemyId: string; quantity: number }
+  | { type: "collect_item"; itemId: string; quantity: number }
+  | { type: "complete_adventure"; adventureId: string; quantity: number };
+
+export interface QuestRewardItem {
+  itemId: string;
+  quantity: number;
+}
+
+export interface QuestReward {
+  experience: number;
+  items: QuestRewardItem[];
+}
+
+export interface QuestDefinition {
+  id: string;
+  title: string;
+  description: string;
+  objective: QuestObjective;
+  reward: QuestReward;
+}
+
+export interface QuestlineDefinition {
+  id: string;
+  title: string;
+  description: string;
+  questIds: string[];
+}
 
 export interface AdventureNode {
   id: string;
@@ -1030,13 +1084,17 @@ export interface AdventureStageDefinition {
   entries: AdventureStageEntry[];
 }
 
+export type AdventureTheme = "windsong_forest" | "arkenfall_highlands" | "highfall_mountains";
+
 export interface AdventureDefinition {
   id: string;
   name: string;
   description: string;
   recommendedLevel: number;
   prerequisiteAdventureId?: string;
-  theme: "windsong_forest";
+  theme: AdventureTheme;
+  /** Text shown beside the footsteps during this adventure's travel transition. */
+  travelText?: string;
   stages: AdventureStageDefinition[];
   completionTitle: string;
   completionDescription: string;

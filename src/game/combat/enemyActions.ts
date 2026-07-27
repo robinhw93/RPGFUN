@@ -51,6 +51,27 @@ export function getReadyEnemyAbility(enemy: EnemyState, enemies: EnemyState[] = 
     return (hasOtherLivingEnemy ? byName("Protect") : undefined) ?? byName("Heavy Cleave");
   }
   if (enemy.behavior === "goblin_chieftain") return byName("Rally") ?? byName("Skewer") ?? byName("Impale") ?? byName("Spear Poke");
+  if (enemy.behavior === "hill_troll") return byName("Club Smash") ?? byName("Nap");
+  if (enemy.behavior === "mountain_troll") return byName("Heavy Fists") ?? byName("Roar") ?? byName("Nap");
+  if (enemy.behavior === "troll_shaman") {
+    const hasWoundedFriendly = enemies.some((candidate) => candidate.hp > 0 && candidate.hp < candidate.maxHp);
+    const hasOtherLivingEnemy = enemies.some((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp > 0);
+    return (hasWoundedFriendly ? byName("Heal") : undefined)
+      ?? (hasOtherLivingEnemy ? byName("Regeneration") : undefined)
+      ?? byName("Greater Hex")
+      ?? byName("Nap");
+  }
+  if (enemy.behavior === "bandit_enforcer") {
+    return byName("Steal")
+      ?? (hasStatus(enemy.statuses, "stealth") ? byName("Poisoned Stab") : undefined)
+      ?? byName("Stealth")
+      ?? byName("Poisoned Stab");
+  }
+  if (enemy.behavior === "loot_goblin") return byName("Flee");
+  if (enemy.behavior === "bandit_trapper") return byName("Fire Trap") ?? byName("Snipe") ?? byName("Bow Shot");
+  if (enemy.behavior === "troll_bandit_king") {
+    return enemy.behaviorPhase === "toying" ? byName("Toying") : byName("No Patience") ?? byName("Patience");
+  }
   return enemy.abilities.find(ready);
 }
 
@@ -73,6 +94,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
   let playerEnergy = combat.energy;
+  let goldStolen = combat.goldStolen ?? 0;
   let playerAbilityCooldowns = combat.abilityCooldowns;
   let procUsage = { ...(combat.procUsage ?? {}) };
   const enemyIndex = enemies.findIndex((enemy) => enemy.instanceId === activeActor.actorId);
@@ -145,7 +167,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     playerAbilityCooldowns = burnTriggers.state.abilityCooldowns ?? playerAbilityCooldowns;
     enemy = enemies.find((candidate) => candidate.instanceId === originalEnemy.instanceId) ?? enemy;
   }
-  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns };
+  let nextBase: CombatState = { ...combat, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, goldStolen };
   const enemyAbility = getReadyEnemyAbility(enemy, enemies);
   let usedAbility = false;
   let startedCharge = false;
@@ -204,12 +226,33 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
         queueStatus(events, pendingEffects, `${enemy.name} gains ${status.name}.`, enemy.instanceId, status, application.status === "stunned", abilityEventIndex);
       });
+      const selfHealing = Math.min(
+        enemy.maxHp - enemy.hp,
+        Math.max(0, Math.round(enemy.maxHp * (enemyAbility.selfHealMaxHpRatio ?? 0))),
+      );
+      if (selfHealing > 0) {
+        enemy = { ...enemy, hp: enemy.hp + selfHealing };
+        logs.push(makeLog(`${enemy.name} restores ${selfHealing} Health.`, enemyAttackInfo));
+        queueHealAtEvent(pendingEffects, abilityEventIndex, enemy.instanceId, selfHealing);
+        queuePassiveAnimation(pendingEffects, abilityEventIndex, enemy.instanceId, `+${selfHealing} Health`);
+      }
+      if (enemyAbility.fleeCombat) {
+        enemy = { ...enemy, hp: 0, fled: true };
+        pendingEffects.push({ id: `enemy-flee-${Date.now()}-${enemy.instanceId}`, eventIndex: abilityEventIndex, type: "enemy_flee", targetId: enemy.instanceId });
+        logs.push(makeLog(`${enemy.name} escapes with its loot.`, enemyAttackInfo));
+      }
+      enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? enemy : candidate);
       const livingFriendlies = enemies.filter((candidate) => candidate.hp > 0);
       const friendlyTargets = enemyAbility.friendlyTarget === "lowest_health"
         ? livingFriendlies
           .filter((candidate) => candidate.hp < candidate.maxHp)
           .sort((left, right) => (left.hp / left.maxHp) - (right.hp / right.maxHp))
           .slice(0, 1)
+        : enemyAbility.friendlyTarget === "lowest_health_other"
+          ? livingFriendlies
+            .filter((candidate) => candidate.instanceId !== enemy.instanceId)
+            .sort((left, right) => (left.hp / left.maxHp) - (right.hp / right.maxHp))
+            .slice(0, 1)
         : enemyAbility.friendlyTarget === "all_other_enemies"
           ? livingFriendlies.filter((candidate) => candidate.instanceId !== enemy.instanceId)
           : enemyAbility.friendlyTarget === "all_enemies"
@@ -236,6 +279,9 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, target.instanceId, enemy.instanceId, true);
       });
       const isSelfUtility = (enemyAbility.selfStatusApplications?.length ?? 0) > 0
+        || (enemyAbility.selfHealMaxHpRatio ?? 0) > 0
+        || (enemyAbility.selfEnergyGain ?? 0) > 0
+        || enemyAbility.fleeCombat === true
         || (enemyAbility.nextTurnEnergyRegen ?? 0) > 0
         || enemyAbility.restoreFullEnergyNextTurn === true
         || Boolean(enemyAbility.friendlyTarget);
@@ -286,6 +332,12 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}It deals ${damage} damage${blocked ? ` (${blocked} blocked)` : ""}.`, "player", damage, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, sourceLabel: critical ? "Crit" : undefined });
       queueAbilityVfx(pendingEffects, damageEventIndex, enemyAbility.vfx, "player", enemy.instanceId);
       queueAbsorptionChanges(pendingEffects, damageEventIndex, "player", absorption);
+      const stolen = Math.min(Math.max(0, enemyAbility.stealGold ?? 0), Math.max(0, character.gold));
+      if (stolen > 0) {
+        goldStolen += stolen;
+        logs.push(makeLog(`${enemy.name} steals ${stolen} Gold.`, enemyAttackInfo));
+        queuePassiveAnimation(pendingEffects, damageEventIndex, "player", `-${stolen} Gold`);
+      }
       const appliedStatusIds: StatusEffectId[] = [];
       if (damage > 0) (enemyAbility.statusApplications ?? []).forEach((application) => {
         if (derived.statusImmunities.includes(application.status)) return;
@@ -351,7 +403,10 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       pendingEffects.push({ id: `enemy-charge-release-${Date.now()}-${enemy.instanceId}`, eventIndex: Math.max(abilityEventIndex, events.length - 1), type: "enemy_charge", targetId: enemy.instanceId });
     }
     const spendsResources = !releasingChargedAbility;
-    const energyAfterAbility = spendsResources ? Math.max(0, enemy.energy - enemyAbility.energyCost) : enemy.energy;
+    const energyAfterCost = spendsResources ? Math.max(0, enemy.energy - enemyAbility.energyCost) : enemy.energy;
+    const energyAfterAbility = spendsResources
+      ? Math.min(enemy.maxEnergy, energyAfterCost + Math.max(0, enemyAbility.selfEnergyGain ?? 0))
+      : energyAfterCost;
     if (spendsResources && energyAfterAbility === 0) {
       (enemyAbility.selfStatusApplicationsWhenEnergyDepleted ?? []).forEach((application) => {
         if (!canApplyStatusEffect(enemy.statuses, application.status)) return;
@@ -372,6 +427,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       if (enemyAbility.name === "Nature's Beam") enemy.behaviorPhase = "nature";
       if (enemyAbility.name === "Burning Glare") enemy.behaviorPhase = "burning";
     }
+    if (enemy.behavior === "troll_bandit_king" && enemyAbility.name === "No Patience") enemy.behaviorPhase = "toying";
     const bleedResult = applyBleedAfterAbility(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, 1, enemy.armor);
     enemy = { ...enemy, hp: bleedResult.hp, statuses: bleedResult.statuses };
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId
@@ -399,12 +455,12 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       playerEnergy = bleedTriggers.state.energy;
       playerAbilityCooldowns = bleedTriggers.state.abilityCooldowns ?? playerAbilityCooldowns;
     }
-    nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage };
+    nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, goldStolen };
   }
 
   enemy = enemies.find((candidate) => candidate.instanceId === enemy.instanceId) ?? enemy;
   const enemyActionsTaken = usedAbility ? (combat.enemyActionsTaken ?? 0) + 1 : combat.enemyActionsTaken ?? 0;
-  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, enemyActionsTaken };
+  nextBase = { ...nextBase, enemies, playerHp, playerStatuses, energy: playerEnergy, abilityCooldowns: playerAbilityCooldowns, procUsage, enemyActionsTaken, goldStolen };
   const nextEnemyAbility = getReadyEnemyAbility(enemy, enemies);
   const nextAbilityBlockedByStealth = Boolean(
     nextEnemyAbility

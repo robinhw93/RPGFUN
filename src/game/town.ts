@@ -1,6 +1,6 @@
 import { getDerivedStats } from "./character";
 import { ITEMS } from "./data";
-import { getItemGoldCost, isConsumableItem, isGearItem } from "./items";
+import { acquireItem, getItemGoldCost, getItemSellValue, isConsumableItem, isGearItem } from "./items";
 import type { ArkenfallVendorId, GameState, InventoryItem, ItemCraftingRecipe, StatusEffectId } from "./types";
 
 export type TavernMealId = "ironpot-stew" | "peppercrust-boar" | "hartroot-broth";
@@ -121,17 +121,14 @@ export function purchaseTownItem(state: GameState, vendor: ArkenfallVendorId, it
   if (!item || getArkenfallVendor(item) !== vendor || !isTownVendorItemUnlocked(item, state.character.completedAdventureIds)) return { state, success: false, message: "That item is not sold here." };
   const cost = getItemGoldCost(item);
   if (state.character.gold < cost) return { state, success: false, message: `You need ${cost - state.character.gold} more Gold.` };
+  const acquisition = acquireItem({ ...state.character, gold: state.character.gold - cost }, item);
   return {
     state: {
       ...state,
-      character: {
-        ...state.character,
-        gold: state.character.gold - cost,
-        inventory: [...state.character.inventory, structuredClone(item)],
-      },
+      character: acquisition.character,
     },
     success: true,
-    message: `${item.name} added to inventory.`,
+    message: acquisition.equippedSlot ? `${item.name} equipped automatically.` : `${item.name} added to inventory.`,
     item,
   };
 }
@@ -142,16 +139,39 @@ export function craftTownItem(state: GameState, station: ArkenfallVendorId, item
   const recipe = item ? getItemCraftingRecipe(item) : null;
   if (!item || !recipe || recipe.station !== station || !isTownCraftingRecipeUnlocked(item, state.character.completedAdventureIds)) return { state, success: false, message: "That item cannot be made here." };
   if (!canCraftTownItem(state.character.inventory, item, station, state.character.completedAdventureIds)) return { state, success: false, message: "You do not have all the required materials." };
+  const acquisition = acquireItem({ ...state.character, inventory: removeCraftingIngredients(state.character.inventory, recipe) }, item);
+  return {
+    state: {
+      ...state,
+      character: acquisition.character,
+    },
+    success: true,
+    message: acquisition.equippedSlot
+      ? `${item.name} crafted and equipped automatically.`
+      : station === "alchemist" ? `${item.name} brewed successfully.` : `${item.name} crafted successfully.`,
+    item,
+  };
+}
+
+/** Sells exactly one inventory copy to any Arkenfall vendor. */
+export function sellTownItem(state: GameState, _vendor: ArkenfallVendorId, itemId: string): TownActionResult {
+  if (state.adventure.active) return { state, success: false, message: "Finish your current adventure before visiting a vendor." };
+  const inventoryIndex = state.character.inventory.findIndex((item) => item.id === itemId);
+  if (inventoryIndex < 0) return { state, success: false, message: "That item is not in your inventory." };
+  const item = state.character.inventory[inventoryIndex];
+  const sellValue = getItemSellValue(item);
+  if (sellValue <= 0) return { state, success: false, message: "That item has no sell value." };
   return {
     state: {
       ...state,
       character: {
         ...state.character,
-        inventory: [...removeCraftingIngredients(state.character.inventory, recipe), structuredClone(item)],
+        gold: state.character.gold + sellValue,
+        inventory: state.character.inventory.filter((_, index) => index !== inventoryIndex),
       },
     },
     success: true,
-    message: station === "alchemist" ? `${item.name} brewed successfully.` : `${item.name} crafted successfully.`,
+    message: `${item.name} sold for ${sellValue} Gold.`,
     item,
   };
 }
@@ -161,21 +181,28 @@ export function restAtArkenfallTavern(state: GameState): TownActionResult {
   const maxHp = getDerivedStats(state.character).maxHp;
   const currentHp = Math.min(maxHp, state.adventure.carryHp ?? maxHp);
   if (currentHp >= maxHp) return { state, success: false, message: "You are already fully rested." };
-  const cost = getTavernRestCost(currentHp, maxHp);
-  if (state.character.gold < cost) return { state, success: false, message: `You need ${cost - state.character.gold} more Gold.` };
+  const offer = getTavernRestOffer(currentHp, maxHp, state.character.gold);
+  if (offer.goldCost <= 0) return { state, success: false, message: "You need at least 1 Gold to rest." };
   return {
     state: {
       ...state,
-      character: { ...state.character, gold: state.character.gold - cost },
-      adventure: { ...state.adventure, carryHp: maxHp },
+      character: { ...state.character, gold: state.character.gold - offer.goldCost },
+      adventure: { ...state.adventure, carryHp: currentHp + offer.healthRestored },
     },
     success: true,
-    message: `You rest by the hearth and recover ${maxHp - currentHp} Health for ${cost} Gold.`,
+    message: `You rest by the hearth and recover ${offer.healthRestored} Health for ${offer.goldCost} Gold.`,
   };
 }
 
 export function getTavernRestCost(currentHp: number, maxHp: number): number {
-  return Math.ceil(Math.max(0, maxHp - currentHp) / 3);
+  return Math.ceil(Math.max(0, maxHp - currentHp) / 5);
+}
+
+export function getTavernRestOffer(currentHp: number, maxHp: number, gold: number): { goldCost: number; healthRestored: number; fullyRestores: boolean } {
+  const missingHp = Math.max(0, maxHp - Math.max(0, Math.min(currentHp, maxHp)));
+  const goldCost = Math.min(Math.max(0, Math.floor(gold)), Math.ceil(missingHp / 5));
+  const healthRestored = Math.min(missingHp, goldCost * 5);
+  return { goldCost, healthRestored, fullyRestores: healthRestored === missingHp };
 }
 
 export function hasPreparedTavernMeal(state: GameState, meal: TavernMealDefinition): boolean {

@@ -1,8 +1,8 @@
 import { FlaskConical, Gem, Package, Plus, Shield, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ADVENTURES, GEAR_SETS, ITEMS } from "../../game/data";
 import { getItemGoldCost, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
-import { getItemIconUrl, ITEM_ARTWORK_URLS } from "../../game/itemIcons";
+import { CONSUMABLE_POTION_ARTWORK_URLS, getItemIconUrl, ITEM_ARTWORK_URLS } from "../../game/itemIcons";
 import { calculateGearScalingValue, getGearScalingRank } from "../../game/itemScaling";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { getArkenfallVendor, getItemCraftingRecipe } from "../../game/town";
@@ -12,6 +12,9 @@ import { copyJson, downloadJson, EditorShell, ensureInternalId, ITEM_DRAFT_STORA
 
 type ItemEditorTab = "gear" | "sets" | "consumables" | "misc";
 export type ItemEditorSortMode = "name_asc" | "name_desc" | "scaling_desc" | "scaling_asc";
+const ITEM_DRAFT_CATALOG_SIGNATURE_KEY = `${ITEM_DRAFT_STORAGE_KEY}.live-catalog-signature`;
+const ITEM_DRAFT_CATALOG_REVISION = "highfall-special-set-bonuses-v2";
+const CANONICAL_REFRESH_SET_IDS = new Set(["set-nightveil", "set-trollforged", "set-runewoven"]);
 const RARITIES: ItemRarity[] = ["common", "uncommon", "rare", "epic", "legendary"];
 const GEAR_SLOTS: Array<{ id: GearType; label: string }> = [
   { id: "head", label: "Head" }, { id: "chest", label: "Chest" }, { id: "pants", label: "Pants" }, { id: "boots", label: "Boots" },
@@ -35,6 +38,32 @@ const ARKENFALL_VENDORS: Array<{ id: ArkenfallVendorId; shop: string; crafting: 
 
 export function canonicalItemExchange(): ItemExchange {
   return { format: "arkenfall-items", version: 1, items: ITEMS.map((item) => structuredClone(item)), sets: GEAR_SETS.map((set) => structuredClone(set)) };
+}
+
+export function mergeItemDraftWithCanonical(draft: ItemExchange, canonical: ItemExchange = canonicalItemExchange()): ItemExchange {
+  const draftItemIds = new Set((draft.items ?? []).map((item) => item.id));
+  const draftSetIds = new Set((draft.sets ?? []).map((set) => set.id));
+  return {
+    ...draft,
+    items: [...(draft.items ?? []), ...canonical.items.filter((item) => !draftItemIds.has(item.id)).map((item) => structuredClone(item))],
+    sets: [...(draft.sets ?? []), ...canonical.sets.filter((set) => !draftSetIds.has(set.id)).map((set) => structuredClone(set))],
+  };
+}
+
+export function synchronizeItemDraftWithCanonical(draft: ItemExchange, canonical: ItemExchange = canonicalItemExchange()): ItemExchange {
+  const merged = mergeItemDraftWithCanonical(draft, canonical);
+  const canonicalSets = new Map(canonical.sets.map((set) => [set.id, set]));
+  return {
+    ...merged,
+    sets: merged.sets.map((set) => {
+      const liveSet = CANONICAL_REFRESH_SET_IDS.has(set.id) ? canonicalSets.get(set.id) : undefined;
+      return liveSet ? structuredClone(liveSet) : set;
+    }),
+  };
+}
+
+function getItemCatalogSignature(exchange: ItemExchange): string {
+  return `${ITEM_DRAFT_CATALOG_REVISION}::${exchange.items.map((item) => item.id).join("|")}::${exchange.sets.map((set) => set.id).join("|")}`;
 }
 
 export function normalizeItemExchange(exchange: ItemExchange): ItemExchange {
@@ -66,7 +95,7 @@ function blankGear(): GearItem {
   return { kind: "gear", id: makeId("gear"), name: "New Gear", goldCost: 12, slot: "head", armorMaterial: "cloth", rarity: "common", description: "", stats: {}, arkenfallVendor: null, craftingRecipe: null };
 }
 function blankSet(): GearSetDefinition { return { id: makeId("set"), name: "New Gear Set", pieceCount: 2, bonuses: [{ requiredPieces: 2, description: "+1 Strength.", passive: { stats: { strength: 1 } } }] }; }
-function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", goldCost: 8, rarity: "common", description: "", iconUrl: ITEM_ARTWORK_URLS[0], effects: [{ type: "heal", amount: 10 }], arkenfallVendor: null, craftingRecipe: null }; }
+function blankConsumable(): ConsumableItem { return { kind: "consumable", id: makeId("consumable"), name: "New Consumable", goldCost: 8, rarity: "common", description: "", iconUrl: CONSUMABLE_POTION_ARTWORK_URLS[0], effects: [{ type: "heal", amount: 10 }], arkenfallVendor: null, craftingRecipe: null }; }
 function blankMiscItem(): MiscItem { return { kind: "misc", id: makeId("item"), name: "New Item", goldCost: 0, rarity: "common", description: "", iconUrl: ITEM_ARTWORK_URLS[0], arkenfallVendor: null, craftingRecipe: null }; }
 function blankEffect(type: ConsumableEffect["type"]): ConsumableEffect {
   if (type === "apply_status") return { type, target: "self", status: "strengthened", stacks: 1, duration: 3 };
@@ -216,10 +245,18 @@ export function sortItemEditorEntries<T extends { id: string; name: string }>(en
 }
 
 export function ItemDevtool({ onExit }: { onExit: () => void }) {
-  const store = useLocalDraft<ItemExchange>(ITEM_DRAFT_STORAGE_KEY, canonicalItemExchange(), normalizeItemExchange);
+  const canonical = canonicalItemExchange();
+  const canonicalSignature = getItemCatalogSignature(canonical);
+  const store = useLocalDraft<ItemExchange>(ITEM_DRAFT_STORAGE_KEY, canonical, normalizeItemExchange);
   const [tab, setTab] = useState<ItemEditorTab>("gear");
   const [sortMode, setSortMode] = useState<ItemEditorSortMode>("name_asc");
   const [selectedId, setSelectedId] = useState(() => store.draft.items.find(isGearItem)?.id ?? "");
+  useEffect(() => {
+    if (window.localStorage.getItem(ITEM_DRAFT_CATALOG_SIGNATURE_KEY) === canonicalSignature) return;
+    store.setDraft((draft) => normalizeItemExchange(synchronizeItemDraftWithCanonical(draft, canonical)));
+    window.localStorage.setItem(ITEM_DRAFT_CATALOG_SIGNATURE_KEY, canonicalSignature);
+    store.setMessage("New or updated live items and sets were synced to this browser draft");
+  }, [canonicalSignature]);
   const entries = useMemo(() => {
     const source: Array<InventoryItem | GearSetDefinition> = tab === "sets" ? store.draft.sets : itemsForTab(store.draft.items, tab);
     return sortItemEditorEntries(source, sortMode, tab === "gear" ? (entry) => calculateGearScalingValue(entry as GearItem).value : undefined);

@@ -1,5 +1,5 @@
 import { ADVENTURES, ADVENTURE_EVENTS, ENEMIES } from "./data";
-import type { AdventureDefinition, AdventureNode, AdventureProgress, AdventureStageEntry } from "./types";
+import type { AdventureDefinition, AdventureNode, AdventureProgress, AdventureStageEntry, AdventureTheme } from "./types";
 
 export const DEFAULT_ADVENTURE_ID = "windsong-forest";
 
@@ -9,6 +9,18 @@ export function getAdventureStartingHp(maxHp: number, carryHp: number | null): n
 
 export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefinition {
   return ADVENTURES.find((adventure) => adventure.id === id) ?? ADVENTURES[0];
+}
+
+export function getAdventureDefaultTravelText(theme: AdventureTheme): string {
+  if (theme === "arkenfall_highlands") return "Crossing the windswept highlands";
+  if (theme === "highfall_mountains") return "Climbing into the Highfall Mountains";
+  return "Walking beneath the Windsong canopy";
+}
+
+export function getAdventureTravelText(adventure: AdventureDefinition): string {
+  const configuredText = adventure.travelText?.trim();
+  if (configuredText) return configuredText;
+  return getAdventureDefaultTravelText(adventure.theme);
 }
 
 export type StoryAdventureAvailability = "available" | "locked" | "completed";

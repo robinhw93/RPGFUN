@@ -4,6 +4,22 @@ import { ENEMIES } from "../../game/data";
 import type { AbilityRange } from "../../game/types";
 import { copyJson, downloadJson, DropTableEditor, EditorShell, ENEMY_DRAFT_STORAGE_KEY, finiteNumber, localItems, makeId, NumberField, TextField, useLocalDraft, type EnemyAbilityDraft, type EnemyDraft, type EnemyEditableStats, type EnemyExchange } from "./shared";
 
+const ENEMY_DRAFT_CATALOG_SIGNATURE_KEY = `${ENEMY_DRAFT_STORAGE_KEY}.live-catalog-signature`;
+const ENEMY_DRAFT_CATALOG_REVISION = "windsong-uncommon-drops-v1";
+const CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS = new Set([
+  "enemy-mrxiut2a-k4kgv",
+  "enemy-mrxj4o6o-o45ia",
+  "enemy-mrxk609z-n04fq",
+  "enemy-mrxkar5z-g9o5d",
+  "enemy-mrxkjqs3-g7g5i",
+  "enemy-ms2vrqbb-8r5ux",
+  "enemy-ms2w17p6-txpmq",
+  "enemy-ms2w93yt-v817a",
+  "enemy-ms2wk1ul-6ol9b",
+  "enemy-ms2wuk5j-1ddqa",
+  "enemy-ms2xaper-z7o3g",
+]);
+
 export function canonicalEnemyExchange(): EnemyExchange {
   return {
     format: "arkenfall-enemies",
@@ -36,6 +52,34 @@ export function canonicalEnemyExchange(): EnemyExchange {
       accent: enemy.accent,
     })),
   };
+}
+
+export function mergeEnemyDraftWithCanonical(draft: EnemyExchange, canonical: EnemyExchange = canonicalEnemyExchange()): EnemyExchange {
+  const draftEnemyIds = new Set((draft.enemies ?? []).map((enemy) => enemy.id));
+  return {
+    ...draft,
+    enemies: [...(draft.enemies ?? []), ...canonical.enemies.filter((enemy) => !draftEnemyIds.has(enemy.id)).map((enemy) => structuredClone(enemy))],
+  };
+}
+
+export function synchronizeEnemyDraftWithCanonical(draft: EnemyExchange, canonical: EnemyExchange = canonicalEnemyExchange()): EnemyExchange {
+  const merged = mergeEnemyDraftWithCanonical(draft, canonical);
+  const canonicalEnemies = new Map(canonical.enemies.map((enemy) => [enemy.id, enemy]));
+  return {
+    ...merged,
+    enemies: merged.enemies.map((enemy) => {
+      const liveEnemy = CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS.has(enemy.id) ? canonicalEnemies.get(enemy.id) : undefined;
+      return liveEnemy ? { ...enemy, dropTable: structuredClone(liveEnemy.dropTable) } : enemy;
+    }),
+  };
+}
+
+function getEnemyCatalogSignature(exchange: EnemyExchange): string {
+  const refreshedDropTables = exchange.enemies
+    .filter((enemy) => CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS.has(enemy.id))
+    .map((enemy) => `${enemy.id}:${enemy.dropTable.map((drop) => `${drop.itemId}@${drop.chance}`).join(",")}`)
+    .join("|");
+  return `${ENEMY_DRAFT_CATALOG_REVISION}::${exchange.enemies.map((enemy) => enemy.id).join("|")}::${refreshedDropTables}`;
 }
 
 export function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
@@ -107,7 +151,9 @@ export function normalizeEnemyExchange(exchange: EnemyExchange): EnemyExchange {
 }
 
 export function EnemyDevtool({ onExit }: { onExit: () => void }) {
-  const store = useLocalDraft<EnemyExchange>(ENEMY_DRAFT_STORAGE_KEY, canonicalEnemyExchange(), normalizeEnemyExchange);
+  const canonical = canonicalEnemyExchange();
+  const canonicalSignature = getEnemyCatalogSignature(canonical);
+  const store = useLocalDraft<EnemyExchange>(ENEMY_DRAFT_STORAGE_KEY, canonical, normalizeEnemyExchange);
   const [selectedId, setSelectedId] = useState(store.draft.enemies[0]?.id ?? "");
   const sourceSyncTimer = useRef<number | null>(null);
   const dropSourceSyncTimer = useRef<number | null>(null);
@@ -116,6 +162,12 @@ export function EnemyDevtool({ onExit }: { onExit: () => void }) {
   const selected = store.draft.enemies.find((enemy) => enemy.id === selectedId) ?? store.draft.enemies[0];
   const items = useMemo(localItems, []);
   const update = (change: Partial<EnemyDraft>) => store.setDraft((draft) => ({ ...draft, enemies: draft.enemies.map((enemy) => enemy.id === selected?.id ? { ...enemy, ...change } : enemy) }));
+  useEffect(() => {
+    if (window.localStorage.getItem(ENEMY_DRAFT_CATALOG_SIGNATURE_KEY) === canonicalSignature) return;
+    store.setDraft((draft) => normalizeEnemyExchange(synchronizeEnemyDraftWithCanonical(draft, canonical)));
+    window.localStorage.setItem(ENEMY_DRAFT_CATALOG_SIGNATURE_KEY, canonicalSignature);
+    store.setMessage("New live enemies and updated drop tables were synced to this browser draft");
+  }, [canonicalSignature]);
   useEffect(() => () => {
     if (sourceSyncTimer.current !== null) window.clearTimeout(sourceSyncTimer.current);
     if (dropSourceSyncTimer.current !== null) window.clearTimeout(dropSourceSyncTimer.current);

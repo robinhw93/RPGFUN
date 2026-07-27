@@ -55,6 +55,12 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
         : enemy);
       return;
     }
+    if (effect.type === "enemy_flee") {
+      enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
+        ? { ...enemy, hp: 0, fled: true, statuses: [] }
+        : enemy);
+      return;
+    }
     if (effect.type === "energy_regen_bonus") {
       nextTurnEnergyRegenBonus += effect.amount;
       return;
@@ -135,7 +141,10 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     if (effect.damage > 0) damagedTargets.push(effect.targetId);
   });
 
-  const newlyDefeated = combat.enemies.filter((before) => before.hp > 0 && (enemies.find((enemy) => enemy.instanceId === before.instanceId)?.hp ?? 0) <= 0);
+  const newlyDefeated = combat.enemies.filter((before) => {
+    const after = enemies.find((enemy) => enemy.instanceId === before.instanceId);
+    return before.hp > 0 && !after?.fled && (after?.hp ?? 0) <= 0;
+  });
   newlyDefeated.forEach((defeated) => {
     enemies = enemies.map((enemy) => {
       const reaction = enemy.healOnAllyDeath;

@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import "./item-scaling-tests";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { moveAdventureStage, normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
-import { canonicalEnemyExchange, normalizeEnemyExchange } from "../src/components/devtools/EnemyDevtool";
-import { normalizeEventExchange } from "../src/components/devtools/EventDevtool";
-import { normalizeItemExchange } from "../src/components/devtools/ItemDevtool";
+import { getScoreGearInspection } from "../src/components/adventure/AdventureView";
+import { canonicalAdventureExchange, mergeAdventureDraftWithCanonical, moveAdventureStage, normalizeAdventureExchange } from "../src/components/devtools/AdventureDevtool";
+import { canonicalEnemyExchange, mergeEnemyDraftWithCanonical, normalizeEnemyExchange, synchronizeEnemyDraftWithCanonical } from "../src/components/devtools/EnemyDevtool";
+import { canonicalEventExchange, mergeEventDraftWithCanonical, normalizeEventExchange } from "../src/components/devtools/EventDevtool";
+import { canonicalItemExchange, mergeItemDraftWithCanonical, normalizeItemExchange, synchronizeItemDraftWithCanonical } from "../src/components/devtools/ItemDevtool";
+import type { AdventureExchange, EventExchange, ItemExchange } from "../src/components/devtools/shared";
+import { canonicalQuestExchange, normalizeQuestExchange } from "../src/components/devtools/QuestDevtool";
 import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconChoices } from "../src/components/GearSlotIcon";
-import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
-import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
+import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, QUESTLINES, QUESTS, TALENTS } from "../src/game/data";
+import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getAdventureTravelText, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { chooseStartingClass, getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../src/game/characterIntroduction";
 import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
@@ -19,11 +22,13 @@ import { applyAbilityFlatDamage } from "../src/game/combat/damage";
 import { createCombat, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
 import { getReadyEnemyAbility } from "../src/game/combat/enemyActions";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
-import { getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
-import { CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
-import { grantCombatReward, rollCombatDropTables } from "../src/game/rewards";
+import { fleeCombat } from "../src/game/flee";
+import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
+import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
+import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
+import { acceptQuest, getQuestAvailability, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
-import { canCraftTownItem, craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, TAVERN_MEALS } from "../src/game/town";
+import { canCraftTownItem, craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
 
@@ -62,6 +67,54 @@ function testDeveloperCharacterTools() {
   assert.ok(granted.inventory.every((candidate) => candidate.id === item.id), "Every granted copy must use the selected live item.");
   assert.notEqual(granted.inventory[0], granted.inventory[1], "Granted inventory copies must not share object identity.");
   assert.equal(grantItemForTesting(character, item, Number.NaN).inventory.length, 1, "Invalid developer quantities must safely grant one copy.");
+
+  const gear = ITEMS.find(isGearItem);
+  assert.ok(gear, "Developer Grant item auto-equip regression requires live gear.");
+  const grantedGear = grantItemForTesting({ ...character, equipment: {} }, gear, 2);
+  assert.ok(Object.values(grantedGear.equipment).some((equipped) => equipped?.id === gear.id), "The first granted gear copy must equip when its slot is empty.");
+  assert.equal(grantedGear.inventory.filter((candidate) => candidate.id === gear.id).length, 1, "Additional granted copies must remain in Inventory after the slot is filled.");
+}
+
+function testAutomaticGearAcquisition() {
+  const emptyCharacter = { ...structuredClone(INITIAL_GAME.character), inventory: [], equipment: {} };
+  const head: GearItem = { kind: "gear", id: "auto-head", name: "Auto Head", slot: "head", armorMaterial: "cloth", rarity: "common", description: "", stats: {} };
+  const ring: GearItem = { kind: "gear", id: "auto-ring", name: "Auto Ring", slot: "ring", rarity: "common", description: "", stats: {} };
+  const dagger: GearItem = { kind: "gear", id: "auto-dagger", name: "Auto Dagger", slot: "mainHand", weaponEquipType: "oneHand", weaponKind: "dagger", rarity: "common", description: "", stats: {} };
+  const shield: GearItem = { kind: "gear", id: "auto-shield", name: "Auto Shield", slot: "offHand", weaponEquipType: "offHand", weaponKind: "shield", rarity: "common", description: "", stats: {} };
+  const staff: GearItem = { kind: "gear", id: "auto-staff", name: "Auto Staff", slot: "mainHand", weaponEquipType: "twoHand", weaponKind: "staff", rarity: "common", description: "", stats: {} };
+
+  const firstHead = acquireItem(emptyCharacter, head);
+  assert.equal(firstHead.equippedSlot, "head", "New armor must identify its empty equipment slot.");
+  assert.equal(firstHead.character.equipment.head?.id, head.id, "New armor must equip directly into an empty slot.");
+  assert.equal(firstHead.character.inventory.length, 0, "Automatically equipped gear must not also remain in Inventory.");
+  const secondHead = acquireItem(firstHead.character, { ...head, id: "second-head" });
+  assert.equal(secondHead.equippedSlot, null, "Gear must never replace an occupied slot automatically.");
+  assert.equal(secondHead.character.equipment.head?.id, head.id, "The existing equipped item must remain untouched.");
+  assert.equal(secondHead.character.inventory[0]?.id, "second-head", "Gear without an empty slot must enter Inventory.");
+
+  const rings = acquireItems(emptyCharacter, [ring, { ...ring, id: "auto-ring-2" }, { ...ring, id: "auto-ring-3" }]);
+  assert.equal(rings.equipment.ring1?.id, ring.id, "The first ring must fill Ring 1.");
+  assert.equal(rings.equipment.ring2?.id, "auto-ring-2", "The second ring must fill Ring 2.");
+  assert.equal(rings.inventory[0]?.id, "auto-ring-3", "Further rings must enter Inventory.");
+
+  const dualWield = acquireItems(emptyCharacter, [dagger, { ...dagger, id: "auto-dagger-2" }, { ...dagger, id: "auto-dagger-3" }]);
+  assert.equal(dualWield.equipment.mainHand?.id, dagger.id, "The first one-hand weapon must fill Main Hand.");
+  assert.equal(dualWield.equipment.offHand?.id, "auto-dagger-2", "The second one-hand weapon must fill Off Hand.");
+  assert.equal(dualWield.inventory[0]?.id, "auto-dagger-3", "A third one-hand weapon must enter Inventory.");
+
+  const twoHanded = acquireItem(emptyCharacter, staff);
+  assert.equal(twoHanded.character.equipment.mainHand?.id, staff.id, "A two-hand weapon must equip when both weapon slots are free.");
+  assert.equal(getAutomaticEquipSlot(twoHanded.character, shield), null, "A two-hand weapon must lock automatic Off Hand equipment.");
+  const shieldFirst = acquireItem(emptyCharacter, shield).character;
+  const blockedStaff = acquireItem(shieldFirst, staff);
+  assert.equal(blockedStaff.equippedSlot, null, "A two-hand weapon must not displace an occupied Off Hand slot automatically.");
+  assert.equal(blockedStaff.character.inventory[0]?.id, staff.id, "A blocked two-hand weapon must enter Inventory.");
+
+  const consumable = ITEMS.find(isConsumableItem);
+  assert.ok(consumable, "Automatic acquisition regression requires a consumable.");
+  const carriedConsumable = acquireItem(emptyCharacter, consumable);
+  assert.equal(carriedConsumable.equippedSlot, null, "Consumables must never auto-equip.");
+  assert.equal(carriedConsumable.character.inventory[0]?.id, consumable.id, "Consumables must continue entering Inventory.");
 }
 
 function testNewCharacterIntroductionDefaults() {
@@ -98,6 +151,31 @@ function testCraftingMaterialArtworkLibrary() {
   assert.equal(new Set(CRAFTING_MATERIAL_ARTWORK_URLS).size, CRAFTING_MATERIAL_ARTWORK_URLS.length, "Crafting-material icon URLs must be unique.");
   CRAFTING_MATERIAL_ARTWORK_URLS.forEach((url) => assert.ok(existsSync(join(process.cwd(), "public", url)), `Missing crafting-material icon ${url}.`));
   assert.equal(ITEM_ICON_URLS["item-ms0ss0dt-z4bke"], "/assets/items/metal-scrap.webp", "Metal Scrap must use its dedicated artwork.");
+}
+
+function testConsumablePotionArtworkLibrary() {
+  assert.equal(CONSUMABLE_POTION_ARTWORK_URLS.length, 20, "Four potion colors must each expose Minor, Normal, Greater, Major, and Superior artwork.");
+  assert.equal(new Set(CONSUMABLE_POTION_ARTWORK_URLS).size, CONSUMABLE_POTION_ARTWORK_URLS.length, "Potion artwork URLs must be unique.");
+  CONSUMABLE_POTION_ARTWORK_URLS.forEach((url) => assert.ok(existsSync(join(process.cwd(), "public", url)), `Missing generated potion artwork ${url}.`));
+  assert.equal(CONSUMABLE_POTION_ARTWORK_URLS[0], "/assets/items/minor-healing-potion.webp", "The existing red Minor Healing Potion must remain the first potion form.");
+}
+
+function testScoreScreenGearInspection() {
+  const drop: GearItem = { kind: "gear", id: "score-drop", name: "Score Drop", slot: "head", rarity: "rare", description: "", stats: { strength: 2 } };
+  const equippedCharacter = {
+    ...structuredClone(INITIAL_GAME.character),
+    inventory: [],
+    equipment: { ...structuredClone(INITIAL_GAME.character.equipment), head: structuredClone(drop) },
+  };
+  const equippedInspection = getScoreGearInspection(drop, equippedCharacter);
+  assert.equal(equippedInspection.canEquip, false, "Automatically equipped score-screen loot must not expose a duplicate Equip action.");
+  assert.equal(equippedInspection.equippedSlot, "head", "Automatically equipped score-screen loot must be recognized in its live slot.");
+
+  const inventoryCharacter = { ...equippedCharacter, inventory: [structuredClone(drop)] };
+  const inventoryInspection = getScoreGearInspection(drop, inventoryCharacter);
+  assert.equal(inventoryInspection.canEquip, true, "A score-screen gear copy remaining in Inventory must expose Equip actions.");
+  assert.equal(inventoryInspection.equippedSlot, undefined, "An Inventory copy must remain independently equippable when an identical copy is already equipped.");
+  assert.equal(inventoryInspection.item, inventoryCharacter.inventory[0], "Score-screen Equip must act on the live Inventory copy.");
 }
 
 function testGearCombatStatsArePresented() {
@@ -154,6 +232,55 @@ function testPassiveStatAggregationIsPure() {
   assert.equal(cleanDerived.intelligence, 5, "One character's Intelligence multiplier must not leak into another character.");
 }
 
+function testFleeCombatLossesAndReset() {
+  const hood: GearItem = { kind: "gear", id: "flee-hood", name: "Flee Hood", slot: "head", rarity: "common", description: "", stats: {} };
+  const chest: GearItem = { kind: "gear", id: "flee-chest", name: "Flee Chest", slot: "chest", rarity: "common", description: "", stats: {} };
+  const combat = { ...createCombat(INITIAL_GAME.character, ["dummy"]), playerHp: 7, outcome: "active" as const };
+  const state: GameState = {
+    ...structuredClone(INITIAL_GAME),
+    characterCreated: true,
+    character: {
+      ...structuredClone(INITIAL_GAME.character),
+      gold: 101,
+      equipment: { head: hood, chest },
+    },
+    adventure: {
+      ...structuredClone(INITIAL_GAME.adventure),
+      active: true,
+      nodeIndex: 4,
+      stageEntryId: "flee-stage-entry",
+      combat,
+      eventResolved: true,
+      nextCombatPlayerStatuses: [{ status: "fierce", stacks: 1 }],
+    },
+  };
+  const rolls = [0, 0.49, 0.75];
+  const result = fleeCombat(state, () => rolls.shift() ?? 0);
+  assert.ok(result, "An active combat must be fleeable.");
+  assert.equal(result.goldLossPercent, 50, "The minimum flee loss must be 50% of current Gold.");
+  assert.equal(result.goldLost, 51, "Flee Gold loss must round up so the rolled percentage is fully lost.");
+  assert.equal(result.state.character.gold, 50, "Fleeing must immediately deduct the rolled Gold loss.");
+  assert.equal(result.lostItem?.id, chest.id, "A successful item-loss roll must remove one random equipped item.");
+  assert.equal(result.state.character.equipment.chest, undefined, "The lost equipped item must be destroyed rather than moved to Inventory.");
+  assert.equal(result.state.character.equipment.head?.id, hood.id, "Fleeing must not remove more than one equipped item.");
+  assert.equal(result.state.adventure.active, false, "Fleeing must abandon the active adventure.");
+  assert.equal(result.state.adventure.nodeIndex, 0, "Fleeing must reset adventure progress to its first stage.");
+  assert.equal(result.state.adventure.stageEntryId, null, "Fleeing must discard the selected stage possibility.");
+  assert.equal(result.state.adventure.combat, null, "Fleeing must end combat without triggering defeat.");
+  assert.equal(result.state.adventure.carryHp, 7, "The character must reach town with their remaining combat Health.");
+  assert.deepEqual(result.state.adventure.nextCombatPlayerStatuses, [], "Fleeing must clear queued adventure combat statuses.");
+
+  const safeRolls = [1, 0.5];
+  const safeResult = fleeCombat(state, () => safeRolls.shift() ?? 0);
+  assert.ok(safeResult);
+  assert.equal(safeResult.goldLossPercent, 90, "The maximum flee loss must be 90% of current Gold.");
+  assert.equal(safeResult.lostItem, null, "An item-loss roll at or above 50% must preserve all equipped items.");
+  assert.equal(Object.keys(safeResult.state.character.equipment).length, 2, "A failed item-loss roll must preserve the complete equipment loadout.");
+
+  const inactive = { ...state, adventure: { ...state.adventure, active: false, combat: null } };
+  assert.equal(fleeCombat(inactive), null, "Fleeing must do nothing outside active combat.");
+}
+
 function testContentIntegrity() {
   assert.equal(TALENTS.length, 263, "The canonical talent count changed unexpectedly.");
   assert.equal(new Set(TALENTS.map((talent) => talent.id)).size, TALENTS.length, "Talent IDs must be unique.");
@@ -175,8 +302,14 @@ function testContentIntegrity() {
     assert.ok(itemIds.has(drop.itemId), `${enemy.name} references missing drop item ${drop.itemId}.`);
     assert.ok(drop.chance >= 0 && drop.chance <= 100, `${enemy.name} has an invalid drop chance.`);
   }));
+  Object.values(ENEMIES).forEach((enemy) => {
+    assert.ok(existsSync(join(process.cwd(), "public", enemy.imageUrl)), `${enemy.name} needs its bestiary artwork.`);
+    assert.ok(existsSync(join(process.cwd(), "public", enemy.portraitUrl)), `${enemy.name} needs its combat portrait.`);
+  });
   ADVENTURES.forEach((adventure) => {
     assert.ok(adventure.id, "Every adventure needs an internal ID.");
+    assert.ok(adventure.travelText?.trim(), `${adventure.name} needs travel loading text.`);
+    assert.equal(getAdventureTravelText(adventure), adventure.travelText?.trim(), `${adventure.name} must use its configured travel loading text.`);
     assert.equal(new Set(adventure.stages.map((stage) => stage.id)).size, adventure.stages.length, `${adventure.name} stage IDs must be unique.`);
     adventure.stages.forEach((stage) => {
       (stage.dropTable ?? []).forEach((drop) => {
@@ -193,6 +326,67 @@ function testContentIntegrity() {
       });
     });
   });
+  const questIds = new Set(QUESTS.map((quest) => quest.id));
+  assert.equal(questIds.size, QUESTS.length, "Quest IDs must be unique.");
+  QUESTS.forEach((quest) => {
+    assert.ok(quest.title.trim() && quest.description.trim(), `${quest.id} needs a title and description.`);
+    assert.ok(Number.isInteger(quest.objective.quantity) && quest.objective.quantity > 0, `${quest.title} needs a positive whole-number goal.`);
+    if (quest.objective.type === "kill_enemy") assert.ok(ENEMIES[quest.objective.enemyId], `${quest.title} references a missing enemy.`);
+    if (quest.objective.type === "collect_item") assert.ok(itemIds.has(quest.objective.itemId), `${quest.title} references a missing item.`);
+    if (quest.objective.type === "complete_adventure") assert.ok(ADVENTURES.some((adventure) => adventure.id === quest.objective.adventureId), `${quest.title} references a missing adventure.`);
+    quest.reward.items.forEach((reward) => assert.ok(itemIds.has(reward.itemId), `${quest.title} rewards a missing item.`));
+  });
+  const assignedQuests = QUESTLINES.flatMap((questline) => questline.questIds);
+  assert.equal(new Set(QUESTLINES.map((questline) => questline.id)).size, QUESTLINES.length, "Questline IDs must be unique.");
+  assert.equal(new Set(assignedQuests).size, assignedQuests.length, "A quest can belong to only one questline.");
+  assignedQuests.forEach((questId) => assert.ok(questIds.has(questId), `Questline references missing quest ${questId}.`));
+}
+
+function testQuestLifecycle() {
+  const killQuest = QUESTS.find((quest) => quest.objective.type === "kill_enemy");
+  const itemQuest = QUESTS.find((quest) => quest.objective.type === "collect_item");
+  const adventureQuest = QUESTS.find((quest) => quest.objective.type === "complete_adventure");
+  assert.ok(killQuest && killQuest.objective.type === "kill_enemy", "Quest lifecycle requires a kill quest.");
+  assert.ok(itemQuest && itemQuest.objective.type === "collect_item", "Quest lifecycle requires an item quest.");
+  assert.ok(adventureQuest && adventureQuest.objective.type === "complete_adventure", "Quest lifecycle requires an adventure quest.");
+
+  const base = structuredClone(INITIAL_GAME) as GameState;
+  const acceptedKill = acceptQuest(base, killQuest.id);
+  assert.equal(acceptedKill.success, true, "An available quest must be accepted at the Quest Board.");
+  assert.equal(getQuestAvailability(acceptedKill.state.character, killQuest), "accepted");
+  const killProgress = recordQuestEnemyDefeats(acceptedKill.state.character, Array.from({ length: killQuest.objective.quantity }, () => killQuest.objective.enemyId));
+  assert.equal(getQuestAvailability(killProgress, killQuest), "ready", "The exact enemy defeats must make a kill quest ready.");
+  const turnedInKill = turnInQuest({ ...acceptedKill.state, character: killProgress }, killQuest.id);
+  assert.equal(turnedInKill.success, true, "A finished kill quest must be turned in at the Quest Board.");
+  assert.ok(turnedInKill.state.character.completedQuestIds.includes(killQuest.id));
+  assert.equal(turnedInKill.state.character.xp, killQuest.reward.experience, "Quest XP must be granted exactly once.");
+  killQuest.reward.items.forEach((reward) => assert.equal(turnedInKill.state.character.inventory.filter((item) => item.id === reward.itemId).length, reward.quantity, "Quest reward items must enter Inventory."));
+  assert.equal(turnInQuest(turnedInKill.state, killQuest.id).success, false, "A quest reward cannot be claimed twice.");
+
+  const targetItem = ITEMS.find((item) => item.id === itemQuest.objective.itemId)!;
+  const itemState = structuredClone(INITIAL_GAME) as GameState;
+  itemState.character.completedQuestIds = QUESTLINES.flatMap((questline) => questline.questIds.slice(0, questline.questIds.indexOf(itemQuest.id))).filter((id) => id !== itemQuest.id);
+  itemState.character.inventory = Array.from({ length: itemQuest.objective.quantity }, () => structuredClone(targetItem));
+  const acceptedItem = acceptQuest(itemState, itemQuest.id);
+  assert.equal(getQuestAvailability(acceptedItem.state.character, itemQuest), "ready", "Owned quest items must count immediately after accepting the quest.");
+  const turnedInItem = turnInQuest(acceptedItem.state, itemQuest.id);
+  assert.equal(turnedInItem.state.character.inventory.filter((item) => item.id === targetItem.id).length, 0, "Find-item quest targets must be handed over at turn-in.");
+
+  const adventureState = structuredClone(INITIAL_GAME) as GameState;
+  adventureState.character.completedQuestIds = QUESTLINES.flatMap((questline) => questline.questIds.slice(0, questline.questIds.indexOf(adventureQuest.id))).filter((id) => id !== adventureQuest.id);
+  const acceptedAdventure = acceptQuest(adventureState, adventureQuest.id);
+  const adventureProgress = recordQuestAdventureCompletion(acceptedAdventure.state.character, adventureQuest.objective.adventureId);
+  assert.equal(getQuestAvailability(adventureProgress, adventureQuest), "ready", "Completing the selected adventure must advance its quest.");
+}
+
+function testQuestEditorCatalog() {
+  const canonical = canonicalQuestExchange();
+  const duplicated = structuredClone(canonical);
+  if (duplicated.questlines.length > 1 && duplicated.questlines[0].questIds[0]) duplicated.questlines[1].questIds.push(duplicated.questlines[0].questIds[0]);
+  const normalized = normalizeQuestExchange(duplicated);
+  assert.equal(normalized.format, "arkenfall-quests");
+  assert.equal(normalized.quests.length, QUESTS.length, "Quest Editor must preserve the complete live quest catalog.");
+  assert.equal(new Set(normalized.questlines.flatMap((questline) => questline.questIds)).size, normalized.questlines.flatMap((questline) => questline.questIds).length, "Quest Editor normalization must keep each quest in at most one questline.");
 }
 
 function testAbilityFlatDamage() {
@@ -213,6 +407,36 @@ function testEnemyStartingEnergy() {
   delete (legacyDraft.enemies[0] as Partial<(typeof legacyDraft.enemies)[number]>).startingEnergy;
   const normalizedLegacyDraft = normalizeEnemyExchange(legacyDraft);
   assert.equal(normalizedLegacyDraft.enemies[0].startingEnergy, normalizedLegacyDraft.enemies[0].maxEnergy, "Older Enemy Creator drafts must default Starting Energy to Max Energy.");
+}
+
+function testEnemyEditorSynchronizesLiveDropTables() {
+  const canonical = canonicalEnemyExchange();
+  const liveHighfallEnemy = canonical.enemies.find((enemy) => enemy.id === "enemy-ms2vrqbb-8r5ux")!;
+  const liveWindsongEnemy = canonical.enemies.find((enemy) => enemy.id === "enemy-mrxj4o6o-o45ia")!;
+  const ordinaryLiveEnemy = canonical.enemies.find((enemy) => enemy.id === "dummy")!;
+  const locallyCustomizedHighfallEnemy = { ...structuredClone(liveHighfallEnemy), name: "Locally Customized Troll", dropTable: [] };
+  const locallyCustomizedWindsongEnemy = { ...structuredClone(liveWindsongEnemy), name: "Locally Customized Wolf", dropTable: [] };
+  const locallyCustomizedOrdinaryEnemy = { ...structuredClone(ordinaryLiveEnemy), dropTable: [{ itemId: ITEMS[0].id, chance: 37 }] };
+  const localOnlyEnemy = { ...structuredClone(liveHighfallEnemy), id: "local-draft-enemy", name: "Local Draft Enemy", dropTable: [] };
+  const staleDraft = {
+    format: "arkenfall-enemies" as const,
+    version: 3 as const,
+    enemies: [locallyCustomizedHighfallEnemy, locallyCustomizedWindsongEnemy, locallyCustomizedOrdinaryEnemy, localOnlyEnemy],
+  };
+
+  const merged = mergeEnemyDraftWithCanonical(staleDraft, canonical);
+  canonical.enemies.forEach((enemy) => assert.ok(merged.enemies.some((candidate) => candidate.id === enemy.id), `${enemy.name} must be added to an older Enemy Editor draft.`));
+  assert.ok(merged.enemies.some((enemy) => enemy.id === localOnlyEnemy.id), "Catalog hydration must preserve local-only enemy drafts.");
+
+  const synchronized = synchronizeEnemyDraftWithCanonical(staleDraft, canonical);
+  const synchronizedHighfallEnemy = synchronized.enemies.find((enemy) => enemy.id === liveHighfallEnemy.id)!;
+  assert.deepEqual(synchronizedHighfallEnemy.dropTable, liveHighfallEnemy.dropTable, "Highfall Bandit and Troll drop-table revisions must replace stale browser-draft rows.");
+  assert.equal(synchronizedHighfallEnemy.name, "Locally Customized Troll", "Drop-table hydration must preserve unrelated local enemy fields.");
+  const synchronizedWindsongEnemy = synchronized.enemies.find((enemy) => enemy.id === liveWindsongEnemy.id)!;
+  assert.deepEqual(synchronizedWindsongEnemy.dropTable, liveWindsongEnemy.dropTable, "Windsong item-drop revisions must replace stale browser-draft rows.");
+  assert.equal(synchronizedWindsongEnemy.name, "Locally Customized Wolf", "Windsong drop-table hydration must preserve unrelated local enemy fields.");
+  assert.deepEqual(synchronized.enemies.find((enemy) => enemy.id === ordinaryLiveEnemy.id)?.dropTable, locallyCustomizedOrdinaryEnemy.dropTable, "Unrelated enemy drop-table drafts must remain untouched.");
+  assert.ok(synchronized.enemies.some((enemy) => enemy.id === localOnlyEnemy.id), "Refreshing live drop tables must preserve local-only enemy drafts.");
 }
 
 function combatWithActiveEnemy(enemyIds: string[], activeEnemyIndex: number) {
@@ -278,6 +502,186 @@ function testGoblinEnemyBehaviors() {
   assert.ok(released.pendingEffects.some((effect) => effect.type === "enemy_charge" && effect.abilityId === undefined), "Impale release must clear the persistent charging presentation at impact.");
 }
 
+function testHighfallEnemyBehaviorsAndLoot() {
+  const highfallEnemyIds = [
+    "enemy-ms2vrqbb-8r5ux",
+    "enemy-ms2w17p6-txpmq",
+    "enemy-ms2w93yt-v817a",
+    "enemy-ms2wk1ul-6ol9b",
+    "enemy-ms2wqzxv-srsgs",
+    "enemy-ms2wuk5j-1ddqa",
+    "enemy-ms2xaper-z7o3g",
+  ];
+  highfallEnemyIds.forEach((enemyId) => {
+    const enemy = ENEMIES[enemyId];
+    assert.ok(enemy, `Missing Highfall enemy ${enemyId}.`);
+    assert.ok(enemy.abilities.length > 0, `${enemy.name} needs executable abilities.`);
+    enemy.abilities.forEach((ability) => {
+      assert.ok(ability.vfx, `${enemy.name}'s ${ability.name} needs readable VFX.`);
+      assert.ok(ability.range === "melee" || ability.range === "ranged", `${enemy.name}'s ${ability.name} needs a valid range.`);
+    });
+  });
+
+  const hillCombat = combatWithActiveEnemy(["enemy-ms2vrqbb-8r5ux"], 0);
+  const hill = hillCombat.enemies[0];
+  assert.equal(getReadyEnemyAbility(hill)?.name, "Club Smash", "Hill Troll must prepare Club Smash at full Energy.");
+  const hillCharging = takeEnemyTurn(hillCombat, INITIAL_GAME.character, hill.instanceId);
+  assert.ok(hillCharging.pendingEffects.some((effect) => effect.type === "enemy_charge" && effect.targetId === hill.instanceId), "Club Smash must visibly charge before dealing damage.");
+  assert.ok(!hillCharging.pendingEffects.some((effect) => "damage" in effect && effect.targetId === "player"), "Club Smash must not deal damage during its charge event.");
+
+  const shamanCombat = combatWithActiveEnemy(["enemy-ms2w93yt-v817a", "enemy-ms2vrqbb-8r5ux"], 0);
+  shamanCombat.enemies[1] = { ...shamanCombat.enemies[1], hp: 1 };
+  const shamanHealing = takeEnemyTurn(shamanCombat, INITIAL_GAME.character, shamanCombat.enemies[0].instanceId);
+  assert.ok(shamanHealing.pendingEffects.some((effect) => effect.type === "heal" && effect.targetId === shamanCombat.enemies[1].instanceId && effect.amount === 20), "Hill Troll Shaman must heal the most wounded friendly target for 200% Spell Power.");
+
+  const enforcerCharacter = { ...structuredClone(INITIAL_GAME.character), gold: 7 };
+  const enforcerCombat = combatWithActiveEnemy(["enemy-ms2wk1ul-6ol9b"], 0);
+  enforcerCombat.enemies[0] = { ...enforcerCombat.enemies[0], hitChance: 100 };
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+  let stolenCombat: ReturnType<typeof takeEnemyTurn>;
+  try {
+    stolenCombat = takeEnemyTurn(enforcerCombat, enforcerCharacter, enforcerCombat.enemies[0].instanceId);
+  } finally {
+    Math.random = originalRandom;
+  }
+  assert.equal(stolenCombat.goldStolen, 7, "Bandit Enforcer must steal no more Gold than the character owns.");
+  assert.ok(stolenCombat.pendingEffects.some((effect) => effect.type === "passive_text" && effect.text === "-7 Gold"), "Stolen Gold must receive impact-timed combat feedback.");
+
+  const lootCombat = combatWithActiveEnemy(["enemy-ms2wqzxv-srsgs"], 0);
+  lootCombat.enemies[0] = { ...lootCombat.enemies[0], energy: 10 };
+  const escaping = takeEnemyTurn(lootCombat, INITIAL_GAME.character, lootCombat.enemies[0].instanceId);
+  assert.ok(escaping.pendingEffects.some((effect) => effect.type === "enemy_flee"), "Loot Goblin must queue its escape at the presentation event.");
+  const escaped = resolveCombatEvent(escaping, escaping.eventId, 0);
+  assert.equal(escaped.enemies[0].fled, true, "Loot Goblin must be marked as escaped when its flee event resolves.");
+  assert.equal(escaped.outcome, "victory", "The encounter must end when the final enemy escapes.");
+  const escapedState = structuredClone(INITIAL_GAME) as GameState;
+  escapedState.adventure.combat = {
+    ...escaped,
+    enemies: escaped.enemies.map((enemy) => ({ ...enemy, dropTable: [{ itemId: ITEMS[0].id, chance: 100 }] })),
+  };
+  assert.equal(rollCombatLoot(escapedState, () => 0).some((item) => item.id === ITEMS[0].id), false, "An escaped Loot Goblin must take its drop table with it.");
+
+  const klaus = createCombat(INITIAL_GAME.character, ["enemy-ms2xaper-z7o3g"]).enemies[0];
+  assert.equal(getReadyEnemyAbility(klaus)?.name, "Patience", "Klaus must build Guard before reaching full Energy.");
+  assert.equal(getReadyEnemyAbility({ ...klaus, energy: 10 })?.name, "No Patience", "Klaus must unleash No Patience at full Energy.");
+  assert.equal(getReadyEnemyAbility({ ...klaus, energy: 10, behaviorPhase: "toying" })?.name, "Toying", "Klaus must switch permanently to Toying after No Patience.");
+
+  const highfallSetItemIds = [
+    "gear-nightveil-cowl", "gear-nightveil-jerkin", "gear-nightveil-legwraps", "gear-nightveil-treads",
+    "gear-trollforged-greathelm", "gear-trollforged-breastplate", "gear-trollforged-legguards", "gear-trollforged-warboots",
+    "gear-runewoven-cowl", "gear-runewoven-robes", "gear-runewoven-leggings", "gear-runewoven-boots",
+  ];
+  const highfallDropRows = highfallEnemyIds.flatMap((enemyId) => ENEMIES[enemyId].dropTable ?? []);
+  highfallSetItemIds.forEach((itemId) => {
+    const matchingRows = highfallDropRows.filter((drop) => drop.itemId === itemId);
+    assert.equal(matchingRows.length, 1, `${itemId} must have one dedicated Bandit or Troll drop row.`);
+    assert.equal(matchingRows[0].chance, 5, `${itemId} must use the requested 5% drop chance.`);
+  });
+
+  const expectedSetTriggers = new Map([
+    ["set-nightveil", "nightveil-critical-evasion"],
+    ["set-trollforged", "trollforged-retaliatory-guard"],
+    ["set-runewoven", "runewoven-arcane-cycle"],
+  ]);
+  expectedSetTriggers.forEach((triggerId, setId) => {
+    const pieces = ITEMS.filter((item): item is GearItem => isGearItem(item) && item.set === setId);
+    const character = structuredClone(INITIAL_GAME.character);
+    character.equipment = {};
+    pieces.forEach((piece) => { character.equipment[piece.slot] = structuredClone(piece); });
+    const trigger = getCharacterCombatFeatures(character).triggers.find((candidate) => candidate.id === triggerId);
+    assert.equal(pieces.length, 4, `${setId} must still contain four equippable pieces.`);
+    assert.ok(trigger, `${setId} must activate its unique four-piece combat trigger.`);
+  });
+
+  const nightveilSet = GEAR_SETS.find((set) => set.id === "set-nightveil")!;
+  const nightveilEffect = nightveilSet.bonuses.find((bonus) => bonus.requiredPieces === 4)?.triggers?.[0]?.effects[0];
+  assert.ok(nightveilEffect?.type === "apply_status" && nightveilEffect.status.id === "evasion" && nightveilEffect.status.magnitude === 0.2, "Nightveil critical strikes must grant exactly +20% Dodge Chance.");
+  const trollforgedTrigger = GEAR_SETS.find((set) => set.id === "set-trollforged")!.bonuses.find((bonus) => bonus.requiredPieces === 4)?.triggers?.[0];
+  assert.equal(trollforgedTrigger?.oncePerTurn, true, "Trollforged Guard must trigger at most once per turn.");
+  assert.deepEqual(trollforgedTrigger?.conditions, { minimumDamage: 1 }, "Trollforged must require real Health damage before granting Guard.");
+  const runewovenTrigger = GEAR_SETS.find((set) => set.id === "set-runewoven")!.bonuses.find((bonus) => bonus.requiredPieces === 4)?.triggers?.[0];
+  assert.deepEqual(runewovenTrigger?.conditions?.damageTypes, ["spell", "arcane", "fire", "frost", "lightning"], "Runewoven must cover every Magic damage school.");
+  assert.equal(runewovenTrigger?.oncePerTurn, true, "Runewoven Energy restoration must trigger at most once per turn.");
+}
+
+function testWindsongUncommonItemCollection() {
+  const itemIds = [
+    "gear-windsong-thornbark-visor",
+    "gear-windsong-thornbark-buckler",
+    "gear-windsong-galehide-jerkin",
+    "gear-windsong-galehide-striders",
+    "gear-windsong-wispwoven-leggings",
+    "gear-windsong-wispwoven-band",
+    "gear-windsong-bramblefang",
+    "gear-windsong-moondrop-wand",
+    "gear-windsong-wolfstep-loop",
+    "consumable-windsong-whisperbloom-tonic",
+  ];
+  const collection = ITEMS.filter((item) => itemIds.includes(item.id));
+  assert.equal(collection.length, 10, "Windsong Forest must contain all ten requested new items.");
+  assert.ok(collection.every((item) => item.rarity === "uncommon"), "Every new Windsong item must be Uncommon.");
+  assert.ok(collection.every((item) => ITEM_ICON_URLS[item.id]), "Every new Windsong item must reuse a registered live icon.");
+  assert.ok(itemIds.every((itemId) => canonicalItemExchange().items.some((item) => item.id === itemId)), "Every new Windsong item must appear in Item Editor's canonical catalog.");
+
+  const expectedSets = new Map([
+    ["set-windsong-thornbark", ["gear-windsong-thornbark-visor", "gear-windsong-thornbark-buckler"]],
+    ["set-windsong-galehide", ["gear-windsong-galehide-jerkin", "gear-windsong-galehide-striders"]],
+    ["set-windsong-wispwoven", ["gear-windsong-wispwoven-leggings", "gear-windsong-wispwoven-band"]],
+  ]);
+  expectedSets.forEach((expectedPieceIds, setId) => {
+    const set = GEAR_SETS.find((candidate) => candidate.id === setId);
+    const pieces = ITEMS.filter((item): item is GearItem => isGearItem(item) && item.set === setId);
+    assert.equal(set?.pieceCount, 2, `${setId} must be a two-piece set.`);
+    assert.deepEqual(pieces.map((item) => item.id), expectedPieceIds, `${setId} must contain its intended pair.`);
+    assert.equal(set?.bonuses.length, 1, `${setId} must have exactly one set bonus.`);
+    assert.equal(set?.bonuses[0].requiredPieces, 2, `${setId} must activate at two pieces.`);
+    assert.equal(set?.bonuses[0].description, "+1 Vitality.", `${setId} must describe the shared Vitality bonus.`);
+    assert.deepEqual(set?.bonuses[0].passive, { stats: { vitality: 1 } }, `${setId} must grant exactly +1 Vitality.`);
+  });
+  assert.equal(collection.filter(isGearItem).filter((item) => item.set).length, 6, "Exactly six new Windsong items must be set pieces.");
+
+  const windsongMaterialIds = new Set([
+    "item-ms0jd8ky-lu2zb",
+    "item-ms0jdzsp-pnyoa",
+    "item-ms0jej41-7sii2",
+    "item-ms0jf0sp-z8hcl",
+    "item-ms0jgblm-ko16i",
+  ]);
+  const expectedStations = new Map([
+    ["gear-windsong-thornbark-visor", "blacksmith"],
+    ["gear-windsong-thornbark-buckler", "blacksmith"],
+    ["gear-windsong-galehide-jerkin", "leatherworker"],
+    ["gear-windsong-galehide-striders", "leatherworker"],
+    ["gear-windsong-wispwoven-leggings", "tailor"],
+    ["gear-windsong-wispwoven-band", "jeweler"],
+    ["gear-windsong-bramblefang", "blacksmith"],
+    ["gear-windsong-moondrop-wand", "jeweler"],
+    ["gear-windsong-wolfstep-loop", "jeweler"],
+    ["consumable-windsong-whisperbloom-tonic", "alchemist"],
+  ]);
+  collection.forEach((item) => {
+    const recipe = getItemCraftingRecipe(item);
+    assert.equal(recipe?.station, expectedStations.get(item.id), `${item.name} must be craftable at its intended Arkenfall artisan.`);
+    assert.ok(recipe?.ingredients.length, `${item.name} must have a material recipe.`);
+    assert.ok(recipe?.ingredients.every((ingredient) => windsongMaterialIds.has(ingredient.itemId)), `${item.name} must use only materials obtainable in Windsong Forest.`);
+  });
+
+  const windsongEnemyIds = [
+    "enemy-mrxiut2a-k4kgv",
+    "enemy-mrxj4o6o-o45ia",
+    "enemy-mrxk609z-n04fq",
+    "enemy-mrxkar5z-g9o5d",
+    "enemy-mrxkjqs3-g7g5i",
+  ];
+  const dropRows = windsongEnemyIds.flatMap((enemyId) => ENEMIES[enemyId].dropTable ?? []);
+  itemIds.forEach((itemId) => {
+    const matchingRows = dropRows.filter((drop) => drop.itemId === itemId);
+    assert.ok(matchingRows.length >= 1, `${itemId} must drop inside Windsong Forest.`);
+    assert.ok(matchingRows.every((drop) => drop.chance > 0 && drop.chance <= 8), `${itemId} must retain a low positive Windsong drop chance.`);
+  });
+}
+
 function testItemEditorRepairsInternalIds() {
   const exchange = normalizeItemExchange({
     format: "arkenfall-items",
@@ -311,6 +715,32 @@ function testItemEditorRepairsInternalIds() {
   assert.equal(isConsumableItem(exchange.items[2]), false, "Other items must never be classified as consumables.");
 }
 
+function testItemEditorMergesNewLiveCatalogEntries() {
+  const canonical = canonicalItemExchange();
+  const customizedLiveItem = { ...structuredClone(canonical.items[0]), name: "Locally Customized Item" };
+  const localOnlyItem: InventoryItem = { kind: "misc", id: "local-draft-item", name: "Local Draft Item", rarity: "common", description: "", goldCost: 0 };
+  const localOnlySet = { id: "local-draft-set", name: "Local Draft Set", pieceCount: 2, bonuses: [] };
+  const staleDraft: ItemExchange = {
+    format: "arkenfall-items",
+    version: 1,
+    items: [customizedLiveItem, localOnlyItem],
+    sets: [localOnlySet],
+  };
+  const merged = mergeItemDraftWithCanonical(staleDraft, canonical);
+
+  canonical.items.forEach((item) => assert.ok(merged.items.some((candidate) => candidate.id === item.id), `${item.name} must be added to an older Item Editor draft.`));
+  canonical.sets.forEach((set) => assert.ok(merged.sets.some((candidate) => candidate.id === set.id), `${set.name} must be added to an older Set Editor draft.`));
+  assert.equal(merged.items.find((item) => item.id === customizedLiveItem.id)?.name, "Locally Customized Item", "Catalog hydration must preserve edits to existing item IDs.");
+  assert.ok(merged.items.some((item) => item.id === localOnlyItem.id), "Catalog hydration must preserve unsaved local item drafts.");
+  assert.ok(merged.sets.some((set) => set.id === localOnlySet.id), "Catalog hydration must preserve unsaved local set drafts.");
+
+  const staleNightveil = structuredClone(canonical.sets.find((set) => set.id === "set-nightveil")!);
+  staleNightveil.bonuses = staleNightveil.bonuses.map((bonus) => bonus.requiredPieces === 4 ? { requiredPieces: 4, description: "+2 Physical Power.", passive: { physicalPower: 2 } } : bonus);
+  const synchronized = synchronizeItemDraftWithCanonical({ ...staleDraft, sets: [localOnlySet, staleNightveil] }, canonical);
+  assert.deepEqual(synchronized.sets.find((set) => set.id === "set-nightveil"), canonical.sets.find((set) => set.id === "set-nightveil"), "Known live set revisions must replace their older browser-draft definitions.");
+  assert.ok(synchronized.sets.some((set) => set.id === localOnlySet.id), "Refreshing known live sets must still preserve local-only set drafts.");
+}
+
 function testTownAdventureRequirements() {
   const prerequisiteAdventureId = ADVENTURES[0].id;
   const material: InventoryItem = { kind: "misc", id: "gate-material", name: "Gate Material", rarity: "common", description: "" };
@@ -342,7 +772,8 @@ function testArkenfallTownCommerceAndCrafting() {
   assert.ok(blacksmithStock.some(isGearItem), "The Blacksmith must expose assigned gear stock.");
   assert.ok(alchemistStock.some(isConsumableItem), "The Alchemist must expose assigned consumable stock.");
 
-  const soldItem = blacksmithStock[0];
+  const soldItem = blacksmithStock.find(isGearItem);
+  assert.ok(soldItem, "Town purchase auto-equip regression requires live Blacksmith gear.");
   const purchaseState: GameState = {
     ...structuredClone(INITIAL_GAME),
     characterCreated: true,
@@ -351,8 +782,9 @@ function testArkenfallTownCommerceAndCrafting() {
   const purchased = purchaseTownItem(purchaseState, "blacksmith", soldItem.id);
   assert.equal(purchased.success, true, "A town vendor must sell assigned stock when the character can afford it.");
   assert.equal(purchased.state.character.gold, 5, "Town purchases must deduct the full configured Gold Cost.");
-  assert.equal(purchased.state.character.inventory[0]?.id, soldItem.id, "A purchased item must enter the persistent Inventory.");
-  assert.equal(purchased.message, `${soldItem.name} added to inventory.`, "Town purchase feedback must use the floating-text copy.");
+  assert.ok(Object.values(purchased.state.character.equipment).some((item) => item?.id === soldItem.id), "Purchased gear must equip when its slot is empty.");
+  assert.equal(purchased.state.character.inventory.length, 0, "Automatically equipped purchases must not remain in Inventory.");
+  assert.equal(purchased.message, `${soldItem.name} equipped automatically.`, "Town purchase feedback must explain automatic equipment.");
 
   const recipeItem = getTownCraftingCatalog("blacksmith")[0];
   const recipe = getItemCraftingRecipe(recipeItem);
@@ -365,8 +797,19 @@ function testArkenfallTownCommerceAndCrafting() {
   const craftingState = { ...purchaseState, character: { ...purchaseState.character, inventory: materials } };
   const crafted = craftTownItem(craftingState, "blacksmith", recipeItem.id);
   assert.equal(crafted.success, true, "Crafting must succeed when every required material is present.");
-  assert.deepEqual(crafted.state.character.inventory.map((item) => item.id), [recipeItem.id], "Crafting must consume exact ingredient quantities and add one crafted item.");
+  assert.equal(crafted.state.character.inventory.length, 0, "Crafting must consume the exact ingredient quantities before auto-equipping gear.");
+  assert.ok(Object.values(crafted.state.character.equipment).some((item) => item?.id === recipeItem.id), "Crafted gear must equip when its slot is empty.");
+  assert.equal(crafted.message, `${recipeItem.name} crafted and equipped automatically.`, "Crafting feedback must explain automatic equipment.");
   assert.equal(craftTownItem(purchaseState, "blacksmith", recipeItem.id).success, false, "Crafting must fail without the required materials.");
+
+  const sellValue = getItemSellValue(soldItem);
+  (["blacksmith", "alchemist", "tailor", "leatherworker", "jeweler"] as const).forEach((vendor) => {
+    const saleState = { ...purchaseState, character: { ...purchaseState.character, gold: 0, inventory: [structuredClone(soldItem), structuredClone(soldItem)] } };
+    const sold = sellTownItem(saleState, vendor, soldItem.id);
+    assert.equal(sold.success, true, `Items must be sellable at the ${vendor}.`);
+    assert.equal(sold.state.character.gold, sellValue, "Town vendors must pay 25% of Gold Cost using the shared sell-value rule.");
+    assert.equal(sold.state.character.inventory.length, 1, "A town sale must remove exactly one inventory copy.");
+  });
 
   const maxHp = getDerivedStats(purchaseState.character).maxHp;
   const restCost = getTavernRestCost(1, maxHp);
@@ -374,9 +817,16 @@ function testArkenfallTownCommerceAndCrafting() {
   const rested = restAtArkenfallTavern(wounded);
   assert.equal(rested.success, true, "The tavern must heal a wounded character between adventures.");
   assert.equal(rested.state.adventure.carryHp, maxHp, "Tavern rest must restore carried Health to the derived maximum.");
-  assert.equal(rested.state.character.gold, 0, "Tavern rest must cost one Gold per three missing Health, rounded up.");
-  assert.equal(getTavernRestCost(maxHp - 4, maxHp), 2, "Partial groups of three missing Health must still cost one Gold.");
-  assert.equal(restAtArkenfallTavern({ ...wounded, character: { ...wounded.character, gold: restCost - 1 } }).success, false, "Rest must fail atomically when the character cannot afford full recovery.");
+  assert.equal(rested.state.character.gold, 0, "Tavern rest must cost one Gold per five missing Health, rounded up.");
+  assert.equal(getTavernRestCost(maxHp - 4, maxHp), 1, "Up to five missing Health must cost one Gold.");
+  assert.equal(getTavernRestCost(maxHp - 6, maxHp), 2, "A partial second group of five missing Health must cost another Gold.");
+  assert.deepEqual(getTavernRestOffer(maxHp - 7, maxHp, 1), { goldCost: 1, healthRestored: 5, fullyRestores: false }, "A limited budget must restore five Health per available Gold.");
+  assert.deepEqual(getTavernRestOffer(maxHp - 7, maxHp, 20), { goldCost: 2, healthRestored: 7, fullyRestores: true }, "Full recovery must charge only the rounded-up Gold cost.");
+  const partialRest = restAtArkenfallTavern({ ...wounded, character: { ...wounded.character, gold: 1 } });
+  assert.equal(partialRest.success, true, "Rest must spend the available Gold even when it cannot buy full recovery.");
+  assert.equal(partialRest.state.character.gold, 0, "Budget-limited rest must spend all available Gold.");
+  assert.equal(partialRest.state.adventure.carryHp, Math.min(maxHp, 6), "One Gold must restore five carried Health.");
+  assert.equal(restAtArkenfallTavern({ ...wounded, character: { ...wounded.character, gold: 0 } }).success, false, "Rest must require at least one Gold.");
 
   assert.deepEqual(TAVERN_MEALS.map((meal) => meal.status), ["strengthened", "fierce", "regenerate"], "The tavern menu must cover all three requested next-combat buffs.");
   assert.ok(TAVERN_MEALS.every((meal) => meal.cost >= 5 && meal.cost <= 10), "Every tavern meal must cost between 5 and 10 Gold.");
@@ -535,8 +985,81 @@ function testAdventureEditorRepairsInternalIds() {
   });
   const adventure = exchange.adventures[0];
   assert.equal(adventure.id, "readable-adventure", "A missing adventure ID should be generated from its name.");
+  assert.equal(adventure.travelText, "Walking beneath the Windsong canopy", "Older Adventure Editor drafts must receive theme-appropriate travel loading text.");
   assert.equal(adventure.stages[0].id, "first-stage", "A missing stage ID should be generated from its name.");
   assert.deepEqual(adventure.stages[0].entries.map((entry) => entry.id), ["repeated-encounter", "repeated-encounter-2"], "Missing or duplicate stage possibility IDs should be repaired without user input.");
+}
+
+function testHighfallMountainTheme() {
+  const highfallAdventure = {
+    id: "highfall-mountains",
+    name: "Highfall Mountains",
+    description: "",
+    recommendedLevel: 1,
+    theme: "highfall_mountains" as const,
+    stages: [],
+    completionTitle: "Complete",
+    completionDescription: "",
+  };
+  assert.equal(getAdventureTravelText(highfallAdventure), "Climbing into the Highfall Mountains", "Highfall Mountains needs its own default travel text.");
+  ["highfall-mountains-adventure.webp", "highfall-mountains-edge.webp"].forEach((filename) => {
+    assert.ok(existsSync(join(process.cwd(), "public", "assets", "backgrounds", filename)), `Missing Highfall Mountains background ${filename}.`);
+  });
+}
+
+function testHighfallMountainsAdventureContent() {
+  const adventure = ADVENTURES.find((candidate) => candidate.id === "highfall-mountains");
+  assert.ok(adventure, "Highfall Mountains must exist in the live adventure catalog.");
+  assert.equal(adventure.stages.length, 11, "Highfall Mountains must contain exactly 11 stages.");
+  assert.equal(adventure.prerequisiteAdventureId, "adventure-ms1iq9ye-9ra1z", "Completing Arkenfall Highlands must unlock Highfall Mountains.");
+
+  const stage2 = adventure.stages[1];
+  const stage5 = adventure.stages[4];
+  const stage6 = adventure.stages[5];
+  const stage8 = adventure.stages[7];
+  const stage9 = adventure.stages[8];
+  const stage11 = adventure.stages[10];
+  assert.equal(stage2.entries[0]?.eventId, "event-highfall-sheltered-spring", "Stage 2 must be the healing and potion refuge event.");
+  assert.equal(stage6.entries[0]?.eventId, "event-highfall-stormbound-camp", "Stage 6 must be the second recovery event.");
+  assert.equal(stage8.entries[0]?.eventId, "event-highfall-frozen-cairn", "Stage 8 must be a dedicated event.");
+  assert.equal(stage9.entries[0]?.eventId, "event-highfall-merchant", "Highfall Merchant must appear before the final ascent.");
+
+  assert.deepEqual(stage5.entries.map((entry) => entry.chance), [90, 10], "Stage 5 must reserve exactly 10% for the Loot Goblin encounter.");
+  const lootGoblinEncounter = stage5.entries.find((entry) => entry.chance === 10);
+  assert.deepEqual(lootGoblinEncounter?.enemyIds, ["enemy-ms2vrqbb-8r5ux", "enemy-ms2wqzxv-srsgs"], "The rare Stage 5 encounter must pair a Hill Troll with the Highfall Loot Goblin.");
+  assert.equal(stage11.entries.length, 1, "Stage 11 must have one final encounter.");
+  assert.equal(stage11.entries[0].type, "boss", "Stage 11 must be a boss encounter.");
+  assert.deepEqual(stage11.entries[0].enemyIds, ["enemy-ms2xaper-z7o3g"], "Troll Bandit King, Klaus must be the final boss.");
+
+  const shelter = ADVENTURE_EVENTS["event-highfall-sheltered-spring"];
+  const camp = ADVENTURE_EVENTS["event-highfall-stormbound-camp"];
+  const merchant = ADVENTURE_EVENTS["event-highfall-merchant"];
+  assert.ok(shelter.choices.some((choice) => choice.resolution === "direct" && choice.outcome?.effects.some((effect) => effect.type === "heal")), "Stage 2 must offer guaranteed recovery.");
+  assert.ok(camp.choices.some((choice) => choice.success.effects.some((effect) => effect.type === "gainItem" && effect.itemId === "consumable-stonebloom-draught") && choice.failure.effects.some((effect) => effect.type === "gainItem" && effect.itemId === "consumable-highfall-restorative")), "Stage 6 must have a high-probability potion reward.");
+  const merchantStock = merchant.choices.flatMap((choice) => choice.outcome?.effects ?? []).find((effect) => effect.type === "openMerchant");
+  assert.ok(merchantStock && merchantStock.type === "openMerchant", "Highfall Merchant must open a merchant inventory.");
+  ["item-highfall-frostroot", "consumable-highfall-restorative", "consumable-stonebloom-draught", "gear-cairnkeepers-loop"].forEach((itemId) => {
+    assert.ok(ITEMS.some((item) => item.id === itemId), `Missing Highfall item ${itemId}.`);
+    assert.ok(merchantStock.itemIds.includes(itemId), `${itemId} must be stocked by Highfall Merchant.`);
+  });
+}
+
+function testAdventureAndEventEditorsMergeLiveCatalogs() {
+  const canonicalAdventures = canonicalAdventureExchange();
+  const localAdventure = { ...structuredClone(canonicalAdventures.adventures[0]), id: "local-only-adventure", name: "Local Only Adventure" };
+  const staleAdventureDraft: AdventureExchange = { format: "arkenfall-adventures", version: 1, adventures: [structuredClone(canonicalAdventures.adventures[0]), localAdventure] };
+  const mergedAdventures = mergeAdventureDraftWithCanonical(staleAdventureDraft, canonicalAdventures);
+  assert.ok(mergedAdventures.adventures.some((adventure) => adventure.id === "highfall-mountains"), "Adventure Editor must add Highfall Mountains to older browser drafts.");
+  assert.ok(mergedAdventures.adventures.some((adventure) => adventure.id === localAdventure.id), "Adventure catalog hydration must preserve local-only drafts.");
+
+  const canonicalEvents = canonicalEventExchange();
+  const localEvent = { ...structuredClone(canonicalEvents.events[0]), id: "local-only-event", name: "Local Only Event" };
+  const staleEventDraft: EventExchange = { format: "arkenfall-events", version: 2, events: [structuredClone(canonicalEvents.events[0]), localEvent] };
+  const mergedEvents = mergeEventDraftWithCanonical(staleEventDraft, canonicalEvents);
+  ["event-highfall-sheltered-spring", "event-highfall-stormbound-camp", "event-highfall-frozen-cairn", "event-highfall-merchant"].forEach((eventId) => {
+    assert.ok(mergedEvents.events.some((event) => event.id === eventId), `Event Manager must add ${eventId} to older browser drafts.`);
+  });
+  assert.ok(mergedEvents.events.some((event) => event.id === localEvent.id), "Event catalog hydration must preserve local-only drafts.");
 }
 
 function testAdventureEditorReordersStages() {
@@ -589,7 +1112,7 @@ function testBasicPlayerAbility() {
   Math.random = () => 0;
   try {
     const result = useAbility(combat, character, "quickSlash");
-    assert.equal(result.energy, created.energy - 1, "Quick Slash must spend one Energy.");
+    assert.equal(result.energy, created.energy - ABILITIES.quickSlash.energyCost, "Quick Slash must spend its configured Energy cost.");
     const damageEffect = result.pendingEffects.find((effect) => "damage" in effect && effect.targetId === created.enemies[0].instanceId);
     assert.ok(damageEffect && "damage" in damageEffect, "Quick Slash must queue damage against the selected target.");
     assert.equal(damageEffect.sourceLabel, "Crit", "Critical damage must carry the floating-number Crit label.");
@@ -701,8 +1224,8 @@ function testCombatConsumable() {
 }
 
 function testIndependentItemDrops() {
-  const firstItem = ITEMS[0];
-  const secondItem = ITEMS[1];
+  const firstItem = ITEMS.find((item) => !isGearItem(item));
+  const secondItem = ITEMS.find((item) => !isGearItem(item) && item.id !== firstItem?.id);
   assert.ok(firstItem && secondItem, "Drop-table regression requires at least two live items.");
   const enemyTables: ItemDropDefinition[][] = [
     [{ itemId: firstItem.id, chance: 100 }],
@@ -732,6 +1255,24 @@ function testIndependentItemDrops() {
   assert.equal(rewarded.character.inventory.at(-1)?.id, firstItem.id, "Rolled loot must enter the character inventory immediately.");
   assert.equal(grantCombatReward(rewarded, 2, () => 0).character.inventory.length, 1, "A resolved combat reward must never reroll or duplicate loot.");
 
+  const gearDrop = ITEMS.find(isGearItem);
+  assert.ok(gearDrop, "Gear-loot regression requires a live gear item.");
+  const gearCombat = createCombat(character, ["dummy"]);
+  const gearDropState: GameState = {
+    ...state,
+    character: { ...character, equipment: {} },
+    adventure: {
+      ...state.adventure,
+      combat: { ...gearCombat, outcome: "victory", enemies: gearCombat.enemies.map((enemy) => ({ ...enemy, dropTable: [{ itemId: gearDrop.id, chance: 100 }] })) },
+      pendingReward: null,
+    },
+  };
+  const gearRolls = [0];
+  const gearRewarded = grantCombatReward(gearDropState, 3, () => gearRolls.shift() ?? 1);
+  assert.ok(Object.values(gearRewarded.character.equipment).some((item) => item?.id === gearDrop.id), "Looted gear must automatically fill an empty compatible equipment slot.");
+  assert.equal(gearRewarded.character.inventory.some((item) => item.id === gearDrop.id), false, "Automatically equipped loot must not also enter Inventory.");
+  assert.equal(gearRewarded.adventure.pendingReward?.loot.some((item) => item.id === gearDrop.id), true, "Automatically equipped loot must remain visible in the score-screen reward.");
+
   const grouped = groupInventoryItems([firstItem, structuredClone(firstItem), secondItem]);
   assert.deepEqual(grouped.map(({ item, count }) => [item.id, count]), [[firstItem.id, 2], [secondItem.id, 1]], "Duplicate score-screen loot must group by item without changing order.");
 }
@@ -739,10 +1280,19 @@ function testIndependentItemDrops() {
 testAbilityFlatDamage();
 testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
+testAutomaticGearAcquisition();
 testNewCharacterIntroductionDefaults();
 testEnemyStartingEnergy();
+testEnemyEditorSynchronizesLiveDropTables();
 testGoblinEnemyBehaviors();
+testHighfallEnemyBehaviorsAndLoot();
+testWindsongUncommonItemCollection();
 testIndependentItemDrops();
+testFleeCombatLossesAndReset();
+testQuestLifecycle();
+testQuestEditorCatalog();
+testConsumablePotionArtworkLibrary();
+testScoreScreenGearInspection();
 testContentIntegrity();
 testGearIconLibrary();
 testCraftingMaterialArtworkLibrary();
@@ -754,9 +1304,13 @@ testStoryReplayRewards();
 testOpposedHitAndDodge();
 testStatusAdjustedCombatStats();
 testAdventureEditorRepairsInternalIds();
+testHighfallMountainTheme();
+testHighfallMountainsAdventureContent();
+testAdventureAndEventEditorsMergeLiveCatalogs();
 testAdventureEditorReordersStages();
 testEventEditorRepairsInternalIds();
 testItemEditorRepairsInternalIds();
+testItemEditorMergesNewLiveCatalogEntries();
 testTownAdventureRequirements();
 testArkenfallTownCommerceAndCrafting();
 testStatusContracts();

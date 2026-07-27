@@ -1,15 +1,28 @@
 import { Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ADVENTURE_EVENTS, ENEMIES, ITEMS } from "../../game/data";
 import { getAdventureEventOutcomeEffects } from "../../game/eventOutcomes";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import type { AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcome, AdventureEventOutcomeEffect, StatName, StatusEffectId } from "../../game/types";
 import { copyJson, downloadJson, EditorShell, EMPTY_OUTCOME, ensureInternalId, EVENT_DRAFT_STORAGE_KEY, localEnemies, makeId, NumberField, saveLiveCatalog, STAT_OPTIONS, TextField, useLocalDraft, type EventExchange } from "./shared";
 
+const EVENT_DRAFT_CATALOG_SIGNATURE_KEY = `${EVENT_DRAFT_STORAGE_KEY}.live-catalog-signature`;
+const EVENT_DRAFT_CATALOG_REVISION = "highfall-mountains-events-v1";
+
 export function normalizeOutcome(outcome: AdventureEventOutcome): AdventureEventOutcome {
   return { text: outcome.text ?? "", effects: structuredClone(getAdventureEventOutcomeEffects(outcome)) };
 }
 export function canonicalEventExchange(): EventExchange { return { format: "arkenfall-events", version: 2, events: Object.values(ADVENTURE_EVENTS).map((event) => structuredClone(event)) }; }
+export function mergeEventDraftWithCanonical(draft: EventExchange, canonical: EventExchange = canonicalEventExchange()): EventExchange {
+  const draftEventIds = new Set((draft.events ?? []).map((event) => event.id));
+  return {
+    ...draft,
+    events: [...(draft.events ?? []), ...canonical.events.filter((event) => !draftEventIds.has(event.id)).map((event) => structuredClone(event))],
+  };
+}
+function getEventCatalogSignature(exchange: EventExchange): string {
+  return `${EVENT_DRAFT_CATALOG_REVISION}::${exchange.events.map((event) => event.id).join("|")}`;
+}
 export function normalizeEventExchange(exchange: EventExchange): EventExchange {
   const usedEventIds = new Set<string>();
   return {
@@ -105,9 +118,17 @@ export function OutcomeFields({ title, polarity, outcome, enemies, onChange }: {
 }
 
 export function EventDevtool({ onExit }: { onExit: () => void }) {
-  const store = useLocalDraft<EventExchange>(EVENT_DRAFT_STORAGE_KEY, canonicalEventExchange(), normalizeEventExchange);
+  const canonical = canonicalEventExchange();
+  const canonicalSignature = getEventCatalogSignature(canonical);
+  const store = useLocalDraft<EventExchange>(EVENT_DRAFT_STORAGE_KEY, canonical, normalizeEventExchange);
   const enemies = useMemo(localEnemies, []);
   const [selectedId, setSelectedId] = useState(store.draft.events[0]?.id ?? "");
+  useEffect(() => {
+    if (window.localStorage.getItem(EVENT_DRAFT_CATALOG_SIGNATURE_KEY) === canonicalSignature) return;
+    store.setDraft((draft) => normalizeEventExchange(mergeEventDraftWithCanonical(draft, canonical)));
+    window.localStorage.setItem(EVENT_DRAFT_CATALOG_SIGNATURE_KEY, canonicalSignature);
+    store.setMessage("New live events were synced to this browser draft");
+  }, [canonicalSignature]);
   const selected = store.draft.events.find((event) => event.id === selectedId) ?? store.draft.events[0];
   const update = (change: Partial<AdventureEventDefinition>) => store.setDraft((draft) => ({ ...draft, events: draft.events.map((event) => event.id === selected?.id ? { ...event, ...change } : event) }));
   const updateChoice = (choiceId: string, change: Partial<AdventureEventChoice>) => update({ choices: selected.choices.map((choice) => choice.id === choiceId ? { ...choice, ...change } : choice) });

@@ -1,19 +1,21 @@
 import {
+  ArrowLeft,
   BookOpen,
-  Building2,
   CircleCheckBig,
   ChevronRight, CircleDot,
   Droplets,
   Flame, FlaskConical,
   Heart, HeartPulse,
+  LogOut,
   Skull,
   Sparkles,
   Trophy,
   UserRound,
   Zap
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { FloatingCombatText } from "../../components/FloatingCombatText";
+import { GameConfirmDialog } from "../../components/GameConfirmDialog";
 import { ItemIcon } from "../../components/ItemIcon";
 import { ItemDetailModal } from "../../components/character/CharacterView";
 import { getAdventureDefinition, getAdventureNode, getStoryAdventureAvailability } from "../../game/adventures";
@@ -27,7 +29,7 @@ import { getGearCategoryLabel } from "../../game/gear";
 import { consumableCount, describeConsumableEffect, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
-import type { CharacterState, CombatLogEntry, CombatReward, ConsumableItem, GameState, GearItem, InspectableInfo, StatusEffectId } from "../../game/types";
+import type { CharacterState, CombatLogEntry, CombatReward, ConsumableItem, GameState, GearItem, GearSlot, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
 import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
@@ -39,7 +41,7 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 import { getItemNameClass, GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onTown, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onReturnToAdventures, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onTalents, onCharacter, onInventory, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onTown, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onFlee, onReturnToArkenfall, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onCharacter, onInventory, onEquip, rewardPresentationPlayed, onRewardPresentationStart }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
@@ -56,14 +58,15 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   onInitiativeOrderStart: () => void;
   onInitiativeComplete: () => void;
   onContinue: () => void;
-  onReturnToAdventures: () => void;
+  onFlee: () => void;
+  onReturnToArkenfall: () => void;
   onEvent: (choiceId: string) => void;
   onMerchantPurchase: (itemId: string) => void;
   onMerchantSell: (itemId: string) => void;
   onPermadeath: () => void;
-  onTalents: () => void;
   onCharacter: () => void;
   onInventory: () => void;
+  onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
   rewardPresentationPlayed: boolean;
   onRewardPresentationStart: (rewardId: string) => void;
 }) {
@@ -73,6 +76,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const [inspectedEnemyId, setInspectedEnemyId] = useState<string | null>(null);
   const [playerAttributesOpen, setPlayerAttributesOpen] = useState(false);
   const [combatInventoryOpen, setCombatInventoryOpen] = useState(false);
+  const [fleeDialogOpen, setFleeDialogOpen] = useState(false);
   const [targetFeedback, setTargetFeedback] = useState<{ id: number; text: string } | null>(null);
   const nextTargetFeedbackId = useRef(0);
   const inspectedEnemy = adventure.combat?.enemies.find((enemy) => enemy.instanceId === inspectedEnemyId) ?? null;
@@ -88,6 +92,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
     setInspectedEnemyId(null);
     setPlayerAttributesOpen(false);
     setCombatInventoryOpen(false);
+    setFleeDialogOpen(false);
     setTargetFeedback(null);
   }, [adventure.nodeIndex]);
   useEffect(() => {
@@ -100,10 +105,10 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
     });
   }, [enemyVisualKey]);
   useEffect(() => {
-    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || playerAttributesOpen || combatInventoryOpen || activeActor?.kind !== "enemy") return;
+    if (!adventure.combat || adventure.combat.outcome !== "active" || initiativePlaying || sequencePending || logOpen || inspectedInfo || inspectedEnemy || playerAttributesOpen || combatInventoryOpen || fleeDialogOpen || activeActor?.kind !== "enemy") return;
     const timer = window.setTimeout(() => onEnemyTurn(activeActor.actorId), 250);
     return () => window.clearTimeout(timer);
-  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, combatInventoryOpen, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, playerAttributesOpen, sequencePending]);
+  }, [activeActor?.actorId, activeActor?.kind, adventure.combat?.outcome, combatEventId, combatInventoryOpen, fleeDialogOpen, initiativePlaying, inspectedEnemy, inspectedInfo, logOpen, onEnemyTurn, playerAttributesOpen, sequencePending]);
 
   if (adventure.completed) {
     const completedAdventure = getAdventureDefinition(adventure.adventureId);
@@ -114,38 +119,40 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
         <h1>{completedAdventure.completionTitle}</h1>
         <p>{completedAdventure.completionDescription}</p>
         <div className="reward-strip">
-          <span><strong>{game.character.level}</strong> Level</span><span><strong>{game.character.talentPoints}</strong> Talent Points</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
+          <span><strong>{game.character.level}</strong> Level</span><span><strong className="reward-value-with-icon"><GoldIcon />{game.character.gold}</strong> Gold</span>
         </div>
-        <button className="primary-button" onClick={onReturnToAdventures}>Return to Adventures <ChevronRight size={17} /></button>
-        <button className="text-button" onClick={onTalents}>Spend talent points</button>
+        <button className="primary-button" onClick={onReturnToArkenfall}>Return to Arkenfall <ChevronRight size={17} /></button>
       </section>
     );
   }
 
   if (!adventure.active) {
-    const featuredAdventure = ADVENTURES[0];
-    const featuredAvailability = getStoryAdventureAvailability(featuredAdventure, game.character.completedAdventureIds);
     return (
-      <section className="page adventure-home">
-        <button type="button" className="arkenfall-town-entry" onClick={onTown}>
-          <span className="arkenfall-town-entry-icon"><Building2 /></span>
-          <span><strong>Arkenfall Town</strong><em>Visit vendors, craft items, brew potions, and recover at the tavern.</em></span>
-          <ChevronRight />
-        </button>
-        <div className={`hero-card ${featuredAvailability === "completed" ? "completed" : ""}`}>
-          <div className="hero-copy">
-            {featuredAvailability === "completed" && <div className="adventure-completed-mark"><CircleCheckBig /><strong>Completed</strong></div>}
-            <p className="eyebrow">{featuredAvailability === "completed" ? "Completed Adventure" : "Available Adventure"}</p>
-            <h1>{featuredAdventure.name}</h1>
-            <p>{featuredAdventure.description}</p>
-            <div className="adventure-tags"><span>Recommended Level {featuredAdventure.recommendedLevel}</span><span>{featuredAdventure.stages.length} Stages</span><span>{featuredAvailability === "completed" ? "Replay · 10% XP · 50% Gold" : "Dynamic Encounters"}</span></div>
-            <button className="primary-button" disabled={featuredAvailability === "locked"} onClick={() => onBegin(featuredAdventure.id)}>{featuredAvailability === "completed" ? <>Replay Adventure <ChevronRight size={18} /></> : featuredAvailability === "locked" ? "Locked" : <>Begin Journey <ChevronRight size={18} /></>}</button>
-          </div>
-        </div>
-        {ADVENTURES.length > 1 && <div className="story-adventure-list">{ADVENTURES.slice(1).map((definition) => {
+      <section className="page adventure-home" aria-labelledby="adventures-heading">
+        <header className="adventure-entry-header">
+          <button type="button" className="town-back-button adventure-town-back" onClick={onTown}><ArrowLeft /> Arkenfall Town</button>
+          <div className="adventure-entry-copy"><p className="eyebrow">Beyond the Gates</p><h1 id="adventures-heading">Adventures</h1><p>Choose a path, prepare for the road, and write the next chapter of your story.</p></div>
+        </header>
+        <div className="adventure-hero-list">{ADVENTURES.map((definition, index) => {
           const availability = getStoryAdventureAvailability(definition, game.character.completedAdventureIds);
-          return <article className={availability === "completed" ? "completed" : ""} key={definition.id}><div><p className="eyebrow">{availability === "completed" ? "Completed Adventure" : "Story Adventure"}</p><h2>{definition.name}</h2><p>{definition.description}</p><div className="adventure-tags"><span>Level {definition.recommendedLevel}</span><span>{definition.stages.length} Stages</span>{availability === "completed" ? <span>Replay · 10% XP · 50% Gold</span> : definition.prerequisiteAdventureId && <span>{availability === "locked" ? `Requires ${getAdventureDefinition(definition.prerequisiteAdventureId).name}` : "Unlocked"}</span>}</div></div><div className="story-adventure-actions">{availability === "completed" && <div className="story-adventure-completed"><CircleCheckBig /><strong>Completed</strong></div>}<button className="secondary-button" disabled={availability === "locked"} onClick={() => onBegin(definition.id)}>{availability === "completed" ? "Replay Adventure" : availability === "available" ? "Begin Journey" : "Locked"} <ChevronRight size={17} /></button></div></article>;
-        })}</div>}
+          const requirementName = definition.prerequisiteAdventureId ? getAdventureDefinition(definition.prerequisiteAdventureId).name : null;
+          return (
+            <div className={`hero-card adventure-theme-${definition.theme.replaceAll("_", "-")} ${availability === "completed" ? "completed" : ""}`} style={{ "--adventure-card-order": index } as CSSProperties} key={definition.id}>
+              <div className="hero-copy">
+                {availability === "completed" && <div className="adventure-completed-mark"><CircleCheckBig /><strong>Completed</strong></div>}
+                <p className="eyebrow">{availability === "completed" ? "Completed Adventure" : index === 0 ? "Available Adventure" : "Story Adventure"}</p>
+                <h1>{definition.name}</h1>
+                <p>{definition.description}</p>
+                <div className="adventure-tags">
+                  <span>Recommended Level {definition.recommendedLevel}</span>
+                  <span>{definition.stages.length} Stages</span>
+                  <span>{availability === "completed" ? "Replay · 10% XP · 50% Gold" : availability === "locked" && requirementName ? `Requires ${requirementName}` : index === 0 ? "Dynamic Encounters" : "Unlocked"}</span>
+                </div>
+                <button className="primary-button" disabled={availability === "locked"} onClick={() => onBegin(definition.id)}>{availability === "completed" ? <>Replay Adventure <ChevronRight size={18} /></> : availability === "locked" ? "Locked" : <>Begin Journey <ChevronRight size={18} /></>}</button>
+              </div>
+            </div>
+          );
+        })}</div>
       </section>
     );
   }
@@ -234,7 +241,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
-    <section className={`combat-page compact-combat ${adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).theme === "windsong_forest" ? "windsong-forest-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}>
+    <section className={`combat-page compact-combat ${adventure.mode === "story" ? `${getAdventureDefinition(adventure.adventureId).theme.replaceAll("_", "-")}-combat` : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}>
       <button type="button" className="combat-log-button combat-log-corner" onClick={() => setLogOpen(true)} aria-label="Open Combat Log"><BookOpen size={15} /></button>
       <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />
@@ -389,11 +396,24 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       </div>
 
       <div className="combat-footer-controls">
+        <button className="combat-flee-button" disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active"} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> Flee</button>
         <button className="combat-inventory-button" disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active"} onClick={() => setCombatInventoryOpen(true)}><FlaskConical size={14} /> Inventory</button>
         <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
       </div>
+
+      {fleeDialogOpen && (
+        <GameConfirmDialog
+          eyebrow="Retreat"
+          title="Flee combat?"
+          description="If you flee there is a risk that you lose items and gold while running away. Are you sure?"
+          cancelLabel="Fight!"
+          confirmLabel="Flee!"
+          onCancel={() => setFleeDialogOpen(false)}
+          onConfirm={() => { setFleeDialogOpen(false); onFlee(); }}
+        />
+      )}
 
       {combatInventoryOpen && (
         <CombatInventoryModal
@@ -445,6 +465,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           character={game.character}
           encounterTitle={node.title}
           onCharacter={onCharacter}
+          onEquip={onEquip}
           onContinue={onContinue}
           finalEncounter={adventure.nodeIndex === getAdventureDefinition(adventure.adventureId).stages.length - 1}
           presentationPlayed={rewardPresentationPlayed}
@@ -513,11 +534,25 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
   );
 }
 
-export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onContinue, finalEncounter, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart }: {
+export interface ScoreGearInspection {
+  item: GearItem;
+  equippedSlot?: GearSlot;
+  canEquip: boolean;
+}
+
+export function getScoreGearInspection(item: GearItem, character: CharacterState): ScoreGearInspection {
+  const inventoryItem = character.inventory.find((candidate): candidate is GearItem => candidate.id === item.id && isGearItem(candidate));
+  if (inventoryItem) return { item: inventoryItem, canEquip: true };
+  const equippedEntry = (Object.entries(character.equipment) as Array<[GearSlot, GearItem | undefined]>).find(([, equipped]) => equipped?.id === item.id);
+  return { item, equippedSlot: equippedEntry?.[0], canEquip: false };
+}
+
+export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onEquip, onContinue, finalEncounter, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart }: {
   reward: CombatReward;
   character: CharacterState;
   encounterTitle: string;
   onCharacter: () => void;
+  onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
   onContinue: () => void;
   finalEncounter: boolean;
   presentationPlayed: boolean;
@@ -531,7 +566,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
   const leveledUp = reward.levelsGained > 0;
   const levelUpPending = leveledUp && (unspentAttributePoints > 0 || unspentTalentPoints > 0);
   const groupedLoot = groupInventoryItems(reward.loot);
-  const [inspectedGear, setInspectedGear] = useState<GearItem | null>(null);
+  const [inspectedGear, setInspectedGear] = useState<ScoreGearInspection | null>(null);
   const continueTooltip = [
     unspentAttributePoints > 0 ? "You have unspent Attribute Points" : "",
     unspentTalentPoints > 0 ? "You have unspent Talent Points" : "",
@@ -598,7 +633,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
               <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong className={getItemNameClass(item)}>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
             </>;
             return isGearItem(item)
-              ? <button type="button" className={`score-loot-card inspectable ${item.rarity}`} key={item.id} onClick={() => setInspectedGear(item)}>{content}</button>
+              ? <button type="button" className={`score-loot-card inspectable ${item.rarity}`} key={item.id} onClick={() => setInspectedGear(getScoreGearInspection(item, character))}>{content}</button>
               : <div className={`score-loot-card ${item.rarity}`} key={item.id}>{content}</div>;
           })}
         </div>}
@@ -608,7 +643,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
           <button className="primary-button score-continue-button" disabled={levelUpPending} data-game-tooltip={levelUpPending ? continueTooltip : undefined} onClick={onContinue}>{finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
       </section>
-      {inspectedGear && <ItemDetailModal item={inspectedGear} character={character} locked viewOnly onClose={() => setInspectedGear(null)} />}
+      {inspectedGear && <ItemDetailModal item={inspectedGear.item} equippedSlot={inspectedGear.equippedSlot} character={character} locked={false} viewOnly={!inspectedGear.canEquip} onClose={() => setInspectedGear(null)} onEquip={(item, slot) => { onEquip(item, slot); setInspectedGear(null); }} />}
     </div>
   );
 }

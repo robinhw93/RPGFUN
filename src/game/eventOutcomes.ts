@@ -1,7 +1,7 @@
 import { getDerivedStats } from "./character";
 import { getAdventureExperienceReward } from "./adventures";
 import { ENEMIES, ITEMS } from "./data";
-import { getItemGoldCost, getItemSellValue } from "./items";
+import { acquireItem, getItemGoldCost, getItemSellValue } from "./items";
 import { addExperience } from "./progression";
 import { isStatusEffectId } from "./statusEffects";
 import type {
@@ -100,7 +100,7 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
         break;
       case "gainItem": {
         const item = ITEMS.find((candidate) => candidate.id === effect.itemId);
-        if (item) character = { ...character, inventory: [...character.inventory, structuredClone(item)] };
+        if (item) character = acquireItem(character, item).character;
         break;
       }
       case "openMerchant":
@@ -156,13 +156,10 @@ export function purchaseEventMerchantItem(state: GameState, itemId: string): Gam
   if (!item) return state;
   const goldCost = getItemGoldCost(item);
   if (state.character.gold < goldCost) return state;
+  const acquisition = acquireItem({ ...state.character, gold: state.character.gold - goldCost }, item);
   return {
     ...state,
-    character: {
-      ...state.character,
-      gold: state.character.gold - goldCost,
-      inventory: [...state.character.inventory, structuredClone(item)],
-    },
+    character: acquisition.character,
     adventure: {
       ...state.adventure,
       eventMerchant: {

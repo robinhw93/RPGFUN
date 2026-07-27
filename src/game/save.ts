@@ -1,5 +1,5 @@
 import type { CharacterIntroductionStep, GameState } from "./types";
-import { ITEMS, TALENTS } from "./data";
+import { ITEMS, QUESTS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
 import { isGearItem } from "./items";
@@ -27,6 +27,7 @@ export function loadGame(): GameState | null {
     const shouldResetAdventure = savedAdventureMode === "endless" || !state.adventure.adventureId;
     const normalizedLevel = Math.min(MAX_LEVEL, Math.max(1, Math.floor(state.character.level || 1)));
     const validTalentIds = new Set(TALENTS.map((talent) => talent.id));
+    const validQuestIds = new Set(QUESTS.map((quest) => quest.id));
     const removedTalents = state.character.unlockedTalents.filter((id) => !validTalentIds.has(id));
     const unlockedTalents = state.character.unlockedTalents.filter((id) => validTalentIds.has(id));
     const talentAbilities = TALENTS
@@ -96,6 +97,13 @@ export function loadGame(): GameState | null {
         inventory,
         equipment,
         completedAdventureIds: state.character.completedAdventureIds ?? [],
+        acceptedQuestIds: (state.character.acceptedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
+        completedQuestIds: (state.character.completedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
+        questProgress: Object.fromEntries(Object.entries(state.character.questProgress ?? {}).flatMap(([id, progress]) => (
+          validQuestIds.has(id) && typeof progress === "number" && Number.isFinite(progress)
+            ? [[id, Math.max(0, Math.floor(progress))]]
+            : []
+        ))),
       },
       adventure: {
         ...state.adventure,

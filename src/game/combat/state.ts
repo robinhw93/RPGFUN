@@ -83,6 +83,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     initiativeRevealed: false,
     playerActed: false,
     enemyActionsTaken: 0,
+    goldStolen: 0,
     abilityCooldowns: {},
     eventId: 1,
     completedSequenceEventId: 1,
@@ -227,6 +228,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       initiativeRevealed: combat.initiativeRevealed ?? true,
       playerActed: combat.playerActed ?? false,
       enemyActionsTaken: combat.enemyActionsTaken ?? 0,
+      goldStolen: combat.goldStolen ?? 0,
       abilityCooldowns: combat.abilityCooldowns ?? {},
       completedSequenceEventId: combat.completedSequenceEventId
         ?? ((combat.floatingEvents?.length ?? 0) > 0 && (combat.pendingEffects?.length ?? 0) > 0 ? (combat.eventId ?? 1) - 1 : combat.eventId ?? 1),
@@ -261,6 +263,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     initiativeRevealed: false,
     playerActed: false,
     enemyActionsTaken: 0,
+    goldStolen: combat.goldStolen ?? 0,
     abilityCooldowns: {},
     eventId: (combat.eventId ?? 0) + 1,
     completedSequenceEventId: combat.eventId ?? 0,
