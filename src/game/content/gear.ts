@@ -1180,7 +1180,7 @@ export const ITEMS: InventoryItem[] = [
     "name": "Potion of Invisibility",
     "goldCost": 45,
     "rarity": "uncommon",
-    "description": "Gain invisibility.",
+    "description": "Gain Stealth until the end of your next turn.",
     "iconUrl": "/assets/items/potion-purple-greater.webp",
     "effects": [
       {
@@ -1188,7 +1188,7 @@ export const ITEMS: InventoryItem[] = [
         "target": "self",
         "status": "stealth",
         "stacks": 1,
-        "duration": 1
+        "duration": 2
       }
     ],
     "arkenfallVendor": "alchemist",
