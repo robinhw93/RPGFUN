@@ -1,5 +1,5 @@
 import {
-  BatteryLow,
+  ArrowRight, BatteryLow,
   CircleDot, Crosshair, Droplets,
   EyeOff, Flame, FlaskConical, Footprints,
   Hand, Heart, HeartPulse,
@@ -321,7 +321,7 @@ export function EpidemicEffect() {
 }
 
 export function CombatantPathEffect({ animation, className, children, durationMs, delayMs = 0 }: { animation: Pick<CombatAbilityAnimation, "id" | "sourceTargetId" | "targetId">; className: string; children: ReactNode; durationMs?: number; delayMs?: number }) {
-  const [path, setPath] = useState<{ left: number; top: number; x: number; y: number } | null>(null);
+  const [path, setPath] = useState<{ left: number; top: number; x: number; y: number; angle: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!animation.sourceTargetId || !animation.targetId) return;
@@ -333,11 +333,14 @@ export function CombatantPathEffect({ animation, className, children, durationMs
     const targetRect = target.getBoundingClientRect();
     const sourceX = sourceRect.left + sourceRect.width / 2;
     const sourceY = sourceRect.top + sourceRect.height / 2;
+    const x = targetRect.left + targetRect.width / 2 - sourceX;
+    const y = targetRect.top + targetRect.height / 2 - sourceY;
     setPath({
       left: sourceX - 16,
       top: sourceY - 16,
-      x: targetRect.left + targetRect.width / 2 - sourceX,
-      y: targetRect.top + targetRect.height / 2 - sourceY,
+      x,
+      y,
+      angle: Math.atan2(y, x) * (180 / Math.PI),
     });
   }, [animation.id, animation.sourceTargetId, animation.targetId]);
 
@@ -345,7 +348,7 @@ export function CombatantPathEffect({ animation, className, children, durationMs
   return (
     <span
       className={`combatant-path-effect ${className}`}
-      style={{ left: path.left, top: path.top, animationDelay: `${delayMs}ms`, "--path-x": `${path.x}px`, "--path-y": `${path.y}px`, ...(durationMs ? { "--projectile-flight": `${durationMs}ms` } : {}) } as React.CSSProperties}
+      style={{ left: path.left, top: path.top, animationDelay: `${delayMs}ms`, "--path-x": `${path.x}px`, "--path-y": `${path.y}px`, "--path-angle": `${path.angle}deg`, ...(durationMs ? { "--projectile-flight": `${durationMs}ms` } : {}) } as React.CSSProperties}
       aria-hidden="true"
     >
       {children}
@@ -467,7 +470,7 @@ export function AbilityProjectileEffect({ animation }: { animation: CombatProjec
     return <CombatantBeamEffect animation={animation} durationMs={beamDurationMs} className="enemy-natures-beam"><i /><i /><i /><b /><Sparkles /></CombatantBeamEffect>;
   }
   if (kind === "enemy_bow_shot" || kind === "enemy_snipe") {
-    return <CombatantPathEffect animation={animation} durationMs={kind === "enemy_snipe" ? durationMs * 0.72 : durationMs} className={`ability-projectile-path ${kind === "enemy_snipe" ? "enemy-snipe-path" : "enemy-bow-shot-path"}`}><Target /><i /><i /><b /></CombatantPathEffect>;
+    return <CombatantPathEffect animation={animation} durationMs={kind === "enemy_snipe" ? durationMs * 0.72 : durationMs} className={`ability-projectile-path ${kind === "enemy_snipe" ? "enemy-snipe-path" : "enemy-bow-shot-path"}`}><ArrowRight /><i /><i /></CombatantPathEffect>;
   }
   if (kind === "frostbolt" || kind === "deep_freeze" || (!kind && animation.damageType === "frost")) {
     return <CombatantPathEffect animation={animation} durationMs={durationMs} className="ability-projectile-path frostbolt-path"><Snowflake /><i /><i /></CombatantPathEffect>;
