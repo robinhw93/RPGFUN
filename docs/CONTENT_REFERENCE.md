@@ -687,7 +687,7 @@ Adventures 4–12 form one linear route after Highfall Mountains. Each has three
 | The Astral Scar | 49 | 20 | Arcane Wound, Blind, Vulnerable, Burn, Slow, and Weaken. | Seraphel, the Fallen Star: collapses the heavens around the target, charges Starfall Extinction, then restores itself behind Guard. |
 | The World Below | 50 | 22 | Guard, Bleed, Blind, Burn, Stealth, Weaken, and Vulnerable. | Eidolon, the First Hunger: begins to unmake its target, charges The World Devours, then retreats behind ancient defenses. |
 
-The final stage of each late adventure contains its boss plus two role-complementary adds. Bosses begin with 10 Energy, may resolve two ready actions per turn, and prioritize their setup/charged/recovery sequence. Combat and stage rewards rise with each recommended level. The generated late-campaign enemy roster contains exactly seven templates per biome:
+The final stage of each late adventure contains its boss plus two role-complementary adds. Every Adventure 4–12 boss has 30% more Max Health than the route's original generated curve, rounded to the nearest whole point. Bosses begin with 10 Energy, may resolve two ready actions per turn, and prioritize their setup/charged/recovery sequence. Combat and stage rewards rise with each recommended level. The generated late-campaign enemy roster contains exactly seven templates per biome:
 
 | Adventure | Enemy roster |
 | --- | --- |

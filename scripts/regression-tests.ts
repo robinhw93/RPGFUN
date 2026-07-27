@@ -368,7 +368,14 @@ function testContentIntegrity() {
     const eventIds = new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.eventId ? [entry.eventId] : [])));
     assert.equal(eventIds.size, 3, `${adventure.name} must offer three editable skill-check events.`);
     const finalEntries = adventure.stages.at(-1)?.entries ?? [];
-    assert.ok(finalEntries.some((entry) => entry.type === "boss"), `${adventure.name} must end in a boss encounter.`);
+    const bossEntry = finalEntries.find((entry) => entry.type === "boss");
+    assert.ok(bossEntry, `${adventure.name} must end in a boss encounter.`);
+    const bossEnemyId = bossEntry.enemyIds?.[0];
+    assert.ok(bossEnemyId, `${adventure.name}'s final encounter must list its boss first.`);
+    const bossEnemy = ENEMIES[bossEnemyId];
+    assert.ok(bossEnemy, `${adventure.name} references missing boss ${bossEnemyId}.`);
+    const originalBossHp = 170 + (adventureNumber - 3) ** 2 * 26;
+    assert.equal(bossEnemy.maxHp, Math.round(originalBossHp * 1.3), `${bossEnemy.name} must retain the 30% late-campaign boss Health increase.`);
     adventure.stages.forEach((stage, stageIndex) => {
       stage.entries.filter((entry) => entry.type === "combat" || entry.type === "boss").forEach((entry) => {
         const originalExperience = entry.type === "boss"
