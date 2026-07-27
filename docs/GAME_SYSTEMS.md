@@ -344,6 +344,8 @@ Applying a status that is already present:
 - Non-stackable statuses, including Stealth, always retain exactly one stack when reapplied.
 - Stealth always expires at the end of its holder's next turn. If an enemy casts Stealth in round 1, it remains protected through that enemy's round-2 turn and loses Stealth when that turn ends. Its status tooltip states that endpoint directly using “your” for the player and “their” for an enemy instead of showing the internal turn counter. Its shared creation, refresh, and turn-end normalization rejects longer explicit or legacy durations, so player and enemy Stealth can never last three turns. Ending a turn reconciles duration changes even when no damage or status message was queued, and a status applied and decremented during the same enemy action is replaced with the authoritative post-turn duration instead of being refreshed back to the larger displayed duration.
 
+- Nullify and Disarm last until the end of the affected player's next turn. Nullify multiplies Spell Power by 0.1, while Disarm multiplies Physical Power by 0.1; both results are rounded to whole Power before abilities, statuses, and triggers resolve.
+
 Detailed status definitions and formulas are in [Content reference](CONTENT_REFERENCE.md#status-effects).
 
 ### Damage-over-time formulas

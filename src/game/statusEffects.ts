@@ -53,6 +53,8 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },
+  nullify: { id: "nullify", name: "Nullify", kind: "debuff", duration: 1, description: "Spell Power is reduced by 90% until the end of your next turn." },
+  disarm: { id: "disarm", name: "Disarm", kind: "debuff", duration: 1, description: "Physical Power is reduced by 90% until the end of your next turn." },
   chained: { id: "chained", name: "Chained", kind: "debuff", duration: 2, description: "Cannot flee for 2 turns." },
   sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
 };
@@ -207,6 +209,14 @@ export function getHitChanceMultiplier(statuses: StatusEffect[]): number {
 
 export function getEnergyRegeneration(regeneration: number, statuses: StatusEffect[]): number {
   return hasStatus(statuses, "exhausted") ? Math.min(1, regeneration) : regeneration;
+}
+
+export function getPhysicalPowerMultiplier(statuses: StatusEffect[]): number {
+  return hasStatus(statuses, "disarm") ? 0.1 : 1;
+}
+
+export function getMagicalPowerMultiplier(statuses: StatusEffect[]): number {
+  return hasStatus(statuses, "nullify") ? 0.1 : 1;
 }
 
 export function getStatusInitiativeBonus(statuses: StatusEffect[]): number {

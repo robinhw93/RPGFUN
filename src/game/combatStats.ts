@@ -5,6 +5,8 @@ import {
   getEffectiveArmor,
   getEnergyRegeneration,
   getHitChanceMultiplier,
+  getMagicalPowerMultiplier,
+  getPhysicalPowerMultiplier,
 } from "./statusEffects";
 import type { StatusEffect } from "./types";
 
@@ -15,6 +17,8 @@ export interface StatusModifiableCombatStats {
   critChance: number;
   energyRegen: number;
   initiativeBonus?: number;
+  physicalPower?: number;
+  magicalPower?: number;
 }
 
 /** Applies the same temporary status modifiers used by live combat resolution. */
@@ -27,5 +31,7 @@ export function getStatusAdjustedCombatStats<T extends StatusModifiableCombatSta
     critChance: stats.critChance + getCriticalChanceBonus(statuses),
     energyRegen: getEnergyRegeneration(stats.energyRegen, statuses),
     ...(stats.initiativeBonus === undefined ? {} : { initiativeBonus: statuses.some((status) => status.id === "slowed") ? 0 : stats.initiativeBonus }),
+    ...(stats.physicalPower === undefined ? {} : { physicalPower: Math.max(0, Math.round(stats.physicalPower * getPhysicalPowerMultiplier(statuses))) }),
+    ...(stats.magicalPower === undefined ? {} : { magicalPower: Math.max(0, Math.round(stats.magicalPower * getMagicalPowerMultiplier(statuses))) }),
   } as T;
 }

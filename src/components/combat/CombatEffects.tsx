@@ -95,6 +95,11 @@ export function ChainedApplicationEffect() {
   return <span className="chained-application-effect" aria-hidden="true"><Link2 /><i /><i /></span>;
 }
 
+export function PowerSuppressionApplicationEffect({ kind }: { kind: "nullify" | "disarm" }) {
+  const Icon = kind === "nullify" ? Sparkles : Swords;
+  return <span className={`power-suppression-application-effect ${kind}`} aria-hidden="true"><Icon /><i /><i /></span>;
+}
+
 export function ConductorFieldEffect() {
   return <span className="conductor-field-effect" aria-hidden="true"><Zap />{Array.from({ length: 7 }).map((_, index) => <i key={index} style={{ "--conductor-x": `${5 + index * 15}%`, "--conductor-delay": `${index * 34}ms` } as React.CSSProperties} />)}</span>;
 }

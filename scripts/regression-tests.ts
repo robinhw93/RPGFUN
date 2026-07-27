@@ -822,6 +822,43 @@ function testTacticalEnemyAiCatalogAndSelection() {
     assert.equal(application?.duration, duration, `${ENEMIES[enemyId].name}'s ${status} duration changed unexpectedly.`);
   });
 
+  const expectedPowerSuppressionSources = [
+    { enemyId: "enemy-a7-shard-magus", status: "nullify" },
+    { enemyId: "enemy-a7-bloodbound-knight", status: "disarm" },
+    { enemyId: "enemy-a8-frost-hermit", status: "nullify" },
+    { enemyId: "enemy-a8-icebound-raider", status: "disarm" },
+    { enemyId: "enemy-a9-storm-channeler", status: "nullify" },
+    { enemyId: "enemy-a9-thunder-talon", status: "disarm" },
+    { enemyId: "enemy-a10-crown-seraph", status: "nullify" },
+    { enemyId: "enemy-a10-crownless-guard", status: "disarm" },
+    { enemyId: "enemy-a11-fallen-astrologer", status: "nullify" },
+    { enemyId: "enemy-a11-gravity-warden", status: "disarm" },
+    { enemyId: "enemy-a12-deep-oracle", status: "nullify" },
+    { enemyId: "enemy-a12-rootless-titan", status: "disarm" },
+  ] as const;
+  const powerSuppressionSources = Object.values(ENEMIES).flatMap((enemy) => enemy.abilities.flatMap((ability) => (
+    (ability.statusApplications ?? [])
+      .filter((application) => application.status === "nullify" || application.status === "disarm")
+      .map((application) => ({
+        enemyId: enemy.id,
+        status: application.status,
+        chance: application.chance,
+        duration: application.duration,
+      }))
+  )));
+  const sortPowerSuppressionSources = <T extends { enemyId: string; status: string }>(sources: readonly T[]) => (
+    [...sources].sort((left, right) => `${left.enemyId}:${left.status}`.localeCompare(`${right.enemyId}:${right.status}`))
+  );
+  assert.deepEqual(
+    sortPowerSuppressionSources(powerSuppressionSources).map(({ enemyId, status }) => ({ enemyId, status })),
+    sortPowerSuppressionSources(expectedPowerSuppressionSources),
+    "Adventures 7-12 must each have one Nullify source and one separate Disarm source.",
+  );
+  assert.ok(
+    powerSuppressionSources.every((source) => source.chance === 0.25 && source.duration === 1),
+    "Every enemy Nullify and Disarm application must have a 25% on-hit chance and last through the player's next turn.",
+  );
+
   const leech = createCombat(INITIAL_GAME.character, ["enemy-a4-bog-leech"]).enemies[0];
   const healthyContext: EnemyAiContext = { playerHp: 100, playerMaxHp: 100, playerStatusIds: [] };
   assert.equal(getReadyEnemyAbility(leech, [leech], healthyContext)?.name, "Open the Vein", "Bog Leech must create Bleed before attempting its payoff.");
@@ -1288,6 +1325,8 @@ function testOpposedHitAndDodge() {
 function testStatusAdjustedCombatStats() {
   const adjusted = getStatusAdjustedCombatStats({
     armor: 10,
+    physicalPower: 100,
+    magicalPower: 80,
     hitChance: 1,
     dodgeChance: 0.1,
     critChance: 0.05,
@@ -1300,8 +1339,12 @@ function testStatusAdjustedCombatStats() {
     createStatusEffect("blind"),
     createStatusEffect("exhausted"),
     createStatusEffect("slowed"),
+    createStatusEffect("nullify"),
+    createStatusEffect("disarm"),
   ]);
   assert.equal(adjusted.armor, 5, "Combat stat display must include temporary Armor debuffs.");
+  assert.equal(adjusted.physicalPower, 10, "Combat stat display and ability resolution must include Disarm.");
+  assert.equal(adjusted.magicalPower, 8, "Combat stat display and ability resolution must include Nullify.");
   assert.equal(adjusted.hitChance, 0.25, "Combat stat display must include Blind.");
   assert.equal(adjusted.dodgeChance, 0.5, "Combat stat display must include temporary Dodge and its cap.");
   assert.equal(adjusted.critChance, 0.25, "Combat stat display must include Fierce.");

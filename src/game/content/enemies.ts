@@ -4900,12 +4900,20 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a7-bloodbound-knight-strike",
         "name": "Bloodletter",
-        "description": "Deals reliable Physical damage.",
+        "description": "Deals reliable Physical damage and has a 25% chance to apply Disarm until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.24,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_heavy_cleave"
       },
       {
@@ -5019,7 +5027,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a7-shard-magus-strike",
         "name": "Shard Lance",
-        "description": "Deals 124% Spell Power as Spell damage and applies Shatter.",
+        "description": "Deals 124% Spell Power as Spell damage, applies Shatter, and has a 25% chance to apply Nullify until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
@@ -5031,6 +5039,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "shatter",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
           }
         ],
         "vfx": "enemy_hex"
@@ -5680,12 +5694,20 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a8-icebound-raider-strike",
         "name": "Ice-Axe Chop",
-        "description": "Deals reliable Physical damage.",
+        "description": "Deals reliable Physical damage and has a 25% chance to apply Disarm until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.32,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_heavy_cleave"
       },
       {
@@ -5924,13 +5946,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a8-frost-hermit-strike",
         "name": "Hermit's Frost",
-        "description": "Deals reliable Frost damage.",
+        "description": "Deals reliable Frost damage and has a 25% chance to apply Nullify until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "frost",
         "spellPowerScaling": 1.32,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "frostbolt"
       },
       {
@@ -6473,12 +6503,20 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a9-thunder-talon-strike",
         "name": "Thunderclaw",
-        "description": "Deals reliable Lightning damage.",
+        "description": "Deals reliable Lightning damage and has a 25% chance to apply Disarm until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "melee",
         "damageType": "lightning",
         "physicalPowerScaling": 1.4,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_heavy_cleave"
       },
       {
@@ -6714,13 +6752,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a9-storm-channeler-strike",
         "name": "Forked Spark",
-        "description": "Deals reliable Lightning damage.",
+        "description": "Deals reliable Lightning damage and has a 25% chance to apply Nullify until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "lightning",
         "spellPowerScaling": 1.4,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "lightning_strike"
       },
       {
@@ -7373,12 +7419,20 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a10-crownless-guard-strike",
         "name": "Oathless Slash",
-        "description": "Deals steady Physical damage.",
+        "description": "Deals steady Physical damage and has a 25% chance to apply Disarm until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.48,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_heavy_cleave"
       },
       {
@@ -7852,13 +7906,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a10-crown-seraph-strike",
         "name": "Fallen Radiance",
-        "description": "Deals reliable Spell damage.",
+        "description": "Deals reliable Spell damage and has a 25% chance to apply Nullify until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
         "spellPowerScaling": 1.48,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_hex"
       },
       {
@@ -8517,13 +8579,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-fallen-astrologer-strike",
         "name": "Starless Ray",
-        "description": "Deals reliable Arcane damage.",
+        "description": "Deals reliable Arcane damage and has a 25% chance to apply Nullify until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "arcane",
         "spellPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_hex"
       },
       {
@@ -8754,7 +8824,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a11-gravity-warden-strike",
         "name": "Horizon Maul",
-        "description": "Deals steady Spell damage.",
+        "description": "Deals steady Spell damage, applies Slowed, and has a 25% chance to apply Disarm until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
@@ -8766,6 +8836,12 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
             "status": "slowed",
             "stacks": 1,
             "duration": 3
+          },
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
           }
         ],
         "vfx": "enemy_hex"
@@ -9206,12 +9282,20 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-rootless-titan-strike",
         "name": "Worldstone Blow",
-        "description": "Deals steady Physical damage.",
+        "description": "Deals steady Physical damage and has a 25% chance to apply Disarm until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "melee",
         "damageType": "physical",
         "physicalPowerScaling": 1.6400000000000001,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_heavy_cleave"
       },
       {
@@ -9437,13 +9521,21 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       {
         "id": "enemy-ability-a12-deep-oracle-strike",
         "name": "Sightless Word",
-        "description": "Deals reliable Spell damage.",
+        "description": "Deals reliable Spell damage and has a 25% chance to apply Nullify until the end of your next turn.",
         "energyCost": 2,
         "cooldownTurns": 0,
         "range": "ranged",
         "rangedPresentation": "projectile",
         "damageType": "spell",
         "spellPowerScaling": 1.6400000000000001,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 1,
+            "chance": 0.25
+          }
+        ],
         "vfx": "enemy_hex"
       },
       {

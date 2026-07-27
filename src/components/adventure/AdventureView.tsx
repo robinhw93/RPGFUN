@@ -33,7 +33,7 @@ import { COMBAT_TIMING } from "../../game/timing";
 import type { CharacterState, CombatLogEntry, CombatReward, CombatState, ConsumableItem, GameState, GearItem, GearSlot, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
-import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, ChainedApplicationEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
+import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, ChainedApplicationEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, PowerSuppressionApplicationEffect, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
 
 import { ElectrifiedApplicationEffect, EnemyStatsModal, EnergySegments, HealthBar, HoldAbilityButton, InspectInfoModal, PassiveProcFloats, PlayerAttributesModal, StatusBadge } from "../combat/CombatHud";
 
@@ -208,6 +208,8 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const smiteAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "smite");
   const diminishingReturnsAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "diminishingReturns");
   const chainedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "chained");
+  const nullifyAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "nullify");
+  const disarmAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "disarm");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
   const barrierPulseTargets = new Set(abilityAnimations.filter((animation) => animation.kind === "barrier_absorb").flatMap((animation) => animation.targetId ? [animation.targetId] : []));
@@ -277,6 +279,8 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           {smiteAnimations.filter((animation) => animation.targetId === "player").map((animation) => <SmiteApplicationEffect key={animation.id} />)}
           {diminishingReturnsAnimations.filter((animation) => animation.targetId === "player").map((animation) => <DiminishingReturnsApplicationEffect key={animation.id} />)}
           {chainedAnimations.filter((animation) => animation.targetId === "player").map((animation) => <ChainedApplicationEffect key={animation.id} />)}
+          {nullifyAnimations.filter((animation) => animation.targetId === "player").map((animation) => <PowerSuppressionApplicationEffect key={animation.id} kind="nullify" />)}
+          {disarmAnimations.filter((animation) => animation.targetId === "player").map((animation) => <PowerSuppressionApplicationEffect key={animation.id} kind="disarm" />)}
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
           {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}

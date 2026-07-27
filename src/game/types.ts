@@ -74,6 +74,8 @@ export type StatusEffectId =
   | "frozen"
   | "frozenPath"
   | "blind"
+  | "nullify"
+  | "disarm"
   | "chained"
   | "sleep";
 

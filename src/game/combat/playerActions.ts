@@ -1,4 +1,5 @@
 import { getDerivedStats } from "../character";
+import { getStatusAdjustedCombatStats } from "../combatStats";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterDamageMultiplier, getCharacterStatusDamageMultiplier, getDamageModifierMultiplier } from "../combatFeatures";
 import { getEffectiveDodgeChance, rollHit } from "../combatMath";
 import { ABILITIES } from "../data";
@@ -34,7 +35,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const modifiedEnergyCost = getCharacterAbilityEnergyCostForTarget(character, ability, selectedTargetStatuses.map((status) => status.id));
   const effectiveEnergyCost = abilityIsFree ? 0 : modifiedEnergyCost;
   if (effectiveEnergyCost > combat.energy) return combat;
-  const derived = getDerivedStats(character);
+  const derived = getStatusAdjustedCombatStats(getDerivedStats(character), combat.playerStatuses);
   const abilityModifiers = getCharacterAbilityModifiers(character, ability.id);
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));

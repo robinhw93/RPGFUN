@@ -208,6 +208,8 @@ export const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   frozen: Snowflake,
   frozenPath: Footprints,
   blind: EyeOff,
+  nullify: Brain,
+  disarm: Swords,
   chained: Link2,
   arcaneWound: CircleDot,
   arcaneCharge: Sparkles,
