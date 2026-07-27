@@ -257,7 +257,7 @@ function App() {
         }) : null;
         return {
           ...current,
-          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, completed: false },
+          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, carriedAbilityCooldowns: {}, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -373,6 +373,9 @@ function App() {
       const adventure = current.adventure;
       const wonCombat = adventure.combat?.outcome === "victory";
       const carryHp = wonCombat ? adventure.combat!.playerHp : (adventure.carryHp ?? getDerivedStats(current.character).maxHp);
+      const carriedAbilityCooldowns = wonCombat
+        ? { ...adventure.combat!.abilityCooldowns }
+        : { ...adventure.carriedAbilityCooldowns };
       const character = current.character;
       const latestLoot = adventure.pendingReward?.loot ?? adventure.latestLoot;
 
@@ -382,7 +385,7 @@ function App() {
         return {
           ...current,
           character: { ...questCharacter, completedAdventureIds: [...new Set([...questCharacter.completedAdventureIds, definition.id])] },
-          adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null, eventEncounter: null, eventMerchant: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
+          adventure: { ...adventure, active: false, completed: true, carryHp, latestLoot, pendingReward: null, combat: null, eventEncounter: null, eventMerchant: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], carriedAbilityCooldowns: {} },
         };
       }
 
@@ -392,6 +395,7 @@ function App() {
       const combat = entry.enemyIds?.length ? createCombat(character, entry.enemyIds, carryHp, {
         playerStatuses: adventure.nextCombatPlayerStatuses,
         enemyStatuses: adventure.nextCombatEnemyStatuses,
+        abilityCooldowns: carriedAbilityCooldowns,
       }) : null;
       return {
         ...current,
@@ -406,6 +410,7 @@ function App() {
           eventRollResult: null,
           nextCombatPlayerStatuses: combat ? [] : adventure.nextCombatPlayerStatuses,
           nextCombatEnemyStatuses: combat ? [] : adventure.nextCombatEnemyStatuses,
+          carriedAbilityCooldowns: combat ? {} : carriedAbilityCooldowns,
           eventEncounter: null,
           eventMerchant: null,
           latestLoot: wonCombat ? latestLoot : null,
@@ -428,10 +433,11 @@ function App() {
           const combat = createCombat(current.character, pendingEncounter.enemyIds, carryHp, {
             playerStatuses: current.adventure.nextCombatPlayerStatuses,
             enemyStatuses: current.adventure.nextCombatEnemyStatuses,
+            abilityCooldowns: current.adventure.carriedAbilityCooldowns,
           });
           return {
             ...current,
-            adventure: { ...current.adventure, combat, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [] },
+            adventure: { ...current.adventure, combat, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], carriedAbilityCooldowns: {} },
           };
         });
       });

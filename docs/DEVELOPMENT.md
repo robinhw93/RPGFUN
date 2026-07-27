@@ -464,6 +464,7 @@ Then test the changed system in a browser. For combat changes, verify at minimum
 - Enemy Energy regeneration only at that enemy's turn start.
 - Initiative-changing statuses during an active turn; pending turn transitions must follow the stable actor ID after reordering and never repeat or skip an enemy.
 - Multiple abilities in one turn and cooldown blocking.
+- Cooldowns carrying into the next combat of the same adventure, ticking once there, and resetting at adventure boundaries.
 - Hit, miss, critical, Guard, and one damage-over-time effect.
 - Damage/status application at the matching floating message.
 - Lethal-damage prevention, its delayed heal/status event, and the later real defeat.

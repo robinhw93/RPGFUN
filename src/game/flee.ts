@@ -49,6 +49,7 @@ export function fleeCombat(state: GameState, random: () => number = Math.random)
         eventRollResult: null,
         nextCombatPlayerStatuses: [],
         nextCombatEnemyStatuses: [],
+        carriedAbilityCooldowns: {},
         eventEncounter: null,
         eventMerchant: null,
         latestLoot: null,

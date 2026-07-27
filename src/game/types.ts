@@ -1221,6 +1221,8 @@ export interface AdventureProgress {
   eventRollResult: AdventureEventRollResult | null;
   nextCombatPlayerStatuses: AdventureCombatStartStatus[];
   nextCombatEnemyStatuses: AdventureCombatStartStatus[];
+  /** Remaining player ability cooldowns while moving between encounters in the same adventure. */
+  carriedAbilityCooldowns: Record<string, number>;
   eventEncounter: AdventureEventEncounter | null;
   eventMerchant: AdventureEventMerchant | null;
   latestLoot: InventoryItem[] | null;

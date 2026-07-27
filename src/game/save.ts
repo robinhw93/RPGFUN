@@ -129,6 +129,11 @@ export function loadGame(): GameState | null {
         eventRollResult: state.adventure.eventRollResult ?? null,
         nextCombatPlayerStatuses: state.adventure.nextCombatPlayerStatuses ?? [],
         nextCombatEnemyStatuses: state.adventure.nextCombatEnemyStatuses ?? [],
+        carriedAbilityCooldowns: Object.fromEntries(Object.entries(state.adventure.carriedAbilityCooldowns ?? {}).flatMap(([abilityId, turns]) => (
+          abilityId && typeof turns === "number" && Number.isFinite(turns) && turns > 0
+            ? [[abilityId, Math.floor(turns)]]
+            : []
+        ))),
         eventEncounter: state.adventure.eventEncounter ?? null,
         eventMerchant: state.adventure.eventMerchant ? {
           itemIds: state.adventure.eventMerchant.itemIds ?? [],
@@ -150,6 +155,7 @@ export function loadGame(): GameState | null {
           eventRollResult: null,
           nextCombatPlayerStatuses: [],
           nextCombatEnemyStatuses: [],
+          carriedAbilityCooldowns: {},
           eventEncounter: null,
           eventMerchant: null,
           pendingReward: null,

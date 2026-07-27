@@ -17,6 +17,15 @@ import { makeLog } from "./eventQueue";
 export interface CombatStartEffects {
   playerStatuses?: AdventureCombatStartStatus[];
   enemyStatuses?: AdventureCombatStartStatus[];
+  abilityCooldowns?: Record<string, number>;
+}
+
+/** A new encounter begins a new player turn, so carried cooldowns tick once instead of resetting. */
+export function prepareCarriedAbilityCooldowns(cooldowns: Record<string, number> = {}): Record<string, number> {
+  return Object.fromEntries(Object.entries(cooldowns).flatMap(([abilityId, turns]) => {
+    const remaining = Math.max(0, Math.floor(Number.isFinite(turns) ? turns : 0) - 1);
+    return abilityId && remaining > 0 ? [[abilityId, remaining]] : [];
+  }));
 }
 
 export function createEventStartStatus(effect: AdventureCombatStartStatus): StatusEffect | null {
@@ -84,7 +93,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     playerActed: false,
     enemyActionsTaken: 0,
     goldStolen: 0,
-    abilityCooldowns: {},
+    abilityCooldowns: prepareCarriedAbilityCooldowns(startEffects.abilityCooldowns),
     eventId: 1,
     completedSequenceEventId: 1,
     floatingEvents: [],

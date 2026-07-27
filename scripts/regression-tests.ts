@@ -1422,6 +1422,25 @@ function testBasicPlayerAbility() {
   }
 }
 
+function testCooldownsCarryBetweenAdventureCombats() {
+  const character = { ...structuredClone(INITIAL_GAME.character), name: "Cooldown Tester" };
+  const nextCombat = createCombat(character, ["dummy"], undefined, {
+    abilityCooldowns: { quickSlash: 3, expiringAbility: 1, invalidAbility: Number.NaN },
+  });
+  assert.deepEqual(nextCombat.abilityCooldowns, { quickSlash: 2 }, "A new combat in the same adventure must tick carried cooldowns once instead of resetting them.");
+
+  const newAdventureCombat = createCombat(character, ["dummy"]);
+  assert.deepEqual(newAdventureCombat.abilityCooldowns, {}, "A combat started without adventure-carried cooldowns must begin fully refreshed.");
+
+  const fleeState = structuredClone(INITIAL_GAME) as GameState;
+  fleeState.characterCreated = true;
+  fleeState.adventure.active = true;
+  fleeState.adventure.carriedAbilityCooldowns = { quickSlash: 2 };
+  fleeState.adventure.combat = { ...nextCombat, outcome: "active" };
+  const fled = fleeCombat(fleeState, () => 0.99);
+  assert.deepEqual(fled?.state.adventure.carriedAbilityCooldowns, {}, "Abandoning an adventure must clear its carried cooldowns.");
+}
+
 function testStructuredEventOutcome() {
   const gear = ITEMS.find(isGearItem);
   assert.ok(gear, "Structured event outcome regression requires a live gear item.");
@@ -1723,6 +1742,7 @@ testProgressiveTownStock();
 testArkenfallTownCommerceAndCrafting();
 testStatusContracts();
 testBasicPlayerAbility();
+testCooldownsCarryBetweenAdventureCombats();
 testStructuredEventOutcome();
 testDirectEventMerchant();
 testResolvedMerchantPresentation();

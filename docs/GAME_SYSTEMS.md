@@ -314,6 +314,7 @@ This sequencing guarantees that:
 - Enemy Starting Energy, Energy regeneration, and Max Energy come from that enemy's definition.
 - Energy cannot exceed Max Energy and cannot be spent below zero.
 - A cooldown is measured in player turns and decreases only when the next player turn begins. The visible counter updates with **Your turn.**, never during the final enemy action.
+- Remaining player cooldowns carry through events and into the next combat of the same adventure. Starting that encounter counts as the next player turn and reduces each carried cooldown by one. Starting, completing, fleeing, or otherwise leaving an adventure clears the carried cooldowns, so every new adventure begins fully refreshed.
 - Focus clears every other cooldown, then keeps its own six-turn cooldown.
 - Recuperate presents its cast and Energy restoration as one `You gain X Energy.` combat message.
 
