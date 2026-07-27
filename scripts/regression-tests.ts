@@ -371,6 +371,16 @@ function testContentIntegrity() {
   const expectedAdventureEnemyHp = (generatedHp: number, adventureNumber: number) => adventureNumber >= 7
     ? Math.round((generatedHp + 100) * 1.5)
     : generatedHp;
+  const expectedEnemyDefenseBonuses: Record<number, { armor: number; magicResistance: number }> = {
+    5: { armor: 10, magicResistance: 10 },
+    6: { armor: 20, magicResistance: 15 },
+    7: { armor: 25, magicResistance: 20 },
+    8: { armor: 30, magicResistance: 30 },
+    9: { armor: 35, magicResistance: 35 },
+    10: { armor: 10, magicResistance: 50 },
+    11: { armor: 50, magicResistance: 10 },
+    12: { armor: 100, magicResistance: 100 },
+  };
   assert.equal(ADVENTURES.length, 12, "The complete story route must contain Adventures 1 through 12.");
   lateAdventureExpectations.forEach(([id, level, stageCount, prerequisite]) => {
     const adventure = ADVENTURES.find((candidate) => candidate.id === id);
@@ -397,6 +407,10 @@ function testContentIntegrity() {
     const originalBossHp = 170 + (adventureNumber - 3) ** 2 * 26;
     const generatedBossHp = Math.round(originalBossHp * 1.3);
     assert.equal(bossEnemy.maxHp, expectedAdventureEnemyHp(generatedBossHp, adventureNumber), `${bossEnemy.name} must retain its intended late-campaign Health scaling.`);
+    const defenseBonus = expectedEnemyDefenseBonuses[adventureNumber] ?? { armor: 0, magicResistance: 0 };
+    const scale = adventureNumber - 3;
+    assert.equal(bossEnemy.armor, Math.floor(scale * 1.2) + defenseBonus.armor * 2, `${bossEnemy.name} must receive double its adventure Armor bonus.`);
+    assert.equal(bossEnemy.magicResistance, Math.floor(scale * 1.1) + 1 + defenseBonus.magicResistance * 2, `${bossEnemy.name} must receive double its adventure Magic Resistance bonus.`);
     const regularEnemies = Array.from(enemyIds)
       .filter((enemyId) => enemyId !== bossEnemyId)
       .map((enemyId) => ENEMIES[enemyId])
@@ -405,6 +419,8 @@ function testContentIntegrity() {
     regularEnemies.forEach((enemy, enemyIndex) => {
       const generatedHp = 55 + (adventureNumber - 3) * 28 + enemyIndex * 9;
       assert.equal(enemy.maxHp, expectedAdventureEnemyHp(generatedHp, adventureNumber), `${enemy.name} must retain its intended late-campaign Health scaling.`);
+      assert.equal(enemy.armor, Math.floor(scale * 1.2) + (enemyIndex % 3) + defenseBonus.armor, `${enemy.name} must receive its adventure Armor bonus.`);
+      assert.equal(enemy.magicResistance, Math.floor(scale * 1.1) + ((enemyIndex + 1) % 3) + defenseBonus.magicResistance, `${enemy.name} must receive its adventure Magic Resistance bonus.`);
     });
     adventure.stages.forEach((stage, stageIndex) => {
       stage.entries.filter((entry) => entry.type === "combat" || entry.type === "boss").forEach((entry) => {

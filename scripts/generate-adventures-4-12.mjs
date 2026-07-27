@@ -23,6 +23,17 @@ const latePrefixes = Array.from({ length: 9 }, (_, index) => index + 4).flatMap(
 ]);
 const isLateId = (id) => latePrefixes.some((prefix) => id.startsWith(prefix)) || lateAdventureIds.has(id);
 
+const ENEMY_DEFENSE_BONUSES = {
+  5: { armor: 10, magicResistance: 10 },
+  6: { armor: 20, magicResistance: 15 },
+  7: { armor: 25, magicResistance: 20 },
+  8: { armor: 30, magicResistance: 30 },
+  9: { armor: 35, magicResistance: 35 },
+  10: { armor: 10, magicResistance: 50 },
+  11: { armor: 50, magicResistance: 10 },
+  12: { armor: 100, magicResistance: 100 },
+};
+
 async function loadModule(entryPoint) {
   const result = await build({ entryPoints: [entryPoint], bundle: true, platform: "node", format: "esm", write: false });
   const source = result.outputFiles[0].text;
@@ -594,6 +605,8 @@ function buildEnemies(spec, items) {
   return Object.fromEntries(spec.enemies.map((enemy, index) => {
     const [slug, name, , power] = enemy;
     const boss = index === spec.enemies.length - 1;
+    const defenseBonus = ENEMY_DEFENSE_BONUSES[spec.number] ?? { armor: 0, magicResistance: 0 };
+    const defenseBonusMultiplier = boss ? 2 : 1;
     const physical = power !== "spell";
     const magical = power !== "physical";
     const generatedHp = boss ? Math.round((170 + scale * scale * 26) * 1.3) : 55 + scale * 28 + index * 9;
@@ -618,8 +631,8 @@ function buildEnemies(spec, items) {
       maxHp: hp,
       physicalPower: physical ? powerValue : Math.floor(powerValue * 0.45),
       spellPower: magical ? powerValue : 0,
-      armor: Math.max(0, Math.floor(scale * 1.2) + (index % 3)),
-      magicResistance: Math.max(0, Math.floor(scale * 1.1) + ((index + 1) % 3)),
+      armor: Math.max(0, Math.floor(scale * 1.2) + (index % 3)) + defenseBonus.armor * defenseBonusMultiplier,
+      magicResistance: Math.max(0, Math.floor(scale * 1.1) + ((index + 1) % 3)) + defenseBonus.magicResistance * defenseBonusMultiplier,
       hitChance: Math.min(1.2, 0.92 + scale * 0.015),
       dodgeChance: Math.min(0.35, 0.04 + (index % 3) * 0.03 + scale * 0.005),
       critChance: Math.min(0.3, 0.05 + scale * 0.015),

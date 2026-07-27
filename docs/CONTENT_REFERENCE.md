@@ -693,6 +693,19 @@ Adventures 4–12 form one linear route after Highfall Mountains. Each has three
 
 The final stage of each late adventure contains its boss plus two role-complementary adds. Every Adventure 4–12 boss has 30% more Max Health than the route's original generated curve, rounded to the nearest whole point. After that curve is applied, every enemy template in Adventures 7–12—including bosses—gains 100 Max Health and then has the resulting total increased by 50%, rounded to the nearest whole point. Bosses begin with 10 Energy, may resolve two ready actions per turn, and prioritize their setup/charged/recovery sequence. Combat and stage rewards rise with each recommended level. The generated late-campaign enemy roster contains exactly seven templates per biome:
 
+Adventures 5–12 add the following defenses to every enemy template after its generated base stats. The local boss receives twice the listed Armor and Magic Resistance bonus.
+
+| Adventure | Regular-enemy Armor bonus | Regular-enemy Magic Resistance bonus | Boss Armor bonus | Boss Magic Resistance bonus |
+| --- | ---: | ---: | ---: | ---: |
+| 5 — Ashen Foundry | +10 | +10 | +20 | +20 |
+| 6 — Sunken Reliquary | +20 | +15 | +40 | +30 |
+| 7 — Nightglass Citadel | +25 | +20 | +50 | +40 |
+| 8 — Frostbound Expanse | +30 | +30 | +60 | +60 |
+| 9 — Stormspire Aerie | +35 | +35 | +70 | +70 |
+| 10 — The Hollow Crown | +10 | +50 | +20 | +100 |
+| 11 — The Astral Scar | +50 | +10 | +100 | +20 |
+| 12 — The World Below | +100 | +100 | +200 | +200 |
+
 | Adventure | Enemy roster |
 | --- | --- |
 | Mirefen Marsh | Reed Stalker; Bog Leech; Mirefen Spitter; Drowned Warden; Fen Witch; Brood Guard; Vespara, Broodmother. |
