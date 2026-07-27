@@ -4215,7 +4215,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss",
             "title": "Boss",
-            "description": "",
+            "description": "At the crest, Striz's hulking warband closes ranks around its chieftain, blades raised beneath a storm of tattered banners.",
             "enemyIds": [
               "enemy-ms1ftdlw-jz5lo",
               "enemy-ms1fykbj-rhb65",
@@ -4888,7 +4888,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Vespara, Broodmother",
-            "description": "Vespara, Broodmother bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "The black water trembles as Vespara hauls her vast brood from the drowned nest, venom hissing from every fang.",
             "enemyIds": [
               "enemy-a4-vespara-broodmother",
               "enemy-a4-fen-witch",
@@ -5266,7 +5266,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "The Furnace Tyrant",
-            "description": "The Furnace Tyrant bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "The foundry doors glow white-hot as the Furnace Tyrant tears free of its chains, each footfall ringing like a hammer blow.",
             "enemyIds": [
               "enemy-a5-furnace-tyrant",
               "enemy-a5-ironbound-overseer",
@@ -5673,7 +5673,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Nhalos, the Drowned Seer",
-            "description": "Nhalos, the Drowned Seer bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "Nhalos rises above the storm-filled font, bronze masks chanting his final prophecy through mouths full of seawater.",
             "enemyIds": [
               "enemy-a6-nhalos-drowned-seer",
               "enemy-a6-tidebound-knight",
@@ -6121,7 +6121,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Lady Noctra, the Last Reflection",
-            "description": "Lady Noctra, the Last Reflection bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "Every mirror shows Lady Noctra smiling—then six reflections step through the glass and draw their blades as one.",
             "enemyIds": [
               "enemy-a7-lady-noctra",
               "enemy-a7-veil-dancer",
@@ -6573,7 +6573,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Skara, the White Maw",
-            "description": "Skara, the White Maw bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "The glacier splits beneath a roar, and Skara erupts from the ancient ice with winter burning in her jaws.",
             "enemyIds": [
               "enemy-a8-skara-white-maw",
               "enemy-a8-glacier-golem",
@@ -7071,7 +7071,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Vaelith, the Tempest Roc",
-            "description": "Vaelith, the Tempest Roc bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "Lightning crowns Vaelith as the chained colossus spreads its wings, turning the summit sky black from edge to edge.",
             "enemyIds": [
               "enemy-a9-vaelith-tempest-roc",
               "enemy-a9-thunderhead-colossus",
@@ -7571,7 +7571,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Aldren, the Hollow King",
-            "description": "Aldren, the Hollow King bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "Aldren rises with the broken throne fused to his bones, and every dead courtier bows as the hollow crown ignites.",
             "enemyIds": [
               "enemy-a10-aldren-hollow-king",
               "enemy-a10-crown-seraph",
@@ -8133,7 +8133,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Seraphel, the Fallen Star",
-            "description": "Seraphel, the Fallen Star bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "The crater bends around Seraphel as the fallen giant strains against its star-metal chains and reaches for the sky it shattered.",
             "enemyIds": [
               "enemy-a11-seraphel-fallen-star",
               "enemy-a11-gravity-warden",
@@ -8770,7 +8770,7 @@ export const ADVENTURES: AdventureDefinition[] = [
             "chance": 100,
             "eyebrow": "Boss Encounter",
             "title": "Eidolon, the First Hunger",
-            "description": "Eidolon, the First Hunger bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "description": "The First Gate buckles inward. Countless limbs claw into the chamber as Eidolon speaks your name in the voice of a starving world.",
             "enemyIds": [
               "enemy-a12-eidolon-first-hunger",
               "enemy-a12-firstborn-shade",

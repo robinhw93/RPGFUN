@@ -330,6 +330,7 @@ function testContentIntegrity() {
     assert.ok(existsSync(join(process.cwd(), "public", enemy.imageUrl)), `${enemy.name} needs its bestiary artwork.`);
     assert.ok(existsSync(join(process.cwd(), "public", enemy.portraitUrl)), `${enemy.name} needs its combat portrait.`);
   });
+  const bossDescriptions: string[] = [];
   ADVENTURES.forEach((adventure) => {
     assert.ok(adventure.id, "Every adventure needs an internal ID.");
     assert.ok(adventure.travelText?.trim(), `${adventure.name} needs travel loading text.`);
@@ -347,9 +348,15 @@ function testContentIntegrity() {
         assert.ok(entry.id, `${stage.name} contains a possibility without an internal ID.`);
         entry.enemyIds?.forEach((enemyId) => assert.ok(ENEMIES[enemyId], `${entry.id} references missing enemy ${enemyId}.`));
         if (entry.eventId) assert.ok(ADVENTURE_EVENTS[entry.eventId], `${entry.id} references missing event ${entry.eventId}.`);
+        if (entry.type === "boss") {
+          assert.ok(entry.description.trim(), `${entry.id} needs a flavorful boss introduction.`);
+          assert.equal(/read the setup|survive the charged attack|bars the final path/i.test(entry.description), false, `${entry.id} must not use the tactical placeholder introduction.`);
+          bossDescriptions.push(entry.description.trim());
+        }
       });
     });
   });
+  assert.equal(new Set(bossDescriptions).size, bossDescriptions.length, "Every boss encounter needs a unique introduction.");
   const lateAdventureExpectations = [
     ["mirefen-marsh", 13, 12, "highfall-mountains"],
     ["ashen-foundry", 18, 13, "mirefen-marsh"],

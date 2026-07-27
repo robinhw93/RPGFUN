@@ -56,6 +56,7 @@ const specs = [
     description: "Black water, drowned causeways, and venomous nests choke the southern Mirefen. Every safe foothold has teeth.",
     travelText: "Following the lantern road into Mirefen Marsh", completionTitle: "The Brood Falls Silent",
     completionDescription: "Vespara sinks beneath the black water. The reed paths clear, and Mirefen's lanterns burn safely again.",
+    bossDescription: "The black water trembles as Vespara hauls her vast brood from the drowned nest, venom hissing from every fang.",
     cardImageUrl: "/assets/backgrounds/mirefen-marsh-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/mirefen-marsh-edge.webp",
     accent: "#5f8a58", statuses: ["poison", "wet"], materials: [
       ["bog-iron", "Bog Iron", "/assets/items/iron-ore.webp"],
@@ -82,6 +83,7 @@ const specs = [
     description: "An abandoned dwarven foundry has awakened beneath the ash fields, feeding armor and souls into an endless furnace.",
     travelText: "Crossing the ash fields toward the old foundry", completionTitle: "The Furnace Cools",
     completionDescription: "The Furnace Tyrant cracks apart and the foundry's great bellows fall still. For the first time in an age, clean air enters the halls.",
+    bossDescription: "The foundry doors glow white-hot as the Furnace Tyrant tears free of its chains, each footfall ringing like a hammer blow.",
     cardImageUrl: "/assets/backgrounds/ashen-foundry-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/ashen-foundry-edge.webp",
     accent: "#a75835", statuses: ["burn", "charred"], materials: [
       ["cindersteel", "Cindersteel Ore", "/assets/items/copper-ore.webp"],
@@ -108,6 +110,7 @@ const specs = [
     description: "Tidal caverns expose a drowned temple where relic wards still hum beneath the surf and dead priests whisper through bronze masks.",
     travelText: "Descending with the tide into the Sunken Reliquary", completionTitle: "The Last Prophecy Drowned",
     completionDescription: "Nhalos releases the relic and the temple wards dim. The tide retreats, leaving the ancient road open.",
+    bossDescription: "Nhalos rises above the storm-filled font, bronze masks chanting his final prophecy through mouths full of seawater.",
     cardImageUrl: "/assets/backgrounds/sunken-reliquary-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/sunken-reliquary-edge.webp",
     accent: "#397f91", statuses: ["wet", "electrified"], materials: [
       ["abyssal-pearl", "Abyssal Pearl", "/assets/items/arcane-crystal.webp"],
@@ -134,6 +137,7 @@ const specs = [
     description: "A fortress of black glass reflects paths that do not exist. Assassins and bloodbound knights hunt between its mirrored halls.",
     travelText: "Climbing the moonlit road to Nightglass Citadel", completionTitle: "Every Mirror Broken",
     completionDescription: "Lady Noctra's final reflection splinters. Dawn crosses the citadel walls and the hidden road beyond appears.",
+    bossDescription: "Every mirror shows Lady Noctra smiling—then six reflections step through the glass and draw their blades as one.",
     cardImageUrl: "/assets/backgrounds/nightglass-citadel-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/nightglass-citadel-edge.webp",
     accent: "#65518c", statuses: ["stealth", "blind"], materials: [
       ["nightglass", "Nightglass Shard", "/assets/items/arcane-crystal.webp"],
@@ -160,6 +164,7 @@ const specs = [
     description: "Beyond the citadel lies a white waste where the wind freezes thought itself and ancient beasts wake beneath blue ice.",
     travelText: "Following the aurora across the Frostbound Expanse", completionTitle: "The White Maw Shattered",
     completionDescription: "Skara's roar collapses into drifting snow. The aurora steadies and a safe passage opens through the ice.",
+    bossDescription: "The glacier splits beneath a roar, and Skara erupts from the ancient ice with winter burning in her jaws.",
     cardImageUrl: "/assets/backgrounds/frostbound-expanse-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/frostbound-expanse-edge.webp",
     accent: "#71a8c8", statuses: ["cold", "frozen"], materials: [
       ["rimebone", "Rimebone", "/assets/items/bone-fragments.webp"],
@@ -186,6 +191,7 @@ const specs = [
     description: "Stone bridges climb into a permanent storm where sky cults chain lightning to the peaks and thunderbirds guard the final ascent.",
     travelText: "Ascending the chain bridges of Stormspire", completionTitle: "The Storm Unbound",
     completionDescription: "Vaelith's chains break and the storm rolls away from the peak. The road to the Hollow Crown stands revealed.",
+    bossDescription: "Lightning crowns Vaelith as the chained colossus spreads its wings, turning the summit sky black from edge to edge.",
     cardImageUrl: "/assets/backgrounds/stormspire-aerie-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/stormspire-aerie-edge.webp",
     accent: "#547cb8", statuses: ["electrified", "stunned"], materials: [
       ["skyiron", "Skyiron", "/assets/items/silver-ore.webp"],
@@ -212,6 +218,7 @@ const specs = [
     description: "At the world's broken summit, a dead kingdom repeats its final night beneath an empty crown and a sun that never rises.",
     travelText: "Walking the silent causeway to the Hollow Crown", completionTitle: "A Crown Without a King",
     completionDescription: "Aldren's hollow crown strikes the floor and breaks. The false night lifts from Arkenfall, though deeper doors remain sealed.",
+    bossDescription: "Aldren rises with the broken throne fused to his bones, and every dead courtier bows as the hollow crown ignites.",
     cardImageUrl: "/assets/backgrounds/hollow-crown-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/hollow-crown-edge.webp",
     accent: "#8e714a", statuses: ["vulnerable", "arcaneWound"], materials: [
       ["hollowsteel", "Hollowsteel", "/assets/items/gold-ore.webp"],
@@ -239,6 +246,7 @@ const specs = [
     description: "Beyond the Hollow Crown, a fallen star has split an ancient observatory open. Gravity twists, constellations bleed, and pilgrims kneel to something burning beneath the crater.",
     travelText: "Crossing the broken causeway toward the Astral Scar", completionTitle: "The Fallen Star Extinguished",
     completionDescription: "Seraphel collapses into a rain of quiet embers. The observatory steadies, and a stair older than the stars opens beneath the crater.",
+    bossDescription: "The crater bends around Seraphel as the fallen giant strains against its star-metal chains and reaches for the sky it shattered.",
     cardImageUrl: "/assets/backgrounds/astral-scar-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/astral-scar-edge.webp",
     accent: "#8c69c7", statuses: ["arcaneWound", "blind"], materials: [
       ["star-metal", "Star Metal", "/assets/items/silver-ore.webp"],
@@ -266,6 +274,7 @@ const specs = [
     description: "The stair beneath the fallen star descends beyond every map. Here the roots of Arkenfall coil around a sealed hunger, and the first voices still remember how the world was made.",
     travelText: "Descending the endless stair into the World Below", completionTitle: "The First Hunger Bound",
     completionDescription: "Eidolon is driven back behind the First Gate. The roots of Arkenfall close around the wound, and the deep voices fall silent—for now.",
+    bossDescription: "The First Gate buckles inward. Countless limbs claw into the chamber as Eidolon speaks your name in the voice of a starving world.",
     cardImageUrl: "/assets/backgrounds/world-below-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/world-below-edge.webp",
     accent: "#b17a43", statuses: ["vulnerable", "weaken"], materials: [
       ["worldroot-heartwood", "Worldroot Heartwood", "/assets/items/hardwood.webp"],
@@ -683,7 +692,7 @@ function buildAdventure(spec, itemIds) {
       return {
         id: `a${spec.number}-stage-${number}`, name: `Heart of ${spec.name}`, entries: [{
           id: `a${spec.number}-boss`, type: "boss", chance: 100, eyebrow: "Boss Encounter", title: spec.enemies[6][1],
-          description: `${spec.enemies[6][1]} bars the final path. Read the setup, survive the charged attack, and punish the recovery window.`,
+          description: spec.bossDescription,
           enemyIds: [bossId, regularIds[4], regularIds[5]], reward: { experience: lateCombatExperience(baseXp * 3), gold: baseGold * 4 },
         }], dropTable: [{ itemId: itemIds.weapons[0], chance: 8 }, { itemId: itemIds.materials[1], chance: 100 }],
       };
