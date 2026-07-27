@@ -19,6 +19,7 @@ import { GameConfirmDialog } from "../../components/GameConfirmDialog";
 import { ItemIcon } from "../../components/ItemIcon";
 import { ItemDetailModal } from "../../components/character/CharacterView";
 import { getAdventureDefinition, getAdventureNode, getStoryAdventureAvailability } from "../../game/adventures";
+import { ARENA_CHAMPION_MAX_HP } from "../../game/arena";
 import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { getStatusAdjustedCombatStats } from "../../game/combatStats";
@@ -676,7 +677,7 @@ export function ProgressHeader({ index, adventureId }: { index: number; adventur
 
 function ArenaProgressHeader({ combat }: { combat: CombatState }) {
   const champion = combat.enemies[0];
-  const damage = Math.max(0, (champion?.maxHp ?? 10000) - (champion?.hp ?? 10000));
+  const damage = Math.max(0, (champion?.maxHp ?? ARENA_CHAMPION_MAX_HP) - (champion?.hp ?? ARENA_CHAMPION_MAX_HP));
   const challenge = combat.challenge;
   const currentTurn = Math.max(1, Math.min(challenge?.playerTurnLimit ?? 10, (challenge?.playerTurnsCompleted ?? 0) + (combat.outcome === "active" ? 1 : 0)));
   return <div className="journey-progress arena-trial-progress"><span>Damage Trial</span><strong>{damage.toLocaleString()} Damage</strong><span>Turn {currentTurn} / {challenge?.playerTurnLimit ?? 10}</span></div>;
@@ -692,7 +693,7 @@ function ArenaResultScreen({ game, onCharacter, onReturn }: { game: GameState; o
         <Trophy />
         <p className="eyebrow">Damage Recorded</p>
         <h2>{result.damage.toLocaleString()} Damage</h2>
-        <p>The Arena Champion laughs as the bell rings. Your result earns the same amount of Experience.</p>
+        <p>The Arena Champion laughs as the bell rings. You earn Experience equal to 20% of the damage dealt.</p>
         <div className="arena-result-stats"><span><small>Experience</small><strong>+{reward.experience.toLocaleString()} XP</strong></span><span><small>Personal Rank</small><strong>#{rank}</strong></span><span><small>Turns Used</small><strong>{result.turns} / 10</strong></span></div>
         {reward.levelsGained > 0 && <button type="button" className="score-character-button level-up" onClick={onCharacter}><Sparkles size={16} /> Level up!</button>}
         <button className="primary-button" onClick={onReturn}>Return to Grand Arena <ChevronRight size={17} /></button>

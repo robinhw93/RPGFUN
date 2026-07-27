@@ -43,7 +43,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "title": "The Unbroken Colossus",
     "imageUrl": "/assets/enemies/full/arena-champion.webp",
     "portraitUrl": "/assets/enemies/portraits/arena-champion.webp",
-    "maxHp": 10000,
+    "maxHp": 100000,
     "physicalPower": 0,
     "spellPower": 0,
     "armor": 0,

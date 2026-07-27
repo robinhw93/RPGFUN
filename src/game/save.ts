@@ -86,7 +86,7 @@ export function loadGame(): GameState | null {
       if (typeof candidate.id !== "string" || !Number.isFinite(candidate.damage) || !Number.isFinite(candidate.completedAt)) return [];
       return [{
         id: candidate.id,
-        damage: Math.max(0, Math.min(10000, Math.floor(candidate.damage ?? 0))),
+        damage: Math.max(0, Math.min(100000, Math.floor(candidate.damage ?? 0))),
         turns: Math.max(1, Math.min(10, Math.floor(candidate.turns ?? 10))),
         level: Math.max(1, Math.min(MAX_LEVEL, Math.floor(candidate.level ?? 1))),
         completedAt: Math.max(0, Math.floor(candidate.completedAt ?? 0)),

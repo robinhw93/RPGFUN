@@ -12,7 +12,7 @@ import { canonicalQuestExchange, normalizeQuestExchange } from "../src/component
 import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconChoices } from "../src/components/GearSlotIcon";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, QUESTLINES, QUESTS, TALENTS } from "../src/game/data";
 import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getAdventureTravelText, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
-import { ARENA_SCORE_LIMIT, ARENA_TURN_LIMIT, getArenaScores, grantArenaChallengeReward, resetArenaAttemptAfterAdventure, startArenaChallenge } from "../src/game/arena";
+import { ARENA_CHAMPION_MAX_HP, ARENA_SCORE_LIMIT, ARENA_TURN_LIMIT, getArenaExperience, getArenaScores, grantArenaChallengeReward, resetArenaAttemptAfterAdventure, startArenaChallenge } from "../src/game/arena";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { chooseStartingClass, getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../src/game/characterIntroduction";
 import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
@@ -1738,7 +1738,7 @@ function testArenaDamageTrial() {
   assert.equal(started.adventure.mode, "arena", "The arena must use its dedicated safe challenge mode.");
   assert.equal(started.character.arenaAttemptAvailable, false, "Starting the arena must spend the current attempt.");
   assert.equal(started.adventure.combat?.enemies[0]?.id, "arena-champion", "The damage trial must spawn the Arena Champion.");
-  assert.equal(started.adventure.combat?.enemies[0]?.maxHp, 10000, "The Arena Champion must have exactly 10,000 Health.");
+  assert.equal(started.adventure.combat?.enemies[0]?.maxHp, ARENA_CHAMPION_MAX_HP, "The Arena Champion must have exactly 100,000 Health.");
   assert.equal(started.adventure.combat?.challenge?.playerTurnLimit, ARENA_TURN_LIMIT, "The damage trial must last ten player turns.");
 
   let combat = started.adventure.combat!;
@@ -1755,10 +1755,11 @@ function testArenaDamageTrial() {
     ...started.adventure.combat!,
     outcome: "victory" as const,
     playerActed: true,
-    enemies: started.adventure.combat!.enemies.map((enemy) => ({ ...enemy, hp: 8766 })),
+    enemies: started.adventure.combat!.enemies.map((enemy) => ({ ...enemy, hp: 98766 })),
   };
   const rewarded = grantArenaChallengeReward({ ...started, adventure: { ...started.adventure, combat: damagedCombat } }, 123456);
-  assert.equal(rewarded.adventure.pendingReward?.experience, 1234, "Arena damage must award the same amount of Experience.");
+  assert.equal(getArenaExperience(1234), 246, "Arena Experience must be 20% of damage, rounded down to a whole number.");
+  assert.equal(rewarded.adventure.pendingReward?.experience, 246, "Arena damage must award 20% of its value as Experience.");
   assert.equal(rewarded.character.arenaScores[0]?.damage, 1234, "Arena damage must be recorded on the personal leaderboard.");
   assert.equal(grantArenaChallengeReward(rewarded, 123457), rewarded, "An arena result must never award Experience twice.");
   assert.equal(resetArenaAttemptAfterAdventure(rewarded.character).arenaAttemptAvailable, true, "Completing an adventure must restore the arena attempt.");

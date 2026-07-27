@@ -7,7 +7,12 @@ import type { ArenaAttemptRecord, CharacterState, CombatReward, GameState } from
 
 export const ARENA_TURN_LIMIT = 10;
 export const ARENA_SCORE_LIMIT = 10;
-export const ARENA_CHAMPION_MAX_HP = 10000;
+export const ARENA_CHAMPION_MAX_HP = 100_000;
+export const ARENA_EXPERIENCE_DAMAGE_RATIO = 0.2;
+
+export function getArenaExperience(damage: number): number {
+  return Math.floor(Math.max(0, damage) * ARENA_EXPERIENCE_DAMAGE_RATIO);
+}
 
 function makeArenaAttemptId(timestamp: number): string {
   return `arena-attempt-${timestamp}`;
@@ -84,7 +89,8 @@ export function grantArenaChallengeReward(state: GameState, timestamp = Date.now
     level: state.character.level,
     completedAt: timestamp,
   };
-  const experience = addExperience(state.character, damage);
+  const experienceReward = getArenaExperience(damage);
+  const experience = addExperience(state.character, experienceReward);
   const character = {
     ...experience.character,
     arenaAttemptAvailable: false,
@@ -93,7 +99,7 @@ export function grantArenaChallengeReward(state: GameState, timestamp = Date.now
   const reward: CombatReward = {
     id: record.id,
     nodeIndex: 0,
-    experience: damage,
+    experience: experienceReward,
     gold: 0,
     loot: [],
     levelBefore: experience.levelBefore,
