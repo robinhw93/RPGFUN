@@ -410,9 +410,9 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Poison | 3 turns | Yes | At turn end, takes Spell Damage per stack equal to `1 + 15% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
-| Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `1 + 10% source Physical Power`; Armor is 50% effective against the combined trigger. |
-| Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `1 + 20% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
+| Poison | 3 turns | Yes | At turn end, takes Spell Damage per stack equal to `1 + 11.25% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
+| Bleed | 3 turns | Yes | After using an ability/attack, takes Physical damage per stack equal to `1 + 7.5% source Physical Power`; Armor is 50% effective against the combined trigger. |
+| Burn | 3 turns | Yes | At turn start, takes Fire damage per stack equal to `1 + 15% source Spell Power`; Magic Resistance is 50% effective against the combined tick. |
 | Weaken | 3 turns | No | Deals 25% less damage. |
 | Shatter | 3 turns | No | Effective Armor is reduced by 50%. |
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |

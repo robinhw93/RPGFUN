@@ -37,9 +37,9 @@ Attributes are whole numbers. Equipment and flat talent bonuses are added to bas
 
 | Attribute | Current effects |
 | --- | --- |
-| Strength | +1 Physical Power per point and +1% Guard gained per point. |
-| Agility | +0.3 Physical Power, +0.5% raw Hit Chance, +0.4% Dodge Chance, and +0.5 Initiative per point. |
-| Intelligence | +1 Spell Power and +0.25 Initiative per point. |
+| Strength | +0.5 Physical Power per point and +1% Guard gained per point. |
+| Agility | +0.25 Physical Power, +0.5% raw Hit Chance, +0.4% Dodge Chance, and +0.5 Initiative per point. |
+| Intelligence | +0.5 Spell Power and +0.25 Initiative per point. |
 | Vitality | +10 Max Health and +0.5% healing received per point. |
 | Luck | +0.75% Critical Strike Chance, +1% loot-rarity bonus, and +0.25% to explicitly chance-based combat triggers per point. |
 
@@ -56,8 +56,8 @@ All displayed stats are rounded to whole numbers. Percentage values are displaye
 | Max Health | `Vitality × 10` |
 | Max Energy | `7 + flat bonuses` |
 | Energy Regeneration | `2 + flat bonuses` at the start of the player's turn. |
-| Physical Power | `(Strength + Agility × 0.3 + gear/talent Physical Power) × (100% + Physical Power bonuses)` |
-| Spell Power | `(Intelligence + gear/talent Spell Power) × (100% + Spell Power bonuses)` |
+| Physical Power | `(Strength × 0.5 + Agility × 0.25 + gear/talent Physical Power) × (100% + Physical Power bonuses)` |
+| Spell Power | `(Intelligence × 0.5 + gear/talent Spell Power) × (100% + Spell Power bonuses)` |
 | Armor | Sum of equipped item, set, and talent Armor. Shatter can halve the effective value. |
 | Magic Resistance | Sum of equipped item, set, and talent Magic Resistance. |
 | Critical Strike Chance | `5% + Luck × 0.75% + bonuses` |
@@ -347,9 +347,9 @@ Detailed status definitions and formulas are in [Content reference](CONTENT_REFE
 All status damage is rounded to a whole number after multiplying by stacks.
 
 ```text
-Bleed per stack  = 1 + source Physical Power × 0.10
-Poison per stack = 1 + source Spell Power × 0.15
-Burn per stack   = 1 + source Spell Power × 0.20
+Bleed per stack  = 1 + source Physical Power × 0.075
+Poison per stack = 1 + source Spell Power × 0.1125
+Burn per stack   = 1 + source Spell Power × 0.15
 ```
 
 - Bleed triggers whenever the afflicted combatant uses an ability or enemy attack.

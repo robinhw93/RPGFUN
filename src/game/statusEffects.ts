@@ -29,9 +29,9 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   evasion: { id: "evasion", name: "Evasion", kind: "buff", duration: 1, description: "+60% Dodge Chance until your next turn. Dodge Chance cannot exceed 50%." },
   distraction: { id: "distraction", name: "Distraction", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next ability costs 0 Energy." },
   pinpoint: { id: "pinpoint", name: "Pinpoint", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Your next damaging ability is guaranteed to critically strike." },
-  poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Spell Damage at the end of each turn. Each stack deals 1 damage plus 15% of the applier's Spell Power. Magic Resistance is 50% effective against this damage." },
-  bleed: { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Physical Damage whenever it uses an ability. Each stack deals 1 damage plus 10% of the applier's Physical Power. Armor is 50% effective against this damage." },
-  burn: { id: "burn", name: "Burn", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Fire Damage at the start of each turn. Each stack deals 1 damage plus 20% of the applier's Spell Power. Magic Resistance is 50% effective against this damage." },
+  poison: { id: "poison", name: "Poison", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Spell Damage at the end of each turn. Each stack deals 1 damage plus 11.25% of the applier's Spell Power. Magic Resistance is 50% effective against this damage." },
+  bleed: { id: "bleed", name: "Bleed", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Physical Damage whenever it uses an ability. Each stack deals 1 damage plus 7.5% of the applier's Physical Power. Armor is 50% effective against this damage." },
+  burn: { id: "burn", name: "Burn", kind: "debuff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Takes Fire Damage at the start of each turn. Each stack deals 1 damage plus 15% of the applier's Spell Power. Magic Resistance is 50% effective against this damage." },
   weaken: { id: "weaken", name: "Weaken", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Deals 25% less damage." },
   shatter: { id: "shatter", name: "Shatter", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Armor is reduced by 50%." },
   vulnerable: { id: "vulnerable", name: "Vulnerable", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Takes 25% more damage from all sources." },
@@ -215,11 +215,11 @@ export function getStatusInitiativeBonus(statuses: StatusEffect[]): number {
 export function getStatusDamage(status: StatusEffect): number {
   const power = Math.max(0, status.sourcePower ?? 0);
   const perStack = status.id === "bleed"
-    ? 1 + power * 0.1
+    ? 1 + power * 0.075
     : status.id === "burn"
-      ? 1 + power * 0.2
+      ? 1 + power * 0.15
       : status.id === "poison"
-        ? 1 + power * 0.15
+        ? 1 + power * 0.1125
         : 0;
   return Math.max(0, Math.round(perStack * status.stacks));
 }

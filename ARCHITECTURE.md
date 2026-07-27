@@ -131,8 +131,8 @@ UI modules display these results but never reproduce their formulas.
 - Permanent and temporary Dodge modifiers are combined through the shared combat-math helper, then capped at 50%.
 - Blind multiplies the attacker's raw Hit Chance by 0.25 before opposed Hit/Dodge resolution.
 - Final Hit Chance is `modified raw Hit - capped Dodge`, clamped to 20–100%.
-- Strength and Agility feed Physical Power.
-- Intelligence feeds Spell Power.
+- Strength contributes 0.5 Physical Power per point and Agility contributes 0.25 Physical Power per point.
+- Intelligence contributes 0.5 Spell Power per point.
 - Agility contributes 0.5 Initiative per point and Intelligence contributes 0.25 Initiative per point before direct Initiative bonuses.
 - Abilities use their relevant derived power exactly once. `scalingStat` remains legacy/category metadata for older definitions and is not independently added to damage.
 - All visible stats and initiative values are rounded whole numbers.

@@ -27,7 +27,7 @@ import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getI
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
-import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
+import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect, getStatusDamage } from "../src/game/statusEffects";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
@@ -144,6 +144,20 @@ function testNewCharacterIntroductionDefaults() {
     unlockedTalents: [...arcanist.unlockedTalents, connectedTalent.id],
   };
   assert.equal(hasSpentIntroductionTalentPoint(afterFirstTalent), true, "Spending the post-class Talent Point must complete the Talent step.");
+}
+
+function testAttributeAndAfflictionScaling() {
+  const character = {
+    ...structuredClone(INITIAL_GAME.character),
+    baseStats: { strength: 10, agility: 10, intelligence: 10, vitality: 5, luck: 5 },
+  };
+  const derived = getDerivedStats(character);
+  assert.equal(derived.physicalPower, 8, "Strength must grant 0.5 and Agility 0.25 Physical Power per point before whole-number rounding.");
+  assert.equal(derived.magicalPower, 5, "Intelligence must grant 0.5 Spell Power per point before whole-number rounding.");
+
+  assert.equal(getStatusDamage(createStatusEffect("bleed", { stacks: 2, sourcePower: 40 })), 8, "Bleed must scale at 7.5% Physical Power per stack.");
+  assert.equal(getStatusDamage(createStatusEffect("poison", { stacks: 2, sourcePower: 80 })), 20, "Poison must scale at 11.25% Spell Power per stack.");
+  assert.equal(getStatusDamage(createStatusEffect("burn", { stacks: 2, sourcePower: 40 })), 14, "Burn must scale at 15% Spell Power per stack.");
 }
 
 function testCraftingMaterialArtworkLibrary() {
@@ -1477,6 +1491,7 @@ testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
 testAutomaticGearAcquisition();
 testNewCharacterIntroductionDefaults();
+testAttributeAndAfflictionScaling();
 testEnemyStartingEnergy();
 testEnemyEditorSynchronizesLiveDropTables();
 testGoblinEnemyBehaviors();
