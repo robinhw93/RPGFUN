@@ -1550,12 +1550,23 @@ main { min-height: calc(100vh - 68px); }
 .runtime-talent-node.cultist { --branch: #315e42; }
 .runtime-talent-node.unlocked { border-color: var(--branch); outline: 2px solid #c9a867; outline-offset: 3px; background: linear-gradient(145deg, color-mix(in srgb, var(--branch) 18%, #171a18), #111412); box-shadow: inset 0 0 22px color-mix(in srgb, var(--branch) 8%, transparent), 0 0 18px rgba(201,168,103,.18), 0 9px 25px rgba(0,0,0,.32); }
 .runtime-talent-node.locked { opacity: .48; }
+.runtime-talent-node.introduction-available { z-index: 3; border-color: #e8c46e; background: linear-gradient(145deg, color-mix(in srgb, var(--branch) 20%, #211c12), #121611); animation: introduction-talent-glow 1.7s ease-in-out infinite; }
+.runtime-talent-node.introduction-available::after { content: ""; position: absolute; inset: -7px; border: 2px solid rgba(232,196,110,.72); border-radius: inherit; box-shadow: 0 0 14px rgba(232,196,110,.48); pointer-events: none; animation: introduction-talent-ring 1.7s ease-out infinite; }
 .runtime-talent-node:hover, .runtime-talent-node:focus-visible { z-index: 2; border-color: color-mix(in srgb, var(--branch) 86%, #fff); filter: brightness(1.12); }
 .runtime-talent-node:not(.unlocked):focus-visible { outline: 2px solid color-mix(in srgb, var(--branch) 76%, #ddd); outline-offset: 2px; }
 .runtime-talent-node > small { color: color-mix(in srgb, var(--branch) 68%, #a6aaa6); font-size: .46rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .runtime-talent-node > strong { font-family: Georgia, serif; font-size: .88rem; line-height: 1.08; }
 .runtime-talent-node.circle > small { font-size: .4rem; }
 .runtime-talent-node.circle > strong { font-size: .7rem; }
+
+@keyframes introduction-talent-glow {
+  0%, 100% { box-shadow: inset 0 0 16px rgba(232,196,110,.08), 0 0 12px rgba(232,196,110,.28), 0 9px 25px rgba(0,0,0,.32); filter: brightness(1); }
+  50% { box-shadow: inset 0 0 24px rgba(232,196,110,.2), 0 0 30px rgba(232,196,110,.78), 0 0 54px color-mix(in srgb, var(--branch) 38%, transparent), 0 9px 25px rgba(0,0,0,.32); filter: brightness(1.16); }
+}
+@keyframes introduction-talent-ring {
+  0% { opacity: .9; transform: scale(.94); }
+  72%, 100% { opacity: 0; transform: scale(1.18); }
+}
 
 .talent-detail-modal { position: fixed; z-index: 230; inset: 0; display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); overflow: hidden; background: rgba(5,7,6,.34); backdrop-filter: blur(7px) brightness(.76); animation: dialog-backdrop-in .18s ease both; }
 .talent-detail-card { --branch: #c9a867; width: min(430px, 100%); position: relative; padding: 1.25rem; border: 1px solid color-mix(in srgb, var(--branch) 62%, #393d38); background: linear-gradient(155deg, color-mix(in srgb, var(--branch) 8%, #171b18), #0d110f); box-shadow: 0 28px 80px rgba(0,0,0,.78); animation: dialog-card-in .22s ease both; }
@@ -1642,7 +1653,7 @@ main { min-height: calc(100vh - 68px); }
   .event-cinematic-title, .event-cinematic-description, .event-cinematic-choices button, .event-cinematic-resolution, .event-cinematic-outcome { opacity: 1 !important; transform: none !important; animation: none !important; }
   .encounter-flavor span { animation: none !important; }
   .encounter-flavor.lower span, .encounter-flavor.exit span { transform: translate3d(-50%, var(--encounter-flavor-offset), 0); }
-  .score-character-button.level-up, .unspent-points-indicator, .character-submenu button.talent-attention, .introduction-next-button { animation: none !important; text-shadow: 0 0 10px rgba(255,229,158,.58); }
+  .score-character-button.level-up, .unspent-points-indicator, .character-submenu button.talent-attention, .introduction-next-button, .runtime-talent-node.introduction-available, .runtime-talent-node.introduction-available::after { animation: none !important; text-shadow: 0 0 10px rgba(255,229,158,.58); }
   .score-character-button.level-up::after, .unspent-points-indicator::after, .character-submenu button.talent-attention::before, .town-destination.starting-item-recommended::before { animation: none !important; opacity: .58; }
   .enemy-combatant.utility-cast-shake { animation: none !important; }
   .enemy-combatant.enemy-charging-attack { animation: none !important; }

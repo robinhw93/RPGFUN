@@ -534,10 +534,11 @@ export function TalentsView({ character, locked, introduction = false, onNext, o
               const available = areTalentRequirementsMet(talent, character.unlockedTalents, TALENTS)
                 && !isAdditionalClassTalentLocked(talent, character.unlockedTalents, character.level, TALENTS);
               const state = unlocked ? "unlocked" : available ? "available" : "locked";
+              const introductionAvailable = introduction && !introductionTalentSpent && state === "available";
               const position = nodePositions.get(talent.id)!;
               const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";
               return (
-                <button type="button" data-talent-id={talent.id} aria-label={`${talent.name}, ${typeLabel}, ${state}`} className={`runtime-talent-node ${talent.branch} ${talent.shape} ${state}`} key={talent.id} style={{ left: position.x, top: position.y }} onClick={(event) => { if (event.detail === 0) setSelectedTalentId(talent.id); }}>
+                <button type="button" data-talent-id={talent.id} aria-label={`${talent.name}, ${typeLabel}, ${state}`} className={`runtime-talent-node ${talent.branch} ${talent.shape} ${state} ${introductionAvailable ? "introduction-available" : ""}`.trim()} key={talent.id} style={{ left: position.x, top: position.y }} onClick={(event) => { if (event.detail === 0) setSelectedTalentId(talent.id); }}>
                   <small>{typeLabel}</small>
                   <strong>{talent.name}</strong>
                 </button>
