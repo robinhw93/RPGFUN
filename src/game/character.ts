@@ -17,6 +17,7 @@ export const INITIAL_CHARACTER: CharacterState = {
   inventory: [],
   equipment: {},
   completedAdventureIds: [],
+  tavernGamblingAttempts: 0,
   acceptedQuestIds: [],
   completedQuestIds: [],
   questProgress: {},

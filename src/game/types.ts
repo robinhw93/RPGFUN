@@ -950,6 +950,8 @@ export interface CharacterState {
   inventory: InventoryItem[];
   equipment: Partial<Record<GearSlot, GearItem>>;
   completedAdventureIds: string[];
+  /** Persistent house-pressure counter for tavern gambling; reset only by completing an adventure. */
+  tavernGamblingAttempts: number;
   acceptedQuestIds: string[];
   completedQuestIds: string[];
   questProgress: Record<string, number>;

@@ -28,7 +28,7 @@ import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_IC
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
 import { acceptQuest, getQuestAvailability, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
 import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "../src/game/statusEffects";
-import { canCraftTownItem, craftTownItem, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
+import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
 
@@ -842,6 +842,19 @@ function testArkenfallTownCommerceAndCrafting() {
   assert.equal(purchaseTavernMeal(mealState, TAVERN_MEALS[0].id).success, false, "A non-stackable meal benefit must not be charged twice before combat.");
   const mealCombat = createCombat(mealState.character, ["dummy"], undefined, { playerStatuses: mealState.adventure.nextCombatPlayerStatuses });
   assert.deepEqual(mealCombat.playerStatuses.map((status) => status.id), TAVERN_MEALS.map((meal) => meal.status), "Queued tavern meal buffs must become real combat statuses.");
+
+  const gamblingStart = { ...structuredClone(INITIAL_GAME), characterCreated: true };
+  const firstGamble = gambleAtArkenfallTavern(gamblingStart, 5, () => 0.49);
+  assert.equal(firstGamble.success, true, "A funded tavern wager must resolve.");
+  assert.equal(firstGamble.roll?.dieRoll, 50, "Tavern gambling must use a visible d100 roll.");
+  assert.equal(firstGamble.roll?.luckBonus, 5, "Tavern gambling must add the character's derived Luck.");
+  assert.equal(firstGamble.roll?.won, true, "A total of 55 must win the first house check.");
+  assert.equal(firstGamble.state.character.gold, gamblingStart.character.gold + 5, "Winning must grant a net profit equal to the wager.");
+  assert.equal(firstGamble.state.character.tavernGamblingAttempts, 1, "Every resolved wager must persistently increase the hidden pressure counter.");
+  const secondGamble = gambleAtArkenfallTavern(firstGamble.state, 5, () => 0.49);
+  assert.equal(secondGamble.roll?.won, false, "The same check total must fail after repeated gambling raises the concealed difficulty.");
+  assert.equal(secondGamble.state.character.gold, gamblingStart.character.gold, "Losing must deduct exactly the wager.");
+  assert.equal(resetTavernGamblingAfterAdventure(secondGamble.state.character).tavernGamblingAttempts, 0, "Completing an adventure must reset tavern gambling pressure.");
   assert.equal(getAdventureStartingHp(50, 17), 17, "Starting another adventure must preserve carried Health instead of healing automatically.");
   assert.equal(getAdventureStartingHp(50, null), 50, "A fresh character without carried Health must begin at full Health.");
   assert.equal(getAdventureStartingHp(50, 80), 50, "Carried Health must never exceed current Max Health.");

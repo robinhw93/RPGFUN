@@ -97,6 +97,7 @@ export function loadGame(): GameState | null {
         inventory,
         equipment,
         completedAdventureIds: state.character.completedAdventureIds ?? [],
+        tavernGamblingAttempts: Math.max(0, Math.floor(state.character.tavernGamblingAttempts ?? 0)),
         acceptedQuestIds: (state.character.acceptedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         completedQuestIds: (state.character.completedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         questProgress: Object.fromEntries(Object.entries(state.character.questProgress ?? {}).flatMap(([id, progress]) => (

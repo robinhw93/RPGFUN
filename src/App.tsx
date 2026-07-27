@@ -25,7 +25,7 @@ import { acceptQuest, recordQuestAdventureCompletion, turnInQuest, type QuestAct
 import { clearSave, loadGame, saveGame } from "./game/save";
 import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
-import { craftTownItem, purchaseTavernMeal, purchaseTownItem, restAtArkenfallTavern, sellTownItem, type TavernMealId, type TownActionResult } from "./game/town";
+import { craftTownItem, gambleAtArkenfallTavern, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, type TavernGamblingResult, type TavernMealId, type TownActionResult } from "./game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
 import { useCombatActionQueue } from "./hooks/useCombatActionQueue";
 import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
@@ -365,7 +365,7 @@ function App() {
 
       const definition = getAdventureDefinition(adventure.adventureId);
       if (adventure.nodeIndex >= definition.stages.length - 1) {
-        const questCharacter = recordQuestAdventureCompletion(character, definition.id);
+        const questCharacter = resetTavernGamblingAfterAdventure(recordQuestAdventureCompletion(character, definition.id));
         return {
           ...current,
           character: { ...questCharacter, completedAdventureIds: [...new Set([...questCharacter.completedAdventureIds, definition.id])] },
@@ -467,6 +467,7 @@ function App() {
   const sellItemInTown = (vendor: ArkenfallVendorId, itemId: string) => runTownAction((current) => sellTownItem(current, vendor, itemId));
   const restInTown = () => runTownAction(restAtArkenfallTavern);
   const eatInTown = (mealId: TavernMealId) => runTownAction((current) => purchaseTavernMeal(current, mealId));
+  const gambleInTown = (wager: number): TavernGamblingResult => runTownAction((current) => gambleAtArkenfallTavern(current, wager)) as TavernGamblingResult;
   const runQuestAction = (action: (current: GameState) => QuestActionResult): QuestActionResult => {
     const result = action(game);
     if (result.success) setGame(result.state);
@@ -743,7 +744,7 @@ function App() {
         {(view === "town" || (view === "character" && preserveTownSession && !game.adventure.active)) && (
           <div className="town-view-host" hidden={view !== "town"}>
             <Suspense fallback={null}>
-              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
+              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onGamble={gambleInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
             </Suspense>
           </div>
         )}

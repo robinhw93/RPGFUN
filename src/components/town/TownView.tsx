@@ -7,7 +7,7 @@ import { getGearCategoryLabel } from "../../game/gear";
 import { describeConsumableEffect, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem } from "../../game/items";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { describeQuestObjective, getQuestAvailability, getQuestObjectiveProgress, type QuestActionResult } from "../../game/quests";
-import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_MEALS, type TavernMealId, type TownActionResult } from "../../game/town";
+import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_GAMBLING_WAGERS, TAVERN_MEALS, type TavernGamblingResult, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, InventoryItem } from "../../game/types";
 import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon, RARITY_SORT_WEIGHT } from "../../ui/gameUi";
 
@@ -299,7 +299,7 @@ function QuestBoardView({ game, onBack, onAccept, onTurnIn }: {
   );
 }
 
-export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onAdventures, onBuy, onCraft, onSell, onRest, onMeal, onAcceptQuest, onTurnInQuest }: {
+export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onAdventures, onBuy, onCraft, onSell, onRest, onMeal, onGamble, onAcceptQuest, onTurnInQuest }: {
   game: GameState;
   maxHp: number;
   initialLocation?: Extract<TownLocation, "square" | "tavern">;
@@ -310,17 +310,47 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
   onSell: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
   onRest: () => TownActionResult;
   onMeal: (mealId: TavernMealId) => TownActionResult;
+  onGamble: (wager: number) => TavernGamblingResult;
   onAcceptQuest: (questId: string) => QuestActionResult;
   onTurnInQuest: (questId: string) => QuestActionResult;
 }) {
   const [location, setLocation] = useState<TownLocation>(initialLocation);
   const [serviceFeedback, setServiceFeedback] = useState<string | null>(null);
+  const [gamblingResult, setGamblingResult] = useState<TavernGamblingResult | null>(null);
+  const [displayedGamblingRoll, setDisplayedGamblingRoll] = useState<number | null>(null);
+  const [gamblingRolling, setGamblingRolling] = useState(false);
+  const gamblingTickTimer = useRef<number | null>(null);
+  const gamblingResultTimer = useRef<number | null>(null);
   const { toast: mealToast, showToast: showMealToast } = useTownToast<string>();
   const currentHp = Math.min(maxHp, game.adventure.carryHp ?? maxHp);
   const restOffer = getTavernRestOffer(currentHp, maxHp, game.character.gold);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location]);
+  useEffect(() => () => {
+    if (gamblingTickTimer.current !== null) window.clearInterval(gamblingTickTimer.current);
+    if (gamblingResultTimer.current !== null) window.clearTimeout(gamblingResultTimer.current);
+  }, []);
+  const gamble = (wager: number) => {
+    if (gamblingRolling) return;
+    const result = onGamble(wager);
+    if (!result.success || !result.roll) {
+      setServiceFeedback(result.message);
+      return;
+    }
+    setServiceFeedback(null);
+    setGamblingResult(result);
+    setDisplayedGamblingRoll(Math.floor(Math.random() * 100) + 1);
+    setGamblingRolling(true);
+    gamblingTickTimer.current = window.setInterval(() => setDisplayedGamblingRoll(Math.floor(Math.random() * 100) + 1), 70);
+    gamblingResultTimer.current = window.setTimeout(() => {
+      if (gamblingTickTimer.current !== null) window.clearInterval(gamblingTickTimer.current);
+      gamblingTickTimer.current = null;
+      gamblingResultTimer.current = null;
+      setDisplayedGamblingRoll(result.roll!.dieRoll);
+      setGamblingRolling(false);
+    }, 900);
+  };
   if (location !== "square" && location !== "shops" && location !== "tavern" && location !== "questboard") return <VendorView vendor={location} game={game} onBack={() => setLocation("shops")} onBuy={onBuy} onCraft={onCraft} onSell={onSell} />;
   if (location === "questboard") return <QuestBoardView game={game} onBack={() => setLocation("square")} onAccept={onAcceptQuest} onTurnIn={onTurnInQuest} />;
   if (location === "tavern") return (
@@ -339,6 +369,18 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
             return <article className={`tavern-meal-card meal-${meal.status}`} key={meal.id}><span className="tavern-service-icon">{meal.status === "strengthened" ? <Dumbbell /> : meal.status === "fierce" ? <Crosshair /> : <HeartPulse />}</span><div className="tavern-meal-copy"><p className="eyebrow">Grants {status.name}</p><h4>{meal.name}</h4><p>{meal.description}</p><small>{status.description}</small></div><button type="button" className="tavern-service-button" disabled={prepared || game.character.gold < meal.cost} onClick={() => { const result = onMeal(meal.id); if (result.success) { setServiceFeedback(null); showMealToast(result.message); } else { setServiceFeedback(result.message); } }}>{prepared ? <><Check /> Prepared</> : <><Utensils /> Order <span><GoldIcon /> {meal.cost}</span></>}</button></article>;
           })}</div></section>
         </div>
+        <section className="tavern-gambling" aria-labelledby="tavern-gambling-heading">
+          <div className="tavern-gambling-copy"><span className="tavern-service-icon"><Coins /></span><div><p className="eyebrow">Try your Luck</p><h3 id="tavern-gambling-heading">The Gilded Dice</h3><p>Choose your stake and test your Luck against the house. Win the check to double your wager.</p></div></div>
+          <div className="tavern-gambling-table">
+            <div className={`tavern-gambling-die ${gamblingRolling ? "rolling" : ""}`} aria-label={displayedGamblingRoll === null ? "D100 waiting to roll" : `D100 result ${displayedGamblingRoll}`}><span>{displayedGamblingRoll ?? "?"}</span><small>D100</small></div>
+            <div className="tavern-gambling-result" aria-live="polite">
+              {!gamblingResult && <p>The dice are waiting.</p>}
+              {gamblingResult?.roll && gamblingRolling && <p>The bones tumble across the table...</p>}
+              {gamblingResult?.roll && !gamblingRolling && <><strong className={gamblingResult.roll.won ? "won" : "lost"}>{gamblingResult.roll.won ? "You win" : "The house wins"}</strong><p>{gamblingResult.roll.dieRoll} + {gamblingResult.roll.luckBonus} Luck = <b>{gamblingResult.roll.total}</b></p><small>{gamblingResult.message}</small></>}
+            </div>
+            <div className="tavern-gambling-wagers" aria-label="Choose a Gold wager">{TAVERN_GAMBLING_WAGERS.map((wager) => <button type="button" key={wager} disabled={gamblingRolling || game.character.gold < wager} onClick={() => gamble(wager)}><Coins /> Bet {wager} <GoldIcon /></button>)}</div>
+          </div>
+        </section>
       </div>
     </section>
   );

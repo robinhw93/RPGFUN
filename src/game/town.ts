@@ -1,9 +1,22 @@
 import { getDerivedStats } from "./character";
 import { ITEMS } from "./data";
 import { acquireItem, getItemGoldCost, getItemSellValue, isConsumableItem, isGearItem } from "./items";
-import type { ArkenfallVendorId, GameState, InventoryItem, ItemCraftingRecipe, StatusEffectId } from "./types";
+import type { ArkenfallVendorId, CharacterState, GameState, InventoryItem, ItemCraftingRecipe, StatusEffectId } from "./types";
 
 export type TavernMealId = "ironpot-stew" | "peppercrust-boar" | "hartroot-broth";
+
+export const TAVERN_GAMBLING_WAGERS = [5, 10, 25] as const;
+const TAVERN_GAMBLING_BASE_THRESHOLD = 55;
+const TAVERN_GAMBLING_DIFFICULTY_PER_ATTEMPT = 6;
+
+export interface TavernGamblingRoll {
+  wager: number;
+  dieRoll: number;
+  luckBonus: number;
+  total: number;
+  won: boolean;
+  goldChange: number;
+}
 
 export interface TavernMealDefinition {
   id: TavernMealId;
@@ -61,6 +74,10 @@ export interface TownActionResult {
   success: boolean;
   message: string;
   item?: InventoryItem;
+}
+
+export interface TavernGamblingResult extends TownActionResult {
+  roll?: TavernGamblingRoll;
 }
 
 /** Resolves explicit editor data while preserving sensible stock for catalogs created before town support. */
@@ -227,4 +244,51 @@ export function purchaseTavernMeal(state: GameState, mealId: TavernMealId): Town
     success: true,
     message: `${meal.name} will grant ${meal.status === "strengthened" ? "Strengthened" : meal.status === "fierce" ? "Fierce" : "Regenerate"} in your next combat.`,
   };
+}
+
+/**
+ * Resolves one concealed house check. Repeated attempts increase the hidden
+ * threshold until an adventure completion resets the persisted attempt count.
+ */
+export function gambleAtArkenfallTavern(
+  state: GameState,
+  wager: number,
+  random: () => number = Math.random,
+): TavernGamblingResult {
+  if (state.adventure.active) return { state, success: false, message: "You cannot gamble while an adventure is in progress." };
+  const normalizedWager = Math.floor(wager);
+  if (!TAVERN_GAMBLING_WAGERS.includes(normalizedWager as typeof TAVERN_GAMBLING_WAGERS[number])) {
+    return { state, success: false, message: "Choose one of the wagers on the table." };
+  }
+  if (state.character.gold < normalizedWager) {
+    return { state, success: false, message: `You need ${normalizedWager - state.character.gold} more Gold.` };
+  }
+
+  const attempts = Math.max(0, Math.floor(state.character.tavernGamblingAttempts ?? 0));
+  const threshold = TAVERN_GAMBLING_BASE_THRESHOLD + attempts * TAVERN_GAMBLING_DIFFICULTY_PER_ATTEMPT;
+  const dieRoll = Math.max(1, Math.min(100, Math.floor(random() * 100) + 1));
+  const luckBonus = getDerivedStats(state.character).luck;
+  const total = dieRoll + luckBonus;
+  const won = total >= threshold;
+  const goldChange = won ? normalizedWager : -normalizedWager;
+
+  return {
+    state: {
+      ...state,
+      character: {
+        ...state.character,
+        gold: state.character.gold + goldChange,
+        tavernGamblingAttempts: attempts + 1,
+      },
+    },
+    success: true,
+    message: won
+      ? `Fortune smiles. You win ${normalizedWager} Gold.`
+      : `The house takes your ${normalizedWager} Gold.`,
+    roll: { wager: normalizedWager, dieRoll, luckBonus, total, won, goldChange },
+  };
+}
+
+export function resetTavernGamblingAfterAdventure(character: CharacterState): CharacterState {
+  return character.tavernGamblingAttempts === 0 ? character : { ...character, tavernGamblingAttempts: 0 };
 }
