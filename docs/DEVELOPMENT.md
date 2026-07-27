@@ -334,7 +334,7 @@ The editor supports:
 
 ### What Save does
 
-Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/content/talents.ts` through the local Vite server. If the talent references an existing canonical ability, leaving its **Energy cost**, **Cooldown**, **Flat Damage per hit**, **Ability tooltip for players**, or either Power-percentage field writes that value directly to `src/game/content/abilities.ts`. These restricted field writes are independent of the Save button.
+Every editor change already auto-saves the draft to browser `localStorage` under the legacy compatibility key `emberfall.talent-devtool.v1`. The **Save** button performs the same browser-local write immediately and confirms it in the editor UI. For an existing canonical talent, leaving the **Talent tooltip for players** field writes that description directly to `src/game/content/talents.ts` through the local Vite server. If the talent references an existing canonical ability, **Energy cost** writes to `src/game/content/abilities.ts` shortly after each edit and flushes immediately when the field loses focus. Leaving its **Cooldown**, **Flat Damage per hit**, **Ability tooltip for players**, or either Power-percentage field writes that value directly to the same canonical ability source. These restricted field writes are independent of the Save button.
 
 The **Save** button itself does not:
 

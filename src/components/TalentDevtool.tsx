@@ -560,6 +560,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
   const draggingIdRef = useRef<string | null>(null);
   const zoomRef = useRef(DEFAULT_CANVAS_ZOOM);
   const panRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
+  const energyCostSyncTimerRef = useRef<number | null>(null);
   const selected = draft.nodes.find((node) => node.id === selectedId) ?? draft.nodes[0];
   const selectedLiveTalent = selected ? TALENTS.find((talent) => talent.id === selected.id) : undefined;
   const selectedLiveAbility = selected?.abilityId ? ABILITIES[selected.abilityId] : undefined;
@@ -572,6 +573,10 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     window.localStorage.setItem(TALENT_SNAP_STORAGE_KEY, String(snapToGrid));
   }, [snapToGrid]);
+
+  useEffect(() => () => {
+    if (energyCostSyncTimerRef.current !== null) window.clearTimeout(energyCostSyncTimerRef.current);
+  }, []);
 
   useEffect(() => {
     const scroller = canvasScrollRef.current;
@@ -623,6 +628,22 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The live source could not be updated");
     }
+  };
+
+  const scheduleEnergyCostSourceSync = (node: TalentDraftNode, energyCost: number) => {
+    if (energyCostSyncTimerRef.current !== null) window.clearTimeout(energyCostSyncTimerRef.current);
+    setMessage("Saving Energy cost…");
+    energyCostSyncTimerRef.current = window.setTimeout(() => {
+      energyCostSyncTimerRef.current = null;
+      void syncSelectedSource(node, { energyCost });
+    }, 350);
+  };
+
+  const flushEnergyCostSourceSync = (node: TalentDraftNode, energyCost: number) => {
+    if (energyCostSyncTimerRef.current === null) return;
+    window.clearTimeout(energyCostSyncTimerRef.current);
+    energyCostSyncTimerRef.current = null;
+    void syncSelectedSource(node, { energyCost });
   };
 
   const changeSelectedAbilityId = (abilityId: string) => {
@@ -950,7 +971,7 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
             <label className="talent-form-field"><span>Talent tooltip for players</span><textarea rows={3} value={selected.description} onChange={(event) => updateSelected({ description: event.target.value })} onBlur={(event) => void syncSelectedSource(selected, { talentDescription: event.currentTarget.value })} /></label>
             <p className="talent-source-sync-note">{selectedLiveTalent
               ? selected.abilityId
-                ? "Talent tooltip and all supported ability fields write to the live source when you leave the field."
+                ? "Energy cost writes to the live source as you edit it. Tooltips and other supported ability fields write when you leave the field."
                 : "The talent tooltip writes to the live source when you leave the field."
               : "This new talent is a local draft until it is implemented."}</p>
             <div className="talent-form-grid two-columns">
@@ -966,7 +987,11 @@ export function TalentDevtool({ onExit }: { onExit: () => void }) {
                 <>
                   <label className="talent-form-field"><span>Ability ID</span><input value={selected.abilityId} placeholder="e.g. crushingBlow" onChange={(event) => changeSelectedAbilityId(event.target.value)} /></label>
                   <div className="talent-form-grid two-columns">
-                    <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => updateSelected({ abilityEnergyCost: Math.max(0, Math.round(Number(event.target.value))) })} onBlur={(event) => void syncSelectedSource(selected, { energyCost: Math.max(0, Math.round(Number(event.currentTarget.value))) })} /></label>
+                    <label><span>Energy cost</span><input type="number" min={0} step={1} value={selected.abilityEnergyCost} onChange={(event) => {
+                      const energyCost = Math.max(0, Math.round(Number(event.target.value)));
+                      updateSelected({ abilityEnergyCost: energyCost });
+                      scheduleEnergyCostSourceSync(selected, energyCost);
+                    }} onBlur={(event) => flushEnergyCostSourceSync(selected, Math.max(0, Math.round(Number(event.currentTarget.value))))} /></label>
                     <label><span>Cooldown (turns)</span><input type="number" min={0} step={1} value={selected.abilityCooldownTurns} onChange={(event) => updateSelected({ abilityCooldownTurns: Math.max(0, Math.round(Number(event.target.value))) })} onBlur={(event) => void syncSelectedSource(selected, { cooldownTurns: Math.max(0, Math.round(Number(event.currentTarget.value))) })} /></label>
                   </div>
                   <label className="talent-form-field"><span>Attack range</span><select value={selected.abilityRange} onChange={(event) => updateSelected({ abilityRange: event.target.value as AbilityRange })}><option value="melee">Melee</option><option value="ranged">Ranged</option></select></label>

@@ -149,7 +149,7 @@ When the owner supplies Talent Editor JSON:
 6. Keep existing ability definitions, talent combat bundles, editor metadata, and all documentation synchronized.
 7. Verify every ability talent points to a real ability and every connection points to a real node.
 
-The Talent Editor's **Save** button only writes its browser-local draft. It does not edit the canonical modules under `src/game/content/`, update the runtime tree, or push Git changes. Separately, leaving the supported tooltip, Energy cost, cooldown, Flat Damage, and Physical/Spell Power percentage fields for an existing canonical talent/ability pair writes those specific fields through the restricted local Vite source-sync route.
+The Talent Editor's **Save** button only writes its browser-local draft. It does not edit the canonical modules under `src/game/content/`, update the runtime tree, or push Git changes. Separately, Energy cost uses a short debounced live write and flushes on blur for an existing canonical talent/ability pair. Leaving the supported tooltip, cooldown, Flat Damage, and Physical/Spell Power percentage fields writes those specific fields through the restricted local Vite source-sync route.
 
 ## Saves and compatibility
 
