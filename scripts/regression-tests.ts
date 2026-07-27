@@ -355,6 +355,8 @@ function testContentIntegrity() {
   lateAdventureExpectations.forEach(([id, level, stageCount, prerequisite]) => {
     const adventure = ADVENTURES.find((candidate) => candidate.id === id);
     assert.ok(adventure, `Missing late-game adventure ${id}.`);
+    const adventureNumber = lateAdventureExpectations.findIndex(([candidateId]) => candidateId === id) + 4;
+    const originalBaseExperience = 300 + (adventureNumber - 4) * 70;
     assert.equal(adventure.recommendedLevel, level, `${adventure.name} needs its intended level gate.`);
     assert.equal(adventure.stages.length, stageCount, `${adventure.name} needs the intended increasing stage count.`);
     assert.equal(adventure.prerequisiteAdventureId, prerequisite, `${adventure.name} must remain in the linear story chain.`);
@@ -367,6 +369,27 @@ function testContentIntegrity() {
     assert.equal(eventIds.size, 3, `${adventure.name} must offer three editable skill-check events.`);
     const finalEntries = adventure.stages.at(-1)?.entries ?? [];
     assert.ok(finalEntries.some((entry) => entry.type === "boss"), `${adventure.name} must end in a boss encounter.`);
+    adventure.stages.forEach((stage, stageIndex) => {
+      stage.entries.filter((entry) => entry.type === "combat" || entry.type === "boss").forEach((entry) => {
+        const originalExperience = entry.type === "boss"
+          ? originalBaseExperience * 3
+          : entry.id.endsWith("-b")
+            ? Math.floor(originalBaseExperience * 1.35) + stageIndex * 12
+            : originalBaseExperience + stageIndex * 12;
+        assert.equal(entry.reward.experience, Math.floor(originalExperience * 0.5), `${entry.id} must retain the 50% late-campaign enemy-XP reduction.`);
+      });
+    });
+    eventIds.forEach((eventId) => {
+      const event = ADVENTURE_EVENTS[eventId];
+      event.choices.forEach((choice) => {
+        [choice.success, choice.failure, choice.outcome].forEach((outcome) => {
+          (outcome?.effects ?? []).filter((effect) => effect.type === "immediateEncounter").forEach((effect) => {
+            const originalExperience = eventId.endsWith("-relic") ? 120 + adventureNumber * 25 : 130 + adventureNumber * 25;
+            assert.equal(effect.experience, Math.floor(originalExperience * 0.5), `${eventId}'s immediate enemy encounter must retain the 50% XP reduction.`);
+          });
+        });
+      });
+    });
   });
   const lateEnemies = Object.values(ENEMIES).filter((enemy) => /^enemy-a(?:[4-9]|1[0-2])-/.test(enemy.id));
   assert.equal(lateEnemies.length, 63, "Adventures 4 through 12 need seven new enemies each.");

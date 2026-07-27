@@ -630,6 +630,10 @@ function outcome(text, effects) {
   return { text, effects };
 }
 
+function lateCombatExperience(value) {
+  return Math.floor(value * 0.5);
+}
+
 function buildEvents(spec) {
   const [firstMaterial, secondMaterial, thirdMaterial] = spec.materials.map(([slug]) => materialId(spec, slug));
   const enemy = enemyId(spec, spec.enemies[1][0]);
@@ -650,7 +654,7 @@ function buildEvents(spec) {
       description: "An old relic hums with a warning and a promise.",
       choices: [
         { id: `choice-a${spec.number}-relic-intelligence`, label: "Study the relic", description: "Read the pattern before touching it.", resolution: "check", stat: "intelligence", threshold: threshold + 2, success: outcome("The relic yields its secret without resistance.", [{ type: "gainExperience", amount: 130 + spec.number * 24 }, { type: "gainItem", itemId: secondMaterial }]), failure: outcome("The relic answers with a hostile pulse.", [{ type: "loseHealth", amount: 12 + spec.number * 3 }, { type: "enemiesNextCombatBuff", status: "fierce", stacks: 1 }]) },
-        { id: `choice-a${spec.number}-relic-luck`, label: "Reach through the ward", description: "Trust the relic to choose kindly.", resolution: "check", stat: "luck", threshold: threshold + 5, success: outcome("Fortune turns the ward aside.", [{ type: "gainGold", amount: 24 + spec.number * 4 }, { type: "gainItem", itemId: secondMaterial }]), failure: outcome("The ward marks you for the guardians.", [{ type: "immediateEncounter", enemyId: enemy, count: 1, experience: 120 + spec.number * 25, gold: 15 + spec.number * 2 }]) },
+        { id: `choice-a${spec.number}-relic-luck`, label: "Reach through the ward", description: "Trust the relic to choose kindly.", resolution: "check", stat: "luck", threshold: threshold + 5, success: outcome("Fortune turns the ward aside.", [{ type: "gainGold", amount: 24 + spec.number * 4 }, { type: "gainItem", itemId: secondMaterial }]), failure: outcome("The ward marks you for the guardians.", [{ type: "immediateEncounter", enemyId: enemy, count: 1, experience: lateCombatExperience(120 + spec.number * 25), gold: 15 + spec.number * 2 }]) },
         { id: `choice-a${spec.number}-relic-leave`, label: "Leave it untouched", description: "Some warnings deserve respect.", resolution: "direct", stat: "vitality", threshold: 0, success: outcome("", []), failure: outcome("", []), outcome: outcome("The relic's whisper fades behind you.", []) },
       ],
     },
@@ -658,7 +662,7 @@ function buildEvents(spec) {
       id: `event-a${spec.number}-refuge`, name: `Last Refuge of ${spec.name}`, eyebrow: "Abandoned Shelter",
       description: "A barricaded shelter still holds supplies, but something scratches beyond its far wall.",
       choices: [
-        { id: `choice-a${spec.number}-refuge-vitality`, label: "Clear the shelter", description: "Hold the entrance while searching every corner.", resolution: "check", stat: "vitality", threshold, success: outcome("You secure the refuge and recover in safety.", [{ type: "heal", amount: 30 + spec.number * 5 }, { type: "gainItem", itemId: thirdMaterial }]), failure: outcome("The shelter collapses into a frantic fight.", [{ type: "loseHealth", amount: 18 + spec.number * 3 }, { type: "immediateEncounter", enemyId: enemy, count: 1, experience: 130 + spec.number * 25, gold: 16 + spec.number * 2 }]) },
+        { id: `choice-a${spec.number}-refuge-vitality`, label: "Clear the shelter", description: "Hold the entrance while searching every corner.", resolution: "check", stat: "vitality", threshold, success: outcome("You secure the refuge and recover in safety.", [{ type: "heal", amount: 30 + spec.number * 5 }, { type: "gainItem", itemId: thirdMaterial }]), failure: outcome("The shelter collapses into a frantic fight.", [{ type: "loseHealth", amount: 18 + spec.number * 3 }, { type: "immediateEncounter", enemyId: enemy, count: 1, experience: lateCombatExperience(130 + spec.number * 25), gold: 16 + spec.number * 2 }]) },
         { id: `choice-a${spec.number}-refuge-luck`, label: "Search the loose stones", description: "Look for the cache survivors would hide.", resolution: "check", stat: "luck", threshold: threshold + 4, success: outcome("Your hand finds a sealed emergency cache.", [{ type: "gainGold", amount: 28 + spec.number * 5 }, { type: "gainItem", itemId: firstMaterial }]), failure: outcome("You disturb what was nesting in the wall.", [{ type: "playerNextCombatDebuff", status: eventDebuff, stacks: 1 }, { type: "loseHealth", amount: 8 + spec.number * 2 }]) },
         { id: `choice-a${spec.number}-refuge-rest`, label: "Rest by the entrance", description: "Take only the safety you can confirm.", resolution: "direct", stat: "vitality", threshold: 0, success: outcome("", []), failure: outcome("", []), outcome: outcome("A short rest steadies you.", [{ type: "heal", amount: 12 + spec.number * 3 }]) },
       ],
@@ -680,7 +684,7 @@ function buildAdventure(spec, itemIds) {
         id: `a${spec.number}-stage-${number}`, name: `Heart of ${spec.name}`, entries: [{
           id: `a${spec.number}-boss`, type: "boss", chance: 100, eyebrow: "Boss Encounter", title: spec.enemies[6][1],
           description: `${spec.enemies[6][1]} bars the final path. Read the setup, survive the charged attack, and punish the recovery window.`,
-          enemyIds: [bossId, regularIds[4], regularIds[5]], reward: { experience: baseXp * 3, gold: baseGold * 4 },
+          enemyIds: [bossId, regularIds[4], regularIds[5]], reward: { experience: lateCombatExperience(baseXp * 3), gold: baseGold * 4 },
         }], dropTable: [{ itemId: itemIds.weapons[0], chance: 8 }, { itemId: itemIds.materials[1], chance: 100 }],
       };
     }
@@ -698,12 +702,12 @@ function buildAdventure(spec, itemIds) {
     const entries = [{
       id: `a${spec.number}-combat-${number}-a`, type: "combat", chance: index % 4 === 1 ? 65 : 100, eyebrow: "Encounter",
       title: `${spec.enemies[index % 6][1]} Ambush`, description: `The path through ${spec.name} closes behind you.`,
-      enemyIds, reward: { experience: baseXp + index * 12, gold: baseGold + Math.floor(index / 2) },
+      enemyIds, reward: { experience: lateCombatExperience(baseXp + index * 12), gold: baseGold + Math.floor(index / 2) },
     }];
     if (index % 4 === 1) entries.push({
       id: `a${spec.number}-combat-${number}-b`, type: "combat", chance: 35, eyebrow: "Elite Encounter",
       title: "Coordinated Hunters", description: `A dangerous group has prepared the ground in ${spec.name}.`,
-      enemyIds: [first, regularIds[(index + 3) % 6], regularIds[(index + 4) % 6]], reward: { experience: Math.floor(baseXp * 1.35) + index * 12, gold: Math.floor(baseGold * 1.4) },
+      enemyIds: [first, regularIds[(index + 3) % 6], regularIds[(index + 4) % 6]], reward: { experience: lateCombatExperience(Math.floor(baseXp * 1.35) + index * 12), gold: Math.floor(baseGold * 1.4) },
     });
     return {
       id: `a${spec.number}-stage-${number}`, name: `${spec.name.split(" ")[0]} Passage ${number}`, entries,

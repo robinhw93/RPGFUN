@@ -673,7 +673,7 @@ The Highfall events are **The Sheltered Spring**, **Stormbound Camp**, **The Fro
 
 ## Late-campaign adventures
 
-Adventures 4–12 form one linear route after Highfall Mountains. Each has three canonical events: a dangerous shortcut, a forgotten relic, and an abandoned refuge. Every event offers two increasing d100 checks and one safe direct choice. Successful checks award experience, Gold, healing, or local materials; failure can remove Health, apply a next-combat debuff, strengthen enemies, or launch an immediate encounter. The exact choices, thresholds, effects, stages, encounter weights, and rewards are stored in `ADVENTURE_EVENTS` and `ADVENTURES` and are editable through Event Manager and Adventure Editor.
+Adventures 4–12 form one linear route after Highfall Mountains. Each has three canonical events: a dangerous shortcut, a forgotten relic, and an abandoned refuge. Every event offers two increasing d100 checks and one safe direct choice. Successful checks award experience, Gold, healing, or local materials; failure can remove Health, apply a next-combat debuff, strengthen enemies, or launch an immediate encounter. Every normal combat, boss, and event-triggered immediate encounter in this route now grants exactly 50% of its original enemy XP, rounded down. For reference, Mirefen's opening combat now grants 150 XP and its boss grants 450 XP; The World Below opens at 430 XP and ends with 1,290 boss XP. Direct event XP and quest rewards are unchanged. The exact choices, thresholds, effects, stages, encounter weights, and rewards are stored in `ADVENTURE_EVENTS` and `ADVENTURES` and are editable through Event Manager and Adventure Editor.
 
 | Adventure | Recommended level | Stages | Main tactics | Final boss |
 | --- | ---: | ---: | --- | --- |

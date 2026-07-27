@@ -1201,7 +1201,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a4-bog-leech",
               "count": 1,
-              "experience": 220,
+              "experience": 110,
               "gold": 23
             }
           ]
@@ -1266,7 +1266,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a4-bog-leech",
               "count": 1,
-              "experience": 230,
+              "experience": 115,
               "gold": 24
             }
           ]
@@ -1500,7 +1500,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a5-cinder-smith",
               "count": 1,
-              "experience": 245,
+              "experience": 122,
               "gold": 25
             }
           ]
@@ -1565,7 +1565,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a5-cinder-smith",
               "count": 1,
-              "experience": 255,
+              "experience": 127,
               "gold": 26
             }
           ]
@@ -1799,7 +1799,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a6-drowned-acolyte",
               "count": 1,
-              "experience": 270,
+              "experience": 135,
               "gold": 27
             }
           ]
@@ -1864,7 +1864,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a6-drowned-acolyte",
               "count": 1,
-              "experience": 280,
+              "experience": 140,
               "gold": 28
             }
           ]
@@ -2098,7 +2098,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a7-gloom-archer",
               "count": 1,
-              "experience": 295,
+              "experience": 147,
               "gold": 29
             }
           ]
@@ -2163,7 +2163,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a7-gloom-archer",
               "count": 1,
-              "experience": 305,
+              "experience": 152,
               "gold": 30
             }
           ]
@@ -2397,7 +2397,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a8-icebound-raider",
               "count": 1,
-              "experience": 320,
+              "experience": 160,
               "gold": 31
             }
           ]
@@ -2462,7 +2462,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a8-icebound-raider",
               "count": 1,
-              "experience": 330,
+              "experience": 165,
               "gold": 32
             }
           ]
@@ -2696,7 +2696,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a9-spire-zealot",
               "count": 1,
-              "experience": 345,
+              "experience": 172,
               "gold": 33
             }
           ]
@@ -2761,7 +2761,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a9-spire-zealot",
               "count": 1,
-              "experience": 355,
+              "experience": 177,
               "gold": 34
             }
           ]
@@ -2995,7 +2995,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a10-ashen-confessor",
               "count": 1,
-              "experience": 370,
+              "experience": 185,
               "gold": 35
             }
           ]
@@ -3060,7 +3060,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a10-ashen-confessor",
               "count": 1,
-              "experience": 380,
+              "experience": 190,
               "gold": 36
             }
           ]
@@ -3294,7 +3294,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a11-glasswing-moth",
               "count": 1,
-              "experience": 395,
+              "experience": 197,
               "gold": 37
             }
           ]
@@ -3359,7 +3359,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a11-glasswing-moth",
               "count": 1,
-              "experience": 405,
+              "experience": 202,
               "gold": 38
             }
           ]
@@ -3593,7 +3593,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a12-pale-burrower",
               "count": 1,
-              "experience": 420,
+              "experience": 210,
               "gold": 39
             }
           ]
@@ -3658,7 +3658,7 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
               "type": "immediateEncounter",
               "enemyId": "enemy-a12-pale-burrower",
               "count": 1,
-              "experience": 430,
+              "experience": 215,
               "gold": 40
             }
           ]
@@ -4599,7 +4599,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-reed-stalker"
             ],
             "reward": {
-              "experience": 300,
+              "experience": 150,
               "gold": 20
             }
           }
@@ -4626,7 +4626,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-bog-leech"
             ],
             "reward": {
-              "experience": 312,
+              "experience": 156,
               "gold": 20
             }
           },
@@ -4643,7 +4643,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-brood-guard"
             ],
             "reward": {
-              "experience": 417,
+              "experience": 208,
               "gold": 28
             }
           }
@@ -4686,7 +4686,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-brood-guard"
             ],
             "reward": {
-              "experience": 336,
+              "experience": 168,
               "gold": 21
             }
           }
@@ -4709,7 +4709,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-reed-stalker"
             ],
             "reward": {
-              "experience": 348,
+              "experience": 174,
               "gold": 22
             }
           }
@@ -4732,7 +4732,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-bog-leech"
             ],
             "reward": {
-              "experience": 360,
+              "experience": 180,
               "gold": 22
             }
           },
@@ -4749,7 +4749,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-drowned-warden"
             ],
             "reward": {
-              "experience": 465,
+              "experience": 232,
               "gold": 28
             }
           }
@@ -4798,7 +4798,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-brood-guard"
             ],
             "reward": {
-              "experience": 384,
+              "experience": 192,
               "gold": 23
             }
           }
@@ -4822,7 +4822,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-reed-stalker"
             ],
             "reward": {
-              "experience": 396,
+              "experience": 198,
               "gold": 24
             }
           }
@@ -4866,7 +4866,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-mirefen-spitter"
             ],
             "reward": {
-              "experience": 420,
+              "experience": 210,
               "gold": 25
             }
           }
@@ -4895,7 +4895,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a4-brood-guard"
             ],
             "reward": {
-              "experience": 900,
+              "experience": 450,
               "gold": 80
             }
           }
@@ -4941,7 +4941,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-ash-hound"
             ],
             "reward": {
-              "experience": 370,
+              "experience": 185,
               "gold": 28
             }
           }
@@ -4968,7 +4968,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-cinder-smith"
             ],
             "reward": {
-              "experience": 382,
+              "experience": 191,
               "gold": 28
             }
           },
@@ -4985,7 +4985,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-spark-swarm"
             ],
             "reward": {
-              "experience": 511,
+              "experience": 255,
               "gold": 39
             }
           }
@@ -5028,7 +5028,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-spark-swarm"
             ],
             "reward": {
-              "experience": 406,
+              "experience": 203,
               "gold": 29
             }
           }
@@ -5051,7 +5051,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-ash-hound"
             ],
             "reward": {
-              "experience": 418,
+              "experience": 209,
               "gold": 30
             }
           }
@@ -5074,7 +5074,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-cinder-smith"
             ],
             "reward": {
-              "experience": 430,
+              "experience": 215,
               "gold": 30
             }
           },
@@ -5091,7 +5091,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-furnace-acolyte"
             ],
             "reward": {
-              "experience": 559,
+              "experience": 279,
               "gold": 39
             }
           }
@@ -5140,7 +5140,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-spark-swarm"
             ],
             "reward": {
-              "experience": 454,
+              "experience": 227,
               "gold": 31
             }
           }
@@ -5164,7 +5164,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-ash-hound"
             ],
             "reward": {
-              "experience": 466,
+              "experience": 233,
               "gold": 32
             }
           }
@@ -5188,7 +5188,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-cinder-smith"
             ],
             "reward": {
-              "experience": 478,
+              "experience": 239,
               "gold": 32
             }
           },
@@ -5205,7 +5205,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-cinder-smith"
             ],
             "reward": {
-              "experience": 607,
+              "experience": 303,
               "gold": 39
             }
           }
@@ -5249,7 +5249,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-furnace-acolyte"
             ],
             "reward": {
-              "experience": 502,
+              "experience": 251,
               "gold": 33
             }
           }
@@ -5273,7 +5273,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a5-spark-swarm"
             ],
             "reward": {
-              "experience": 1110,
+              "experience": 555,
               "gold": 112
             }
           }
@@ -5319,7 +5319,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-brine-crawler"
             ],
             "reward": {
-              "experience": 440,
+              "experience": 220,
               "gold": 36
             }
           }
@@ -5346,7 +5346,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-drowned-acolyte"
             ],
             "reward": {
-              "experience": 452,
+              "experience": 226,
               "gold": 36
             }
           },
@@ -5363,7 +5363,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-siren-oracle"
             ],
             "reward": {
-              "experience": 606,
+              "experience": 303,
               "gold": 50
             }
           }
@@ -5406,7 +5406,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-siren-oracle"
             ],
             "reward": {
-              "experience": 476,
+              "experience": 238,
               "gold": 37
             }
           }
@@ -5429,7 +5429,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-brine-crawler"
             ],
             "reward": {
-              "experience": 488,
+              "experience": 244,
               "gold": 38
             }
           }
@@ -5452,7 +5452,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-drowned-acolyte"
             ],
             "reward": {
-              "experience": 500,
+              "experience": 250,
               "gold": 38
             }
           },
@@ -5469,7 +5469,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-shock-eel"
             ],
             "reward": {
-              "experience": 654,
+              "experience": 327,
               "gold": 50
             }
           }
@@ -5498,7 +5498,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-tidebound-knight"
             ],
             "reward": {
-              "experience": 512,
+              "experience": 256,
               "gold": 39
             }
           }
@@ -5542,7 +5542,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-brine-crawler"
             ],
             "reward": {
-              "experience": 536,
+              "experience": 268,
               "gold": 40
             }
           }
@@ -5566,7 +5566,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-drowned-acolyte"
             ],
             "reward": {
-              "experience": 548,
+              "experience": 274,
               "gold": 40
             }
           },
@@ -5583,7 +5583,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-drowned-acolyte"
             ],
             "reward": {
-              "experience": 702,
+              "experience": 351,
               "gold": 50
             }
           }
@@ -5607,7 +5607,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-relic-sentinel"
             ],
             "reward": {
-              "experience": 560,
+              "experience": 280,
               "gold": 41
             }
           }
@@ -5656,7 +5656,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-tidebound-knight"
             ],
             "reward": {
-              "experience": 584,
+              "experience": 292,
               "gold": 42
             }
           }
@@ -5680,7 +5680,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a6-siren-oracle"
             ],
             "reward": {
-              "experience": 1320,
+              "experience": 660,
               "gold": 144
             }
           }
@@ -5726,7 +5726,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-mirror-stalker"
             ],
             "reward": {
-              "experience": 510,
+              "experience": 255,
               "gold": 44
             }
           }
@@ -5753,7 +5753,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-gloom-archer"
             ],
             "reward": {
-              "experience": 522,
+              "experience": 261,
               "gold": 44
             }
           },
@@ -5770,7 +5770,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-reflection-wraith"
             ],
             "reward": {
-              "experience": 700,
+              "experience": 350,
               "gold": 61
             }
           }
@@ -5813,7 +5813,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-reflection-wraith"
             ],
             "reward": {
-              "experience": 546,
+              "experience": 273,
               "gold": 45
             }
           }
@@ -5836,7 +5836,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-mirror-stalker"
             ],
             "reward": {
-              "experience": 558,
+              "experience": 279,
               "gold": 46
             }
           }
@@ -5859,7 +5859,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-gloom-archer"
             ],
             "reward": {
-              "experience": 570,
+              "experience": 285,
               "gold": 46
             }
           },
@@ -5876,7 +5876,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-shard-magus"
             ],
             "reward": {
-              "experience": 748,
+              "experience": 374,
               "gold": 61
             }
           }
@@ -5905,7 +5905,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-veil-dancer"
             ],
             "reward": {
-              "experience": 582,
+              "experience": 291,
               "gold": 47
             }
           }
@@ -5949,7 +5949,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-mirror-stalker"
             ],
             "reward": {
-              "experience": 606,
+              "experience": 303,
               "gold": 48
             }
           }
@@ -5973,7 +5973,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-gloom-archer"
             ],
             "reward": {
-              "experience": 618,
+              "experience": 309,
               "gold": 48
             }
           },
@@ -5990,7 +5990,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-gloom-archer"
             ],
             "reward": {
-              "experience": 796,
+              "experience": 398,
               "gold": 61
             }
           }
@@ -6014,7 +6014,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-bloodbound-knight"
             ],
             "reward": {
-              "experience": 630,
+              "experience": 315,
               "gold": 49
             }
           }
@@ -6043,7 +6043,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-shard-magus"
             ],
             "reward": {
-              "experience": 642,
+              "experience": 321,
               "gold": 49
             }
           }
@@ -6087,7 +6087,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-reflection-wraith"
             ],
             "reward": {
-              "experience": 666,
+              "experience": 333,
               "gold": 50
             }
           },
@@ -6104,7 +6104,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-reflection-wraith"
             ],
             "reward": {
-              "experience": 844,
+              "experience": 422,
               "gold": 61
             }
           }
@@ -6128,7 +6128,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a7-reflection-wraith"
             ],
             "reward": {
-              "experience": 1530,
+              "experience": 765,
               "gold": 176
             }
           }
@@ -6174,7 +6174,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-rime-wolf"
             ],
             "reward": {
-              "experience": 580,
+              "experience": 290,
               "gold": 52
             }
           }
@@ -6201,7 +6201,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-icebound-raider"
             ],
             "reward": {
-              "experience": 592,
+              "experience": 296,
               "gold": 52
             }
           },
@@ -6218,7 +6218,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-snowblind-harrier"
             ],
             "reward": {
-              "experience": 795,
+              "experience": 397,
               "gold": 72
             }
           }
@@ -6260,7 +6260,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-frost-hermit"
             ],
             "reward": {
-              "experience": 616,
+              "experience": 308,
               "gold": 53
             }
           }
@@ -6283,7 +6283,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-rime-wolf"
             ],
             "reward": {
-              "experience": 628,
+              "experience": 314,
               "gold": 54
             }
           }
@@ -6306,7 +6306,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-icebound-raider"
             ],
             "reward": {
-              "experience": 640,
+              "experience": 320,
               "gold": 54
             }
           },
@@ -6323,7 +6323,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-frost-hermit"
             ],
             "reward": {
-              "experience": 843,
+              "experience": 421,
               "gold": 72
             }
           }
@@ -6351,7 +6351,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-aurora-wisp"
             ],
             "reward": {
-              "experience": 652,
+              "experience": 326,
               "gold": 55
             }
           }
@@ -6374,7 +6374,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-frost-hermit"
             ],
             "reward": {
-              "experience": 664,
+              "experience": 332,
               "gold": 55
             }
           }
@@ -6418,7 +6418,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-icebound-raider"
             ],
             "reward": {
-              "experience": 688,
+              "experience": 344,
               "gold": 56
             }
           },
@@ -6435,7 +6435,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-icebound-raider"
             ],
             "reward": {
-              "experience": 891,
+              "experience": 445,
               "gold": 72
             }
           }
@@ -6459,7 +6459,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-aurora-wisp"
             ],
             "reward": {
-              "experience": 700,
+              "experience": 350,
               "gold": 57
             }
           }
@@ -6488,7 +6488,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-frost-hermit"
             ],
             "reward": {
-              "experience": 712,
+              "experience": 356,
               "gold": 57
             }
           }
@@ -6512,7 +6512,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-glacier-golem"
             ],
             "reward": {
-              "experience": 724,
+              "experience": 362,
               "gold": 58
             }
           }
@@ -6556,7 +6556,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-rime-wolf"
             ],
             "reward": {
-              "experience": 748,
+              "experience": 374,
               "gold": 59
             }
           }
@@ -6580,7 +6580,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a8-snowblind-harrier"
             ],
             "reward": {
-              "experience": 1740,
+              "experience": 870,
               "gold": 208
             }
           }
@@ -6626,7 +6626,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-thunder-talon"
             ],
             "reward": {
-              "experience": 650,
+              "experience": 325,
               "gold": 60
             }
           }
@@ -6653,7 +6653,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-spire-zealot"
             ],
             "reward": {
-              "experience": 662,
+              "experience": 331,
               "gold": 60
             }
           },
@@ -6670,7 +6670,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-chainwing-matron"
             ],
             "reward": {
-              "experience": 889,
+              "experience": 444,
               "gold": 84
             }
           }
@@ -6712,7 +6712,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-cloud-djinn"
             ],
             "reward": {
-              "experience": 686,
+              "experience": 343,
               "gold": 61
             }
           }
@@ -6735,7 +6735,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-thunder-talon"
             ],
             "reward": {
-              "experience": 698,
+              "experience": 349,
               "gold": 62
             }
           }
@@ -6758,7 +6758,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-spire-zealot"
             ],
             "reward": {
-              "experience": 710,
+              "experience": 355,
               "gold": 62
             }
           },
@@ -6775,7 +6775,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-cloud-djinn"
             ],
             "reward": {
-              "experience": 937,
+              "experience": 468,
               "gold": 84
             }
           }
@@ -6803,7 +6803,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-storm-channeler"
             ],
             "reward": {
-              "experience": 722,
+              "experience": 361,
               "gold": 63
             }
           }
@@ -6826,7 +6826,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-cloud-djinn"
             ],
             "reward": {
-              "experience": 734,
+              "experience": 367,
               "gold": 63
             }
           }
@@ -6870,7 +6870,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-spire-zealot"
             ],
             "reward": {
-              "experience": 758,
+              "experience": 379,
               "gold": 64
             }
           },
@@ -6887,7 +6887,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-spire-zealot"
             ],
             "reward": {
-              "experience": 985,
+              "experience": 492,
               "gold": 84
             }
           }
@@ -6911,7 +6911,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-storm-channeler"
             ],
             "reward": {
-              "experience": 770,
+              "experience": 385,
               "gold": 65
             }
           }
@@ -6940,7 +6940,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-cloud-djinn"
             ],
             "reward": {
-              "experience": 782,
+              "experience": 391,
               "gold": 65
             }
           }
@@ -6964,7 +6964,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-thunderhead-colossus"
             ],
             "reward": {
-              "experience": 794,
+              "experience": 397,
               "gold": 66
             }
           }
@@ -6988,7 +6988,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-chainwing-matron"
             ],
             "reward": {
-              "experience": 806,
+              "experience": 403,
               "gold": 66
             }
           },
@@ -7005,7 +7005,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-chainwing-matron"
             ],
             "reward": {
-              "experience": 1033,
+              "experience": 516,
               "gold": 84
             }
           }
@@ -7049,7 +7049,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-spire-zealot"
             ],
             "reward": {
-              "experience": 830,
+              "experience": 415,
               "gold": 67
             }
           }
@@ -7078,7 +7078,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a9-chainwing-matron"
             ],
             "reward": {
-              "experience": 1950,
+              "experience": 975,
               "gold": 240
             }
           }
@@ -7124,7 +7124,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-crownless-guard"
             ],
             "reward": {
-              "experience": 720,
+              "experience": 360,
               "gold": 68
             }
           }
@@ -7151,7 +7151,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-ashen-confessor"
             ],
             "reward": {
-              "experience": 732,
+              "experience": 366,
               "gold": 68
             }
           },
@@ -7168,7 +7168,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-royal-shadow"
             ],
             "reward": {
-              "experience": 984,
+              "experience": 492,
               "gold": 95
             }
           }
@@ -7210,7 +7210,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-hollow-courtier"
             ],
             "reward": {
-              "experience": 756,
+              "experience": 378,
               "gold": 69
             }
           }
@@ -7233,7 +7233,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-crownless-guard"
             ],
             "reward": {
-              "experience": 768,
+              "experience": 384,
               "gold": 70
             }
           }
@@ -7256,7 +7256,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-ashen-confessor"
             ],
             "reward": {
-              "experience": 780,
+              "experience": 390,
               "gold": 70
             }
           },
@@ -7273,7 +7273,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-hollow-courtier"
             ],
             "reward": {
-              "experience": 1032,
+              "experience": 516,
               "gold": 95
             }
           }
@@ -7301,7 +7301,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-veilbound-executioner"
             ],
             "reward": {
-              "experience": 792,
+              "experience": 396,
               "gold": 71
             }
           }
@@ -7324,7 +7324,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-hollow-courtier"
             ],
             "reward": {
-              "experience": 804,
+              "experience": 402,
               "gold": 71
             }
           }
@@ -7348,7 +7348,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-crownless-guard"
             ],
             "reward": {
-              "experience": 816,
+              "experience": 408,
               "gold": 72
             }
           }
@@ -7392,7 +7392,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-veilbound-executioner"
             ],
             "reward": {
-              "experience": 840,
+              "experience": 420,
               "gold": 73
             }
           }
@@ -7421,7 +7421,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-hollow-courtier"
             ],
             "reward": {
-              "experience": 852,
+              "experience": 426,
               "gold": 73
             }
           }
@@ -7445,7 +7445,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-crown-seraph"
             ],
             "reward": {
-              "experience": 864,
+              "experience": 432,
               "gold": 74
             }
           }
@@ -7469,7 +7469,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-royal-shadow"
             ],
             "reward": {
-              "experience": 876,
+              "experience": 438,
               "gold": 74
             }
           },
@@ -7486,7 +7486,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-royal-shadow"
             ],
             "reward": {
-              "experience": 1128,
+              "experience": 564,
               "gold": 95
             }
           }
@@ -7510,7 +7510,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-crownless-guard"
             ],
             "reward": {
-              "experience": 888,
+              "experience": 444,
               "gold": 75
             }
           }
@@ -7554,7 +7554,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-veilbound-executioner"
             ],
             "reward": {
-              "experience": 912,
+              "experience": 456,
               "gold": 76
             }
           }
@@ -7578,7 +7578,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a10-royal-shadow"
             ],
             "reward": {
-              "experience": 2160,
+              "experience": 1080,
               "gold": 272
             }
           }
@@ -7624,7 +7624,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-starved-pilgrim"
             ],
             "reward": {
-              "experience": 790,
+              "experience": 395,
               "gold": 76
             }
           }
@@ -7651,7 +7651,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-glasswing-moth"
             ],
             "reward": {
-              "experience": 802,
+              "experience": 401,
               "gold": 76
             }
           },
@@ -7668,7 +7668,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-astral-devourer"
             ],
             "reward": {
-              "experience": 1078,
+              "experience": 539,
               "gold": 106
             }
           }
@@ -7710,7 +7710,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-comet-hound"
             ],
             "reward": {
-              "experience": 826,
+              "experience": 413,
               "gold": 77
             }
           }
@@ -7732,7 +7732,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-gravity-warden"
             ],
             "reward": {
-              "experience": 838,
+              "experience": 419,
               "gold": 78
             }
           }
@@ -7755,7 +7755,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-glasswing-moth"
             ],
             "reward": {
-              "experience": 850,
+              "experience": 425,
               "gold": 78
             }
           },
@@ -7772,7 +7772,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-comet-hound"
             ],
             "reward": {
-              "experience": 1126,
+              "experience": 563,
               "gold": 106
             }
           }
@@ -7800,7 +7800,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-fallen-astrologer"
             ],
             "reward": {
-              "experience": 862,
+              "experience": 431,
               "gold": 79
             }
           }
@@ -7823,7 +7823,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-comet-hound"
             ],
             "reward": {
-              "experience": 874,
+              "experience": 437,
               "gold": 79
             }
           }
@@ -7846,7 +7846,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-gravity-warden"
             ],
             "reward": {
-              "experience": 886,
+              "experience": 443,
               "gold": 80
             }
           }
@@ -7869,7 +7869,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-astral-devourer"
             ],
             "reward": {
-              "experience": 898,
+              "experience": 449,
               "gold": 80
             }
           },
@@ -7886,7 +7886,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-glasswing-moth"
             ],
             "reward": {
-              "experience": 1174,
+              "experience": 587,
               "gold": 106
             }
           }
@@ -7930,7 +7930,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-comet-hound"
             ],
             "reward": {
-              "experience": 922,
+              "experience": 461,
               "gold": 81
             }
           }
@@ -7954,7 +7954,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-gravity-warden"
             ],
             "reward": {
-              "experience": 934,
+              "experience": 467,
               "gold": 82
             }
           }
@@ -7978,7 +7978,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-astral-devourer"
             ],
             "reward": {
-              "experience": 946,
+              "experience": 473,
               "gold": 82
             }
           },
@@ -7995,7 +7995,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-astral-devourer"
             ],
             "reward": {
-              "experience": 1222,
+              "experience": 611,
               "gold": 106
             }
           }
@@ -8019,7 +8019,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-starved-pilgrim"
             ],
             "reward": {
-              "experience": 958,
+              "experience": 479,
               "gold": 83
             }
           }
@@ -8043,7 +8043,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-glasswing-moth"
             ],
             "reward": {
-              "experience": 970,
+              "experience": 485,
               "gold": 83
             }
           }
@@ -8072,7 +8072,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-fallen-astrologer"
             ],
             "reward": {
-              "experience": 982,
+              "experience": 491,
               "gold": 84
             }
           }
@@ -8116,7 +8116,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-gravity-warden"
             ],
             "reward": {
-              "experience": 1006,
+              "experience": 503,
               "gold": 85
             }
           }
@@ -8140,7 +8140,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a11-astral-devourer"
             ],
             "reward": {
-              "experience": 2370,
+              "experience": 1185,
               "gold": 304
             }
           }
@@ -8186,7 +8186,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-rootless-titan"
             ],
             "reward": {
-              "experience": 860,
+              "experience": 430,
               "gold": 84
             }
           }
@@ -8213,7 +8213,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-pale-burrower"
             ],
             "reward": {
-              "experience": 872,
+              "experience": 436,
               "gold": 84
             }
           },
@@ -8230,7 +8230,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-abyssal-choir"
             ],
             "reward": {
-              "experience": 1173,
+              "experience": 586,
               "gold": 117
             }
           }
@@ -8272,7 +8272,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-worldvein-elemental"
             ],
             "reward": {
-              "experience": 896,
+              "experience": 448,
               "gold": 85
             }
           }
@@ -8294,7 +8294,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-firstborn-shade"
             ],
             "reward": {
-              "experience": 908,
+              "experience": 454,
               "gold": 86
             }
           }
@@ -8317,7 +8317,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-pale-burrower"
             ],
             "reward": {
-              "experience": 920,
+              "experience": 460,
               "gold": 86
             }
           },
@@ -8334,7 +8334,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-worldvein-elemental"
             ],
             "reward": {
-              "experience": 1221,
+              "experience": 610,
               "gold": 117
             }
           }
@@ -8362,7 +8362,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-deep-oracle"
             ],
             "reward": {
-              "experience": 932,
+              "experience": 466,
               "gold": 87
             }
           }
@@ -8385,7 +8385,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-worldvein-elemental"
             ],
             "reward": {
-              "experience": 944,
+              "experience": 472,
               "gold": 87
             }
           }
@@ -8408,7 +8408,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-firstborn-shade"
             ],
             "reward": {
-              "experience": 956,
+              "experience": 478,
               "gold": 88
             }
           }
@@ -8431,7 +8431,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-abyssal-choir"
             ],
             "reward": {
-              "experience": 968,
+              "experience": 484,
               "gold": 88
             }
           },
@@ -8448,7 +8448,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-pale-burrower"
             ],
             "reward": {
-              "experience": 1269,
+              "experience": 634,
               "gold": 117
             }
           }
@@ -8472,7 +8472,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-deep-oracle"
             ],
             "reward": {
-              "experience": 980,
+              "experience": 490,
               "gold": 89
             }
           }
@@ -8521,7 +8521,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-firstborn-shade"
             ],
             "reward": {
-              "experience": 1004,
+              "experience": 502,
               "gold": 90
             }
           }
@@ -8545,7 +8545,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-abyssal-choir"
             ],
             "reward": {
-              "experience": 1016,
+              "experience": 508,
               "gold": 90
             }
           },
@@ -8562,7 +8562,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-abyssal-choir"
             ],
             "reward": {
-              "experience": 1317,
+              "experience": 658,
               "gold": 117
             }
           }
@@ -8586,7 +8586,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-rootless-titan"
             ],
             "reward": {
-              "experience": 1028,
+              "experience": 514,
               "gold": 91
             }
           }
@@ -8610,7 +8610,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-pale-burrower"
             ],
             "reward": {
-              "experience": 1040,
+              "experience": 520,
               "gold": 91
             }
           }
@@ -8639,7 +8639,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-deep-oracle"
             ],
             "reward": {
-              "experience": 1052,
+              "experience": 526,
               "gold": 92
             }
           }
@@ -8663,7 +8663,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-worldvein-elemental"
             ],
             "reward": {
-              "experience": 1064,
+              "experience": 532,
               "gold": 92
             }
           },
@@ -8680,7 +8680,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-worldvein-elemental"
             ],
             "reward": {
-              "experience": 1365,
+              "experience": 682,
               "gold": 117
             }
           }
@@ -8704,7 +8704,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-firstborn-shade"
             ],
             "reward": {
-              "experience": 1076,
+              "experience": 538,
               "gold": 93
             }
           }
@@ -8748,7 +8748,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-rootless-titan"
             ],
             "reward": {
-              "experience": 1100,
+              "experience": 550,
               "gold": 94
             }
           }
@@ -8777,7 +8777,7 @@ export const ADVENTURES: AdventureDefinition[] = [
               "enemy-a12-abyssal-choir"
             ],
             "reward": {
-              "experience": 2580,
+              "experience": 1290,
               "gold": 336
             }
           }
