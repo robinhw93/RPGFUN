@@ -266,10 +266,11 @@ export function AbilityLoadoutModal({ character, locked, onClose, onSelectSlot }
   );
 }
 
-export function TalentsView({ character, locked, introduction = false, onNext, onUnlock, onToggleAbility, onSetAbilitySlot }: {
+export function TalentsView({ character, locked, introduction = false, levelUpFlow = false, onNext, onUnlock, onToggleAbility, onSetAbilitySlot }: {
   character: CharacterState;
   locked: boolean;
   introduction?: boolean;
+  levelUpFlow?: boolean;
   onNext?: () => void;
   onUnlock: (id: string) => void;
   onToggleAbility: (id: string) => void;
@@ -490,11 +491,13 @@ export function TalentsView({ character, locked, introduction = false, onNext, o
 
   return (
     <section className="page talents-page">
-      {introduction && <aside className="character-introduction-guide talent-introduction-guide" aria-label="Talent introduction">
-        <div><p className="eyebrow">Getting Started · Step 2 of 3</p><h2>Take Your First Step</h2><p>Spend your starting Talent Point on a node connected to {startingClass?.name ?? "your class"}.</p></div>
-        {introductionTalentSpent && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
+      {(introduction || levelUpFlow) && <aside className="character-introduction-guide talent-introduction-guide" aria-label={introduction ? "Talent introduction" : "Level-up talent step"}>
+        {introduction
+          ? <div><p className="eyebrow">Getting Started · Step 2 of 3</p><h2>Take Your First Step</h2><p>Spend your starting Talent Point on a node connected to {startingClass?.name ?? "your class"}.</p></div>
+          : <div><p className="eyebrow">Level Up · Step 1 of 2</p><h2>Spend Talent {character.talentPoints === 1 ? "Point" : "Points"}</h2><p>Spend all available Talent Points before continuing to your Attributes.</p></div>}
+        {(introduction ? introductionTalentSpent : true) && <button type="button" className="primary-button introduction-next-button" disabled={levelUpFlow && character.talentPoints > 0} onClick={onNext}>Next <ChevronRight size={17} /></button>}
       </aside>}
-      {!introduction && <div className="talent-loadout-actions">
+      {!introduction && !levelUpFlow && <div className="talent-loadout-actions">
         <button type="button" className="talent-loadout-trigger" onClick={() => setAbilityLoadoutOpen(true)}>
           <Swords size={18} />
           <span><small>Combat Loadout</small><strong>Equipped Abilities</strong></span>

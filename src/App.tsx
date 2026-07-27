@@ -39,6 +39,7 @@ import { chooseStartingClass, hasSpentIntroductionTalentPoint } from "./game/cha
 import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, type CharacterSection } from "./ui/gameUi";
 
 type View = "adventure" | "character" | "town" | DevtoolKind;
+type LevelUpFlowStep = "talents" | "attributes";
 type EncounterFlavorPhase = "center" | "lower" | "exit";
 type TownEntryLocation = "square" | "tavern";
 
@@ -71,6 +72,7 @@ function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
   const [view, setView] = useState<View>(() => game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes" ? "character" : game.adventure.active ? "adventure" : game.characterIntroductionStep === "town" ? "town" : "adventure");
   const [characterSection, setCharacterSection] = useState<CharacterSection>(() => game.characterIntroductionStep === "talents" ? "talents" : "overview");
+  const [levelUpFlowStep, setLevelUpFlowStep] = useState<LevelUpFlowStep | null>(null);
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; travelLabel: string } | null>(null);
   const [encounterFlavor, setEncounterFlavor] = useState<{ message: string; phase: EncounterFlavorPhase } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -88,6 +90,7 @@ function App() {
   const activeNode = getAdventureNode(game.adventure);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
   const characterIntroductionActive = game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes";
+  const guidedCharacterFlowActive = characterIntroductionActive || levelUpFlowStep !== null;
   const recommendStartingItem = game.characterIntroductionStep === "town" && !Object.values(game.character.equipment).some(Boolean);
 
   useEffect(() => {
@@ -122,6 +125,12 @@ function App() {
   const navigate = (next: View) => {
     if (game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes") {
       setCharacterSection(game.characterIntroductionStep === "talents" ? "talents" : "overview");
+      setView("character");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (levelUpFlowStep) {
+      setCharacterSection(levelUpFlowStep === "talents" ? "talents" : "overview");
       setView("character");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -516,6 +525,7 @@ function App() {
     setView("adventure");
     setCharacterSection("overview");
     setTravelTransition(null);
+    setLevelUpFlowStep(null);
     setResetDialogOpen(false);
   };
 
@@ -528,6 +538,7 @@ function App() {
     }));
     setCharacterSection("overview");
     setView("character");
+    setLevelUpFlowStep(null);
     window.scrollTo({ top: 0 });
   };
 
@@ -564,6 +575,34 @@ function App() {
   };
 
   if (!game.characterCreated) return <CharacterCreation onCreate={createCharacter} />;
+  const openScoreCharacter = () => {
+    const reward = game.adventure.pendingReward;
+    if (reward?.levelsGained && (game.character.talentPoints > 0 || game.character.unspentStatPoints > 0)) {
+      const nextStep: LevelUpFlowStep = game.character.talentPoints > 0 ? "talents" : "attributes";
+      setLevelUpFlowStep(nextStep);
+      setCharacterSection(nextStep === "talents" ? "talents" : "overview");
+      setView("character");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    openCharacterSection("overview");
+  };
+
+  const continueLevelUpToAttributes = () => {
+    if (levelUpFlowStep !== "talents" || game.character.talentPoints > 0) return;
+    setLevelUpFlowStep("attributes");
+    setCharacterSection("overview");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const completeLevelUpFlow = () => {
+    if (levelUpFlowStep !== "attributes" || game.character.unspentStatPoints > 0) return;
+    setLevelUpFlowStep(null);
+    setCharacterSection("overview");
+    setView("adventure");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
 
   return (
     <div
@@ -571,11 +610,11 @@ function App() {
       style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs * Math.max(0.1, game.adventure.combat?.attackAnimationDurationMultiplier ?? 1) / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1)}ms` } as React.CSSProperties}
     >
       <header className="topbar">
-        <button className="brand" onClick={() => navigate("adventure")} aria-label={characterIntroductionActive ? "Introduction in progress" : "Go to adventure"}>
+        <button className="brand" onClick={() => navigate("adventure")} aria-label={characterIntroductionActive ? "Introduction in progress" : levelUpFlowStep ? "Level up in progress" : "Go to adventure"}>
           <span className="brand-mark"><Sparkles size={17} /></span>
           <span><strong>ARKENFALL</strong></span>
         </button>
-        {!characterIntroductionActive && <nav className="desktop-nav" aria-label="Main navigation">
+        {!guidedCharacterFlowActive && <nav className="desktop-nav" aria-label="Main navigation">
           <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Footprints size={17} />} label="Adventure" />
           <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={17} />} label="Character" />
         </nav>}
@@ -611,7 +650,7 @@ function App() {
             onMerchantSell={sellMerchantItem}
             onPermadeath={returnToCharacterCreation}
             onTalents={() => openCharacterSection("talents")}
-            onCharacter={() => openCharacterSection("overview")}
+            onCharacter={openScoreCharacter}
             onInventory={() => openCharacterSection("equipment")}
             rewardPresentationPlayed={Boolean(game.adventure.pendingReward && presentedRewardIds.current.has(game.adventure.pendingReward.id))}
             onRewardPresentationStart={markRewardPresented}
@@ -620,18 +659,18 @@ function App() {
         {view === "character" && (
           <>
             {game.characterIntroductionStep === "class" ? <ClassSelection onChoose={selectIntroductionClass} /> : <>
-            {!characterIntroductionActive && <nav className="character-submenu" aria-label="Character sections">
+            {!guidedCharacterFlowActive && <nav className="character-submenu" aria-label="Character sections">
               <button type="button" className={characterSection === "overview" ? "active" : ""} aria-current={characterSection === "overview" ? "page" : undefined} onClick={() => openCharacterSection("overview")}><UserRound size={16} /> Character</button>
               <button type="button" className={characterSection === "equipment" ? "active" : ""} aria-current={characterSection === "equipment" ? "page" : undefined} onClick={() => openCharacterSection("equipment")}><Shield size={16} /> Equipment and Inventory</button>
               <button type="button" className={`${characterSection === "talents" ? "active" : ""} ${game.character.talentPoints > 0 ? "talent-attention" : ""}`.trim()} aria-current={characterSection === "talents" ? "page" : undefined} onClick={() => openCharacterSection("talents")}><CircleDot size={16} /> Talents &amp; Abilities</button>
             </nav>}
             {characterSection !== "talents" ? (
               <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
-                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "attributes"} onNext={continueIntroductionToTown} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "attributes"} levelUpFlow={levelUpFlowStep === "attributes"} onNext={levelUpFlowStep === "attributes" ? completeLevelUpFlow : continueIntroductionToTown} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
               </CharacterAssetBoundary>
             ) : (
               <Suspense fallback={null}>
-                <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} onNext={continueIntroductionToAttributes} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
+                <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} levelUpFlow={levelUpFlowStep === "talents"} onNext={levelUpFlowStep === "talents" ? continueLevelUpToAttributes : continueIntroductionToAttributes} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
               </Suspense>
             )}
             </>}
@@ -652,7 +691,7 @@ function App() {
         </Suspense>
       </main>
 
-      {!characterIntroductionActive && <nav className="mobile-nav" aria-label="Mobile navigation">
+      {!guidedCharacterFlowActive && <nav className="mobile-nav" aria-label="Mobile navigation">
         <NavButton active={view === "adventure"} onClick={() => navigate("adventure")} icon={<Home size={19} />} label="Adventure" />
         <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={19} />} label="Character" />
       </nav>}

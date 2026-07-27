@@ -73,11 +73,12 @@ export function CharacterAssetBoundary({ preloaded, assetKey, children }: {
   );
 }
 
-export function CharacterView({ mode, character, locked, introduction = false, onNext, onEquip, onUnequip, onAllocateStat }: {
+export function CharacterView({ mode, character, locked, introduction = false, levelUpFlow = false, onNext, onEquip, onUnequip, onAllocateStat }: {
   mode: Exclude<CharacterSection, "talents">;
   character: CharacterState;
   locked: boolean;
   introduction?: boolean;
+  levelUpFlow?: boolean;
   onNext?: () => void;
   onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
   onUnequip: (slot: GearSlot) => void;
@@ -121,8 +122,8 @@ export function CharacterView({ mode, character, locked, introduction = false, o
     };
   }, [modalOpen]);
   useEffect(() => {
-    if (introduction && character.unspentStatPoints === 0) window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [character.unspentStatPoints, introduction]);
+    if ((introduction || levelUpFlow) && character.unspentStatPoints === 0) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [character.unspentStatPoints, introduction, levelUpFlow]);
   const derived = getDerivedStats(character);
   const avatar = getCharacterAvatar(character.avatarId);
   const requiredExperience = experienceToNextLevel(character.level);
@@ -136,9 +137,11 @@ export function CharacterView({ mode, character, locked, introduction = false, o
   return (
     <section className="page character-page">
       {mode === "overview" ? <>
-        {introduction && <aside className="character-introduction-guide" aria-label="Attribute introduction">
-          <div><p className="eyebrow">Getting Started · Step 3 of 3</p><h2>Shape Your Character</h2><p>Spend your 2 Attribute Points. Choose the attributes that best fit the character you want to build.</p></div>
-          {character.unspentStatPoints === 0 && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
+        {(introduction || levelUpFlow) && <aside className="character-introduction-guide" aria-label={introduction ? "Attribute introduction" : "Level-up attribute step"}>
+          {introduction
+            ? <div><p className="eyebrow">Getting Started · Step 3 of 3</p><h2>Shape Your Character</h2><p>Spend your 2 Attribute Points. Choose the attributes that best fit the character you want to build.</p></div>
+            : <div><p className="eyebrow">Level Up · Step 2 of 2</p><h2>Spend Attribute Points</h2><p>Spend all available Attribute Points before returning to your combat rewards.</p></div>}
+          {(introduction ? character.unspentStatPoints === 0 : true) && <button type="button" className="primary-button introduction-next-button" disabled={character.unspentStatPoints > 0} onClick={onNext}>Next <ChevronRight size={17} /></button>}
         </aside>}
         <div className="page-title"><div><p className="eyebrow">Level {character.level} Wayfarer</p><h1>{character.name}</h1><div className="character-xp"><span><i style={{ width: reachedMaxLevel ? "100%" : `${Math.min(100, (character.xp / requiredExperience) * 100)}%` }} /></span><small>{reachedMaxLevel ? "Max Level" : `${character.xp} / ${requiredExperience} XP`}</small></div></div></div>
         <div className="character-layout character-overview-layout">
