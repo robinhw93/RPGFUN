@@ -5673,7 +5673,2688 @@ export const ITEMS: InventoryItem[] = [
       ],
       "prerequisiteAdventureId": "sunken-reliquary"
     }
-  }
+  },
+  // SHOP PROGRESSION START
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-blacksmith-1",
+    "name": "Canopy-Forged Shortsword",
+    "goldCost": 33,
+    "slot": "mainHand",
+    "rarity": "uncommon",
+    "description": "A Windsong weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/sword-01.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest",
+    "physicalPower": 3,
+    "weaponKind": "sword",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-blacksmith-2",
+    "name": "Barkbound Buckler",
+    "goldCost": 45,
+    "slot": "offHand",
+    "rarity": "uncommon",
+    "description": "Protective platework shaped from techniques recovered in Windsong.",
+    "iconUrl": "/assets/gear-icons/shield-01.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest",
+    "armorMaterial": "plate",
+    "physicalPower": 1,
+    "armor": 1
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a1-healing",
+    "name": "Windsong Remedy",
+    "goldCost": 23,
+    "rarity": "uncommon",
+    "description": "Restore 23 Health.",
+    "iconUrl": "/assets/items/potion-red-normal.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 23
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a1-utility",
+    "name": "Bottled Tailwind",
+    "goldCost": 27,
+    "rarity": "uncommon",
+    "description": "Restore 2 Energy.",
+    "iconUrl": "/assets/items/potion-blue-normal.webp",
+    "effects": [
+      {
+        "type": "gain_energy",
+        "amount": 2
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-tailor-1",
+    "name": "Whisperleaf Hood",
+    "goldCost": 33,
+    "slot": "head",
+    "rarity": "uncommon",
+    "description": "Arcane clothwork inspired by the secrets of Windsong.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest",
+    "armorMaterial": "cloth",
+    "magicalPower": 1,
+    "magicResistance": 1
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-tailor-2",
+    "name": "Wayfarer's Sash",
+    "goldCost": 45,
+    "slot": "pants",
+    "rarity": "uncommon",
+    "description": "Arcane clothwork inspired by the secrets of Windsong.",
+    "iconUrl": "/assets/gear-icons/pants-02.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest",
+    "armorMaterial": "cloth",
+    "magicalPower": 1,
+    "magicResistance": 1
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-leatherworker-1",
+    "name": "Briarhide Jerkin",
+    "goldCost": 33,
+    "slot": "chest",
+    "rarity": "uncommon",
+    "description": "Supple field gear patterned after hunters of Windsong.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest",
+    "armorMaterial": "leather",
+    "physicalPower": 1,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-leatherworker-2",
+    "name": "Softstep Boots",
+    "goldCost": 45,
+    "slot": "boots",
+    "rarity": "uncommon",
+    "description": "Supple field gear patterned after hunters of Windsong.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "agility": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest",
+    "armorMaterial": "leather",
+    "physicalPower": 1,
+    "combat": {
+      "passive": {
+        "initiative": 2
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-jeweler-1",
+    "name": "Venomcoil Ring",
+    "goldCost": 44,
+    "slot": "ring",
+    "rarity": "uncommon",
+    "description": "Your Poison deals 10% more damage. Favored by Poison specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "vitality": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "statusDamage": {
+          "poison": 0.1
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a1-jeweler-2",
+    "name": "Bulwark Band",
+    "goldCost": 59,
+    "slot": "ring",
+    "rarity": "uncommon",
+    "description": "You generate 10% more Guard. Favored by Guard specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "vitality": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "guardGeneration": 0.1
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "windsong-forest"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-blacksmith-1",
+    "name": "Highland Cleaver",
+    "goldCost": 57,
+    "slot": "mainHand",
+    "rarity": "uncommon",
+    "description": "A Highlands weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/axe-02.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z",
+    "physicalPower": 4,
+    "weaponKind": "axe",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-blacksmith-2",
+    "name": "Windscarred Helm",
+    "goldCost": 69,
+    "slot": "head",
+    "rarity": "uncommon",
+    "description": "Protective platework shaped from techniques recovered in Highlands.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z",
+    "armorMaterial": "plate",
+    "physicalPower": 2,
+    "armor": 1
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a2-healing",
+    "name": "Highland Restorative",
+    "goldCost": 38,
+    "rarity": "uncommon",
+    "description": "Restore 32 Health.",
+    "iconUrl": "/assets/items/potion-red-normal.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 32
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a2-utility",
+    "name": "Cliffside Courage",
+    "goldCost": 42,
+    "rarity": "uncommon",
+    "description": "Gain Fierce for 2 turns.",
+    "iconUrl": "/assets/items/potion-purple-normal.webp",
+    "effects": [
+      {
+        "type": "apply_status",
+        "target": "self",
+        "status": "fierce",
+        "stacks": 1,
+        "duration": 2
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-tailor-1",
+    "name": "Skyweave Robe",
+    "goldCost": 57,
+    "slot": "chest",
+    "rarity": "uncommon",
+    "description": "Arcane clothwork inspired by the secrets of Highlands.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z",
+    "armorMaterial": "cloth",
+    "magicalPower": 2,
+    "magicResistance": 1
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-tailor-2",
+    "name": "Heatherstep Slippers",
+    "goldCost": 69,
+    "slot": "boots",
+    "rarity": "uncommon",
+    "description": "Arcane clothwork inspired by the secrets of Highlands.",
+    "iconUrl": "/assets/gear-icons/boots-03.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z",
+    "armorMaterial": "cloth",
+    "magicalPower": 2,
+    "magicResistance": 1
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-leatherworker-1",
+    "name": "Galehunter Vest",
+    "goldCost": 57,
+    "slot": "chest",
+    "rarity": "uncommon",
+    "description": "Supple field gear patterned after hunters of Highlands.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "agility": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z",
+    "armorMaterial": "leather",
+    "physicalPower": 2,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    },
+    "set": "set-shop-a2-galehunter",
+    "setName": "Galehunter"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-leatherworker-2",
+    "name": "Galehunter Leggings",
+    "goldCost": 69,
+    "slot": "pants",
+    "rarity": "uncommon",
+    "description": "Supple field gear patterned after hunters of Highlands.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "agility": 2,
+      "vitality": 1
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z",
+    "armorMaterial": "leather",
+    "physicalPower": 2,
+    "combat": {
+      "passive": {
+        "initiative": 3
+      }
+    },
+    "set": "set-shop-a2-galehunter",
+    "setName": "Galehunter"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-jeweler-1",
+    "name": "Quietstep Signet",
+    "goldCost": 71,
+    "slot": "ring",
+    "rarity": "uncommon",
+    "description": "You deal 12% more damage while Stealthed. Favored by Stealth specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-03.webp",
+    "stats": {
+      "vitality": 1,
+      "luck": 1
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "quietstep-ambush",
+          "name": "Quietstep",
+          "description": "Deal 12% more damage while Stealthed.",
+          "multiplier": 1.12,
+          "attackerHasAnyStatus": [
+            "stealth"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a2-jeweler-2",
+    "name": "Cinder Loop",
+    "goldCost": 86,
+    "slot": "ring",
+    "rarity": "uncommon",
+    "description": "Your Burn deals 12% more damage. Favored by Fire specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-04.webp",
+    "stats": {
+      "vitality": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "statusDamage": {
+          "burn": 0.12
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "adventure-ms1iq9ye-9ra1z"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-blacksmith-1",
+    "name": "Cragforged Maul",
+    "goldCost": 89,
+    "slot": "mainHand",
+    "rarity": "rare",
+    "description": "A Highfall weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/mace-03.webp",
+    "stats": {
+      "strength": 3,
+      "vitality": 1
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains",
+    "physicalPower": 6,
+    "weaponKind": "mace",
+    "weaponEquipType": "twoHand",
+    "set": "set-shop-a3-cragforged",
+    "setName": "Cragforged"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-blacksmith-2",
+    "name": "Cragforged Cuirass",
+    "goldCost": 101,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Protective platework shaped from techniques recovered in Highfall.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "strength": 3,
+      "vitality": 1
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains",
+    "armorMaterial": "plate",
+    "physicalPower": 3,
+    "armor": 2,
+    "set": "set-shop-a3-cragforged",
+    "setName": "Cragforged"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a3-healing",
+    "name": "Highfall Elixir",
+    "goldCost": 58,
+    "rarity": "rare",
+    "description": "Restore 44 Health.",
+    "iconUrl": "/assets/items/potion-red-normal.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 44
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a3-utility",
+    "name": "Stoneblood Draught",
+    "goldCost": 62,
+    "rarity": "rare",
+    "description": "Gain Strengthened for 2 turns.",
+    "iconUrl": "/assets/items/potion-green-normal.webp",
+    "effects": [
+      {
+        "type": "apply_status",
+        "target": "self",
+        "status": "strengthened",
+        "stacks": 1,
+        "duration": 2
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-tailor-1",
+    "name": "Cloudpeak Cowl",
+    "goldCost": 89,
+    "slot": "head",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Highfall.",
+    "iconUrl": "/assets/gear-icons/head-03.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 1
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains",
+    "armorMaterial": "cloth",
+    "magicalPower": 3,
+    "magicResistance": 2
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-tailor-2",
+    "name": "Cloudpeak Robes",
+    "goldCost": 101,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Highfall.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 1
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains",
+    "armorMaterial": "cloth",
+    "magicalPower": 3,
+    "magicResistance": 2
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-leatherworker-1",
+    "name": "Goatpath Leathers",
+    "goldCost": 89,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Highfall.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "agility": 3,
+      "vitality": 1
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains",
+    "armorMaterial": "leather",
+    "physicalPower": 3,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-leatherworker-2",
+    "name": "Goatpath Treads",
+    "goldCost": 101,
+    "slot": "boots",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Highfall.",
+    "iconUrl": "/assets/gear-icons/boots-01.webp",
+    "stats": {
+      "agility": 3,
+      "vitality": 1
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains",
+    "armorMaterial": "leather",
+    "physicalPower": 3,
+    "combat": {
+      "passive": {
+        "initiative": 4
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-jeweler-1",
+    "name": "Bloodletter's Seal",
+    "goldCost": 107,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Your Bleed deals 15% more damage. Favored by Bleed specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "statusDamage": {
+          "bleed": 0.15
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a3-jeweler-2",
+    "name": "Static Fang Ring",
+    "goldCost": 122,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Your Electrified effects last 1 additional turn. Favored by Shockblade specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "vitality": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "statusDurationBonuses": {
+          "electrified": 1
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "highfall-mountains"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-blacksmith-1",
+    "name": "Bog-Iron Hatchet",
+    "goldCost": 129,
+    "slot": "mainHand",
+    "rarity": "rare",
+    "description": "A Mirefen weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/axe-04.webp",
+    "stats": {
+      "strength": 5,
+      "vitality": 2
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "physicalPower": 9,
+    "weaponKind": "axe",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-blacksmith-2",
+    "name": "Mireplate Greaves",
+    "goldCost": 141,
+    "slot": "pants",
+    "rarity": "rare",
+    "description": "Protective platework shaped from techniques recovered in Mirefen.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "strength": 5,
+      "vitality": 2
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "armorMaterial": "plate",
+    "physicalPower": 5,
+    "armor": 2
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a4-healing",
+    "name": "Mirefen Lifebloom",
+    "goldCost": 83,
+    "rarity": "rare",
+    "description": "Restore 59 Health.",
+    "iconUrl": "/assets/items/potion-red-greater.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 59
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a4-utility",
+    "name": "Purewater Antivenom",
+    "goldCost": 87,
+    "rarity": "rare",
+    "description": "Remove Poison.",
+    "iconUrl": "/assets/items/potion-blue-greater.webp",
+    "effects": [
+      {
+        "type": "remove_status",
+        "target": "self",
+        "status": "poison"
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-tailor-1",
+    "name": "Fenweaver Hood",
+    "goldCost": 129,
+    "slot": "head",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Mirefen.",
+    "iconUrl": "/assets/gear-icons/head-04.webp",
+    "stats": {
+      "intelligence": 5,
+      "vitality": 2
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "armorMaterial": "cloth",
+    "magicalPower": 5,
+    "magicResistance": 2,
+    "set": "set-shop-a4-fenweaver",
+    "setName": "Fenweaver"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-tailor-2",
+    "name": "Fenweaver Wraps",
+    "goldCost": 141,
+    "slot": "pants",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Mirefen.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "intelligence": 5,
+      "vitality": 2
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "armorMaterial": "cloth",
+    "magicalPower": 5,
+    "magicResistance": 2,
+    "set": "set-shop-a4-fenweaver",
+    "setName": "Fenweaver"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-leatherworker-1",
+    "name": "Reedstalker Coat",
+    "goldCost": 129,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Mirefen.",
+    "iconUrl": "/assets/gear-icons/chest-01.webp",
+    "stats": {
+      "agility": 5,
+      "vitality": 2
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "armorMaterial": "leather",
+    "physicalPower": 5,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-leatherworker-2",
+    "name": "Reedstalker Boots",
+    "goldCost": 141,
+    "slot": "boots",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Mirefen.",
+    "iconUrl": "/assets/gear-icons/boots-02.webp",
+    "stats": {
+      "agility": 5,
+      "vitality": 2
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "armorMaterial": "leather",
+    "physicalPower": 5,
+    "combat": {
+      "passive": {
+        "initiative": 5
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-jeweler-1",
+    "name": "Rimebound Band",
+    "goldCost": 152,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Your Frost damage against Slowed or Frozen enemies is increased by 14%. Favored by Frost specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "vitality": 2,
+      "luck": 2
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "rimebound-control",
+          "name": "Rimebound",
+          "description": "Deal 14% more Frost damage to Slowed or Frozen enemies.",
+          "multiplier": 1.14,
+          "damageTypes": [
+            "frost"
+          ],
+          "targetHasAnyStatus": [
+            "slowed",
+            "frozen"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a4-jeweler-2",
+    "name": "Woundkeeper Ring",
+    "goldCost": 167,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Your Arcane Wounds last 1 additional turn. Favored by Arcane Wound specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-03.webp",
+    "stats": {
+      "vitality": 2,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "statusDurationBonuses": {
+          "arcaneWound": 1
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "mirefen-marsh"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-blacksmith-1",
+    "name": "Ash Tempered Blade",
+    "goldCost": 169,
+    "slot": "mainHand",
+    "rarity": "rare",
+    "description": "A Ashen weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/sword-05.webp",
+    "stats": {
+      "strength": 6,
+      "vitality": 3
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "physicalPower": 11,
+    "weaponKind": "sword",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-blacksmith-2",
+    "name": "Foundry Wardshield",
+    "goldCost": 181,
+    "slot": "offHand",
+    "rarity": "rare",
+    "description": "Protective platework shaped from techniques recovered in Ashen.",
+    "iconUrl": "/assets/gear-icons/shield-05.webp",
+    "stats": {
+      "strength": 6,
+      "vitality": 3
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "armorMaterial": "plate",
+    "physicalPower": 6,
+    "armor": 3
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a5-healing",
+    "name": "Foundry Heart-Tonic",
+    "goldCost": 108,
+    "rarity": "rare",
+    "description": "Restore 74 Health.",
+    "iconUrl": "/assets/items/potion-red-greater.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 74
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a5-utility",
+    "name": "Cooling Ember Salve",
+    "goldCost": 112,
+    "rarity": "rare",
+    "description": "Remove Burn.",
+    "iconUrl": "/assets/items/potion-purple-greater.webp",
+    "effects": [
+      {
+        "type": "remove_status",
+        "target": "self",
+        "status": "burn"
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-tailor-1",
+    "name": "Sootscribe Mantle",
+    "goldCost": 169,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Ashen.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 3
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "armorMaterial": "cloth",
+    "magicalPower": 6,
+    "magicResistance": 3
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-tailor-2",
+    "name": "Sootscribe Sandals",
+    "goldCost": 181,
+    "slot": "boots",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Ashen.",
+    "iconUrl": "/assets/gear-icons/boots-01.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 3
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "armorMaterial": "cloth",
+    "magicalPower": 6,
+    "magicResistance": 3
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-leatherworker-1",
+    "name": "Cinderhide Vest",
+    "goldCost": 169,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Ashen.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "agility": 6,
+      "vitality": 3
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "armorMaterial": "leather",
+    "physicalPower": 6,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-leatherworker-2",
+    "name": "Cinderhide Legguards",
+    "goldCost": 181,
+    "slot": "pants",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Ashen.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "agility": 6,
+      "vitality": 3
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "armorMaterial": "leather",
+    "physicalPower": 6,
+    "combat": {
+      "passive": {
+        "initiative": 6
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-jeweler-1",
+    "name": "Immolator's Loop",
+    "goldCost": 197,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "You deal 18% more Fire damage while Burning. Favored by Self-Immolation specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-04.webp",
+    "stats": {
+      "vitality": 2,
+      "luck": 2
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "immolator-fire",
+          "name": "Immolator",
+          "description": "Deal 18% more Fire damage while Burning.",
+          "multiplier": 1.18,
+          "damageTypes": [
+            "fire"
+          ],
+          "attackerHasAnyStatus": [
+            "burn"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a5-jeweler-2",
+    "name": "Wardweaver Circle",
+    "goldCost": 212,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Begin each combat with Barrier equal to 6% of your maximum Health. Favored by Barrier specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 2,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "startingAbsorptionMaxHpRatios": {
+          "barrier": 0.06
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "ashen-foundry"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-blacksmith-1",
+    "name": "Drowned Temple Spear",
+    "goldCost": 209,
+    "slot": "mainHand",
+    "rarity": "rare",
+    "description": "A Reliquary weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/polearm-01.webp",
+    "stats": {
+      "strength": 7,
+      "vitality": 3
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "physicalPower": 14,
+    "weaponKind": "polearm",
+    "weaponEquipType": "twoHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-blacksmith-2",
+    "name": "Relicguard Helm",
+    "goldCost": 221,
+    "slot": "head",
+    "rarity": "rare",
+    "description": "Protective platework shaped from techniques recovered in Reliquary.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "strength": 7,
+      "vitality": 3
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "armorMaterial": "plate",
+    "physicalPower": 8,
+    "armor": 3
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a6-healing",
+    "name": "Reliquary Panacea",
+    "goldCost": 133,
+    "rarity": "rare",
+    "description": "Restore 89 Health.",
+    "iconUrl": "/assets/items/potion-red-greater.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 89
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a6-utility",
+    "name": "Pearlwater Infusion",
+    "goldCost": 137,
+    "rarity": "rare",
+    "description": "Restore 3 Energy.",
+    "iconUrl": "/assets/items/potion-green-greater.webp",
+    "effects": [
+      {
+        "type": "gain_energy",
+        "amount": 3
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-tailor-1",
+    "name": "Tidecaller's Vestments",
+    "goldCost": 209,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Reliquary.",
+    "iconUrl": "/assets/gear-icons/chest-01.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 3
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "armorMaterial": "cloth",
+    "magicalPower": 8,
+    "magicResistance": 3
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-tailor-2",
+    "name": "Tidecaller's Slippers",
+    "goldCost": 221,
+    "slot": "boots",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Reliquary.",
+    "iconUrl": "/assets/gear-icons/boots-02.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 3
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "armorMaterial": "cloth",
+    "magicalPower": 8,
+    "magicResistance": 3
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-leatherworker-1",
+    "name": "Tidestrider Coat",
+    "goldCost": 209,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Reliquary.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 7,
+      "vitality": 3
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "armorMaterial": "leather",
+    "physicalPower": 8,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    },
+    "set": "set-shop-a6-tidestrider",
+    "setName": "Tidestrider"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-leatherworker-2",
+    "name": "Tidestrider Leggings",
+    "goldCost": 221,
+    "slot": "pants",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Reliquary.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "agility": 7,
+      "vitality": 3
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "armorMaterial": "leather",
+    "physicalPower": 8,
+    "combat": {
+      "passive": {
+        "initiative": 7
+      }
+    },
+    "set": "set-shop-a6-tidestrider",
+    "setName": "Tidestrider"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-jeweler-1",
+    "name": "Stormcaller's Band",
+    "goldCost": 242,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Whenever you apply Electrified, apply 1 additional stack. Favored by Lightning specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "vitality": 3,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "statusApplicationStacks": {
+          "electrified": 1
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a6-jeweler-2",
+    "name": "Consecrated Seal",
+    "goldCost": 257,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Whenever you apply Smite, apply 1 additional stack. Favored by Smite specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "vitality": 3,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "statusApplicationStacks": {
+          "smite": 1
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "sunken-reliquary"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-blacksmith-1",
+    "name": "Nightguard Dirk",
+    "goldCost": 249,
+    "slot": "mainHand",
+    "rarity": "rare",
+    "description": "A Nightglass weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/dagger-02.webp",
+    "stats": {
+      "strength": 9,
+      "vitality": 4
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
+    "physicalPower": 17,
+    "weaponKind": "dagger",
+    "weaponEquipType": "oneHand",
+    "set": "set-shop-a7-nightguard",
+    "setName": "Nightguard"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-blacksmith-2",
+    "name": "Nightguard Breastplate",
+    "goldCost": 261,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Protective platework shaped from techniques recovered in Nightglass.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "strength": 9,
+      "vitality": 4
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
+    "armorMaterial": "plate",
+    "physicalPower": 9,
+    "armor": 4,
+    "set": "set-shop-a7-nightguard",
+    "setName": "Nightguard"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a7-healing",
+    "name": "Nightglass Elixir",
+    "goldCost": 158,
+    "rarity": "rare",
+    "description": "Restore 104 Health.",
+    "iconUrl": "/assets/items/potion-red-major.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 104
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a7-utility",
+    "name": "Bottled Eclipse",
+    "goldCost": 162,
+    "rarity": "rare",
+    "description": "Apply Blind to all enemies for 1 turn.",
+    "iconUrl": "/assets/items/potion-blue-major.webp",
+    "effects": [
+      {
+        "type": "apply_status",
+        "target": "all_enemies",
+        "status": "blind",
+        "stacks": 1,
+        "duration": 1
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-tailor-1",
+    "name": "Mirror-Silk Hood",
+    "goldCost": 249,
+    "slot": "head",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Nightglass.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 4
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
+    "armorMaterial": "cloth",
+    "magicalPower": 9,
+    "magicResistance": 4
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-tailor-2",
+    "name": "Mirror-Silk Robes",
+    "goldCost": 261,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Arcane clothwork inspired by the secrets of Nightglass.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 4
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
+    "armorMaterial": "cloth",
+    "magicalPower": 9,
+    "magicResistance": 4
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-leatherworker-1",
+    "name": "Veilrunner Jerkin",
+    "goldCost": 249,
+    "slot": "chest",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Nightglass.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "agility": 9,
+      "vitality": 4
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
+    "armorMaterial": "leather",
+    "physicalPower": 9,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-leatherworker-2",
+    "name": "Veilrunner Boots",
+    "goldCost": 261,
+    "slot": "boots",
+    "rarity": "rare",
+    "description": "Supple field gear patterned after hunters of Nightglass.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 9,
+      "vitality": 4
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
+    "armorMaterial": "leather",
+    "physicalPower": 9,
+    "combat": {
+      "passive": {
+        "initiative": 8
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-jeweler-1",
+    "name": "Opportunist's Mark",
+    "goldCost": 287,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Deal 2.5% more damage per unique debuff on the target. Favored by Debuff Exploitation specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-03.webp",
+    "stats": {
+      "vitality": 3,
+      "luck": 3
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "opportunists-mark",
+          "name": "Opportunist's Mark",
+          "description": "Deal 2.5% more damage per unique debuff on the target.",
+          "multiplier": 1,
+          "multiplierPerTargetDebuff": 0.025
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a7-jeweler-2",
+    "name": "Furnaceguard Ring",
+    "goldCost": 302,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "Deal 15% more Fire damage while Guarded. Favored by Burning Guard specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-04.webp",
+    "stats": {
+      "vitality": 3,
+      "luck": 3
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "furnaceguard-fire",
+          "name": "Furnaceguard",
+          "description": "Deal 15% more Fire damage while Guarded.",
+          "multiplier": 1.15,
+          "damageTypes": [
+            "fire"
+          ],
+          "attackerHasAnyStatus": [
+            "guard"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "nightglass-citadel"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-blacksmith-1",
+    "name": "Rimebone Axe",
+    "goldCost": 297,
+    "slot": "mainHand",
+    "rarity": "epic",
+    "description": "A Frostbound weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/axe-03.webp",
+    "stats": {
+      "strength": 11,
+      "vitality": 5
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
+    "physicalPower": 20,
+    "weaponKind": "axe",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-blacksmith-2",
+    "name": "Glacier Bulwark",
+    "goldCost": 309,
+    "slot": "offHand",
+    "rarity": "epic",
+    "description": "Protective platework shaped from techniques recovered in Frostbound.",
+    "iconUrl": "/assets/gear-icons/shield-03.webp",
+    "stats": {
+      "strength": 11,
+      "vitality": 5
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
+    "armorMaterial": "plate",
+    "physicalPower": 11,
+    "armor": 4
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a8-healing",
+    "name": "Frostheart Restorative",
+    "goldCost": 188,
+    "rarity": "epic",
+    "description": "Restore 122 Health.",
+    "iconUrl": "/assets/items/potion-red-major.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 122
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a8-utility",
+    "name": "Thawing Aurora",
+    "goldCost": 192,
+    "rarity": "epic",
+    "description": "Remove Frozen.",
+    "iconUrl": "/assets/items/potion-purple-major.webp",
+    "effects": [
+      {
+        "type": "remove_status",
+        "target": "self",
+        "status": "frozen"
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-tailor-1",
+    "name": "Rimeweaver Crown",
+    "goldCost": 297,
+    "slot": "head",
+    "rarity": "epic",
+    "description": "Arcane clothwork inspired by the secrets of Frostbound.",
+    "iconUrl": "/assets/gear-icons/head-03.webp",
+    "stats": {
+      "intelligence": 11,
+      "vitality": 5
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
+    "armorMaterial": "cloth",
+    "magicalPower": 11,
+    "magicResistance": 4,
+    "set": "set-shop-a8-rimeweaver",
+    "setName": "Rimeweaver"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-tailor-2",
+    "name": "Rimeweaver Vestments",
+    "goldCost": 309,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Arcane clothwork inspired by the secrets of Frostbound.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "intelligence": 11,
+      "vitality": 5
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
+    "armorMaterial": "cloth",
+    "magicalPower": 11,
+    "magicResistance": 4,
+    "set": "set-shop-a8-rimeweaver",
+    "setName": "Rimeweaver"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-leatherworker-1",
+    "name": "Whitewind Leathers",
+    "goldCost": 297,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Supple field gear patterned after hunters of Frostbound.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "agility": 11,
+      "vitality": 5
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
+    "armorMaterial": "leather",
+    "physicalPower": 11,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-leatherworker-2",
+    "name": "Whitewind Treads",
+    "goldCost": 309,
+    "slot": "boots",
+    "rarity": "epic",
+    "description": "Supple field gear patterned after hunters of Frostbound.",
+    "iconUrl": "/assets/gear-icons/boots-01.webp",
+    "stats": {
+      "agility": 11,
+      "vitality": 5
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
+    "armorMaterial": "leather",
+    "physicalPower": 11,
+    "combat": {
+      "passive": {
+        "initiative": 9
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-jeweler-1",
+    "name": "Avalanche Signet",
+    "goldCost": 341,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "Deal 18% more damage to Frozen enemies. Favored by Frost Control specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 4,
+      "luck": 3
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "avalanche-shatter",
+          "name": "Avalanche",
+          "description": "Deal 18% more damage to Frozen enemies.",
+          "multiplier": 1.18,
+          "targetHasAnyStatus": [
+            "frozen"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a8-jeweler-2",
+    "name": "Crimson Feast Ring",
+    "goldCost": 356,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "Your Bleed restores Health equal to 10% of its damage. Favored by Vampiric Bleed specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "vitality": 4,
+      "luck": 3
+    },
+    "combat": {
+      "passive": {
+        "statusDamageLeech": {
+          "bleed": 0.1
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "frostbound-expanse"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-blacksmith-1",
+    "name": "Stormspire Glaive",
+    "goldCost": 345,
+    "slot": "mainHand",
+    "rarity": "epic",
+    "description": "A Stormspire weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/polearm-04.webp",
+    "stats": {
+      "strength": 12,
+      "vitality": 5
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
+    "physicalPower": 23,
+    "weaponKind": "polearm",
+    "weaponEquipType": "twoHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-blacksmith-2",
+    "name": "Thunderhead Plate",
+    "goldCost": 357,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Protective platework shaped from techniques recovered in Stormspire.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "strength": 12,
+      "vitality": 5
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
+    "armorMaterial": "plate",
+    "physicalPower": 13,
+    "armor": 5
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a9-healing",
+    "name": "Stormspire Vitality",
+    "goldCost": 218,
+    "rarity": "epic",
+    "description": "Restore 140 Health.",
+    "iconUrl": "/assets/items/potion-red-major.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 140
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a9-utility",
+    "name": "Condensed Thunder",
+    "goldCost": 222,
+    "rarity": "epic",
+    "description": "Gain Enlightened for 2 turns.",
+    "iconUrl": "/assets/items/potion-green-major.webp",
+    "effects": [
+      {
+        "type": "apply_status",
+        "target": "self",
+        "status": "enlightened",
+        "stacks": 1,
+        "duration": 2
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-tailor-1",
+    "name": "Tempest-Silk Cowl",
+    "goldCost": 345,
+    "slot": "head",
+    "rarity": "epic",
+    "description": "Arcane clothwork inspired by the secrets of Stormspire.",
+    "iconUrl": "/assets/gear-icons/head-04.webp",
+    "stats": {
+      "intelligence": 12,
+      "vitality": 5
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
+    "armorMaterial": "cloth",
+    "magicalPower": 13,
+    "magicResistance": 5
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-tailor-2",
+    "name": "Tempest-Silk Robes",
+    "goldCost": 357,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Arcane clothwork inspired by the secrets of Stormspire.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "intelligence": 12,
+      "vitality": 5
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
+    "armorMaterial": "cloth",
+    "magicalPower": 13,
+    "magicResistance": 5
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-leatherworker-1",
+    "name": "Skystrider Harness",
+    "goldCost": 345,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Supple field gear patterned after hunters of Stormspire.",
+    "iconUrl": "/assets/gear-icons/chest-01.webp",
+    "stats": {
+      "agility": 12,
+      "vitality": 5
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
+    "armorMaterial": "leather",
+    "physicalPower": 13,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-leatherworker-2",
+    "name": "Skystrider Legguards",
+    "goldCost": 357,
+    "slot": "pants",
+    "rarity": "epic",
+    "description": "Supple field gear patterned after hunters of Stormspire.",
+    "iconUrl": "/assets/gear-icons/pants-02.webp",
+    "stats": {
+      "agility": 12,
+      "vitality": 5
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
+    "armorMaterial": "leather",
+    "physicalPower": 13,
+    "combat": {
+      "passive": {
+        "initiative": 10
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-jeweler-1",
+    "name": "Tempest Circuit",
+    "goldCost": 395,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "Deal 20% more Lightning damage to Electrified enemies. Favored by Electrified Burst specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "vitality": 5,
+      "luck": 3
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "tempest-circuit",
+          "name": "Tempest Circuit",
+          "description": "Deal 20% more Lightning damage to Electrified enemies.",
+          "multiplier": 1.2,
+          "damageTypes": [
+            "lightning"
+          ],
+          "targetHasAnyStatus": [
+            "electrified"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a9-jeweler-2",
+    "name": "Virulent Promise",
+    "goldCost": 410,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "Applying Poison has a 20% chance to also apply Weaken. Favored by Venom Debilitation specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-03.webp",
+    "stats": {
+      "vitality": 5,
+      "luck": 3
+    },
+    "combat": {
+      "passive": {
+        "statusApplicationCompanionChances": {
+          "poison": [
+            {
+              "status": "weaken",
+              "chance": 0.2
+            }
+          ]
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "stormspire-aerie"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-blacksmith-1",
+    "name": "Crownless Greatsword",
+    "goldCost": 393,
+    "slot": "mainHand",
+    "rarity": "epic",
+    "description": "A Hollow Crown weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/sword-02.webp",
+    "stats": {
+      "strength": 14,
+      "vitality": 6
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown",
+    "physicalPower": 26,
+    "weaponKind": "sword",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-blacksmith-2",
+    "name": "Hollowguard Sabatons",
+    "goldCost": 405,
+    "slot": "boots",
+    "rarity": "epic",
+    "description": "Protective platework shaped from techniques recovered in Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "strength": 14,
+      "vitality": 6
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown",
+    "armorMaterial": "plate",
+    "physicalPower": 15,
+    "armor": 6
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a10-healing",
+    "name": "Crownless Reprieve",
+    "goldCost": 248,
+    "rarity": "epic",
+    "description": "Restore 158 Health.",
+    "iconUrl": "/assets/items/potion-red-superior.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 158
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a10-utility",
+    "name": "Royal Rejuvenant",
+    "goldCost": 252,
+    "rarity": "epic",
+    "description": "Gain Regenerate for 3 turns.",
+    "iconUrl": "/assets/items/potion-blue-superior.webp",
+    "effects": [
+      {
+        "type": "apply_status",
+        "target": "self",
+        "status": "regenerate",
+        "stacks": 1,
+        "duration": 3
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-tailor-1",
+    "name": "Gravecourt Hood",
+    "goldCost": 393,
+    "slot": "head",
+    "rarity": "epic",
+    "description": "Arcane clothwork inspired by the secrets of Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/head-05.webp",
+    "stats": {
+      "intelligence": 14,
+      "vitality": 6
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown",
+    "armorMaterial": "cloth",
+    "magicalPower": 15,
+    "magicResistance": 6
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-tailor-2",
+    "name": "Gravecourt Vestments",
+    "goldCost": 405,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Arcane clothwork inspired by the secrets of Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/chest-01.webp",
+    "stats": {
+      "intelligence": 14,
+      "vitality": 6
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown",
+    "armorMaterial": "cloth",
+    "magicalPower": 15,
+    "magicResistance": 6
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-leatherworker-1",
+    "name": "Crownstalker Coat",
+    "goldCost": 393,
+    "slot": "chest",
+    "rarity": "epic",
+    "description": "Supple field gear patterned after hunters of Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "agility": 14,
+      "vitality": 6
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown",
+    "armorMaterial": "leather",
+    "physicalPower": 15,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    },
+    "set": "set-shop-a10-crownstalker",
+    "setName": "Crownstalker"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-leatherworker-2",
+    "name": "Crownstalker Boots",
+    "goldCost": 405,
+    "slot": "boots",
+    "rarity": "epic",
+    "description": "Supple field gear patterned after hunters of Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/boots-03.webp",
+    "stats": {
+      "agility": 14,
+      "vitality": 6
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown",
+    "armorMaterial": "leather",
+    "physicalPower": 15,
+    "combat": {
+      "passive": {
+        "initiative": 11
+      }
+    },
+    "set": "set-shop-a10-crownstalker",
+    "setName": "Crownstalker"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-jeweler-1",
+    "name": "Crownless Bastion Ring",
+    "goldCost": 449,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "Begin combat with Guard equal to 15% of your maximum Health and generate 15% more Guard. Favored by Fortress specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-04.webp",
+    "stats": {
+      "vitality": 5,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "startingAbsorptionMaxHpRatios": {
+          "guard": 0.15
+        },
+        "guardGeneration": 0.15
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a10-jeweler-2",
+    "name": "Elemental Conflux Ring",
+    "goldCost": 464,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "Deal 3% more damage per unique debuff on the target. Favored by Elemental Fury specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 5,
+      "luck": 4
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "elemental-conflux",
+          "name": "Elemental Conflux",
+          "description": "Deal 3% more damage per unique debuff on the target.",
+          "multiplier": 1,
+          "multiplierPerTargetDebuff": 0.03
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "hollow-crown"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-blacksmith-1",
+    "name": "Starward Warhammer",
+    "goldCost": 417,
+    "slot": "mainHand",
+    "rarity": "legendary",
+    "description": "A Astral Scar weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/mace-05.webp",
+    "stats": {
+      "strength": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar",
+    "physicalPower": 27,
+    "weaponKind": "mace",
+    "weaponEquipType": "twoHand",
+    "set": "set-shop-a11-starward",
+    "setName": "Starward"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-blacksmith-2",
+    "name": "Starward Aegis",
+    "goldCost": 429,
+    "slot": "offHand",
+    "rarity": "legendary",
+    "description": "Protective platework shaped from techniques recovered in Astral Scar.",
+    "iconUrl": "/assets/gear-icons/shield-02.webp",
+    "stats": {
+      "strength": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar",
+    "armorMaterial": "plate",
+    "physicalPower": 16,
+    "armor": 6,
+    "set": "set-shop-a11-starward",
+    "setName": "Starward"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a11-healing",
+    "name": "Astral Renewal",
+    "goldCost": 263,
+    "rarity": "legendary",
+    "description": "Restore 167 Health.",
+    "iconUrl": "/assets/items/potion-red-superior.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 167
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a11-utility",
+    "name": "Distilled Starlight",
+    "goldCost": 267,
+    "rarity": "legendary",
+    "description": "Restore 4 Energy.",
+    "iconUrl": "/assets/items/potion-purple-superior.webp",
+    "effects": [
+      {
+        "type": "gain_energy",
+        "amount": 4
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-tailor-1",
+    "name": "Cometweave Crown",
+    "goldCost": 417,
+    "slot": "head",
+    "rarity": "legendary",
+    "description": "Arcane clothwork inspired by the secrets of Astral Scar.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "intelligence": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar",
+    "armorMaterial": "cloth",
+    "magicalPower": 16,
+    "magicResistance": 6
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-tailor-2",
+    "name": "Cometweave Robes",
+    "goldCost": 429,
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "Arcane clothwork inspired by the secrets of Astral Scar.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "intelligence": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar",
+    "armorMaterial": "cloth",
+    "magicalPower": 16,
+    "magicResistance": 6
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-leatherworker-1",
+    "name": "Voidwalker Harness",
+    "goldCost": 417,
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "Supple field gear patterned after hunters of Astral Scar.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar",
+    "armorMaterial": "leather",
+    "physicalPower": 16,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-leatherworker-2",
+    "name": "Voidwalker Leggings",
+    "goldCost": 429,
+    "slot": "pants",
+    "rarity": "legendary",
+    "description": "Supple field gear patterned after hunters of Astral Scar.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "agility": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar",
+    "armorMaterial": "leather",
+    "physicalPower": 16,
+    "combat": {
+      "passive": {
+        "initiative": 12
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-jeweler-1",
+    "name": "Astral Fracture Ring",
+    "goldCost": 476,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "Deal 25% more Arcane damage to enemies with Arcane Wound. Favored by Arcane Detonation specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "vitality": 5,
+      "luck": 4
+    },
+    "combat": {
+      "damageModifiers": [
+        {
+          "id": "astral-fracture",
+          "name": "Astral Fracture",
+          "description": "Deal 25% more Arcane damage to enemies with Arcane Wound.",
+          "multiplier": 1.25,
+          "damageTypes": [
+            "arcane"
+          ],
+          "targetHasAnyStatus": [
+            "arcaneWound"
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a11-jeweler-2",
+    "name": "Perfect Execution Ring",
+    "goldCost": 491,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "Your first Critical Strike each turn restores 1 Energy. Favored by Critical Execution specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "vitality": 5,
+      "luck": 4
+    },
+    "combat": {
+      "triggers": [
+        {
+          "id": "perfect-execution-energy",
+          "name": "Perfect Execution",
+          "description": "Your first Critical Strike each turn restores 1 Energy.",
+          "event": "on_crit",
+          "oncePerTurn": true,
+          "effects": [
+            {
+              "type": "gain_energy",
+              "amount": 1,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "astral-scar"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-blacksmith-1",
+    "name": "Deepforge Cleaver",
+    "goldCost": 425,
+    "slot": "mainHand",
+    "rarity": "legendary",
+    "description": "A World Below weapon forged for the dangers beyond Arkenfall.",
+    "iconUrl": "/assets/gear-icons/axe-05.webp",
+    "stats": {
+      "strength": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below",
+    "physicalPower": 28,
+    "weaponKind": "axe",
+    "weaponEquipType": "oneHand"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-blacksmith-2",
+    "name": "Rootsteel Cuirass",
+    "goldCost": 437,
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "Protective platework shaped from techniques recovered in World Below.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "strength": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "blacksmith",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below",
+    "armorMaterial": "plate",
+    "physicalPower": 16,
+    "armor": 6
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a12-healing",
+    "name": "Worldroot Elixir",
+    "goldCost": 268,
+    "rarity": "legendary",
+    "description": "Restore 170 Health.",
+    "iconUrl": "/assets/items/potion-red-superior.webp",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 170
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below"
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-shop-a12-utility",
+    "name": "Essence of the First Echo",
+    "goldCost": 272,
+    "rarity": "legendary",
+    "description": "Gain +4 Energy regeneration next turn.",
+    "iconUrl": "/assets/items/potion-green-superior.webp",
+    "effects": [
+      {
+        "type": "change_next_turn_energy_regen",
+        "amount": 4
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-tailor-1",
+    "name": "First-Echo Veil",
+    "goldCost": 425,
+    "slot": "head",
+    "rarity": "legendary",
+    "description": "Arcane clothwork inspired by the secrets of World Below.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "intelligence": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below",
+    "armorMaterial": "cloth",
+    "magicalPower": 16,
+    "magicResistance": 6,
+    "set": "set-shop-a12-first-echo",
+    "setName": "First Echo"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-tailor-2",
+    "name": "First-Echo Vestments",
+    "goldCost": 437,
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "Arcane clothwork inspired by the secrets of World Below.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "intelligence": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "tailor",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below",
+    "armorMaterial": "cloth",
+    "magicalPower": 16,
+    "magicResistance": 6,
+    "set": "set-shop-a12-first-echo",
+    "setName": "First Echo"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-leatherworker-1",
+    "name": "Abysswalker Leathers",
+    "goldCost": 425,
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "Supple field gear patterned after hunters of World Below.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "agility": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below",
+    "armorMaterial": "leather",
+    "physicalPower": 16,
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-leatherworker-2",
+    "name": "Abysswalker Treads",
+    "goldCost": 437,
+    "slot": "boots",
+    "rarity": "legendary",
+    "description": "Supple field gear patterned after hunters of World Below.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 15,
+      "vitality": 7
+    },
+    "arkenfallVendor": "leatherworker",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below",
+    "armorMaterial": "leather",
+    "physicalPower": 16,
+    "combat": {
+      "passive": {
+        "initiative": 13
+      }
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-jeweler-1",
+    "name": "Worldroot Seal",
+    "goldCost": 485,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "The first time you would die each combat, restore 20% of your maximum Health instead. Favored by Undying Guardian specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-03.webp",
+    "stats": {
+      "vitality": 6,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "deathPreventionHealRatio": 0.2
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below"
+  },
+  {
+    "kind": "gear",
+    "id": "gear-shop-a12-jeweler-2",
+    "name": "First Flame Circle",
+    "goldCost": 500,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "Your Poison, Burn, and Bleed deal 30% more damage. Favored by Affliction Mastery specialists, but wearable by every class.",
+    "iconUrl": "/assets/gear-icons/ring-04.webp",
+    "stats": {
+      "vitality": 6,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "statusDamage": {
+          "poison": 0.3,
+          "burn": 0.3,
+          "bleed": 0.3
+        }
+      }
+    },
+    "arkenfallVendor": "jeweler",
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": "world-below"
+  },
+  // SHOP PROGRESSION END
 ];
 
 export const GEAR_SETS: GearSetDefinition[] = [
@@ -6865,7 +9546,162 @@ export const GEAR_SETS: GearSetDefinition[] = [
         }
       }
     ]
-  }
+  },
+  // SHOP PROGRESSION SETS START
+  {
+    "id": "set-shop-a2-galehunter",
+    "name": "Galehunter",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+1 Agility and +2% Critical Strike Chance.",
+        "passive": {
+          "stats": {
+            "agility": 1
+          },
+          "critChance": 0.02
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a3-cragforged",
+    "name": "Cragforged",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+1 Strength and generate 12% more Guard.",
+        "passive": {
+          "stats": {
+            "strength": 1
+          },
+          "guardGeneration": 0.12
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a4-fenweaver",
+    "name": "Fenweaver",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+2 Intelligence and +3 Spell Power.",
+        "passive": {
+          "stats": {
+            "intelligence": 2
+          },
+          "magicalPower": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a6-tidestrider",
+    "name": "Tidestrider",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+3 Agility and +3% Critical Strike Chance.",
+        "passive": {
+          "stats": {
+            "agility": 3
+          },
+          "critChance": 0.03
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a7-nightguard",
+    "name": "Nightguard",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+4 Strength and generate 16% more Guard.",
+        "passive": {
+          "stats": {
+            "strength": 4
+          },
+          "guardGeneration": 0.16
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a8-rimeweaver",
+    "name": "Rimeweaver",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+4 Intelligence and +5 Spell Power.",
+        "passive": {
+          "stats": {
+            "intelligence": 4
+          },
+          "magicalPower": 5
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a10-crownstalker",
+    "name": "Crownstalker",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+6 Agility and +5% Critical Strike Chance.",
+        "passive": {
+          "stats": {
+            "agility": 6
+          },
+          "critChance": 0.05
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a11-starward",
+    "name": "Starward",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+6 Strength and generate 20% more Guard.",
+        "passive": {
+          "stats": {
+            "strength": 6
+          },
+          "guardGeneration": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-shop-a12-first-echo",
+    "name": "First Echo",
+    "pieceCount": 2,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+6 Intelligence and +7 Spell Power.",
+        "passive": {
+          "stats": {
+            "intelligence": 6
+          },
+          "magicalPower": 7
+        }
+      }
+    ]
+  },
+  // SHOP PROGRESSION SETS END
 ];
 
 export const GEAR_SET_BONUSES: GearSetBonusDefinition[] = GEAR_SETS.flatMap((set) => set.bonuses.map((bonus) => ({

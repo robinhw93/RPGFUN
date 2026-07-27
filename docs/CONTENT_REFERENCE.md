@@ -499,6 +499,54 @@ The town hub is listed above adventures and contains seven illustrated destinati
 | The Resting Hart | Paid recovery, next-combat meals, and The Gilded Dice. | Rest costs 1 Gold per 5 missing Health, rounded up. Ironpot Stew costs 5 Gold and grants Strengthened; Peppercrust Boar costs 8 Gold and grants Fierce; Hartroot Broth costs 10 Gold and grants Regenerate. Each meal benefit is applied when the next combat begins and may be prepared once at a time. The Gilded Dice offers 5, 10, and 25 Gold Luck wagers; its hidden difficulty rises after each roll and resets on adventure completion. |
 | Quest Board | Accepting, tracking, inspecting rewards, and turning in quests and questlines. | Uses dedicated generated town artwork. Rewards are withheld until a ready quest is turned in at the board. |
 
+### Adventure shop progression
+
+Every first completion immediately and permanently adds the following two entries to each listed shop. Earlier stock remains available. The nine matching-name artisan pairs are two-piece sets; every Jeweler entry is a ring wearable by any class with a distinct executable build effect.
+
+| Completed adventure | Blacksmith | Alchemist | Tailor | Leatherworker | Jeweler |
+| --- | --- | --- | --- | --- | --- |
+| Windsong Forest | Canopy-Forged Shortsword; Barkbound Buckler | Windsong Remedy; Bottled Tailwind | Whisperleaf Hood; Wayfarer's Sash | Briarhide Jerkin; Softstep Boots | Venomcoil Ring; Bulwark Band |
+| Arkenfall Highlands | Highland Cleaver; Windscarred Helm | Highland Restorative; Cliffside Courage | Skyweave Robe; Heatherstep Slippers | Galehunter Vest; Galehunter Leggings | Quietstep Signet; Cinder Loop |
+| Highfall Mountains | Cragforged Maul; Cragforged Cuirass | Highfall Elixir; Stoneblood Draught | Cloudpeak Cowl; Cloudpeak Robes | Goatpath Leathers; Goatpath Treads | Bloodletter's Seal; Static Fang Ring |
+| Mirefen Marsh | Bog-Iron Hatchet; Mireplate Greaves | Mirefen Lifebloom; Purewater Antivenom | Fenweaver Hood; Fenweaver Wraps | Reedstalker Coat; Reedstalker Boots | Rimebound Band; Woundkeeper Ring |
+| Ashen Foundry | Ash Tempered Blade; Foundry Wardshield | Foundry Heart-Tonic; Cooling Ember Salve | Sootscribe Mantle; Sootscribe Sandals | Cinderhide Vest; Cinderhide Legguards | Immolator's Loop; Wardweaver Circle |
+| Sunken Reliquary | Drowned Temple Spear; Relicguard Helm | Reliquary Panacea; Pearlwater Infusion | Tidecaller's Vestments; Tidecaller's Slippers | Tidestrider Coat; Tidestrider Leggings | Stormcaller's Band; Consecrated Seal |
+| Nightglass Citadel | Nightguard Dirk; Nightguard Breastplate | Nightglass Elixir; Bottled Eclipse | Mirror-Silk Hood; Mirror-Silk Robes | Veilrunner Jerkin; Veilrunner Boots | Opportunist's Mark; Furnaceguard Ring |
+| Frostbound Expanse | Rimebone Axe; Glacier Bulwark | Frostheart Restorative; Thawing Aurora | Rimeweaver Crown; Rimeweaver Vestments | Whitewind Leathers; Whitewind Treads | Avalanche Signet; Crimson Feast Ring |
+| Stormspire Aerie | Stormspire Glaive; Thunderhead Plate | Stormspire Vitality; Condensed Thunder | Tempest-Silk Cowl; Tempest-Silk Robes | Skystrider Harness; Skystrider Legguards | Tempest Circuit; Virulent Promise |
+| The Hollow Crown | Crownless Greatsword; Hollowguard Sabatons | Crownless Reprieve; Royal Rejuvenant | Gravecourt Hood; Gravecourt Vestments | Crownstalker Coat; Crownstalker Boots | Crownless Bastion Ring; Elemental Conflux Ring |
+| The Astral Scar | Starward Warhammer; Starward Aegis | Astral Renewal; Distilled Starlight | Cometweave Crown; Cometweave Robes | Voidwalker Harness; Voidwalker Leggings | Astral Fracture Ring; Perfect Execution Ring |
+| The World Below | Deepforge Cleaver; Rootsteel Cuirass | Worldroot Elixir; Essence of the First Echo | First-Echo Veil; First-Echo Vestments | Abysswalker Leathers; Abysswalker Treads | Worldroot Seal; First Flame Circle |
+
+The specialization-ring effects progress as follows:
+
+| Ring | Supported build | Unique effect |
+| --- | --- | --- |
+| Venomcoil Ring | Poison | Poison deals 10% more damage. |
+| Bulwark Band | Guard | Generates 10% more Guard. |
+| Quietstep Signet | Stealth | Deals 12% more damage while Stealthed. |
+| Cinder Loop | Fire | Burn deals 12% more damage. |
+| Bloodletter's Seal | Bleed | Bleed deals 15% more damage. |
+| Static Fang Ring | Shockblade | Electrified lasts 1 additional turn. |
+| Rimebound Band | Frost | Deals 14% more Frost damage to Slowed or Frozen enemies. |
+| Woundkeeper Ring | Arcane Wound | Arcane Wound lasts 1 additional turn. |
+| Immolator's Loop | Self-Immolation | Deals 18% more Fire damage while Burning. |
+| Wardweaver Circle | Barrier | Begins combat with Barrier equal to 6% of maximum Health. |
+| Stormcaller's Band | Lightning | Applies 1 additional Electrified stack. |
+| Consecrated Seal | Smite | Applies 1 additional Smite stack. |
+| Opportunist's Mark | Debuff exploitation | Deals 2.5% more damage per unique target debuff. |
+| Furnaceguard Ring | Burning Guard | Deals 15% more Fire damage while Guarded. |
+| Avalanche Signet | Frost control | Deals 18% more damage to Frozen enemies. |
+| Crimson Feast Ring | Vampiric Bleed | Bleed restores Health equal to 10% of its damage. |
+| Tempest Circuit | Electrified burst | Deals 20% more Lightning damage to Electrified enemies. |
+| Virulent Promise | Venom debilitation | Applying Poison has a 20% chance to also apply Weaken. |
+| Crownless Bastion Ring | Fortress | Begins combat with 15% maximum-Health Guard and generates 15% more Guard. |
+| Elemental Conflux Ring | Elemental Fury | Deals 3% more damage per unique target debuff. |
+| Astral Fracture Ring | Arcane detonation | Deals 25% more Arcane damage to enemies with Arcane Wound. |
+| Perfect Execution Ring | Critical execution | The first Critical Strike each turn restores 1 Energy. |
+| Worldroot Seal | Undying guardian | The first lethal hit each combat instead restores 20% maximum Health. |
+| First Flame Circle | Affliction mastery | Poison, Burn, and Bleed deal 30% more damage. |
+
 ### Live quests
 
 The live catalog contains **39 quests** across four ordered questlines. Quest Board projects at most six relevant postings at once and a character may track at most six accepted quests. Required collect-item copies are consumed at turn-in.
@@ -701,7 +749,7 @@ Every late set has Head, Chest, Pants, Boots, and Ring pieces and thresholds at 
 
 ### Available gear
 
-New characters begin with no equipped gear and an empty inventory. The live catalog contains 234 items: 181 gear, 17 consumables, and 36 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
+New characters begin with no equipped gear and an empty inventory. The live catalog contains 354 items: 277 gear, 41 consumables, and 36 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
 
 The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. Legendary gear begins with The Astral Scar. Every live item ID is registered in the shared optimized icon catalog.
 

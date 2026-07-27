@@ -843,6 +843,78 @@ function testTownAdventureRequirements() {
   });
 }
 
+function testProgressiveTownStock() {
+  const storyAdventureIds = [
+    "windsong-forest",
+    "adventure-ms1iq9ye-9ra1z",
+    "highfall-mountains",
+    "mirefen-marsh",
+    "ashen-foundry",
+    "sunken-reliquary",
+    "nightglass-citadel",
+    "frostbound-expanse",
+    "stormspire-aerie",
+    "hollow-crown",
+    "astral-scar",
+    "world-below",
+  ];
+  const vendors = ["blacksmith", "alchemist", "tailor", "leatherworker", "jeweler"] as const;
+  const progressionItems = ITEMS.filter((item) => item.id.includes("-shop-a"));
+  const progressionItemIds = new Set(progressionItems.map((item) => item.id));
+  assert.equal(progressionItems.length, 120, "Twelve adventure clears must add two items to each of the five shops.");
+  assert.ok(storyAdventureIds.every((id) => ADVENTURES.some((adventure) => adventure.id === id)), "Every shop-stock requirement must reference a live story adventure.");
+
+  vendors.forEach((vendor) => {
+    storyAdventureIds.forEach((adventureId, adventureIndex) => {
+      const completedBefore = storyAdventureIds.slice(0, adventureIndex);
+      const completedAfter = storyAdventureIds.slice(0, adventureIndex + 1);
+      const before = getTownVendorStock(vendor, completedBefore).filter((item) => progressionItemIds.has(item.id));
+      const after = getTownVendorStock(vendor, completedAfter).filter((item) => progressionItemIds.has(item.id));
+      const newlyUnlocked = after.filter((item) => item.vendorPrerequisiteAdventureId === adventureId);
+      assert.equal(before.length, adventureIndex * 2, `${vendor} must retain exactly two items from every earlier clear.`);
+      assert.equal(after.length, (adventureIndex + 1) * 2, `${vendor} must add exactly two items after ${adventureId}.`);
+      assert.equal(newlyUnlocked.length, 2, `${vendor} must unlock two new items for ${adventureId}.`);
+      assert.ok(after.every((item) => completedAfter.includes(item.vendorPrerequisiteAdventureId ?? "")), `${vendor} must not reveal future progression stock.`);
+    });
+  });
+
+  const rings = progressionItems.filter((item) => isGearItem(item) && item.slot === "ring");
+  assert.equal(rings.length, 24, "The Jeweler progression must contain one executable ring for each supported build specialization.");
+  assert.ok(rings.every((ring) => ring.arkenfallVendor === "jeweler" && ring.description.includes("wearable by every class")), "Every specialization ring must be class-agnostic and explain that in player-facing text.");
+  assert.ok(rings.every((ring) => ring.combat && Object.keys(ring.combat).length > 0), "Every specialization ring must implement its unique effect through CombatFeatureBundle.");
+  assert.equal(new Set(rings.map((ring) => JSON.stringify(ring.combat))).size, rings.length, "Every specialization ring must have a distinct executable effect.");
+
+  const progressionSets = GEAR_SETS.filter((set) => set.id.startsWith("set-shop-"));
+  assert.equal(progressionSets.length, 9, "Selected artisan stock must introduce nine paired progression sets.");
+  progressionSets.forEach((set) => {
+    const pieces = progressionItems.filter((item) => isGearItem(item) && item.set === set.id);
+    assert.equal(set.pieceCount, 2, `${set.name} must be a two-piece artisan set.`);
+    assert.equal(pieces.length, 2, `${set.name} must have exactly two purchasable pieces.`);
+    assert.equal(set.bonuses.length, 1, `${set.name} must have one complete two-piece bonus.`);
+    assert.equal(set.bonuses[0].requiredPieces, 2, `${set.name}'s bonus must activate at two pieces.`);
+  });
+  progressionItems.forEach((item) => assert.equal(ITEM_ICON_URLS[item.id], item.iconUrl, `${item.name} must reuse its selected registered icon.`));
+
+  const firstUnlockedItem = progressionItems.find((item) => item.arkenfallVendor === "blacksmith" && item.vendorPrerequisiteAdventureId === storyAdventureIds[0]);
+  assert.ok(firstUnlockedItem, "The first adventure must unlock Blacksmith stock.");
+  const purchaseState: GameState = {
+    ...structuredClone(INITIAL_GAME),
+    characterCreated: true,
+    character: {
+      ...structuredClone(INITIAL_GAME.character),
+      completedAdventureIds: [storyAdventureIds[0]],
+      gold: getItemGoldCost(firstUnlockedItem),
+      inventory: [],
+      equipment: {},
+    },
+  };
+  assert.equal(purchaseTownItem({ ...purchaseState, character: { ...purchaseState.character, completedAdventureIds: [] } }, "blacksmith", firstUnlockedItem.id).success, false, "Progression stock must not be purchasable before its adventure is completed.");
+  const purchased = purchaseTownItem(purchaseState, "blacksmith", firstUnlockedItem.id);
+  assert.equal(purchased.success, true, "New stock must become purchasable immediately after its adventure is completed.");
+  assert.equal(purchased.state.character.gold, 0, "A newly unlocked purchase must use its configured Gold Cost.");
+  assert.ok(purchased.state.character.inventory.some((item) => item.id === firstUnlockedItem.id) || Object.values(purchased.state.character.equipment).some((item) => item?.id === firstUnlockedItem.id), "A newly unlocked purchase must enter Inventory or automatically equip.");
+}
+
 function testArkenfallTownCommerceAndCrafting() {
   const blacksmithStock = getTownVendorStock("blacksmith");
   const alchemistStock = getTownVendorStock("alchemist");
@@ -1435,6 +1507,7 @@ testEventEditorRepairsInternalIds();
 testItemEditorRepairsInternalIds();
 testItemEditorMergesNewLiveCatalogEntries();
 testTownAdventureRequirements();
+testProgressiveTownStock();
 testArkenfallTownCommerceAndCrafting();
 testStatusContracts();
 testBasicPlayerAbility();
