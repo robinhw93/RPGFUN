@@ -490,6 +490,8 @@ export interface Ability {
   /** Fraction of the target status stacks consumed. Defaults to all stacks. */
   consumeTargetStatusRatio?: number;
   consumeStatusForHealing?: StatusEffectId;
+  /** Multiplies the consumed status's full-duration damage when converting it to healing. Defaults to 1. */
+  consumeStatusForHealingMultiplier?: number;
   /** Copies this status from the selected target to another random living enemy. */
   spreadTargetStatus?: StatusEffectId;
   /** Copies every debuff from the selected target to all other living enemies. */

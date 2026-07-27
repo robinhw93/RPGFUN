@@ -1422,6 +1422,32 @@ function testBasicPlayerAbility() {
   }
 }
 
+function testShadowPoisonAbilityBalance() {
+  assert.equal(ABILITIES.Epidemic.statusStacks, 4, "Epidemic must apply exactly four Poison stacks.");
+  assert.equal(ABILITIES.Venomborn.consumeStatusForHealingMultiplier, 0.5, "Venomborn must convert only half of Poison's full-duration damage into healing.");
+
+  const character = { ...structuredClone(INITIAL_GAME.character), name: "Poison Tester" };
+  const created = createCombat(character, ["dummy", "dummy"]);
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const activeCombat = { ...created, turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")], activeTurnIndex: 0, initiativeRevealed: true };
+  const epidemicResult = useAbility(activeCombat, character, "Epidemic");
+  const epidemicPoison = epidemicResult.pendingEffects.filter((effect) => effect.type === "status" && effect.targetId !== "player" && effect.status.id === "poison");
+  assert.equal(epidemicPoison.length, 2, "Epidemic must queue Poison for every living target.");
+  assert.ok(epidemicPoison.every((effect) => effect.type === "status" && effect.status.stacks === 4), "Every Epidemic target must receive exactly four Poison stacks.");
+
+  const poisonedTarget = { ...activeCombat.enemies[0], statuses: [createStatusEffect("poison", { stacks: 4, duration: 3, sourcePower: 0, sourceId: "player" })] };
+  const venombornCombat = {
+    ...activeCombat,
+    playerHp: activeCombat.playerMaxHp - 50,
+    enemies: [poisonedTarget, activeCombat.enemies[1]],
+    selectedEnemyId: poisonedTarget.instanceId,
+  };
+  const venombornResult = useAbility(venombornCombat, character, "Venomborn");
+  const venombornHeal = venombornResult.pendingEffects.find((effect) => effect.type === "heal" && effect.targetId === "player");
+  assert.ok(venombornHeal?.type === "heal", "Venomborn must queue its healing at presentation time.");
+  assert.equal(venombornHeal.amount, 6, "Venomborn must heal for 50% of four Poison damage across three turns.");
+}
+
 function testCooldownsCarryBetweenAdventureCombats() {
   const character = { ...structuredClone(INITIAL_GAME.character), name: "Cooldown Tester" };
   const nextCombat = createCombat(character, ["dummy"], undefined, {
@@ -1742,6 +1768,7 @@ testProgressiveTownStock();
 testArkenfallTownCommerceAndCrafting();
 testStatusContracts();
 testBasicPlayerAbility();
+testShadowPoisonAbilityBalance();
 testCooldownsCarryBetweenAdventureCombats();
 testStructuredEventOutcome();
 testDirectEventMerchant();

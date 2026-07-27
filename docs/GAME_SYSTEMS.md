@@ -204,7 +204,7 @@ Light Speed performs a complete player turn transition without allowing enemies 
 
 Voltage Stab deals Lightning damage from Spell Power. If the target was already Electrified when the hit landed, it restores 2% of Max Health and adds 2 to the player's next Energy-regeneration event. The temporary regeneration bonus stacks if another source grants the same effect, is previewed by the segmented Energy bar, and is consumed when the next player turn begins. Exhausted still limits the final regeneration to 1.
 
-Epidemic applies 10 Poison to every living, targetable enemy and then grants Stealth until the end of the player's next turn.
+Epidemic applies 4 Poison to every living, targetable enemy and then grants Stealth until the end of the player's next turn. Venomborn consumes all Poison on its target and restores Health equal to 50% of that Poison's full-duration damage.
 
 New Current reduces Voltage Stab's cooldown from 2 turns to 1. Efficient Spread reduces Epidemic's Energy cost from 3 to 2. Ability cost and cooldown modifiers are additive, use whole numbers, and cannot reduce either value below zero.
 

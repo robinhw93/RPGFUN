@@ -123,8 +123,8 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   Venomborn: {
     range: "ranged",
-    id: "Venomborn", name: "Venomborn", description: "Consume all Poison on the target to heal for the damage it would deal over its full duration.", energyCost: 2,
-    cooldownTurns: 6, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeStatusForHealing: "poison", icon: "♨", branch: "shadow", vfx: "venomborn",
+    id: "Venomborn", name: "Venomborn", description: "Consume all Poison on the target to heal for 50% of the damage it would deal over its full duration.", energyCost: 2,
+    cooldownTurns: 6, target: "enemy", dealsDamage: false, requiredTargetStatus: "poison", consumeStatusForHealing: "poison", consumeStatusForHealingMultiplier: 0.5, icon: "♨", branch: "shadow", vfx: "venomborn",
   },
   LightningStrike: {
     range: "melee",
@@ -213,8 +213,8 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   Epidemic: {
     range: "ranged",
-    id: "Epidemic", name: "Epidemic", description: "Apply 10 Poison to all enemies and gain Stealth until the end of your next turn.", energyCost: 3,
-    cooldownTurns: 10, target: "all_enemies", dealsDamage: false, effect: "poison", statusStacks: 10,
+    id: "Epidemic", name: "Epidemic", description: "Apply 4 Poison to all enemies and gain Stealth until the end of your next turn.", energyCost: 3,
+    cooldownTurns: 10, target: "all_enemies", dealsDamage: false, effect: "poison", statusStacks: 4,
     selfStatusApplications: [{ status: "stealth", duration: 2, expiresAtTurnStart: false }], icon: "☣", branch: "shadow", vfx: "epidemic",
   },
   VoltageStab: {

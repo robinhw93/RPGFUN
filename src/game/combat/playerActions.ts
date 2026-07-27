@@ -379,7 +379,11 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         const statusDamageMultiplier = consumedStatus.sourceId === "player"
           ? (derived.statusDamageMultipliers[consumedStatus.id] ?? 1) * getCharacterStatusDamageMultiplier(character, consumedStatus.id, playerStatuses)
           : 1;
-        const potentialHealing = getAfflictionDamage(consumedStatus, target.statuses, statusDamageMultiplier, target.armor, target.magicResistance) * DEFAULT_STATUS_DURATION;
+        const potentialHealing = Math.max(0, Math.round(
+          getAfflictionDamage(consumedStatus, target.statuses, statusDamageMultiplier, target.armor, target.magicResistance)
+          * DEFAULT_STATUS_DURATION
+          * Math.max(0, ability.consumeStatusForHealingMultiplier ?? 1),
+        ));
         const healing = Math.min(combat.playerMaxHp - playerHp, potentialHealing);
         playerHp += healing;
         enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, statuses: enemy.statuses.filter((status) => status.id !== consumedStatus.id) } : enemy);

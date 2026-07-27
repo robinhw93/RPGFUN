@@ -24,7 +24,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Flurry | 4 | 2 | Random enemies | Makes five attacks for 40% Physical Power each. Every hit independently selects a valid random enemy and triggers on-hit effects. |
 | Ambush | 2 | None | Enemy | Requires Stealth. Deals 150% Physical Power with +50% Critical Strike Chance. |
 | Toxic Explosion | 5 | 2 | Poisoned enemy | Deals the target's remaining Poison duration immediately and removes Poison. |
-| Venomborn | 2 | 6 | Poisoned enemy | Consumes Poison and heals the player for three turns of that Poison's current damage. |
+| Venomborn | 2 | 6 | Poisoned enemy | Consumes Poison and heals the player for 50% of three turns of that Poison's current damage. |
 | Lightning Strike | 4 | 4 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Spell Power as Lightning damage, then applies Electrified for three turns. |
 | Focus | 1 | 6 | Self | Resets every other ability cooldown. Focus keeps its own cooldown. |
 | Recuperate | 1 | 4 | Self | Restores 50% of Max Energy after paying its Energy cost. |
@@ -40,7 +40,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Light Speed | 6 | 5 | Enemy | Deals 50% Physical Power as Physical damage plus 100% Spell Power as Lightning damage, applies Electrified, ends the current turn, and immediately begins a new player turn. |
 | Chain Assassination | 5 | 3 | Enemy | Deals 125% Physical Power and gains +25% Critical Strike Chance while Stealthed. A kill refunds the Energy actually spent and resets its cooldown. |
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power as Physical damage plus 25% Spell Power as Spell Damage. Both components gain 20% damage per unique debuff on the target. |
-| Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 10 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
+| Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 4 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Spell Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
 | Bash | 1 | 1 | Enemy | Deals 60% Physical Power as Physical damage and has a 30% chance to grant +1 Energy regeneration next turn. Granted by the Brute class node. |
 | Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. Imbued Weapon changes the scaling to Spell Power, lowers the cost to 2, lowers the cooldown to 1, and applies 2 Burn. |
