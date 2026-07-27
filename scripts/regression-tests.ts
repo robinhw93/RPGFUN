@@ -1190,8 +1190,11 @@ function testBasicPlayerAbility() {
 }
 
 function testStructuredEventOutcome() {
+  const gear = ITEMS.find(isGearItem);
+  assert.ok(gear, "Structured event outcome regression requires a live gear item.");
   const state = structuredClone(INITIAL_GAME) as GameState;
   state.characterCreated = true;
+  state.character.equipment = {};
   state.adventure = { ...state.adventure, active: true, eventResolved: false, carryHp: 20 };
   const choice: AdventureEventChoice = {
     id: "regression-choice",
@@ -1202,7 +1205,9 @@ function testStructuredEventOutcome() {
     success: {
       text: "Success.",
       effects: [
+        { type: "loseHealth", amount: 50 },
         { type: "gainGold", amount: 5 },
+        { type: "gainItem", itemId: gear.id },
         { type: "playerNextCombatBuff", status: "strengthened", stacks: 2 },
         { type: "immediateEncounter", enemyId: "dummy", count: 2, experience: 10, gold: 3 },
       ],
@@ -1211,8 +1216,15 @@ function testStructuredEventOutcome() {
   };
   const result = resolveAdventureEventChoice(state, choice, () => 0);
   assert.equal(result.character.gold, state.character.gold + 5, "Event gold must be granted once.");
+  assert.equal(result.adventure.carryHp, 1, "Event Health loss must retain the one-Health floor.");
   assert.deepEqual(result.adventure.nextCombatPlayerStatuses, [{ status: "strengthened", stacks: 2 }]);
   assert.deepEqual(result.adventure.eventEncounter?.enemyIds, ["dummy", "dummy"]);
+  const appliedEffects = result.adventure.eventRollResult?.appliedEffects ?? [];
+  assert.deepEqual(appliedEffects.find((effect) => effect.type === "resource" && effect.resource === "health"), { type: "resource", resource: "health", direction: "lose", amount: 19 }, "Outcome presentation must store the actual clamped Health loss.");
+  assert.deepEqual(appliedEffects.find((effect) => effect.type === "resource" && effect.resource === "gold"), { type: "resource", resource: "gold", direction: "gain", amount: 5 }, "Outcome presentation must store the applied Gold gain.");
+  assert.ok(appliedEffects.some((effect) => effect.type === "item" && effect.itemId === gear.id && effect.equippedSlot), "Outcome presentation must record acquired gear and its automatic equipment slot.");
+  assert.ok(appliedEffects.some((effect) => effect.type === "status" && effect.status === "strengthened" && effect.stacks === 2), "Outcome presentation must record queued next-combat statuses.");
+  assert.ok(appliedEffects.some((effect) => effect.type === "encounter" && effect.enemyId === "dummy" && effect.count === 2), "Outcome presentation must record immediate encounters.");
   assert.equal(resolveAdventureEventChoice(result, choice, () => 0), result, "A resolved event must not apply twice.");
 }
 
@@ -1236,6 +1248,7 @@ function testDirectEventMerchant() {
   };
   const result = resolveAdventureEventChoice(state, choice, () => { throw new Error("Direct outcomes must not roll d100."); });
   assert.equal(result.adventure.eventRollResult?.resolution, "direct", "A direct choice must produce a non-roll resolution result.");
+  assert.deepEqual(result.adventure.eventRollResult?.appliedEffects, [{ type: "merchant", itemIds: [item.id] }], "Direct merchant results must persist their structured Outcome entry.");
   assert.deepEqual(result.adventure.eventMerchant?.itemIds, [item.id], "The selected merchant stock must persist in adventure state.");
   const purchased = purchaseEventMerchantItem(result, item.id);
   assert.equal(purchased.character.gold, 5, "A merchant purchase must deduct the item's live Gold Cost.");

@@ -1045,6 +1045,13 @@ export type AdventureEventOutcomeEffect =
   | { type: "enemiesNextCombatDebuff"; status: StatusEffectId; stacks: number }
   | { type: "immediateEncounter"; enemyId: string; count: number; experience: number; gold: number };
 
+export type AdventureEventAppliedEffect =
+  | { type: "resource"; resource: "health" | "gold" | "experience" | "talentPoints" | "attributePoints"; direction: "gain" | "lose"; amount: number }
+  | { type: "item"; itemId: string; equippedSlot: GearSlot | null }
+  | { type: "status"; target: "player" | "enemies"; disposition: "buff" | "debuff"; status: StatusEffectId; stacks: number }
+  | { type: "encounter"; enemyId: string; count: number; experience: number; gold: number }
+  | { type: "merchant"; itemIds: string[] };
+
 export interface AdventureEventChoice {
   id: string;
   label: string;
@@ -1117,12 +1124,16 @@ export interface AdventureEventCheckResult {
   threshold: number;
   success: boolean;
   outcomeText: string;
+  /** Applied changes are persisted so a resumed event can present the exact resolved outcome. */
+  appliedEffects?: AdventureEventAppliedEffect[];
 }
 
 export interface AdventureEventDirectResult {
   resolution: "direct";
   choiceId: string;
   outcomeText: string;
+  /** Optional for compatibility with event results saved before structured outcome presentation. */
+  appliedEffects?: AdventureEventAppliedEffect[];
 }
 
 export type AdventureEventRollResult = AdventureEventCheckResult | AdventureEventDirectResult;

@@ -489,6 +489,6 @@ For gear changes, verify:
 - Inventory/equipment transfer without duplication or loss.
 - Rarity colors, alphabetical stats, set thresholds, and comparison differences.
 - Background scroll lock in all item and slot modals.
-- Merchant read-only gear inspection, score-screen gear inspection with direct Inventory Equip actions, merchant purchase/sold-out animation, centered rising-and-fading town purchase confirmation without an inline success panel, grouped duplicate loot, and the event Inventory/Equipment shortcut at mobile and desktop widths.
+- Merchant read-only gear inspection, score-screen gear inspection with direct Inventory Equip actions, merchant purchase/sold-out animation, centered rising-and-fading town purchase confirmation without an inline success panel, grouped duplicate loot, structured event Outcome rows, and the event Inventory/Equipment shortcut at mobile and desktop widths.
 - Per-item artwork consistency and rarity-colored item names across Inventory, equipment slots, details/comparison, the in-combat Inventory, merchants, crafting requirements, and score-screen loot.
 - Completed adventures remain listed with the green Completed treatment and expose a Replay Adventure action. Replay combat and positive event XP pass through the shared 10%-reward rule, while locked prerequisites remain rejected at the application start boundary.

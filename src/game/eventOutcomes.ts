@@ -7,6 +7,7 @@ import { isStatusEffectId } from "./statusEffects";
 import type {
   AdventureCombatStartStatus,
   AdventureEventChoice,
+  AdventureEventAppliedEffect,
   AdventureEventRollResult,
   AdventureEventOutcome,
   AdventureEventOutcomeEffect,
@@ -71,59 +72,105 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
   let nextCombatEnemyStatuses = [...(state.adventure.nextCombatEnemyStatuses ?? [])];
   let eventEncounter = state.adventure.eventEncounter ?? null;
   let eventMerchant = state.adventure.eventMerchant ?? null;
+  const appliedEffects: AdventureEventAppliedEffect[] = [];
+  const outcomeEffects = getAdventureEventOutcomeEffects(outcome);
 
-  getAdventureEventOutcomeEffects(outcome).forEach((effect) => {
+  outcomeEffects.forEach((effect) => {
     switch (effect.type) {
-      case "heal":
+      case "heal": {
+        const previousHealth = carryHp;
         carryHp = Math.min(maxHp, carryHp + nonNegativeInteger(effect.amount));
-        break;
-      case "loseHealth":
-        carryHp = Math.max(1, carryHp - nonNegativeInteger(effect.amount));
-        break;
-      case "gainGold":
-        character = { ...character, gold: character.gold + nonNegativeInteger(effect.amount) };
-        break;
-      case "loseGold":
-        character = { ...character, gold: Math.max(0, character.gold - nonNegativeInteger(effect.amount)) };
-        break;
-      case "gainExperience":
-        character = addExperience(character, getAdventureExperienceReward(effect.amount, state.adventure, state.character.completedAdventureIds)).character;
-        break;
-      case "loseExperience":
-        character = { ...character, xp: Math.max(0, character.xp - nonNegativeInteger(effect.amount)) };
-        break;
-      case "gainTalentPoints":
-        character = { ...character, talentPoints: character.talentPoints + nonNegativeInteger(effect.amount) };
-        break;
-      case "gainAttributePoints":
-        character = { ...character, unspentStatPoints: character.unspentStatPoints + nonNegativeInteger(effect.amount) };
-        break;
-      case "gainItem": {
-        const item = ITEMS.find((candidate) => candidate.id === effect.itemId);
-        if (item) character = acquireItem(character, item).character;
+        appliedEffects.push({ type: "resource", resource: "health", direction: "gain", amount: carryHp - previousHealth });
         break;
       }
-      case "openMerchant":
+      case "loseHealth": {
+        const previousHealth = carryHp;
+        carryHp = Math.max(1, carryHp - nonNegativeInteger(effect.amount));
+        appliedEffects.push({ type: "resource", resource: "health", direction: "lose", amount: previousHealth - carryHp });
+        break;
+      }
+      case "gainGold": {
+        const amount = nonNegativeInteger(effect.amount);
+        character = { ...character, gold: character.gold + amount };
+        appliedEffects.push({ type: "resource", resource: "gold", direction: "gain", amount });
+        break;
+      }
+      case "loseGold": {
+        const previousGold = character.gold;
+        character = { ...character, gold: Math.max(0, character.gold - nonNegativeInteger(effect.amount)) };
+        appliedEffects.push({ type: "resource", resource: "gold", direction: "lose", amount: previousGold - character.gold });
+        break;
+      }
+      case "gainExperience": {
+        const amount = getAdventureExperienceReward(effect.amount, state.adventure, state.character.completedAdventureIds);
+        character = addExperience(character, amount).character;
+        appliedEffects.push({ type: "resource", resource: "experience", direction: "gain", amount });
+        break;
+      }
+      case "loseExperience": {
+        const previousExperience = character.xp;
+        character = { ...character, xp: Math.max(0, character.xp - nonNegativeInteger(effect.amount)) };
+        appliedEffects.push({ type: "resource", resource: "experience", direction: "lose", amount: previousExperience - character.xp });
+        break;
+      }
+      case "gainTalentPoints": {
+        const amount = nonNegativeInteger(effect.amount);
+        character = { ...character, talentPoints: character.talentPoints + amount };
+        appliedEffects.push({ type: "resource", resource: "talentPoints", direction: "gain", amount });
+        break;
+      }
+      case "gainAttributePoints": {
+        const amount = nonNegativeInteger(effect.amount);
+        character = { ...character, unspentStatPoints: character.unspentStatPoints + amount };
+        appliedEffects.push({ type: "resource", resource: "attributePoints", direction: "gain", amount });
+        break;
+      }
+      case "gainItem": {
+        const item = ITEMS.find((candidate) => candidate.id === effect.itemId);
+        if (item) {
+          const acquisition = acquireItem(character, item);
+          character = acquisition.character;
+          appliedEffects.push({ type: "item", itemId: item.id, equippedSlot: acquisition.equippedSlot });
+        }
+        break;
+      }
+      case "openMerchant": {
+        const itemIds = [...new Set(effect.itemIds.filter((itemId) => ITEMS.some((item) => item.id === itemId)))];
         eventMerchant = {
-          itemIds: [...new Set(effect.itemIds.filter((itemId) => ITEMS.some((item) => item.id === itemId)))],
+          itemIds,
           purchasedItemIds: [],
         };
+        appliedEffects.push({ type: "merchant", itemIds });
         break;
+      }
       case "playerNextCombatBuff":
-      case "playerNextCombatDebuff":
-        if (isStatusEffectId(effect.status)) nextCombatPlayerStatuses = addPendingStatus(nextCombatPlayerStatuses, effect);
+      case "playerNextCombatDebuff": {
+        if (isStatusEffectId(effect.status)) {
+          const stacks = Math.max(1, nonNegativeInteger(effect.stacks));
+          nextCombatPlayerStatuses = addPendingStatus(nextCombatPlayerStatuses, effect);
+          appliedEffects.push({ type: "status", target: "player", disposition: effect.type === "playerNextCombatBuff" ? "buff" : "debuff", status: effect.status, stacks });
+        }
         break;
+      }
       case "enemiesNextCombatBuff":
-      case "enemiesNextCombatDebuff":
-        if (isStatusEffectId(effect.status)) nextCombatEnemyStatuses = addPendingStatus(nextCombatEnemyStatuses, effect);
+      case "enemiesNextCombatDebuff": {
+        if (isStatusEffectId(effect.status)) {
+          const stacks = Math.max(1, nonNegativeInteger(effect.stacks));
+          nextCombatEnemyStatuses = addPendingStatus(nextCombatEnemyStatuses, effect);
+          appliedEffects.push({ type: "status", target: "enemies", disposition: effect.type === "enemiesNextCombatBuff" ? "buff" : "debuff", status: effect.status, stacks });
+        }
         break;
+      }
       case "immediateEncounter": {
         const count = Math.max(1, nonNegativeInteger(effect.count));
         if (ENEMIES[effect.enemyId]) {
+          const experience = nonNegativeInteger(effect.experience);
+          const gold = nonNegativeInteger(effect.gold);
           eventEncounter = {
             enemyIds: Array.from({ length: count }, () => effect.enemyId),
-            reward: { experience: nonNegativeInteger(effect.experience), gold: nonNegativeInteger(effect.gold) },
+            reward: { experience, gold },
           };
+          appliedEffects.push({ type: "encounter", enemyId: effect.enemyId, count, experience, gold });
         }
         break;
       }
@@ -138,8 +185,8 @@ export function resolveAdventureEventChoice(state: GameState, choice: AdventureE
       carryHp: Math.min(getDerivedStats(character).maxHp, carryHp),
       eventResolved: true,
       eventRollResult: direct
-        ? { resolution: "direct", choiceId: choice.id, outcomeText: outcome.text }
-        : { resolution: "check", choiceId: choice.id, dieRoll, stat: choice.stat, statBonus, total, threshold: choice.threshold, success, outcomeText: outcome.text },
+        ? { resolution: "direct", choiceId: choice.id, outcomeText: outcome.text, appliedEffects }
+        : { resolution: "check", choiceId: choice.id, dieRoll, stat: choice.stat, statBonus, total, threshold: choice.threshold, success, outcomeText: outcome.text, appliedEffects },
       nextCombatPlayerStatuses,
       nextCombatEnemyStatuses,
       eventEncounter,

@@ -1,13 +1,14 @@
-import { Backpack, ChevronRight, FlaskConical } from "lucide-react";
+import { Award, Backpack, ChevronRight, Coins, FlaskConical, HeartPulse, Sparkles, Store, Swords } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
 import { ItemDetailModal } from "../character/CharacterView";
-import { ITEMS } from "../../game/data";
-import { getInitialEventPresentationPhase } from "../../game/eventOutcomes";
+import { ENEMIES, ITEMS } from "../../game/data";
+import { getAdventureEventOutcomeEffects, getInitialEventPresentationPhase } from "../../game/eventOutcomes";
 import { getItemGoldCost, getItemSellValue, isGearItem } from "../../game/items";
-import type { AdventureEventDefinition, AdventureEventRollResult, CharacterState, GearItem, InventoryItem } from "../../game/types";
+import { STATUS_EFFECTS } from "../../game/statusEffects";
+import type { AdventureEventAppliedEffect, AdventureEventChoice, AdventureEventDefinition, AdventureEventOutcomeEffect, AdventureEventRollResult, CharacterState, GearItem, InventoryItem } from "../../game/types";
 import { ADVENTURE_EVENT_TIMING } from "../../game/timing";
-import { getItemNameClass, GoldIcon } from "../../ui/gameUi";
+import { getItemNameClass, GoldIcon, SLOT_LABELS } from "../../ui/gameUi";
 
 type EventPresentationPhase = "title" | "description" | "choices" | "direct" | "rolling" | "raw" | "bonus" | "outcome" | "merchant";
 
@@ -23,6 +24,83 @@ function randomD100() {
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function configuredEffectToAppliedEffect(effect: AdventureEventOutcomeEffect): AdventureEventAppliedEffect | null {
+  const amount = "amount" in effect ? Math.max(0, Math.round(effect.amount)) : 0;
+  switch (effect.type) {
+    case "heal": return { type: "resource", resource: "health", direction: "gain", amount };
+    case "loseHealth": return { type: "resource", resource: "health", direction: "lose", amount };
+    case "gainGold": return { type: "resource", resource: "gold", direction: "gain", amount };
+    case "loseGold": return { type: "resource", resource: "gold", direction: "lose", amount };
+    case "gainExperience": return { type: "resource", resource: "experience", direction: "gain", amount };
+    case "loseExperience": return { type: "resource", resource: "experience", direction: "lose", amount };
+    case "gainTalentPoints": return { type: "resource", resource: "talentPoints", direction: "gain", amount };
+    case "gainAttributePoints": return { type: "resource", resource: "attributePoints", direction: "gain", amount };
+    case "gainItem": return { type: "item", itemId: effect.itemId, equippedSlot: null };
+    case "openMerchant": return { type: "merchant", itemIds: effect.itemIds };
+    case "playerNextCombatBuff": return { type: "status", target: "player", disposition: "buff", status: effect.status, stacks: Math.max(1, Math.round(effect.stacks)) };
+    case "playerNextCombatDebuff": return { type: "status", target: "player", disposition: "debuff", status: effect.status, stacks: Math.max(1, Math.round(effect.stacks)) };
+    case "enemiesNextCombatBuff": return { type: "status", target: "enemies", disposition: "buff", status: effect.status, stacks: Math.max(1, Math.round(effect.stacks)) };
+    case "enemiesNextCombatDebuff": return { type: "status", target: "enemies", disposition: "debuff", status: effect.status, stacks: Math.max(1, Math.round(effect.stacks)) };
+    case "immediateEncounter": return { type: "encounter", enemyId: effect.enemyId, count: Math.max(1, Math.round(effect.count)), experience: Math.max(0, Math.round(effect.experience)), gold: Math.max(0, Math.round(effect.gold)) };
+  }
+}
+
+function getChoiceOutcomeEffects(choice: AdventureEventChoice | undefined, rollResult: AdventureEventRollResult | null): AdventureEventAppliedEffect[] {
+  if (!choice || !rollResult) return [];
+  const outcome = rollResult.resolution === "direct"
+    ? (choice.outcome ?? choice.success)
+    : rollResult.success ? choice.success : choice.failure;
+  return getAdventureEventOutcomeEffects(outcome).flatMap((effect) => {
+    const appliedEffect = configuredEffectToAppliedEffect(effect);
+    return appliedEffect ? [appliedEffect] : [];
+  });
+}
+
+function describeResourceEffect(effect: Extract<AdventureEventAppliedEffect, { type: "resource" }>) {
+  const label = effect.resource === "health" ? "Health"
+    : effect.resource === "gold" ? "Gold"
+      : effect.resource === "experience" ? "XP"
+        : effect.resource === "talentPoints" ? (effect.amount === 1 ? "Talent Point" : "Talent Points")
+          : effect.amount === 1 ? "Attribute Point" : "Attribute Points";
+  if (effect.amount === 0) {
+    if (effect.resource === "health" && effect.direction === "gain") return "No Health restored";
+    return `No ${label} ${effect.direction === "gain" ? "gained" : "lost"}`;
+  }
+  return `${effect.direction === "gain" ? "+" : "−"}${effect.amount} ${label}`;
+}
+
+function EventOutcomeDetails({ effects }: { effects: AdventureEventAppliedEffect[] }) {
+  return <section className="event-outcome-details" aria-label="Outcome">
+    <header><Sparkles size={15} /><strong>Outcome</strong></header>
+    <div className="event-outcome-effect-list">
+      {effects.length === 0 && <div className="event-outcome-effect empty"><span><Sparkles size={18} /></span><strong>No immediate changes</strong></div>}
+      {effects.map((effect, index) => {
+        if (effect.type === "resource") {
+          const Icon = effect.resource === "health" ? HeartPulse : effect.resource === "gold" ? Coins : Award;
+          return <div className={`event-outcome-effect ${effect.direction === "gain" ? "positive" : "negative"}`} key={`${effect.type}-${effect.resource}-${index}`}><span><Icon size={18} /></span><strong>{describeResourceEffect(effect)}</strong></div>;
+        }
+        if (effect.type === "item") {
+          const item = ITEMS.find((candidate) => candidate.id === effect.itemId);
+          if (!item) return null;
+          return <div className="event-outcome-effect item positive" key={`${effect.type}-${effect.itemId}-${index}`}><span><ItemIcon item={item} size={34} /></span><div><small>Item acquired</small><strong className={getItemNameClass(item)}>{item.name}</strong>{effect.equippedSlot && <em>Equipped automatically · {SLOT_LABELS[effect.equippedSlot]}</em>}</div></div>;
+        }
+        if (effect.type === "status") {
+          const status = STATUS_EFFECTS[effect.status];
+          const positive = effect.target === "player" ? effect.disposition === "buff" : effect.disposition === "debuff";
+          const target = effect.target === "player" ? "Next combat" : "Enemies next combat";
+          return <div className={`event-outcome-effect ${positive ? "positive" : "negative"}`} key={`${effect.type}-${effect.target}-${effect.status}-${index}`}><span><Sparkles size={18} /></span><div><small>{target}</small><strong>{status.name}{effect.stacks > 1 ? ` ×${effect.stacks}` : ""}</strong></div></div>;
+        }
+        if (effect.type === "encounter") {
+          const enemy = ENEMIES[effect.enemyId];
+          if (!enemy) return null;
+          return <div className="event-outcome-effect encounter negative" key={`${effect.type}-${effect.enemyId}-${index}`}><span><Swords size={19} /></span><div><small>Immediate encounter</small><strong>{effect.count > 1 ? `${effect.count} × ` : ""}{enemy.name}</strong>{(effect.experience > 0 || effect.gold > 0) && <em>Victory reward · {effect.experience} XP{effect.gold > 0 ? ` · ${effect.gold} Gold` : ""}</em>}</div></div>;
+        }
+        return <div className="event-outcome-effect merchant" key={`${effect.type}-${index}`}><span><Store size={18} /></span><div><small>Wandering Merchant</small><strong>{effect.itemIds.length} {effect.itemIds.length === 1 ? "item" : "items"} available</strong></div></div>;
+      })}
+    </div>
+  </section>;
 }
 
 export function EventPresentation({
@@ -60,11 +138,12 @@ export function EventPresentation({
 }) {
   const [phase, setPhase] = useState<EventPresentationPhase>(() => getInitialEventPresentationPhase(rollResult, merchantItemIds.length));
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(() => rollResult?.choiceId ?? null);
-  const [displayedRoll, setDisplayedRoll] = useState(() => rollResult && rollResult.resolution !== "direct" ? rollResult.dieRoll : randomD100());
+  const [displayedRoll, setDisplayedRoll] = useState(() => rollResult && rollResult.resolution !== "direct" ? rollResult.total : randomD100());
   const [merchantMode, setMerchantMode] = useState<"buy" | "sell">("buy");
   const [inspectedGear, setInspectedGear] = useState<GearItem | null>(null);
   const [purchaseAnimationItemId, setPurchaseAnimationItemId] = useState<string | null>(null);
   const purchaseAnimationTimer = useRef<number | null>(null);
+  const outcomeRef = useRef<HTMLDivElement | null>(null);
   const selectedChoice = useMemo(
     () => definition?.choices.find((choice) => choice.id === (selectedChoiceId ?? rollResult?.choiceId)),
     [definition, rollResult?.choiceId, selectedChoiceId],
@@ -139,6 +218,14 @@ export function EventPresentation({
     };
   }, [merchantItems.length, rollResult, selectedChoiceId]);
 
+  useEffect(() => {
+    if (phase !== "outcome") return;
+    const frame = window.requestAnimationFrame(() => {
+      outcomeRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "end" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [phase]);
+
   const choose = (choiceId: string) => {
     if (selectedChoiceId) return;
     const choice = definition?.choices.find((candidate) => candidate.id === choiceId);
@@ -163,6 +250,8 @@ export function EventPresentation({
   const counterPhase = phase === "rolling" ? "rolling" : phase === "raw" ? "landed" : "bonus";
   const checkedResult = rollResult?.resolution === "direct" ? null : rollResult;
   const directResult = rollResult?.resolution === "direct" ? rollResult : null;
+  const appliedEffects = rollResult?.appliedEffects ?? getChoiceOutcomeEffects(selectedChoice, rollResult);
+  const merchantOutcomeEffects = appliedEffects.filter((effect) => effect.type !== "merchant");
 
   return (
     <section className={`event-cinematic phase-${phase}`} role="dialog" aria-modal="true" aria-label={title}>
@@ -204,10 +293,11 @@ export function EventPresentation({
               </div>
             </div>}
             {phase === "outcome" && (
-              <div className={`event-cinematic-outcome ${directResult ? "direct" : checkedResult?.success ? "success" : "failure"}`}>
-                <strong>{directResult ? "Outcome" : checkedResult?.success ? "Success" : "Failure"}</strong>
+              <div ref={outcomeRef} className={`event-cinematic-outcome ${directResult ? "direct" : checkedResult?.success ? "success" : "failure"}`}>
+                <strong>{directResult ? "Result" : checkedResult?.success ? "Success" : "Failure"}</strong>
                 <p>{rollResult.outcomeText}</p>
                 {checkedResult && <small>Required total: {checkedResult.threshold}</small>}
+                <EventOutcomeDetails effects={appliedEffects} />
                 <button type="button" className="primary-button" onClick={() => merchantItems.length > 0 ? setPhase("merchant") : onContinue()}>
                   {merchantItems.length > 0 ? "Visit Merchant" : hasImmediateEncounter ? "Face Encounter" : "Continue Journey"}
                 </button>
@@ -219,6 +309,7 @@ export function EventPresentation({
         {phase === "merchant" && (
           <div className="event-merchant" aria-live="polite">
             {rollResult?.outcomeText && <p className="event-merchant-intro">{rollResult.outcomeText}</p>}
+            {merchantOutcomeEffects.length > 0 && <EventOutcomeDetails effects={merchantOutcomeEffects} />}
             <div className="event-merchant-heading"><div><p className="eyebrow">Wandering Merchant</p><h2>{merchantMode === "buy" ? "Goods for the road" : "Sell from Inventory"}</h2></div><span className="event-merchant-gold"><GoldIcon /> {gold}</span></div>
             <div className="event-merchant-tabs" role="tablist" aria-label="Merchant actions">
               <button type="button" role="tab" aria-selected={merchantMode === "buy"} className={merchantMode === "buy" ? "active" : ""} onClick={() => setMerchantMode("buy")}>Buy</button>
