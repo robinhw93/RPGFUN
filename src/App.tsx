@@ -11,6 +11,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { GameConfirmDialog } from "./components/GameConfirmDialog";
 import { DevtoolAccessDialog, type DevtoolKind } from "./components/devtools/shared";
 import { canStartStoryAdventure, DEFAULT_ADVENTURE_ID, entryToNode, getAdventureDefinition, getAdventureNode, getAdventureStartingHp, getAdventureTravelText, getStoryNodeIntroduction, selectStageEntry } from "./game/adventures";
+import { endArenaChallenge, grantArenaChallengeReward, resetArenaAttemptAfterAdventure, returnFromArena, startArenaChallenge } from "./game/arena";
 import type { CharacterAvatarId } from "./game/avatars";
 import { getCharacterAvatar } from "./game/avatars";
 import { getDerivedStats, INITIAL_GAME } from "./game/character";
@@ -44,7 +45,7 @@ import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, prelo
 type View = "adventure" | "character" | "town" | DevtoolKind;
 type LevelUpFlowStep = "talents" | "attributes";
 type EncounterFlavorPhase = "center" | "lower" | "exit";
-type TownEntryLocation = "square" | "tavern";
+type TownEntryLocation = "square" | "tavern" | "arena";
 
 const TalentsView = lazy(() => import("./components/talents/TalentsView").then((module) => ({ default: module.TalentsView })));
 const TalentDevtool = lazy(() => import("./components/TalentDevtool").then((module) => ({ default: module.TalentDevtool })));
@@ -102,12 +103,12 @@ function App() {
   const recommendStartingItem = game.characterIntroductionStep === "town" && !Object.values(game.character.equipment).some(Boolean);
 
   useEffect(() => {
-    if (game.adventure.combat?.outcome !== "victory") return;
-    setGame((current) => grantCombatReward(current));
-  }, [game.adventure.combat?.outcome, game.adventure.nodeIndex]);
+    if (!game.adventure.combat || game.adventure.combat.outcome === "active") return;
+    setGame((current) => current.adventure.mode === "arena" ? grantArenaChallengeReward(current) : grantCombatReward(current));
+  }, [game.adventure.combat?.outcome, game.adventure.mode, game.adventure.nodeIndex]);
 
   useEffect(() => {
-    if (game.adventure.combat?.outcome === "defeat") clearSave();
+    if (game.adventure.mode === "story" && game.adventure.combat?.outcome === "defeat") clearSave();
     else saveGame(game);
   }, [game]);
   useEffect(() => {
@@ -256,7 +257,7 @@ function App() {
         }) : null;
         return {
           ...current,
-          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
+          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -283,7 +284,7 @@ function App() {
   };
 
   const returnToArkenfall = () => {
-    setGame((current) => ({
+    setGame((current) => current.adventure.mode === "arena" ? returnFromArena(current) : ({
       ...current,
       adventure: {
         ...current.adventure,
@@ -298,16 +299,28 @@ function App() {
     }));
     setPreserveTownSession(false);
     townScrollPosition.current = 0;
-    setTownEntryLocation("square");
+    setTownEntryLocation(game.adventure.mode === "arena" ? "arena" : "square");
     setView("town");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const fleeCurrentCombat = () => {
+    if (game.adventure.mode === "arena") {
+      setGame((current) => endArenaChallenge(current));
+      return;
+    }
     const result = fleeCombat(game);
     if (!result) return;
     setGame(result.state);
     setFleeResult(result);
+  };
+
+  const challengeArenaChampion = () => {
+    setGame((current) => startArenaChallenge(current));
+    setPreserveTownSession(false);
+    townScrollPosition.current = 0;
+    setView("adventure");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const acknowledgeFleeResult = () => {
@@ -365,7 +378,7 @@ function App() {
 
       const definition = getAdventureDefinition(adventure.adventureId);
       if (adventure.nodeIndex >= definition.stages.length - 1) {
-        const questCharacter = resetTavernGamblingAfterAdventure(recordQuestAdventureCompletion(character, definition.id));
+        const questCharacter = resetArenaAttemptAfterAdventure(resetTavernGamblingAfterAdventure(recordQuestAdventureCompletion(character, definition.id)));
         return {
           ...current,
           character: { ...questCharacter, completedAdventureIds: [...new Set([...questCharacter.completedAdventureIds, definition.id])] },
@@ -744,7 +757,7 @@ function App() {
         {(view === "town" || (view === "character" && preserveTownSession && !game.adventure.active)) && (
           <div className="town-view-host" hidden={view !== "town"}>
             <Suspense fallback={null}>
-              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onGamble={gambleInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
+              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onChallengeArena={challengeArenaChampion} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onGamble={gambleInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
             </Suspense>
           </div>
         )}

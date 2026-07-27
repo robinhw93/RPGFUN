@@ -908,9 +908,19 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "enemy_charge"; targetId: string; abilityId?: string }
   | { id: string; eventIndex: number; type: "enemy_flee"; targetId: string }
+  | { id: string; eventIndex: number; type: "outcome"; outcome: "victory" | "defeat" }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
+export interface CombatDamageTrialState {
+  kind: "damage_trial";
+  playerTurnLimit: number;
+  playerTurnsCompleted: number;
+  completionPending: boolean;
+  returnCarryHp: number | null;
+}
+
 export interface CombatState {
+  challenge?: CombatDamageTrialState;
   turn: number;
   turnOrder: TurnOrderEntry[];
   activeTurnIndex: number;
@@ -983,6 +993,9 @@ export interface CharacterState {
   completedAdventureIds: string[];
   /** Persistent house-pressure counter for tavern gambling; reset only by completing an adventure. */
   tavernGamblingAttempts: number;
+  /** One safe damage-trial attempt is restored whenever a story adventure is completed. */
+  arenaAttemptAvailable: boolean;
+  arenaScores: ArenaAttemptRecord[];
   acceptedQuestIds: string[];
   completedQuestIds: string[];
   questProgress: Record<string, number>;
@@ -1186,7 +1199,15 @@ export interface CombatReward {
   levelsGained: number;
 }
 
-export type AdventureMode = "story";
+export interface ArenaAttemptRecord {
+  id: string;
+  damage: number;
+  turns: number;
+  level: number;
+  completedAt: number;
+}
+
+export type AdventureMode = "story" | "arena";
 
 export interface AdventureProgress {
   mode: AdventureMode;
@@ -1204,6 +1225,7 @@ export interface AdventureProgress {
   eventMerchant: AdventureEventMerchant | null;
   latestLoot: InventoryItem[] | null;
   pendingReward: CombatReward | null;
+  arenaResult: ArenaAttemptRecord | null;
   completed: boolean;
 }
 

@@ -108,7 +108,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/App.tsx` | Top-level state, navigation, application orchestration, high-level actions, and lazy-loaded screen boundaries. |
 | `src/components/character/` | Character creation, canonical starting-class selection, and Character and Equipment/Inventory screens, including the reusable gear-detail modal. |
 | `src/components/adventure/` | Adventure selection, event/score presentation, and combat-screen composition. |
-| `src/components/town/` | Illustrated Arkenfall hub, five Shop/Craft/Sell vendor surfaces, floating transaction feedback, and tavern rest presentation. |
+| `src/components/town/` | Illustrated Arkenfall hub, five Shop/Craft/Sell vendor surfaces, tavern/quest presentation, and the Arena Champion challenge plus personal leaderboard. |
 | `src/components/combat/` | Combat HUD, initiative presentation, and transient combat/VFX renderers. |
 | `src/game/combatStats.ts` | Shared status-adjusted combat-stat projection for player and enemy inspection. |
 | `src/components/talents/` | Runtime talent tree, talent details, and ability-loadout dialogs. |
@@ -139,6 +139,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `src/game/progression.ts` | Experience thresholds and level rewards. |
 | `src/game/developerTools.ts` | Pure saved-character test transitions used by the developer launcher. |
 | `src/game/rewards.ts` | Grants each combat reward once and captures score-screen data. |
+| `src/game/arena.ts` / `src/game/content/arena.ts` | Safe ten-turn damage-trial rules, attempt/reset and leaderboard persistence, damage-based XP, hidden arena encounter data, and artwork mapping. |
 | `src/game/eventOutcomes.ts` | Normalizes and applies typed event outcomes, queued next-combat statuses, and immediate encounters. |
 | `src/components/adventure/EventPresentation.tsx` | Full-screen staged event title, choice, d100, bonus, and outcome presentation. |
 | `src/game/save.ts` | Browser save/load/clear plus backward-compatible migration. |

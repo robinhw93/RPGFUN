@@ -1,4 +1,4 @@
-import { ArrowLeft, BedDouble, Check, CircleCheckBig, ClipboardList, Coins, Crosshair, Dumbbell, FlaskConical, Footprints, Gem, Gift, Hammer, HeartPulse, LockKeyhole, Package, Scissors, ScrollText, Shield, ShoppingBag, Sparkles, Utensils, X } from "lucide-react";
+import { ArrowLeft, BedDouble, Check, CircleCheckBig, ClipboardList, Coins, Crosshair, Dumbbell, FlaskConical, Footprints, Gem, Gift, Hammer, HeartPulse, LockKeyhole, Medal, Package, Scissors, ScrollText, Shield, ShoppingBag, Sparkles, Swords, Trophy, Utensils, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
 import { ItemDetailModal } from "../character/CharacterView";
@@ -11,7 +11,7 @@ import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTave
 import type { ArkenfallVendorId, CharacterState, GameState, InventoryItem } from "../../game/types";
 import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon, RARITY_SORT_WEIGHT } from "../../ui/gameUi";
 
-type TownLocation = "square" | "shops" | "tavern" | "questboard" | ArkenfallVendorId;
+type TownLocation = "square" | "shops" | "tavern" | "questboard" | "arena" | ArkenfallVendorId;
 type VendorTab = "shop" | "craft" | "sell";
 type VendorSort = "type" | "rarity" | "cost-asc" | "cost-desc" | "name-asc" | "name-desc";
 
@@ -308,12 +308,38 @@ function QuestBoardView({ game, onBack, onAccept, onTurnIn }: {
   );
 }
 
-export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onAdventures, onBuy, onCraft, onSell, onRest, onMeal, onGamble, onAcceptQuest, onTurnInQuest }: {
+function ArenaView({ game, onBack, onChallenge }: { game: GameState; onBack: () => void; onChallenge: () => void }) {
+  const scores = game.character.arenaScores ?? [];
+  const available = game.character.arenaAttemptAvailable;
+  return (
+    <section className="town-location town-arena">
+      <div className="arena-gallery-shade" aria-hidden="true" />
+      <header className="town-location-header">
+        <button type="button" className="town-back-button" onClick={onBack}><ArrowLeft /> Arkenfall</button>
+        <div><p className="eyebrow">Hall of Challengers</p><h1>Arkenfall Grand Arena</h1><p>Ten turns. One champion. Every point of damage becomes Experience.</p></div>
+        <span className={`arena-attempt-badge ${available ? "available" : "spent"}`}><Swords /> {available ? "Attempt Ready" : "Attempt Spent"}</span>
+      </header>
+      <div className="arena-menu-layout">
+        <article className="arena-champion-card">
+          <div className="arena-champion-art"><img src="/assets/enemies/full/arena-champion.webp" alt="The gigantic Arena Champion smirking beneath a metal visor" /></div>
+          <div className="arena-champion-copy"><p className="eyebrow">The Unbroken Colossus</p><h2>Arena Champion</h2><p>Strike a 10,000-Health target for ten turns while he answers each round with a contemptuous one-damage attack.</p><ul><li>Damage dealt becomes Experience</li><li>Your ten best attempts are recorded</li><li>A new attempt unlocks after completing an adventure</li></ul><button type="button" className="arena-challenge-button" disabled={!available} onClick={onChallenge}><Swords /> {available ? "Challenge Arena Champion" : "Complete an Adventure to Retry"}</button></div>
+        </article>
+        <section className="arena-leaderboard" aria-labelledby="arena-leaderboard-title">
+          <header><span><Trophy /></span><div><p className="eyebrow">Personal Records</p><h2 id="arena-leaderboard-title">Hall of Challengers</h2></div></header>
+          {scores.length === 0 ? <div className="arena-empty-scores"><Medal /><strong>No attempts recorded</strong><p>Your first result will be carved here.</p></div> : <ol>{scores.map((score, index) => <li key={score.id}><b>#{index + 1}</b><span><strong>{score.damage.toLocaleString()} Damage</strong><small>Level {score.level} · {score.turns} turn{score.turns === 1 ? "" : "s"}</small></span><em>{score.damage.toLocaleString()} XP</em></li>)}</ol>}
+        </section>
+      </div>
+    </section>
+  );
+}
+
+export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onAdventures, onChallengeArena, onBuy, onCraft, onSell, onRest, onMeal, onGamble, onAcceptQuest, onTurnInQuest }: {
   game: GameState;
   maxHp: number;
-  initialLocation?: Extract<TownLocation, "square" | "tavern">;
+  initialLocation?: Extract<TownLocation, "square" | "tavern" | "arena">;
   recommendStartingItem?: boolean;
   onAdventures: () => void;
+  onChallengeArena: () => void;
   onBuy: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
   onCraft: (station: ArkenfallVendorId, itemId: string) => TownActionResult;
   onSell: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
@@ -360,7 +386,8 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
       setGamblingRolling(false);
     }, 900);
   };
-  if (location !== "square" && location !== "shops" && location !== "tavern" && location !== "questboard") return <VendorView vendor={location} game={game} onBack={() => setLocation("shops")} onBuy={onBuy} onCraft={onCraft} onSell={onSell} />;
+  if (location !== "square" && location !== "shops" && location !== "tavern" && location !== "questboard" && location !== "arena") return <VendorView vendor={location} game={game} onBack={() => setLocation("shops")} onBuy={onBuy} onCraft={onCraft} onSell={onSell} />;
+  if (location === "arena") return <ArenaView game={game} onBack={() => setLocation("square")} onChallenge={onChallengeArena} />;
   if (location === "questboard") return <QuestBoardView game={game} onBack={() => setLocation("square")} onAccept={onAcceptQuest} onTurnIn={onTurnInQuest} />;
   if (location === "tavern") return (
     <section className="town-location town-tavern">
@@ -414,6 +441,7 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
         <button type="button" className={`town-destination shops ${recommendStartingItem ? "starting-item-recommended" : ""}`.trim()} onClick={() => setLocation("shops")}><span><ShoppingBag /></span><div><p className="eyebrow">Market District</p><h2>Shops</h2><p>Visit every vendor, browse their wares, and craft new items.</p>{recommendStartingItem && <small className="starting-item-recommendation">It is recommended that you purchase one starting item before going on an adventure.</small>}</div><Sparkles /></button>
         <button type="button" className="town-destination tavern" onClick={() => setLocation("tavern")}><span><BedDouble /></span><div><p className="eyebrow">Tavern and Inn</p><h2>The Resting Hart</h2><p>Recover all Health before setting out on another adventure.</p></div><Sparkles /></button>
         <button type="button" className="town-destination questboard" onClick={() => setLocation("questboard")}><span><ClipboardList /></span><div><p className="eyebrow">Adventurers' Notices</p><h2>Quest Board</h2><p>Accept quests, follow questlines, and return to claim rewards.</p></div><Sparkles /></button>
+        <button type="button" className="town-destination arena" onClick={() => setLocation("arena")}><span><Trophy /></span><div><p className="eyebrow">Ten-Turn Damage Trial</p><h2>Grand Arena</h2><p>Challenge the Arena Champion and turn your damage into Experience.</p></div><Sparkles /></button>
       </div>
     </section>
   );

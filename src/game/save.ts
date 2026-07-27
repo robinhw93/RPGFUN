@@ -5,6 +5,7 @@ import { DEFAULT_ADVENTURE_ID } from "./adventures";
 import { isGearItem } from "./items";
 import { MAX_LEVEL } from "./progression";
 import type { GearItem, InventoryItem } from "./types";
+import type { ArenaAttemptRecord } from "./types";
 
 const SAVE_KEY = "emberfall-save-v1";
 const REMOVED_TALENT_COSTS: Record<string, number> = {
@@ -79,6 +80,18 @@ export function loadGame(): GameState | null {
     const normalizedTalentPoints = savedIntroductionStep === "talents" && hasStartingClass && !hasPostClassTalent && refundedTalentPoints === 0
       ? 1
       : refundedTalentPoints;
+    const arenaScores = (Array.isArray(state.character.arenaScores) ? state.character.arenaScores : []).flatMap((score): ArenaAttemptRecord[] => {
+      if (!score || typeof score !== "object") return [];
+      const candidate = score as Partial<ArenaAttemptRecord>;
+      if (typeof candidate.id !== "string" || !Number.isFinite(candidate.damage) || !Number.isFinite(candidate.completedAt)) return [];
+      return [{
+        id: candidate.id,
+        damage: Math.max(0, Math.min(10000, Math.floor(candidate.damage ?? 0))),
+        turns: Math.max(1, Math.min(10, Math.floor(candidate.turns ?? 10))),
+        level: Math.max(1, Math.min(MAX_LEVEL, Math.floor(candidate.level ?? 1))),
+        completedAt: Math.max(0, Math.floor(candidate.completedAt ?? 0)),
+      }];
+    }).sort((left, right) => right.damage - left.damage || left.turns - right.turns || right.completedAt - left.completedAt).slice(0, 10);
     return {
       ...state,
       characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
@@ -98,6 +111,8 @@ export function loadGame(): GameState | null {
         equipment,
         completedAdventureIds: state.character.completedAdventureIds ?? [],
         tavernGamblingAttempts: Math.max(0, Math.floor(state.character.tavernGamblingAttempts ?? 0)),
+        arenaAttemptAvailable: state.character.arenaAttemptAvailable ?? true,
+        arenaScores,
         acceptedQuestIds: (state.character.acceptedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         completedQuestIds: (state.character.completedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         questProgress: Object.fromEntries(Object.entries(state.character.questProgress ?? {}).flatMap(([id, progress]) => (
@@ -108,7 +123,7 @@ export function loadGame(): GameState | null {
       },
       adventure: {
         ...state.adventure,
-        mode: "story",
+        mode: savedAdventureMode === "arena" ? "arena" : "story",
         adventureId: state.adventure.adventureId ?? DEFAULT_ADVENTURE_ID,
         stageEntryId: state.adventure.stageEntryId ?? null,
         eventRollResult: state.adventure.eventRollResult ?? null,
@@ -123,6 +138,7 @@ export function loadGame(): GameState | null {
         pendingReward: state.adventure.pendingReward
           ? { ...state.adventure.pendingReward, loot: hydrateLoot((state.adventure.pendingReward as unknown as { loot?: unknown }).loot) }
           : null,
+        arenaResult: state.adventure.arenaResult ?? null,
         ...(shouldResetAdventure ? {
           adventureId: DEFAULT_ADVENTURE_ID,
           active: false,
@@ -137,6 +153,7 @@ export function loadGame(): GameState | null {
           eventEncounter: null,
           eventMerchant: null,
           pendingReward: null,
+          arenaResult: null,
           completed: false,
         } : {}),
       },

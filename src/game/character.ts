@@ -18,6 +18,8 @@ export const INITIAL_CHARACTER: CharacterState = {
   equipment: {},
   completedAdventureIds: [],
   tavernGamblingAttempts: 0,
+  arenaAttemptAvailable: true,
+  arenaScores: [],
   acceptedQuestIds: [],
   completedQuestIds: [],
   questProgress: {},
@@ -27,7 +29,7 @@ export const INITIAL_GAME: GameState = {
   characterCreated: false,
   characterIntroductionStep: "class",
   character: INITIAL_CHARACTER,
-  adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, completed: false },
+  adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, completed: false },
 };
 
 export interface DerivedStats extends Stats {

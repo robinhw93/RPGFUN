@@ -12,6 +12,7 @@ import { canonicalQuestExchange, normalizeQuestExchange } from "../src/component
 import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconChoices } from "../src/components/GearSlotIcon";
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, QUESTLINES, QUESTS, TALENTS } from "../src/game/data";
 import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getAdventureTravelText, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
+import { ARENA_SCORE_LIMIT, ARENA_TURN_LIMIT, getArenaScores, grantArenaChallengeReward, resetArenaAttemptAfterAdventure, startArenaChallenge } from "../src/game/arena";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { chooseStartingClass, getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../src/game/characterIntroduction";
 import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
@@ -1636,6 +1637,51 @@ function testIndependentItemDrops() {
   assert.deepEqual(grouped.map(({ item, count }) => [item.id, count]), [[firstItem.id, 2], [secondItem.id, 1]], "Duplicate score-screen loot must group by item without changing order.");
 }
 
+function testArenaDamageTrial() {
+  const initial = structuredClone(INITIAL_GAME);
+  initial.characterCreated = true;
+  initial.character.name = "Arena Tester";
+  initial.adventure.carryHp = 7;
+  const started = startArenaChallenge(initial);
+  assert.equal(started.adventure.mode, "arena", "The arena must use its dedicated safe challenge mode.");
+  assert.equal(started.character.arenaAttemptAvailable, false, "Starting the arena must spend the current attempt.");
+  assert.equal(started.adventure.combat?.enemies[0]?.id, "arena-champion", "The damage trial must spawn the Arena Champion.");
+  assert.equal(started.adventure.combat?.enemies[0]?.maxHp, 10000, "The Arena Champion must have exactly 10,000 Health.");
+  assert.equal(started.adventure.combat?.challenge?.playerTurnLimit, ARENA_TURN_LIMIT, "The damage trial must last ten player turns.");
+
+  let combat = started.adventure.combat!;
+  const playerIndex = combat.turnOrder.findIndex((entry) => entry.kind === "player");
+  const championId = combat.enemies[0].instanceId;
+  for (let turn = 1; turn <= ARENA_TURN_LIMIT; turn += 1) {
+    combat = endPlayerTurn({ ...combat, initiativeRevealed: true, activeTurnIndex: playerIndex, actedActorIds: [championId], floatingEvents: [], pendingEffects: [], outcome: "active" }, started.character);
+    combat.floatingEvents.forEach((_, eventIndex) => { combat = resolveCombatEvent(combat, combat.eventId, eventIndex); });
+    assert.equal(combat.challenge?.playerTurnsCompleted, turn, `Arena turn ${turn} must be counted exactly once.`);
+  }
+  assert.equal(combat.outcome, "victory", "The arena bell must end the trial after the tenth player turn.");
+
+  const damagedCombat = {
+    ...started.adventure.combat!,
+    outcome: "victory" as const,
+    playerActed: true,
+    enemies: started.adventure.combat!.enemies.map((enemy) => ({ ...enemy, hp: 8766 })),
+  };
+  const rewarded = grantArenaChallengeReward({ ...started, adventure: { ...started.adventure, combat: damagedCombat } }, 123456);
+  assert.equal(rewarded.adventure.pendingReward?.experience, 1234, "Arena damage must award the same amount of Experience.");
+  assert.equal(rewarded.character.arenaScores[0]?.damage, 1234, "Arena damage must be recorded on the personal leaderboard.");
+  assert.equal(grantArenaChallengeReward(rewarded, 123457), rewarded, "An arena result must never award Experience twice.");
+  assert.equal(resetArenaAttemptAfterAdventure(rewarded.character).arenaAttemptAvailable, true, "Completing an adventure must restore the arena attempt.");
+
+  const crowdedScores = Array.from({ length: 13 }, (_, index) => ({ id: `score-${index}`, damage: index * 10, turns: 10, level: 1, completedAt: index }));
+  assert.deepEqual(getArenaScores({ ...rewarded.character, arenaScores: crowdedScores }).map((score) => score.damage), [120,110,100,90,80,70,60,50,40,30], "The arena leaderboard must retain only the ten highest results.");
+  [
+    "public/assets/town/arena-destination.webp",
+    "public/assets/town/champion-gallery.webp",
+    "public/assets/backgrounds/arkenfall-arena-combat.webp",
+    "public/assets/enemies/full/arena-champion.webp",
+    "public/assets/enemies/portraits/arena-champion.webp",
+  ].forEach((path) => assert.ok(existsSync(join(process.cwd(), path)), `Missing arena artwork ${path}.`));
+}
+
 testAbilityFlatDamage();
 testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
@@ -1682,4 +1728,5 @@ testDirectEventMerchant();
 testResolvedMerchantPresentation();
 testCombatConsumable();
 testStealthPotionLastsThroughNextTurn();
+testArenaDamageTrial();
 console.log("Arkenfall regression checks passed.");

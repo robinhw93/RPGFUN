@@ -29,7 +29,7 @@ import { getGearCategoryLabel } from "../../game/gear";
 import { consumableCount, describeConsumableEffect, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
-import type { CharacterState, CombatLogEntry, CombatReward, ConsumableItem, GameState, GearItem, GearSlot, InspectableInfo, StatusEffectId } from "../../game/types";
+import type { CharacterState, CombatLogEntry, CombatReward, CombatState, ConsumableItem, GameState, GearItem, GearSlot, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
 import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
@@ -190,6 +190,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   }
 
   const combat = adventure.combat!;
+  const isArenaChallenge = adventure.mode === "arena";
   const displayedPlayerStats = getStatusAdjustedCombatStats({
     ...derived,
     maxHp: combat.playerMaxHp,
@@ -249,13 +250,13 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
     <section
-      className={`combat-page compact-combat ${adventure.mode === "story" ? `${getAdventureDefinition(adventure.adventureId).theme.replaceAll("_", "-")}-combat` : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}
-      style={adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).combatBackgroundUrl
+      className={`combat-page compact-combat ${getAdventureDefinition(adventure.adventureId).theme.replaceAll("_", "-")}-combat ${isArenaChallenge ? "arena-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}
+      style={getAdventureDefinition(adventure.adventureId).combatBackgroundUrl
         ? { "--combat-background-image": `url("${getAdventureDefinition(adventure.adventureId).combatBackgroundUrl}")` } as CSSProperties
         : undefined}
     >
       <button type="button" className="combat-log-button combat-log-corner" onClick={() => setLogOpen(true)} aria-label="Open Combat Log"><BookOpen size={15} /></button>
-      <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />
+      {isArenaChallenge ? <ArenaProgressHeader combat={combat} /> : <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />}
       <TurnOrderBar combat={combat} />
       {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onOrderStart={onInitiativeOrderStart} onComplete={onInitiativeComplete} />}
       {targetFeedback && <div key={targetFeedback.id} className="combat-target-feedback" role="status" aria-live="polite">{targetFeedback.text}</div>}
@@ -408,8 +409,8 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       </div>
 
       <div className="combat-footer-controls">
-        <button className="combat-flee-button" disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active"} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> Flee</button>
-        <button className="combat-inventory-button" disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active"} onClick={() => setCombatInventoryOpen(true)}><FlaskConical size={14} /> Inventory</button>
+        <button className="combat-flee-button" disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active"} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : "Flee"}</button>
+        {!isArenaChallenge && <button className="combat-inventory-button" disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active"} onClick={() => setCombatInventoryOpen(true)}><FlaskConical size={14} /> Inventory</button>}
         <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
         </button>
@@ -417,11 +418,11 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
 
       {fleeDialogOpen && (
         <GameConfirmDialog
-          eyebrow="Retreat"
-          title="Flee combat?"
-          description="If you flee there is a risk that you lose items and gold while running away. Are you sure?"
-          cancelLabel="Fight!"
-          confirmLabel="Flee!"
+          eyebrow={isArenaChallenge ? "Damage Trial" : "Retreat"}
+          title={isArenaChallenge ? "End the trial now?" : "Flee combat?"}
+          description={isArenaChallenge ? "Your current damage will be recorded and awarded as Experience. This attempt will remain spent." : "If you flee there is a risk that you lose items and gold while running away. Are you sure?"}
+          cancelLabel={isArenaChallenge ? "Keep Fighting" : "Fight!"}
+          confirmLabel={isArenaChallenge ? "End Trial" : "Flee!"}
           onCancel={() => setFleeDialogOpen(false)}
           onConfirm={() => { setFleeDialogOpen(false); onFlee(); }}
         />
@@ -471,7 +472,10 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       {inspectedEnemy && <EnemyStatsModal enemy={inspectedEnemy} onClose={() => setInspectedEnemyId(null)} />}
       {playerAttributesOpen && <PlayerAttributesModal name={game.character.name} derived={displayedPlayerStats} onClose={() => setPlayerAttributesOpen(false)} />}
 
-      {combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
+      {isArenaChallenge && combat.outcome !== "active" && !sequencePending && adventure.pendingReward && adventure.arenaResult && (
+        <ArenaResultScreen game={game} onCharacter={onCharacter} onReturn={onReturnToArkenfall} />
+      )}
+      {!isArenaChallenge && combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
         <VictoryScoreScreen
           reward={adventure.pendingReward}
           character={game.character}
@@ -486,7 +490,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           onPresentationStart={onRewardPresentationStart}
         />
       )}
-      {combat.outcome === "defeat" && !sequencePending && (
+      {!isArenaChallenge && combat.outcome === "defeat" && !sequencePending && (
         <div className="compact-outcome defeat">
           <div className="compact-outcome-card">
             <Skull />
@@ -664,4 +668,31 @@ export function ProgressHeader({ index, adventureId }: { index: number; adventur
   const definition = getAdventureDefinition(adventureId);
   const progress = ((index + 1) / definition.stages.length) * 100;
   return <div className="journey-progress"><span>{definition.name}</span><div className="journey-progress-track" role="progressbar" aria-label="Adventure progress" aria-valuemin={0} aria-valuemax={definition.stages.length} aria-valuenow={index + 1}><i style={{ width: `${progress}%` }} /></div><span>{index + 1} / {definition.stages.length}</span></div>;
+}
+
+function ArenaProgressHeader({ combat }: { combat: CombatState }) {
+  const champion = combat.enemies[0];
+  const damage = Math.max(0, (champion?.maxHp ?? 10000) - (champion?.hp ?? 10000));
+  const challenge = combat.challenge;
+  const currentTurn = Math.max(1, Math.min(challenge?.playerTurnLimit ?? 10, (challenge?.playerTurnsCompleted ?? 0) + (combat.outcome === "active" ? 1 : 0)));
+  return <div className="journey-progress arena-trial-progress"><span>Damage Trial</span><strong>{damage.toLocaleString()} Damage</strong><span>Turn {currentTurn} / {challenge?.playerTurnLimit ?? 10}</span></div>;
+}
+
+function ArenaResultScreen({ game, onCharacter, onReturn }: { game: GameState; onCharacter: () => void; onReturn: () => void }) {
+  const result = game.adventure.arenaResult!;
+  const reward = game.adventure.pendingReward!;
+  const rank = Math.max(1, (game.character.arenaScores ?? []).findIndex((score) => score.id === result.id) + 1);
+  return (
+    <div className="compact-outcome arena-result">
+      <div className="compact-outcome-card arena-result-card">
+        <Trophy />
+        <p className="eyebrow">Damage Recorded</p>
+        <h2>{result.damage.toLocaleString()} Damage</h2>
+        <p>The Arena Champion laughs as the bell rings. Your result earns the same amount of Experience.</p>
+        <div className="arena-result-stats"><span><small>Experience</small><strong>+{reward.experience.toLocaleString()} XP</strong></span><span><small>Personal Rank</small><strong>#{rank}</strong></span><span><small>Turns Used</small><strong>{result.turns} / 10</strong></span></div>
+        {reward.levelsGained > 0 && <button type="button" className="score-character-button level-up" onClick={onCharacter}><Sparkles size={16} /> Level up!</button>}
+        <button className="primary-button" onClick={onReturn}>Return to Grand Arena <ChevronRight size={17} /></button>
+      </div>
+    </div>
+  );
 }

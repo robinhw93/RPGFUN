@@ -14,7 +14,7 @@ import {
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "../types";
 import { createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
-import { absorptionSuffix, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueTurn, queueTurnAtEvent, statusInfo } from "./eventQueue";
+import { absorptionSuffix, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueOutcome, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueTurn, queueTurnAtEvent, statusInfo } from "./eventQueue";
 import { reorderCombat } from "./state";
 
 export interface StatusTurnResult {
@@ -258,6 +258,28 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
     events.push("Victory.");
     logs.push(makeLog("Victory. The last enemy falls."));
     return { ...combat, outcome: "victory" };
+  }
+
+  if (combat.challenge?.kind === "damage_trial") {
+    const playerFinishedTurn = completedActorId === "player";
+    const challenge = playerFinishedTurn
+      ? { ...combat.challenge, playerTurnsCompleted: combat.challenge.playerTurnsCompleted + 1 }
+      : combat.challenge;
+    const limitReached = challenge.playerTurnsCompleted >= challenge.playerTurnLimit;
+    const livingEnemyIds = combat.enemies.filter((enemy) => enemy.hp > 0).map((enemy) => enemy.instanceId);
+    const allLivingEnemiesActed = livingEnemyIds.every((enemyId) => actedActorIds.has(enemyId));
+    if ((playerFinishedTurn && limitReached && allLivingEnemiesActed) || (!playerFinishedTurn && challenge.completionPending)) {
+      const completedChallenge = { ...challenge, completionPending: false };
+      queueOutcome(events, pendingEffects, "The arena bell rings. The damage trial is over.", "victory");
+      logs.push(makeLog("The arena bell ends the damage trial."));
+      return { ...combat, challenge: completedChallenge, outcome: "active" };
+    }
+    combat = {
+      ...combat,
+      challenge: playerFinishedTurn && limitReached
+        ? { ...challenge, completionPending: true }
+        : challenge,
+    };
   }
 
   let nextActor = combat.turnOrder.find((actor) => isActorAlive(combat, actor) && !actedActorIds.has(actor.actorId));

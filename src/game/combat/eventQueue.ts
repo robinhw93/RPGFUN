@@ -200,3 +200,10 @@ export function queueTurn(events: string[], pendingEffects: CombatPendingEffect[
   events.push(text);
   queueTurnAtEvent(pendingEffects, eventIndex, activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns, activeActorId);
 }
+
+export function queueOutcome(events: string[], pendingEffects: CombatPendingEffect[], text: string, outcome: "victory" | "defeat"): void {
+  combatEffectSequence += 1;
+  const eventIndex = events.length;
+  events.push(text);
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "outcome", outcome });
+}

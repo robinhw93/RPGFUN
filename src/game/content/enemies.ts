@@ -37,6 +37,42 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "maxActionsPerTurn": 1,
     "accent": "#a8a69d"
   },
+  "arena-champion": {
+    "id": "arena-champion",
+    "name": "Arena Champion",
+    "title": "The Unbroken Colossus",
+    "imageUrl": "/assets/enemies/full/arena-champion.webp",
+    "portraitUrl": "/assets/enemies/portraits/arena-champion.webp",
+    "maxHp": 10000,
+    "physicalPower": 0,
+    "spellPower": 0,
+    "armor": 0,
+    "magicResistance": 0,
+    "hitChance": 10,
+    "dodgeChance": 0,
+    "critChance": 0,
+    "energyRegen": 1,
+    "maxEnergy": 1,
+    "startingEnergy": 1,
+    "dropTable": [],
+    "abilities": [
+      {
+        "id": "champion-contemptuous-tap",
+        "name": "Contemptuous Tap",
+        "description": "Deals 1 base Physical damage.",
+        "energyCost": 1,
+        "cooldownTurns": 0,
+        "range": "melee",
+        "damageType": "physical",
+        "baseDamage": 1,
+        "vfx": "enemy_training_strike"
+      }
+    ],
+    "behaviorNotes": "Uses Contemptuous Tap once each turn.",
+    "behavior": "single",
+    "maxActionsPerTurn": 1,
+    "accent": "#c68a3b"
+  },
   "enemy-mrxiut2a-k4kgv": {
     "id": "enemy-mrxiut2a-k4kgv",
     "name": "Rabid Rat",

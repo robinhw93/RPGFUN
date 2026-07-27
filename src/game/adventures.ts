@@ -1,4 +1,5 @@
 import { ADVENTURES, ADVENTURE_EVENTS, ENEMIES } from "./data";
+import { ARENA_ADVENTURE, ARENA_ADVENTURE_ID } from "./content/arena";
 import type { AdventureDefinition, AdventureNode, AdventureProgress, AdventureStageEntry, AdventureTheme } from "./types";
 
 export const DEFAULT_ADVENTURE_ID = "windsong-forest";
@@ -8,6 +9,7 @@ export function getAdventureStartingHp(maxHp: number, carryHp: number | null): n
 }
 
 export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefinition {
+  if (id === ARENA_ADVENTURE_ID) return ARENA_ADVENTURE;
   return ADVENTURES.find((adventure) => adventure.id === id) ?? ADVENTURES[0];
 }
 

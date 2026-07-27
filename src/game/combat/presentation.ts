@@ -27,6 +27,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let activeActorId = combat.turnOrder[combat.activeTurnIndex]?.actorId;
   let attackAnimationId = combat.attackAnimationId ?? 0;
   let attackEffectId = combat.attackEffectId ?? null;
+  let explicitOutcome: "victory" | "defeat" | null = null;
   const resolvesAttackImpact = matchingEffects.some((effect) => "damage" in effect && Boolean(effect.attackerId));
   const damagedTargets: string[] = [];
   const missedTargets = matchingEffects.flatMap((effect) => "damage" in effect && effect.missed ? [effect.targetId] : []);
@@ -59,6 +60,10 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
         ? { ...enemy, hp: 0, fled: true, statuses: [] }
         : enemy);
+      return;
+    }
+    if (effect.type === "outcome") {
+      explicitOutcome = effect.outcome;
       return;
     }
     if (effect.type === "energy_regen_bonus") {
@@ -169,7 +174,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   if (attackEffectId && consumedIds.has(attackEffectId)) attackEffectId = null;
   const pendingEffects = (combat.pendingEffects ?? []).filter((effect) => !consumedIds.has(effect.id));
   const playerWillRecover = pendingEffects.some((effect) => effect.type === "heal" && effect.targetId === "player" && effect.amount > 0);
-  const outcome = playerHp <= 0 && !playerWillRecover ? "defeat" : enemies.every((enemy) => enemy.hp <= 0) ? "victory" : combat.outcome;
+  const outcome = explicitOutcome ?? (playerHp <= 0 && !playerWillRecover ? "defeat" : enemies.every((enemy) => enemy.hp <= 0) ? "victory" : combat.outcome);
   const selectedEnemyId = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";

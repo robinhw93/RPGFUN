@@ -487,7 +487,7 @@ Each enemy drop-table row rolls independently for each defeated instance. Repeat
 
 ## Arkenfall Town
 
-The town hub is listed above adventures and contains seven illustrated destinations. Each of the five item vendors buys one Inventory copy at a time for 25% of its Gold Cost, rounded down, with a minimum return of 1 Gold for a positive-value item.
+The town hub is listed above adventures and contains eight illustrated service destinations across its main menu and Shops submenu. Each of the five item vendors buys one Inventory copy at a time for 25% of its Gold Cost, rounded down, with a minimum return of 1 Gold for a positive-value item.
 
 | Destination | Services | Live default catalog |
 | --- | --- | --- |
@@ -498,6 +498,7 @@ The town hub is listed above adventures and contains seven illustrated destinati
 | Jeweler — Celestine Veyra | Repeatable Shop purchases, material-based Jewelcrafting, and Inventory selling. | Crafts Wispwoven Band, Moondrop Wand, and Wolfstep Loop. |
 | The Resting Hart | Paid recovery, next-combat meals, and The Gilded Dice. | Rest costs 1 Gold per 5 missing Health, rounded up. Ironpot Stew costs 5 Gold and grants Strengthened; Peppercrust Boar costs 8 Gold and grants Fierce; Hartroot Broth costs 10 Gold and grants Regenerate. Each meal benefit is applied when the next combat begins and may be prepared once at a time. The Gilded Dice offers 5, 10, and 25 Gold Luck wagers; its hidden difficulty rises after each roll and resets on adventure completion. |
 | Quest Board | Accepting, tracking, inspecting rewards, and turning in quests and questlines. | Uses dedicated generated town artwork. Rewards are withheld until a ready quest is turned in at the board. |
+| Grand Arena | One safe ten-turn damage trial per completed adventure, damage-based XP, and a personal top-ten leaderboard. | Arena Champion: 10,000 Health, 0 Armor, 0 Magic Resistance; Contemptuous Tap deals 1 base Physical damage. Arena Health is temporary, prepared meals are preserved, and arena defeat does not delete the character. |
 
 ### Adventure shop progression
 
