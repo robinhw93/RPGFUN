@@ -612,6 +612,9 @@ function buildEnemies(spec, items) {
     const generatedHp = boss ? Math.round((170 + scale * scale * 26) * 1.3) : 55 + scale * 28 + index * 9;
     const hp = spec.number >= 7 ? Math.round((generatedHp + 100) * 1.5) : generatedHp;
     const powerValue = 9 + scale * 5 + index;
+    const powerMultiplier = spec.number >= 9 ? 1.3 : 1;
+    const physicalPower = physical ? powerValue : Math.floor(powerValue * 0.45);
+    const spellPower = magical ? powerValue : 0;
     const id = enemyId(spec, slug);
     const dropTable = [
       { itemId: materialIds[0], chance: boss ? 100 : 30 },
@@ -629,8 +632,8 @@ function buildEnemies(spec, items) {
       imageUrl: `/assets/enemies/full/a${spec.number}-${slug}.webp`,
       portraitUrl: `/assets/enemies/portraits/a${spec.number}-${slug}.webp`,
       maxHp: hp,
-      physicalPower: physical ? powerValue : Math.floor(powerValue * 0.45),
-      spellPower: magical ? powerValue : 0,
+      physicalPower: Math.round(physicalPower * powerMultiplier),
+      spellPower: Math.round(spellPower * powerMultiplier),
       armor: Math.max(0, Math.floor(scale * 1.2) + (index % 3)) + defenseBonus.armor * defenseBonusMultiplier,
       magicResistance: Math.max(0, Math.floor(scale * 1.1) + ((index + 1) % 3)) + defenseBonus.magicResistance * defenseBonusMultiplier,
       hitChance: Math.min(1.2, 0.92 + scale * 0.015),

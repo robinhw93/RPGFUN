@@ -371,6 +371,9 @@ function testContentIntegrity() {
   const expectedAdventureEnemyHp = (generatedHp: number, adventureNumber: number) => adventureNumber >= 7
     ? Math.round((generatedHp + 100) * 1.5)
     : generatedHp;
+  const expectedAdventureEnemyPower = (generatedPower: number, adventureNumber: number) => adventureNumber >= 9
+    ? Math.round(generatedPower * 1.3)
+    : generatedPower;
   const expectedEnemyDefenseBonuses: Record<number, { armor: number; magicResistance: number }> = {
     5: { armor: 10, magicResistance: 10 },
     6: { armor: 20, magicResistance: 15 },
@@ -421,6 +424,15 @@ function testContentIntegrity() {
       assert.equal(enemy.maxHp, expectedAdventureEnemyHp(generatedHp, adventureNumber), `${enemy.name} must retain its intended late-campaign Health scaling.`);
       assert.equal(enemy.armor, Math.floor(scale * 1.2) + (enemyIndex % 3) + defenseBonus.armor, `${enemy.name} must receive its adventure Armor bonus.`);
       assert.equal(enemy.magicResistance, Math.floor(scale * 1.1) + ((enemyIndex + 1) % 3) + defenseBonus.magicResistance, `${enemy.name} must receive its adventure Magic Resistance bonus.`);
+    });
+    [...regularEnemies, bossEnemy].forEach((enemy, enemyIndex) => {
+      const generatedPower = 9 + (adventureNumber - 3) * 5 + enemyIndex;
+      const hasSpellPower = enemy.spellPower > 0;
+      const usesReducedPhysicalPower = hasSpellPower && enemy.physicalPower < enemy.spellPower;
+      const generatedPhysicalPower = usesReducedPhysicalPower ? Math.floor(generatedPower * 0.45) : generatedPower;
+      const generatedSpellPower = hasSpellPower ? generatedPower : 0;
+      assert.equal(enemy.physicalPower, expectedAdventureEnemyPower(generatedPhysicalPower, adventureNumber), `${enemy.name} must retain its intended late-campaign Physical Power scaling.`);
+      assert.equal(enemy.spellPower, expectedAdventureEnemyPower(generatedSpellPower, adventureNumber), `${enemy.name} must retain its intended late-campaign Spell Power scaling.`);
     });
     adventure.stages.forEach((stage, stageIndex) => {
       stage.entries.filter((entry) => entry.type === "combat" || entry.type === "boss").forEach((entry) => {
