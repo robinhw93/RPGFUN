@@ -18,6 +18,8 @@ export interface CombatStartEffects {
   playerStatuses?: AdventureCombatStartStatus[];
   enemyStatuses?: AdventureCombatStartStatus[];
   abilityCooldowns?: Record<string, number>;
+  /** Adventure-recommended level applied to every enemy in this encounter. */
+  enemyLevel?: number;
 }
 
 /** A new encounter begins a new player turn, so carried cooldowns tick once instead of resetting. */
@@ -44,6 +46,7 @@ export function getEnemyStartingEnergy(enemy: Pick<EnemyTemplate, "maxEnergy" | 
 export function createCombat(character: CharacterState, enemyIds: string[], carryHp?: number, startEffects: CombatStartEffects = {}): CombatState {
   const derived = getDerivedStats(character);
   const features = getCharacterCombatFeatures(character);
+  const enemyLevel = Math.max(1, Math.round(startEffects.enemyLevel ?? 1));
   const enemies: EnemyState[] = enemyIds.map((id, index) => {
     const template = ENEMIES[id];
     const statuses = (startEffects.enemyStatuses ?? []).reduce<StatusEffect[]>((current, effect) => {
@@ -53,6 +56,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     return {
       ...template,
       instanceId: `${id}-${index}`,
+      level: enemyLevel,
       hp: template.maxHp,
       energy: getEnemyStartingEnergy(template),
       maxEnergy: template.maxEnergy,
@@ -192,6 +196,7 @@ export function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
       ...template,
       ...enemy,
       id: template.id,
+      level: Math.max(1, Math.round(enemy.level ?? 1)),
       // Migrate active training combats created while DUMMY incorrectly had 1000% Hit Chance.
       hitChance: enemy.id === "dummy" && enemy.hitChance === 10 ? template.hitChance : enemy.hitChance ?? template.hitChance,
       energy: enemy.energy ?? getEnemyStartingEnergy(template),

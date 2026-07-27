@@ -32,7 +32,7 @@ import { COMBAT_TIMING } from "../../game/timing";
 import type { CharacterState, CombatLogEntry, CombatReward, CombatState, ConsumableItem, GameState, GearItem, GearSlot, InspectableInfo, StatusEffectId } from "../../game/types";
 import { projectCombatActionQueue, type QueuedCombatAction } from "../../hooks/useCombatActionQueue";
 
-import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
+import { AbilityImpactEffect, AbilityProjectileEffect, BarrierShimmer, BleedApplicationEffect, BlizzardFieldEffect, ChainedApplicationEffect, CombatantBeamEffect, CombatantPathEffect, ConductorFieldEffect, DiminishingReturnsApplicationEffect, EpidemicEffect, FocusCastEffect, FrozenApplicationEffect, LingeringChargeSiphonEffects, LingeringThunderstormEffects, NeurotoxinEffect, PandemicSpreadEffect, PoisonApplicationEffect, PoisonCloudEffect, PoisonTransferAnimation, RecuperateCastEffect, SmiteApplicationEffect, ToxicExplosionEffect, VenombornHealingEffect, VenombornTransferAnimation } from "../combat/CombatEffects";
 
 import { ElectrifiedApplicationEffect, EnemyStatsModal, EnergySegments, HealthBar, HoldAbilityButton, InspectInfoModal, PassiveProcFloats, PlayerAttributesModal, StatusBadge } from "../combat/CombatHud";
 
@@ -191,6 +191,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
 
   const combat = adventure.combat!;
   const isArenaChallenge = adventure.mode === "arena";
+  const playerChained = combat.playerStatuses.some((status) => status.id === "chained");
   const displayedPlayerStats = getStatusAdjustedCombatStats({
     ...derived,
     maxHp: combat.playerMaxHp,
@@ -205,6 +206,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const frozenAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "frozen");
   const smiteAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "smite");
   const diminishingReturnsAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "diminishingReturns");
+  const chainedAnimations = (combat.statusAnimations ?? []).filter((animation) => animation.statusId === "chained");
   const electrifiedPulseTargets = new Set(electrifiedAnimations.map((animation) => animation.targetId));
   const abilityAnimations = combat.abilityAnimations ?? [];
   const barrierPulseTargets = new Set(abilityAnimations.filter((animation) => animation.kind === "barrier_absorb").flatMap((animation) => animation.targetId ? [animation.targetId] : []));
@@ -273,6 +275,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           {frozenAnimations.some((animation) => animation.targetId === "player") && <FrozenApplicationEffect />}
           {smiteAnimations.filter((animation) => animation.targetId === "player").map((animation) => <SmiteApplicationEffect key={animation.id} />)}
           {diminishingReturnsAnimations.filter((animation) => animation.targetId === "player").map((animation) => <DiminishingReturnsApplicationEffect key={animation.id} />)}
+          {chainedAnimations.filter((animation) => animation.targetId === "player").map((animation) => <ChainedApplicationEffect key={animation.id} />)}
           {venombornAnimations.filter((animation) => animation.targetId === "player").map((animation) => <VenombornHealingEffect key={animation.id} />)}
           {focusAnimations.map((animation) => <FocusCastEffect key={animation.id} />)}
           {recuperateAnimations.map((animation) => <RecuperateCastEffect key={animation.id} />)}
@@ -332,6 +335,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
               {frozenAnimations.some((animation) => animation.targetId === enemy.instanceId) && <FrozenApplicationEffect />}
               {smiteAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <SmiteApplicationEffect key={animation.id} />)}
               {diminishingReturnsAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <DiminishingReturnsApplicationEffect key={animation.id} />)}
+              {chainedAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <ChainedApplicationEffect key={animation.id} />)}
               {neurotoxinEffects.map((animation) => <NeurotoxinEffect key={animation.id} />)}
               {toxicExplosionEffects.map((animation) => <ToxicExplosionEffect key={animation.id} />)}
               {abilityAnimations.filter((animation) => animation.targetId === enemy.instanceId).map((animation) => <AbilityImpactEffect key={`${enemy.instanceId}-${animation.id}`} kind={animation.kind} />)}
@@ -409,7 +413,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       </div>
 
       <div className="combat-footer-controls">
-        <button className="combat-flee-button" disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active"} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : "Flee"}</button>
+        <button className="combat-flee-button" data-game-tooltip={!isArenaChallenge && playerChained ? "Chained prevents you from fleeing." : undefined} disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active" || (!isArenaChallenge && playerChained)} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : playerChained ? "Chained" : "Flee"}</button>
         {!isArenaChallenge && <button className="combat-inventory-button" disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active"} onClick={() => setCombatInventoryOpen(true)}><FlaskConical size={14} /> Inventory</button>}
         <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />

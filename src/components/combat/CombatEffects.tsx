@@ -3,7 +3,7 @@ import {
   CircleDot, Crosshair, Droplets,
   EyeOff, Flame, FlaskConical, Footprints,
   Hand, Heart, HeartPulse,
-  Megaphone, Moon,
+  Link2, Megaphone, Moon,
   Shield,
   ShieldCheck, ShieldOff, ShieldPlus, Skull,
   Snowflake, Sparkles, Sun, Swords, Target,
@@ -89,6 +89,10 @@ export function SmiteApplicationEffect() {
 
 export function DiminishingReturnsApplicationEffect() {
   return <span className="diminishing-returns-application-effect" aria-hidden="true"><ShieldCheck /><i /><i /><i /></span>;
+}
+
+export function ChainedApplicationEffect() {
+  return <span className="chained-application-effect" aria-hidden="true"><Link2 /><i /><i /></span>;
 }
 
 export function ConductorFieldEffect() {

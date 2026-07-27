@@ -53,6 +53,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   frozen: { id: "frozen", name: "Frozen", kind: "debuff", duration: 1, description: "Cannot act. Frozen ends immediately upon taking damage." },
   frozenPath: { id: "frozenPath", name: "Frozen Path", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+30% Dodge Chance for 3 turns. Dodge Chance cannot exceed 50%." },
   blind: { id: "blind", name: "Blind", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Hit Chance is reduced by 75%." },
+  chained: { id: "chained", name: "Chained", kind: "debuff", duration: 2, description: "Cannot flee for 2 turns." },
   sleep: { id: "sleep", name: "Sleep", kind: "debuff", duration: DEFAULT_STATUS_DURATION, description: "Cannot act. Has a 20% chance to wake at the start of each turn and wakes immediately upon taking damage." },
 };
 

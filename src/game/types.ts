@@ -74,6 +74,7 @@ export type StatusEffectId =
   | "frozen"
   | "frozenPath"
   | "blind"
+  | "chained"
   | "sleep";
 
 export type CombatTriggerEvent = "combat_start" | "turn_start" | "before_ability" | "on_hit" | "on_crit" | "on_kill" | "damage_dealt" | "status_applied" | "status_removed" | "status_damage" | "health_restored" | "guard_gained" | "damage_taken" | "enemy_missed" | "enemy_stunned" | "turn_end";
@@ -841,6 +842,8 @@ export interface EnemyTemplate {
 
 export interface EnemyState extends EnemyTemplate {
   instanceId: string;
+  /** Adventure-recommended level used by encounter-wide enemy rules. */
+  level: number;
   hp: number;
   energy: number;
   maxEnergy: number;

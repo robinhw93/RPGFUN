@@ -25,6 +25,16 @@ export interface EnemyAiContext {
   playerStatusIds: StatusEffectId[];
 }
 
+export const CHAINED_ENEMY_MIN_LEVEL = 6;
+export const CHAINED_ON_ATTACK_CHANCE = 0.1;
+
+/** One Chained roll per attack ability, regardless of its number of landed hits. */
+export function shouldApplyChainedOnEnemyAttack(enemyLevel: number, successfulHits: number, random: () => number = Math.random): boolean {
+  return enemyLevel >= CHAINED_ENEMY_MIN_LEVEL
+    && successfulHits > 0
+    && random() < CHAINED_ON_ATTACK_CHANCE;
+}
+
 function enemyAiConditionMatches(condition: EnemyAiCondition, enemy: EnemyState, enemies: EnemyState[], context?: EnemyAiContext): boolean {
   const selfHealthRatio = enemy.maxHp > 0 ? enemy.hp / enemy.maxHp : 0;
   const playerHealthRatio = context && context.playerMaxHp > 0 ? context.playerHp / context.playerMaxHp : 0;
@@ -395,6 +405,17 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         queuePassiveAnimation(pendingEffects, damageEventIndex, "player", `-${stolen} Gold`);
       }
       const appliedStatusIds: StatusEffectId[] = [];
+      if (
+        !derived.statusImmunities.includes("chained")
+        && canApplyStatusEffect(playerStatuses, "chained")
+        && shouldApplyChainedOnEnemyAttack(enemy.level, successfulHits)
+      ) {
+        const chained = createStatusEffect("chained", { sourceId: enemy.instanceId });
+        playerStatuses = addOrRefreshStatus(playerStatuses, chained);
+        appliedStatusIds.push("chained");
+        logs.push(makeLog("You become Chained.", statusInfo(chained)));
+        queueStatus(events, pendingEffects, "You become Chained.", "player", chained, false, damageEventIndex, enemy.instanceId);
+      }
       if (damage > 0) (enemyAbility.statusApplications ?? []).forEach((application) => {
         if (derived.statusImmunities.includes(application.status)) return;
         let applications = 0;

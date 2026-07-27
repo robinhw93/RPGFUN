@@ -21,14 +21,14 @@ import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { applyAbilityFlatDamage } from "../src/game/combat/damage";
 import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
-import { getReadyEnemyAbility, type EnemyAiContext } from "../src/game/combat/enemyActions";
+import { CHAINED_ENEMY_MIN_LEVEL, CHAINED_ON_ATTACK_CHANCE, getReadyEnemyAbility, shouldApplyChainedOnEnemyAttack, type EnemyAiContext } from "../src/game/combat/enemyActions";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
 import { fleeCombat } from "../src/game/flee";
 import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
-import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect, getStatusDamage } from "../src/game/statusEffects";
+import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getStatusDamage } from "../src/game/statusEffects";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
@@ -294,6 +294,15 @@ function testFleeCombatLossesAndReset() {
 
   const inactive = { ...state, adventure: { ...state.adventure, active: false, combat: null } };
   assert.equal(fleeCombat(inactive), null, "Fleeing must do nothing outside active combat.");
+
+  const chainedState = {
+    ...state,
+    adventure: {
+      ...state.adventure,
+      combat: { ...combat, playerStatuses: [createStatusEffect("chained")] },
+    },
+  };
+  assert.equal(fleeCombat(chainedState), null, "Chained must authoritatively prevent fleeing even when the UI transition is called directly.");
 }
 
 function testContentIntegrity() {
@@ -529,6 +538,37 @@ function testEnemyStartingEnergy() {
   delete (legacyDraft.enemies[0] as Partial<(typeof legacyDraft.enemies)[number]>).startingEnergy;
   const normalizedLegacyDraft = normalizeEnemyExchange(legacyDraft);
   assert.equal(normalizedLegacyDraft.enemies[0].startingEnergy, normalizedLegacyDraft.enemies[0].maxEnergy, "Older Enemy Creator drafts must default Starting Energy to Max Energy.");
+}
+
+function testEnemyChainedAttacks() {
+  assert.equal(CHAINED_ENEMY_MIN_LEVEL, 6);
+  assert.equal(CHAINED_ON_ATTACK_CHANCE, 0.1);
+  assert.equal(shouldApplyChainedOnEnemyAttack(5, 1, () => 0), false, "Enemies below level 6 must never apply Chained.");
+  assert.equal(shouldApplyChainedOnEnemyAttack(6, 0, () => 0), false, "A complete miss must never apply Chained.");
+  assert.equal(shouldApplyChainedOnEnemyAttack(6, 3, () => 0.099), true, "A multi-hit attack must make one Chained roll at the configured chance.");
+  assert.equal(shouldApplyChainedOnEnemyAttack(6, 1, () => 0.1), false, "The exact upper probability boundary must not proc Chained.");
+
+  const created = createCombat(INITIAL_GAME.character, ["dummy"], undefined, { enemyLevel: 6 });
+  assert.equal(created.enemies[0].level, 6, "Combat creation must stamp the adventure level onto its enemies.");
+  const enemyEntry = created.turnOrder.find((entry) => entry.kind === "enemy")!;
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const enemyTurn = { ...created, turnOrder: [enemyEntry, playerEntry], activeTurnIndex: 0, initiativeRevealed: true };
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+  try {
+    const result = takeEnemyTurn(enemyTurn, INITIAL_GAME.character, enemyEntry.actorId);
+    const chainedEffects = result.pendingEffects.filter((effect) => effect.type === "status" && effect.targetId === "player" && effect.status.id === "chained");
+    assert.equal(chainedEffects.length, 1, "A successful level-6 enemy attack must queue exactly one Chained application at impact.");
+    assert.equal(chainedEffects[0].type === "status" ? chainedEffects[0].status.duration : 0, 2, "Enemy-applied Chained must last two player turns.");
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  const chained = createStatusEffect("chained");
+  const afterOneTurn = decrementStatusDurations([chained]);
+  const afterTwoTurns = decrementStatusDurations(afterOneTurn);
+  assert.equal(afterOneTurn.find((status) => status.id === "chained")?.duration, 1, "Chained must remain through the first affected player turn.");
+  assert.equal(afterTwoTurns.some((status) => status.id === "chained"), false, "Chained must expire after the second affected player turn.");
 }
 
 function testEnemyEditorSynchronizesLiveDropTables() {
@@ -1734,6 +1774,7 @@ testAutomaticGearAcquisition();
 testNewCharacterIntroductionDefaults();
 testAttributeAndAfflictionScaling();
 testEnemyStartingEnergy();
+testEnemyChainedAttacks();
 testEnemyEditorSynchronizesLiveDropTables();
 testGoblinEnemyBehaviors();
 testHighfallEnemyBehaviorsAndLoot();

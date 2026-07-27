@@ -64,11 +64,15 @@ function cloneInitial(): GameState {
 function loadInitialGame(): GameState {
   const loaded = loadGame() ?? cloneInitial();
   if (!loaded.adventure.combat) return loaded;
+  const combat = ensureCombatState(loaded.adventure.combat, loaded.character);
+  const enemyLevel = loaded.adventure.mode === "story"
+    ? getAdventureDefinition(loaded.adventure.adventureId).recommendedLevel
+    : 1;
   return {
     ...loaded,
     adventure: {
       ...loaded.adventure,
-      combat: ensureCombatState(loaded.adventure.combat, loaded.character),
+      combat: { ...combat, enemies: combat.enemies.map((enemy) => ({ ...enemy, level: enemyLevel })) },
     },
   };
 }
@@ -254,6 +258,7 @@ function App() {
         const combat = enemyIds?.length ? createCombat(current.character, enemyIds, startingHp, {
           playerStatuses: current.adventure.nextCombatPlayerStatuses,
           enemyStatuses: current.adventure.nextCombatEnemyStatuses,
+          enemyLevel: definition.recommendedLevel,
         }) : null;
         return {
           ...current,
@@ -396,6 +401,7 @@ function App() {
         playerStatuses: adventure.nextCombatPlayerStatuses,
         enemyStatuses: adventure.nextCombatEnemyStatuses,
         abilityCooldowns: carriedAbilityCooldowns,
+        enemyLevel: definition.recommendedLevel,
       }) : null;
       return {
         ...current,
@@ -434,6 +440,7 @@ function App() {
             playerStatuses: current.adventure.nextCombatPlayerStatuses,
             enemyStatuses: current.adventure.nextCombatEnemyStatuses,
             abilityCooldowns: current.adventure.carriedAbilityCooldowns,
+            enemyLevel: getAdventureDefinition(current.adventure.adventureId).recommendedLevel,
           });
           return {
             ...current,

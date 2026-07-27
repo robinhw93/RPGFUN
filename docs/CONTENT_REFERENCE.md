@@ -416,6 +416,7 @@ The duration is the default duration created by the status library. Ability or t
 | Weaken | 3 turns | No | Deals 25% less damage. |
 | Shatter | 3 turns | No | Effective Armor is reduced by 50%. |
 | Vulnerable | 3 turns | No | Takes 25% more damage from all sources. |
+| Chained | 2 turns | No | Cannot flee. Enemy attack abilities in recommended-level-6-and-higher story encounters have one 10% chance to apply it when at least one hit lands. |
 | Stunned | 1 turn | No | Skips the next turn, then grants Diminishing Returns for 3 turns. |
 | Exhausted | 1 turn | No | Energy regeneration is limited to 1 on the next turn. |
 | Slowed | 1 turn | No | Sets Initiative to 0 until the end of the affected combatant's next turn. It cannot grant another action in the current round. |

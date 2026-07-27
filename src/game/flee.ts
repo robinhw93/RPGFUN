@@ -1,4 +1,5 @@
 import type { GameState, GearItem, GearSlot } from "./types";
+import { hasStatus } from "./statusEffects";
 
 export interface CombatFleeResult {
   state: GameState;
@@ -14,7 +15,7 @@ function randomUnit(random: () => number): number {
 /** Resolves the permanent losses and abandons the current adventure. */
 export function fleeCombat(state: GameState, random: () => number = Math.random): CombatFleeResult | null {
   const combat = state.adventure.combat;
-  if (!state.adventure.active || !combat || combat.outcome !== "active") return null;
+  if (!state.adventure.active || !combat || combat.outcome !== "active" || hasStatus(combat.playerStatuses, "chained")) return null;
 
   const goldLossPercent = 50 + Math.floor(randomUnit(random) * 41);
   const goldLost = Math.ceil(state.character.gold * goldLossPercent / 100);
