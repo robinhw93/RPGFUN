@@ -612,7 +612,7 @@ The Highfall events are **The Sheltered Spring**, **Stormbound Camp**, **The Fro
 
 ## Late-campaign adventures
 
-Adventures 4–10 form one linear route after Highfall Mountains. Each has three canonical events: a dangerous shortcut, a forgotten relic, and an abandoned refuge. Every event offers two increasing d100 checks and one safe direct choice. Successful checks award experience, Gold, healing, or local materials; failure can remove Health, apply a next-combat debuff, strengthen enemies, or launch an immediate encounter. The exact choices, thresholds, effects, stages, encounter weights, and rewards are stored in `ADVENTURE_EVENTS` and `ADVENTURES` and are editable through Event Manager and Adventure Editor.
+Adventures 4–12 form one linear route after Highfall Mountains. Each has three canonical events: a dangerous shortcut, a forgotten relic, and an abandoned refuge. Every event offers two increasing d100 checks and one safe direct choice. Successful checks award experience, Gold, healing, or local materials; failure can remove Health, apply a next-combat debuff, strengthen enemies, or launch an immediate encounter. The exact choices, thresholds, effects, stages, encounter weights, and rewards are stored in `ADVENTURE_EVENTS` and `ADVENTURES` and are editable through Event Manager and Adventure Editor.
 
 | Adventure | Recommended level | Stages | Main tactics | Final boss |
 | --- | ---: | ---: | --- | --- |
@@ -623,6 +623,8 @@ Adventures 4–10 form one linear route after Highfall Mountains. Each has three
 | Frostbound Expanse | 34 | 16 | Cold, Frozen, Blind, Guard, and frost control. | Skara, the White Maw: establishes Frozen pressure, charges Whiteout Devour, then recovers in the broken ice. |
 | Stormspire Aerie | 40 | 17 | Electrified, Stunned, Evasion, and Guard. | Vaelith, the Tempest Roc: electrifies the field, charges Tempest Unbound, then lands in a vulnerable recovery state. |
 | The Hollow Crown | 46 | 18 | Guard, Burn, Bleed, Weaken, Vulnerable, Stealth, and Arcane Wound. | Aldren, the Hollow King: marks the party Vulnerable, charges Crownfall, then recovers before repeating the cycle. |
+| The Astral Scar | 49 | 20 | Arcane Wound, Blind, Vulnerable, Burn, Slow, and Weaken. | Seraphel, the Fallen Star: collapses the heavens around the target, charges Starfall Extinction, then restores itself behind Guard. |
+| The World Below | 50 | 22 | Guard, Bleed, Blind, Burn, Stealth, Weaken, and Vulnerable. | Eidolon, the First Hunger: begins to unmake its target, charges The World Devours, then retreats behind ancient defenses. |
 
 The final stage of each late adventure contains its boss plus two role-complementary adds. Bosses begin with 10 Energy, may resolve two ready actions per turn, and prioritize their setup/charged/recovery sequence. Combat and stage rewards rise with each recommended level. The generated late-campaign enemy roster contains exactly seven templates per biome:
 
@@ -635,12 +637,14 @@ The final stage of each late adventure contains its boss plus two role-complemen
 | Frostbound Expanse | Rime Wolf; Icebound Raider; Aurora Wisp; Frost Hermit; Glacier Golem; Snowblind Harrier; Skara, the White Maw. |
 | Stormspire Aerie | Thunder Talon; Spire Zealot; Storm Channeler; Cloud Djinn; Thunderhead Colossus; Chainwing Matron; Vaelith, the Tempest Roc. |
 | The Hollow Crown | Crownless Guard; Ashen Confessor; Veilbound Executioner; Hollow Courtier; Crown Seraph; The Royal Shadow; Aldren, the Hollow King. |
+| The Astral Scar | Starved Pilgrim; Glasswing Moth; Fallen Astrologer; Comet Hound; Gravity Warden; Astral Devourer; Seraphel, the Fallen Star. |
+| The World Below | Rootless Titan; Pale Burrower; Deep Oracle; Worldvein Elemental; Firstborn Shade; Abyssal Choir; Eidolon, the First Hunger. |
 
-All 49 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy has two ordered executable abilities. Every boss has three tactical abilities, explicit priority behavior, and dedicated status/damage presentation.
+All 63 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy has two ordered executable abilities. Every boss has three tactical abilities, explicit priority behavior, and dedicated status/damage presentation.
 
 ### Late-campaign loot and crafting
 
-Each late adventure contributes three ordinary crafting materials, two weapons, and two five-piece sets; The Hollow Crown contributes three sets. Set pieces and weapons can drop independently from local enemies and stages. The two weapons and each set's ring are craftable after completing that same adventure. All recipes consume the biome's three materials. Adventure 4 gear is Uncommon, Adventures 5–7 gear is Rare, and Epic gear begins with Adventure 8. No current item is Legendary.
+Each late adventure contributes three ordinary crafting materials and two weapons. Adventures 4–9 contribute two five-piece sets each; The Hollow Crown, The Astral Scar, and The World Below contribute three sets each. Set pieces and weapons can drop independently from local enemies and stages. The two weapons and each set's ring are craftable after completing that same adventure. All recipes consume the biome's three materials. Adventure 4 gear is Uncommon, Adventures 5–7 gear is Rare, and Epic gear begins with Adventure 8. Legendary set pieces and weapons begin dropping in The Astral Scar and continue in The World Below; both adventures' crafting materials remain Epic.
 
 | Adventure | Materials | Weapons | Sets |
 | --- | --- | --- | --- |
@@ -651,6 +655,8 @@ Each late adventure contributes three ordinary crafting materials, two weapons, 
 | Frostbound Expanse | Rimebone; Frostheart Crystal; White Pelt | White Maw Greataxe; Aurora Wand | Rimeguard; Winterweave |
 | Stormspire Aerie | Skyiron; Condensed Storm Essence; Cloudfeather | Skybreaker Spear; Stormcaller's Tome | Stormrunner; Tempest Sage |
 | The Hollow Crown | Hollowsteel; Crown Shard; Soul Ash | Crown-Sunder; Staff of the Last Oracle | Crownless; Veilborn; Ashen Oracle |
+| The Astral Scar | Star Metal; Astral Glass; Comet Silk | Cometfall; Staff of the Last Orrery | Starforged; Voidstrider; Astral Savant |
+| The World Below | Worldroot Heartwood; First Echo; Abyssal Hide | Worldsplitter; Voice of the World Below | Worldroot Bastion; Deepstalker; First Tongue |
 
 Every late set has Head, Chest, Pants, Boots, and Ring pieces and thresholds at 2, 3, 4, and 5 equipped pieces. The 2-piece bonus grants the set's primary attribute, the 3-piece bonus grants Physical or Spell Power, and the 4-piece bonus advances the set's status/defense identity. The executable 5-piece specials are:
 
@@ -671,14 +677,20 @@ Every late set has Head, Chest, Pants, Boots, and Ring pieces and thresholds at 
 | Crownless | Begins combat with Guard equal to 20% of maximum Health and generates 25% more Guard. |
 | Veilborn | Applies 1 additional Poison stack; Poison restores Health equal to 20% of its damage. |
 | Ashen Oracle | Applying Burn also applies Arcane Wound; Burn deals 40% more damage. |
+| Starforged | Immune to Arcane Wound; begins combat with Barrier equal to 22% of maximum Health. |
+| Voidstrider | Immune to Blind and grants +12% Dodge Chance. |
+| Astral Savant | Applies 1 additional Arcane Wound stack and grants 16% more Spell Power. |
+| Worldroot Bastion | Begins combat with Guard equal to 25% of maximum Health and generates 35% more Guard. |
+| Deepstalker | Bleed deals 45% more damage and restores Health equal to 20% of its damage. |
+| First Tongue | Vulnerable lasts 1 additional turn and grants 18% more Spell Power. |
 
 ## Item catalog
 
 ### Available gear
 
-New characters begin with no equipped gear and an empty inventory. The live catalog contains 194 items: 147 gear, 17 consumables, and 30 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
+New characters begin with no equipped gear and an empty inventory. The live catalog contains 234 items: 181 gear, 17 consumables, and 36 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
 
-The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No live item currently uses Legendary. Every live item ID is registered in the shared optimized icon catalog.
+The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. Legendary gear begins with The Astral Scar. Every live item ID is registered in the shared optimized icon catalog.
 
 | Item | Slot | Rarity | Gold Cost | Bonuses |
 | --- | --- | --- | ---: | --- |

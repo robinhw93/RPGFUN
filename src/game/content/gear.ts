@@ -4602,6 +4602,983 @@ export const ITEMS: InventoryItem[] = [
     }
   },
   {
+    "kind": "misc",
+    "id": "item-a11-star-metal",
+    "name": "Star Metal",
+    "goldCost": 52,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The Astral Scar.",
+    "iconUrl": "/assets/items/silver-ore.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a11-astral-glass",
+    "name": "Astral Glass",
+    "goldCost": 55,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The Astral Scar.",
+    "iconUrl": "/assets/items/arcane-crystal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a11-comet-silk",
+    "name": "Comet Silk",
+    "goldCost": 58,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The Astral Scar.",
+    "iconUrl": "/assets/items/fine-cloth.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-starforged-head",
+    "name": "Starforged Helm",
+    "goldCost": 465,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "vitality": 5
+    },
+    "armor": 7,
+    "set": "set-a11-starforged",
+    "setName": "Starforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-starforged-chest",
+    "name": "Starforged Cuirass",
+    "goldCost": 473,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "vitality": 5
+    },
+    "armor": 9,
+    "set": "set-a11-starforged",
+    "setName": "Starforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-starforged-pants",
+    "name": "Starforged Greaves",
+    "goldCost": 481,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "vitality": 5
+    },
+    "armor": 7,
+    "set": "set-a11-starforged",
+    "setName": "Starforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-starforged-boots",
+    "name": "Starforged Sabatons",
+    "goldCost": 489,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "vitality": 5
+    },
+    "armor": 7,
+    "set": "set-a11-starforged",
+    "setName": "Starforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-starforged-ring",
+    "name": "Starforged Signet",
+    "goldCost": 497,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A legendary ring piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 5
+    },
+    "armor": 7,
+    "set": "set-a11-starforged",
+    "setName": "Starforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a11-star-metal",
+          "quantity": 15
+        },
+        {
+          "itemId": "item-a11-astral-glass",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a11-comet-silk",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "astral-scar"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-voidstrider-head",
+    "name": "Voidstrider Cowl",
+    "goldCost": 465,
+    "slot": "head",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "agility": 8,
+      "luck": 5
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a11-voidstrider",
+    "setName": "Voidstrider",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-voidstrider-chest",
+    "name": "Voidstrider Jerkin",
+    "goldCost": 473,
+    "slot": "chest",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 9,
+      "luck": 5
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a11-voidstrider",
+    "setName": "Voidstrider",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-voidstrider-pants",
+    "name": "Voidstrider Legwraps",
+    "goldCost": 481,
+    "slot": "pants",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "agility": 8,
+      "luck": 5
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a11-voidstrider",
+    "setName": "Voidstrider",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-voidstrider-boots",
+    "name": "Voidstrider Treads",
+    "goldCost": 489,
+    "slot": "boots",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 8,
+      "luck": 5
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a11-voidstrider",
+    "setName": "Voidstrider",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-voidstrider-ring",
+    "name": "Voidstrider Band",
+    "goldCost": 497,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A legendary ring piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "agility": 8,
+      "luck": 5
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a11-voidstrider",
+    "setName": "Voidstrider",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "leatherworker",
+      "ingredients": [
+        {
+          "itemId": "item-a11-star-metal",
+          "quantity": 15
+        },
+        {
+          "itemId": "item-a11-astral-glass",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a11-comet-silk",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "astral-scar"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-astral-savant-head",
+    "name": "Astral Savant Hood",
+    "goldCost": 465,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/head-03.webp",
+    "stats": {
+      "intelligence": 8,
+      "vitality": 5
+    },
+    "magicResistance": 7,
+    "set": "set-a11-astral-savant",
+    "setName": "Astral Savant",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-astral-savant-chest",
+    "name": "Astral Savant Robes",
+    "goldCost": 473,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 5
+    },
+    "magicResistance": 9,
+    "set": "set-a11-astral-savant",
+    "setName": "Astral Savant",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-astral-savant-pants",
+    "name": "Astral Savant Leggings",
+    "goldCost": 481,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "intelligence": 8,
+      "vitality": 5
+    },
+    "magicResistance": 7,
+    "set": "set-a11-astral-savant",
+    "setName": "Astral Savant",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-astral-savant-boots",
+    "name": "Astral Savant Slippers",
+    "goldCost": 489,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/boots-01.webp",
+    "stats": {
+      "intelligence": 8,
+      "vitality": 5
+    },
+    "magicResistance": 7,
+    "set": "set-a11-astral-savant",
+    "setName": "Astral Savant",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-astral-savant-ring",
+    "name": "Astral Savant Loop",
+    "goldCost": 497,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A legendary ring piece shaped by the dangers of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "intelligence": 8,
+      "vitality": 5
+    },
+    "magicResistance": 7,
+    "set": "set-a11-astral-savant",
+    "setName": "Astral Savant",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a11-star-metal",
+          "quantity": 15
+        },
+        {
+          "itemId": "item-a11-astral-glass",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a11-comet-silk",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "astral-scar"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-cometfall",
+    "name": "Cometfall",
+    "goldCost": 635,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "mace",
+    "rarity": "legendary",
+    "description": "Cometfall carries the hard-won power of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/mace-02.webp",
+    "stats": {
+      "strength": 8
+    },
+    "physicalPower": 36,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a11-star-metal",
+          "quantity": 18
+        },
+        {
+          "itemId": "item-a11-astral-glass",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a11-comet-silk",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "astral-scar"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a11-orrery-staff",
+    "name": "Staff of the Last Orrery",
+    "goldCost": 635,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "staff",
+    "rarity": "legendary",
+    "description": "Staff of the Last Orrery carries the hard-won power of The Astral Scar.",
+    "iconUrl": "/assets/gear-icons/staff-03.webp",
+    "stats": {
+      "intelligence": 8
+    },
+    "magicalPower": 36,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a11-star-metal",
+          "quantity": 18
+        },
+        {
+          "itemId": "item-a11-astral-glass",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a11-comet-silk",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "astral-scar"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a12-worldroot-heartwood",
+    "name": "Worldroot Heartwood",
+    "goldCost": 56,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The World Below.",
+    "iconUrl": "/assets/items/hardwood.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a12-first-echo",
+    "name": "First Echo",
+    "goldCost": 59,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The World Below.",
+    "iconUrl": "/assets/items/arcane-crystal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a12-abyssal-hide",
+    "name": "Abyssal Hide",
+    "goldCost": 62,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The World Below.",
+    "iconUrl": "/assets/items/monster-hide.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-worldroot-bastion-head",
+    "name": "Worldroot Bastion Helm",
+    "goldCost": 500,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "strength": 9,
+      "vitality": 6
+    },
+    "armor": 8,
+    "set": "set-a12-worldroot-bastion",
+    "setName": "Worldroot Bastion",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-worldroot-bastion-chest",
+    "name": "Worldroot Bastion Cuirass",
+    "goldCost": 508,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "strength": 10,
+      "vitality": 6
+    },
+    "armor": 10,
+    "set": "set-a12-worldroot-bastion",
+    "setName": "Worldroot Bastion",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-worldroot-bastion-pants",
+    "name": "Worldroot Bastion Greaves",
+    "goldCost": 516,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "strength": 9,
+      "vitality": 6
+    },
+    "armor": 8,
+    "set": "set-a12-worldroot-bastion",
+    "setName": "Worldroot Bastion",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-worldroot-bastion-boots",
+    "name": "Worldroot Bastion Sabatons",
+    "goldCost": 524,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "legendary",
+    "description": "A legendary plate piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "strength": 9,
+      "vitality": 6
+    },
+    "armor": 8,
+    "set": "set-a12-worldroot-bastion",
+    "setName": "Worldroot Bastion",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-worldroot-bastion-ring",
+    "name": "Worldroot Bastion Signet",
+    "goldCost": 532,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A legendary ring piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "strength": 9,
+      "vitality": 6
+    },
+    "armor": 8,
+    "set": "set-a12-worldroot-bastion",
+    "setName": "Worldroot Bastion",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a12-worldroot-heartwood",
+          "quantity": 16
+        },
+        {
+          "itemId": "item-a12-first-echo",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a12-abyssal-hide",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "world-below"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-deepstalker-head",
+    "name": "Deepstalker Cowl",
+    "goldCost": 500,
+    "slot": "head",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "agility": 9,
+      "luck": 6
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.05
+      }
+    },
+    "set": "set-a12-deepstalker",
+    "setName": "Deepstalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-deepstalker-chest",
+    "name": "Deepstalker Jerkin",
+    "goldCost": 508,
+    "slot": "chest",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 10,
+      "luck": 6
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.05
+      }
+    },
+    "set": "set-a12-deepstalker",
+    "setName": "Deepstalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-deepstalker-pants",
+    "name": "Deepstalker Legwraps",
+    "goldCost": 516,
+    "slot": "pants",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "agility": 9,
+      "luck": 6
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.05
+      }
+    },
+    "set": "set-a12-deepstalker",
+    "setName": "Deepstalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-deepstalker-boots",
+    "name": "Deepstalker Treads",
+    "goldCost": 524,
+    "slot": "boots",
+    "armorMaterial": "leather",
+    "rarity": "legendary",
+    "description": "A legendary leather piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 9,
+      "luck": 6
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.05
+      }
+    },
+    "set": "set-a12-deepstalker",
+    "setName": "Deepstalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-deepstalker-ring",
+    "name": "Deepstalker Band",
+    "goldCost": 532,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A legendary ring piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "agility": 9,
+      "luck": 6
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.05
+      }
+    },
+    "set": "set-a12-deepstalker",
+    "setName": "Deepstalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "leatherworker",
+      "ingredients": [
+        {
+          "itemId": "item-a12-worldroot-heartwood",
+          "quantity": 16
+        },
+        {
+          "itemId": "item-a12-first-echo",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a12-abyssal-hide",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "world-below"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-first-tongue-head",
+    "name": "First Tongue Hood",
+    "goldCost": 500,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/head-03.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 6
+    },
+    "magicResistance": 8,
+    "set": "set-a12-first-tongue",
+    "setName": "First Tongue",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-first-tongue-chest",
+    "name": "First Tongue Robes",
+    "goldCost": 508,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "intelligence": 10,
+      "vitality": 6
+    },
+    "magicResistance": 10,
+    "set": "set-a12-first-tongue",
+    "setName": "First Tongue",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-first-tongue-pants",
+    "name": "First Tongue Leggings",
+    "goldCost": 516,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 6
+    },
+    "magicResistance": 8,
+    "set": "set-a12-first-tongue",
+    "setName": "First Tongue",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-first-tongue-boots",
+    "name": "First Tongue Slippers",
+    "goldCost": 524,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "legendary",
+    "description": "A legendary cloth piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/boots-01.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 6
+    },
+    "magicResistance": 8,
+    "set": "set-a12-first-tongue",
+    "setName": "First Tongue",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-first-tongue-ring",
+    "name": "First Tongue Loop",
+    "goldCost": 532,
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A legendary ring piece shaped by the dangers of The World Below.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "intelligence": 9,
+      "vitality": 6
+    },
+    "magicResistance": 8,
+    "set": "set-a12-first-tongue",
+    "setName": "First Tongue",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a12-worldroot-heartwood",
+          "quantity": 16
+        },
+        {
+          "itemId": "item-a12-first-echo",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a12-abyssal-hide",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "world-below"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-worldsplitter",
+    "name": "Worldsplitter",
+    "goldCost": 680,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "axe",
+    "rarity": "legendary",
+    "description": "Worldsplitter carries the hard-won power of The World Below.",
+    "iconUrl": "/assets/gear-icons/axe-03.webp",
+    "stats": {
+      "strength": 9
+    },
+    "physicalPower": 40,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a12-worldroot-heartwood",
+          "quantity": 19
+        },
+        {
+          "itemId": "item-a12-first-echo",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a12-abyssal-hide",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "world-below"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a12-voice-below",
+    "name": "Voice of the World Below",
+    "goldCost": 680,
+    "slot": "offHand",
+    "weaponEquipType": "offHand",
+    "weaponKind": "tome",
+    "rarity": "legendary",
+    "description": "Voice of the World Below carries the hard-won power of The World Below.",
+    "iconUrl": "/assets/gear-icons/tome-04.webp",
+    "stats": {
+      "intelligence": 9
+    },
+    "magicalPower": 40,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a12-worldroot-heartwood",
+          "quantity": 19
+        },
+        {
+          "itemId": "item-a12-first-echo",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a12-abyssal-hide",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "world-below"
+    }
+  },
+  {
     "kind": "consumable",
     "id": "consumable-a4-antivenom",
     "name": "Mirefen Antivenom",
@@ -5633,6 +6610,258 @@ export const GEAR_SETS: GearSetDefinition[] = [
           "statusDamage": {
             "burn": 0.4
           }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a11-starforged",
+    "name": "Starforged",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+16 Vitality.",
+        "passive": {
+          "stats": {
+            "vitality": 16
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+18 Physical Power.",
+        "passive": {
+          "physicalPower": 18
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Barrier lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "barrier": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Arcane Wound cannot afflict you, and begin combat with Barrier equal to 22% of maximum Health.",
+        "passive": {
+          "statusImmunities": [
+            "arcaneWound"
+          ],
+          "startingAbsorptionMaxHpRatios": {
+            "barrier": 0.22
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a11-voidstrider",
+    "name": "Voidstrider",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+16 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 16
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+18 Physical Power.",
+        "passive": {
+          "physicalPower": 18
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "+6% Dodge Chance.",
+        "passive": {
+          "dodgeChance": 0.06
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Blind cannot afflict you, and gain +12% Dodge Chance.",
+        "passive": {
+          "statusImmunities": [
+            "blind"
+          ],
+          "dodgeChance": 0.12
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a11-astral-savant",
+    "name": "Astral Savant",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+16 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 16
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+18 Spell Power.",
+        "passive": {
+          "magicalPower": 18
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your ArcaneWound lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "arcaneWound": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Whenever you apply Arcane Wound, apply 1 additional stack; gain 16% more Spell Power.",
+        "passive": {
+          "statusApplicationStacks": {
+            "arcaneWound": 1
+          },
+          "magicalPowerMultiplier": 0.16
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a12-worldroot-bastion",
+    "name": "Worldroot Bastion",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+18 Strength.",
+        "passive": {
+          "stats": {
+            "strength": 18
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+20 Physical Power.",
+        "passive": {
+          "physicalPower": 20
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Generate 36% more Guard.",
+        "passive": {
+          "guardGeneration": 0.36
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Begin combat with Guard equal to 25% of maximum Health and generate 35% more Guard.",
+        "passive": {
+          "startingAbsorptionMaxHpRatios": {
+            "guard": 0.25
+          },
+          "guardGeneration": 0.35
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a12-deepstalker",
+    "name": "Deepstalker",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+18 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 18
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+20 Physical Power.",
+        "passive": {
+          "physicalPower": 20
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Bleed deals 36% more damage.",
+        "passive": {
+          "statusDamage": {
+            "bleed": 0.36
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Your Bleed deals 45% more damage and restores Health equal to 20% of its damage.",
+        "passive": {
+          "statusDamage": {
+            "bleed": 0.45
+          },
+          "statusDamageLeech": {
+            "bleed": 0.2
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a12-first-tongue",
+    "name": "First Tongue",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+18 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 18
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+20 Spell Power.",
+        "passive": {
+          "magicalPower": 20
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Vulnerable lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "vulnerable": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Your Vulnerable lasts 1 additional turn; gain 18% more Spell Power.",
+        "passive": {
+          "statusDurationBonuses": {
+            "vulnerable": 1
+          },
+          "magicalPowerMultiplier": 0.18
         }
       }
     ]

@@ -334,8 +334,10 @@ function testContentIntegrity() {
     ["frostbound-expanse", 34, 16, "nightglass-citadel"],
     ["stormspire-aerie", 40, 17, "frostbound-expanse"],
     ["hollow-crown", 46, 18, "stormspire-aerie"],
+    ["astral-scar", 49, 20, "hollow-crown"],
+    ["world-below", 50, 22, "astral-scar"],
   ] as const;
-  assert.equal(ADVENTURES.length, 10, "The complete story route must contain Adventures 1 through 10.");
+  assert.equal(ADVENTURES.length, 12, "The complete story route must contain Adventures 1 through 12.");
   lateAdventureExpectations.forEach(([id, level, stageCount, prerequisite]) => {
     const adventure = ADVENTURES.find((candidate) => candidate.id === id);
     assert.ok(adventure, `Missing late-game adventure ${id}.`);
@@ -352,20 +354,33 @@ function testContentIntegrity() {
     const finalEntries = adventure.stages.at(-1)?.entries ?? [];
     assert.ok(finalEntries.some((entry) => entry.type === "boss"), `${adventure.name} must end in a boss encounter.`);
   });
-  const lateEnemies = Object.values(ENEMIES).filter((enemy) => /^enemy-a(?:[4-9]|10)-/.test(enemy.id));
-  assert.equal(lateEnemies.length, 49, "Adventures 4 through 10 need seven new enemies each.");
-  const lateSets = GEAR_SETS.filter((set) => /^set-a(?:[4-9]|10)-/.test(set.id));
-  assert.equal(lateSets.length, 15, "Adventures 4 through 10 need fifteen new five-piece sets.");
+  const lateEnemies = Object.values(ENEMIES).filter((enemy) => /^enemy-a(?:[4-9]|1[0-2])-/.test(enemy.id));
+  assert.equal(lateEnemies.length, 63, "Adventures 4 through 12 need seven new enemies each.");
+  const lateSets = GEAR_SETS.filter((set) => /^set-a(?:[4-9]|1[0-2])-/.test(set.id));
+  assert.equal(lateSets.length, 21, "Adventures 4 through 12 need twenty-one new five-piece sets.");
   lateSets.forEach((set) => {
     assert.equal(set.pieceCount, 5, `${set.name} must contain five pieces.`);
     assert.deepEqual(set.bonuses.map((bonus) => bonus.requiredPieces), [2, 3, 4, 5], `${set.name} must unlock bonuses at 2, 3, 4, and 5 pieces.`);
     assert.ok(set.bonuses.at(-1)?.passive, `${set.name}'s five-piece threshold needs an executable special effect.`);
     assert.equal(ITEMS.filter((item) => isGearItem(item) && item.set === set.id).length, 5, `${set.name} needs exactly five equippable pieces.`);
   });
-  const lateItems = ITEMS.filter((item) => /^(?:item|gear|consumable)-a(?:[4-9]|10)-/.test(item.id));
-  assert.equal(lateItems.length, 113, "The late-game content pack must retain its complete item catalog.");
-  assert.ok(lateItems.every((item) => item.rarity !== "legendary"), "Legendary items must not drop or appear in Adventures 4 through 10.");
-  assert.ok(lateItems.filter((item) => item.rarity === "epic").every((item) => /-a(?:8|9|10)-/.test(item.id)), "Epic items must begin at Adventure 8, after Adventure 7.");
+  const lateItems = ITEMS.filter((item) => /^(?:item|gear|consumable)-a(?:[4-9]|1[0-2])-/.test(item.id));
+  assert.equal(lateItems.length, 153, "The late-game content pack must retain its complete item catalog.");
+  const preLegendaryItems = lateItems.filter((item) => /-a(?:[4-9]|10)-/.test(item.id));
+  assert.ok(preLegendaryItems.every((item) => item.rarity !== "legendary"), "Legendary items must not appear before Adventure 11.");
+  assert.ok(preLegendaryItems.filter((item) => item.rarity === "epic").every((item) => /-a(?:8|9|10)-/.test(item.id)), "Epic items must begin at Adventure 8, after Adventure 7.");
+  const legendaryItems = lateItems.filter((item) => item.rarity === "legendary");
+  assert.equal(legendaryItems.length, 34, "Adventures 11 and 12 need thirty-four Legendary set pieces and weapons.");
+  assert.ok(legendaryItems.every((item) => /-a(?:11|12)-/.test(item.id)), "Legendary items must begin in Adventure 11.");
+  const legendaryDropIds = new Set([
+    ...Object.values(ENEMIES).flatMap((enemy) => enemy.dropTable ?? []),
+    ...ADVENTURES.flatMap((adventure) => adventure.stages.flatMap((stage) => stage.dropTable ?? [])),
+  ].map((drop) => drop.itemId).filter((id) => legendaryItems.some((item) => item.id === id)));
+  assert.ok(legendaryItems.some((item) => /-a11-/.test(item.id) && legendaryDropIds.has(item.id)), "Adventure 11 must begin dropping Legendary loot.");
+  assert.ok(legendaryItems.some((item) => /-a12-/.test(item.id) && legendaryDropIds.has(item.id)), "Adventure 12 must continue dropping Legendary loot.");
+  legendaryItems.forEach((item) => {
+    assert.ok(legendaryDropIds.has(item.id) || item.craftingRecipe, `${item.name} must be obtainable from a drop or its endgame recipe.`);
+  });
   const questIds = new Set(QUESTS.map((quest) => quest.id));
   assert.equal(questIds.size, QUESTS.length, "Quest IDs must be unique.");
   QUESTS.forEach((quest) => {

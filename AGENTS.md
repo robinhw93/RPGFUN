@@ -196,9 +196,9 @@ A change is complete only when the applicable items are true:
 
 At the time of this handoff:
 
-- The player-facing story route contains ten adventures from Windsong Forest through The Hollow Crown. Adventures 4–10 have 12–18 stages, seven dedicated enemies, three skill-check events, one tactical final boss, and data-owned card/combat artwork each.
+- The player-facing story route contains twelve adventures from Windsong Forest through The World Below. Adventures 4–12 have 12–22 stages, seven dedicated enemies, three skill-check events, one tactical final boss, and data-owned card/combat artwork each. The Astral Scar and The World Below are the longer level-49/50 endgame chapters.
 - The enemy catalog has 67 templates. The 49 Adventure 4–10 enemies have dedicated full artwork and portraits, executable abilities, behavior priorities, starting Energy, independent drop rows, and tactical boss sequences.
-- The live item source contains 194 definitions: 147 gear, 17 consumables, and 30 ordinary items. There are 24 sets; the fifteen Adventure 4–10 sets each have five pieces and executable 2/3/4/5-piece bonuses. Epic items begin in Adventure 8 and no live item is Legendary.
+- The live item source contains 234 definitions: 181 gear, 17 consumables, and 36 ordinary items. There are 30 sets; the twenty-one Adventure 4–12 sets each have five pieces and executable 2/3/4/5-piece bonuses. Epic items begin in Adventure 8; Legendary set pieces and weapons begin dropping in Adventure 11.
 - Enemy Editor Save replaces the complete canonical enemy catalog, Adventure Editor supports custom card/combat artwork, and Item Editor preserves executable set passives and named status-removal consumables.
 - Shadow, Arcanist, and Brute each have 87 live nodes including their class node. Shadow's latest extensions add Physical Power, Agility, Intelligence, and Spell Power routes.
 - Arcanist includes Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, Elemental Fury, and later Spell Power, Intelligence, Hit Chance, and Critical Strike routes.

@@ -3127,6 +3127,604 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
         }
       }
     ]
+  },
+  "event-a11-hazard": {
+    "id": "event-a11-hazard",
+    "name": "The Astral Scar Shortcut",
+    "eyebrow": "Dangerous Route",
+    "description": "A dangerous shortcut could save hours, but The Astral Scar punishes careless steps.",
+    "choices": [
+      {
+        "id": "choice-a11-hazard-agility",
+        "label": "Take the narrow path",
+        "description": "Trust your footing and move quickly.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 63,
+        "success": {
+          "text": "You cross cleanly and reach an untouched cache.",
+          "effects": [
+            {
+              "type": "gainExperience",
+              "amount": 310
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a11-star-metal"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The route gives way beneath you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 48
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "arcaneWound",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a11-hazard-strength",
+        "label": "Force a safer route",
+        "description": "Break or move the obstacle instead.",
+        "resolution": "check",
+        "stat": "strength",
+        "threshold": 66,
+        "success": {
+          "text": "You carve a stable passage and salvage useful material.",
+          "effects": [
+            {
+              "type": "gainItem",
+              "itemId": "item-a11-comet-silk"
+            },
+            {
+              "type": "gainGold",
+              "amount": 43
+            }
+          ]
+        },
+        "failure": {
+          "text": "The work exhausts you before the path is clear.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 32
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a11-hazard-leave",
+        "label": "Stay on the road",
+        "description": "Lose time, not blood.",
+        "resolution": "direct",
+        "stat": "vitality",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You keep to the longer road.",
+          "effects": []
+        }
+      }
+    ]
+  },
+  "event-a11-relic": {
+    "id": "event-a11-relic",
+    "name": "Whispers of The Astral Scar",
+    "eyebrow": "Forgotten Relic",
+    "description": "An old relic hums with a warning and a promise.",
+    "choices": [
+      {
+        "id": "choice-a11-relic-intelligence",
+        "label": "Study the relic",
+        "description": "Read the pattern before touching it.",
+        "resolution": "check",
+        "stat": "intelligence",
+        "threshold": 65,
+        "success": {
+          "text": "The relic yields its secret without resistance.",
+          "effects": [
+            {
+              "type": "gainExperience",
+              "amount": 394
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a11-astral-glass"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The relic answers with a hostile pulse.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 45
+            },
+            {
+              "type": "enemiesNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a11-relic-luck",
+        "label": "Reach through the ward",
+        "description": "Trust the relic to choose kindly.",
+        "resolution": "check",
+        "stat": "luck",
+        "threshold": 68,
+        "success": {
+          "text": "Fortune turns the ward aside.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 68
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a11-astral-glass"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The ward marks you for the guardians.",
+          "effects": [
+            {
+              "type": "immediateEncounter",
+              "enemyId": "enemy-a11-glasswing-moth",
+              "count": 1,
+              "experience": 395,
+              "gold": 37
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a11-relic-leave",
+        "label": "Leave it untouched",
+        "description": "Some warnings deserve respect.",
+        "resolution": "direct",
+        "stat": "vitality",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "The relic's whisper fades behind you.",
+          "effects": []
+        }
+      }
+    ]
+  },
+  "event-a11-refuge": {
+    "id": "event-a11-refuge",
+    "name": "Last Refuge of The Astral Scar",
+    "eyebrow": "Abandoned Shelter",
+    "description": "A barricaded shelter still holds supplies, but something scratches beyond its far wall.",
+    "choices": [
+      {
+        "id": "choice-a11-refuge-vitality",
+        "label": "Clear the shelter",
+        "description": "Hold the entrance while searching every corner.",
+        "resolution": "check",
+        "stat": "vitality",
+        "threshold": 63,
+        "success": {
+          "text": "You secure the refuge and recover in safety.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 85
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a11-comet-silk"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The shelter collapses into a frantic fight.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 51
+            },
+            {
+              "type": "immediateEncounter",
+              "enemyId": "enemy-a11-glasswing-moth",
+              "count": 1,
+              "experience": 405,
+              "gold": 38
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a11-refuge-luck",
+        "label": "Search the loose stones",
+        "description": "Look for the cache survivors would hide.",
+        "resolution": "check",
+        "stat": "luck",
+        "threshold": 67,
+        "success": {
+          "text": "Your hand finds a sealed emergency cache.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 83
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a11-star-metal"
+            }
+          ]
+        },
+        "failure": {
+          "text": "You disturb what was nesting in the wall.",
+          "effects": [
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "arcaneWound",
+              "stacks": 1
+            },
+            {
+              "type": "loseHealth",
+              "amount": 30
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a11-refuge-rest",
+        "label": "Rest by the entrance",
+        "description": "Take only the safety you can confirm.",
+        "resolution": "direct",
+        "stat": "vitality",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "A short rest steadies you.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 45
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "event-a12-hazard": {
+    "id": "event-a12-hazard",
+    "name": "The World Below Shortcut",
+    "eyebrow": "Dangerous Route",
+    "description": "A dangerous shortcut could save hours, but The World Below punishes careless steps.",
+    "choices": [
+      {
+        "id": "choice-a12-hazard-agility",
+        "label": "Take the narrow path",
+        "description": "Trust your footing and move quickly.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 64,
+        "success": {
+          "text": "You cross cleanly and reach an untouched cache.",
+          "effects": [
+            {
+              "type": "gainExperience",
+              "amount": 330
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a12-worldroot-heartwood"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The route gives way beneath you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 51
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "vulnerable",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a12-hazard-strength",
+        "label": "Force a safer route",
+        "description": "Break or move the obstacle instead.",
+        "resolution": "check",
+        "stat": "strength",
+        "threshold": 67,
+        "success": {
+          "text": "You carve a stable passage and salvage useful material.",
+          "effects": [
+            {
+              "type": "gainItem",
+              "itemId": "item-a12-abyssal-hide"
+            },
+            {
+              "type": "gainGold",
+              "amount": 46
+            }
+          ]
+        },
+        "failure": {
+          "text": "The work exhausts you before the path is clear.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 34
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a12-hazard-leave",
+        "label": "Stay on the road",
+        "description": "Lose time, not blood.",
+        "resolution": "direct",
+        "stat": "vitality",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You keep to the longer road.",
+          "effects": []
+        }
+      }
+    ]
+  },
+  "event-a12-relic": {
+    "id": "event-a12-relic",
+    "name": "Whispers of The World Below",
+    "eyebrow": "Forgotten Relic",
+    "description": "An old relic hums with a warning and a promise.",
+    "choices": [
+      {
+        "id": "choice-a12-relic-intelligence",
+        "label": "Study the relic",
+        "description": "Read the pattern before touching it.",
+        "resolution": "check",
+        "stat": "intelligence",
+        "threshold": 66,
+        "success": {
+          "text": "The relic yields its secret without resistance.",
+          "effects": [
+            {
+              "type": "gainExperience",
+              "amount": 418
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a12-first-echo"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The relic answers with a hostile pulse.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 48
+            },
+            {
+              "type": "enemiesNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a12-relic-luck",
+        "label": "Reach through the ward",
+        "description": "Trust the relic to choose kindly.",
+        "resolution": "check",
+        "stat": "luck",
+        "threshold": 69,
+        "success": {
+          "text": "Fortune turns the ward aside.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 72
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a12-first-echo"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The ward marks you for the guardians.",
+          "effects": [
+            {
+              "type": "immediateEncounter",
+              "enemyId": "enemy-a12-pale-burrower",
+              "count": 1,
+              "experience": 420,
+              "gold": 39
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a12-relic-leave",
+        "label": "Leave it untouched",
+        "description": "Some warnings deserve respect.",
+        "resolution": "direct",
+        "stat": "vitality",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "The relic's whisper fades behind you.",
+          "effects": []
+        }
+      }
+    ]
+  },
+  "event-a12-refuge": {
+    "id": "event-a12-refuge",
+    "name": "Last Refuge of The World Below",
+    "eyebrow": "Abandoned Shelter",
+    "description": "A barricaded shelter still holds supplies, but something scratches beyond its far wall.",
+    "choices": [
+      {
+        "id": "choice-a12-refuge-vitality",
+        "label": "Clear the shelter",
+        "description": "Hold the entrance while searching every corner.",
+        "resolution": "check",
+        "stat": "vitality",
+        "threshold": 64,
+        "success": {
+          "text": "You secure the refuge and recover in safety.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 90
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a12-abyssal-hide"
+            }
+          ]
+        },
+        "failure": {
+          "text": "The shelter collapses into a frantic fight.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 54
+            },
+            {
+              "type": "immediateEncounter",
+              "enemyId": "enemy-a12-pale-burrower",
+              "count": 1,
+              "experience": 430,
+              "gold": 40
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a12-refuge-luck",
+        "label": "Search the loose stones",
+        "description": "Look for the cache survivors would hide.",
+        "resolution": "check",
+        "stat": "luck",
+        "threshold": 68,
+        "success": {
+          "text": "Your hand finds a sealed emergency cache.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 88
+            },
+            {
+              "type": "gainItem",
+              "itemId": "item-a12-worldroot-heartwood"
+            }
+          ]
+        },
+        "failure": {
+          "text": "You disturb what was nesting in the wall.",
+          "effects": [
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "vulnerable",
+              "stacks": 1
+            },
+            {
+              "type": "loseHealth",
+              "amount": 32
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice-a12-refuge-rest",
+        "label": "Rest by the entrance",
+        "description": "Take only the safety you can confirm.",
+        "resolution": "direct",
+        "stat": "vitality",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "A short rest steadies you.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 48
+            }
+          ]
+        }
+      }
+    ]
   }
 };
 
@@ -6992,6 +7590,1205 @@ export const ADVENTURES: AdventureDefinition[] = [
           },
           {
             "itemId": "item-a10-crown-shard",
+            "chance": 100
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "astral-scar",
+    "name": "The Astral Scar",
+    "description": "Beyond the Hollow Crown, a fallen star has split an ancient observatory open. Gravity twists, constellations bleed, and pilgrims kneel to something burning beneath the crater.",
+    "recommendedLevel": 49,
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/astral-scar-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/astral-scar-edge.webp",
+    "prerequisiteAdventureId": "hollow-crown",
+    "travelText": "Crossing the broken causeway toward the Astral Scar",
+    "completionTitle": "The Fallen Star Extinguished",
+    "completionDescription": "Seraphel collapses into a rain of quiet embers. The observatory steadies, and a stair older than the stars opens beneath the crater.",
+    "stages": [
+      {
+        "id": "a11-stage-1",
+        "name": "The Passage 1",
+        "entries": [
+          {
+            "id": "a11-combat-1-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Starved Pilgrim Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-starved-pilgrim"
+            ],
+            "reward": {
+              "experience": 790,
+              "gold": 76
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a11-star-metal",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a11-stage-2",
+        "name": "The Passage 2",
+        "entries": [
+          {
+            "id": "a11-combat-2-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Glasswing Moth Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-glasswing-moth"
+            ],
+            "reward": {
+              "experience": 802,
+              "gold": 76
+            }
+          },
+          {
+            "id": "a11-combat-2-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The Astral Scar.",
+            "enemyIds": [
+              "enemy-a11-glasswing-moth",
+              "enemy-a11-gravity-warden",
+              "enemy-a11-astral-devourer"
+            ],
+            "reward": {
+              "experience": 1078,
+              "gold": 106
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-3",
+        "name": "The Broken Way",
+        "entries": [
+          {
+            "id": "a11-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "A choice on the road",
+            "description": "",
+            "eventId": "event-a11-hazard",
+            "reward": {
+              "experience": 276,
+              "gold": 30
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-4",
+        "name": "The Passage 4",
+        "entries": [
+          {
+            "id": "a11-combat-4-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Comet Hound Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-comet-hound"
+            ],
+            "reward": {
+              "experience": 826,
+              "gold": 77
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-5",
+        "name": "The Passage 5",
+        "entries": [
+          {
+            "id": "a11-combat-5-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Gravity Warden Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-gravity-warden"
+            ],
+            "reward": {
+              "experience": 838,
+              "gold": 78
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-6",
+        "name": "The Passage 6",
+        "entries": [
+          {
+            "id": "a11-combat-6-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Astral Devourer Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-astral-devourer",
+              "enemy-a11-glasswing-moth"
+            ],
+            "reward": {
+              "experience": 850,
+              "gold": 78
+            }
+          },
+          {
+            "id": "a11-combat-6-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The Astral Scar.",
+            "enemyIds": [
+              "enemy-a11-astral-devourer",
+              "enemy-a11-fallen-astrologer",
+              "enemy-a11-comet-hound"
+            ],
+            "reward": {
+              "experience": 1126,
+              "gold": 106
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a11-comet-silk",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a11-stage-7",
+        "name": "The Passage 7",
+        "entries": [
+          {
+            "id": "a11-combat-7-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Starved Pilgrim Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-starved-pilgrim",
+              "enemy-a11-fallen-astrologer"
+            ],
+            "reward": {
+              "experience": 862,
+              "gold": 79
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-8",
+        "name": "The Passage 8",
+        "entries": [
+          {
+            "id": "a11-combat-8-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Glasswing Moth Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-glasswing-moth",
+              "enemy-a11-comet-hound"
+            ],
+            "reward": {
+              "experience": 874,
+              "gold": 79
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-9",
+        "name": "The Passage 9",
+        "entries": [
+          {
+            "id": "a11-combat-9-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Fallen Astrologer Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-fallen-astrologer",
+              "enemy-a11-gravity-warden"
+            ],
+            "reward": {
+              "experience": 886,
+              "gold": 80
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-10",
+        "name": "The Passage 10",
+        "entries": [
+          {
+            "id": "a11-combat-10-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Comet Hound Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-comet-hound",
+              "enemy-a11-astral-devourer"
+            ],
+            "reward": {
+              "experience": 898,
+              "gold": 80
+            }
+          },
+          {
+            "id": "a11-combat-10-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The Astral Scar.",
+            "enemyIds": [
+              "enemy-a11-comet-hound",
+              "enemy-a11-starved-pilgrim",
+              "enemy-a11-glasswing-moth"
+            ],
+            "reward": {
+              "experience": 1174,
+              "gold": 106
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-11",
+        "name": "A Last Shelter",
+        "entries": [
+          {
+            "id": "a11-event-11",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "A choice on the road",
+            "description": "",
+            "eventId": "event-a11-relic",
+            "reward": {
+              "experience": 276,
+              "gold": 30
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-12",
+        "name": "The Passage 12",
+        "entries": [
+          {
+            "id": "a11-combat-12-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Astral Devourer Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-astral-devourer",
+              "enemy-a11-glasswing-moth",
+              "enemy-a11-comet-hound"
+            ],
+            "reward": {
+              "experience": 922,
+              "gold": 81
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-13",
+        "name": "The Passage 13",
+        "entries": [
+          {
+            "id": "a11-combat-13-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Starved Pilgrim Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-starved-pilgrim",
+              "enemy-a11-fallen-astrologer",
+              "enemy-a11-gravity-warden"
+            ],
+            "reward": {
+              "experience": 934,
+              "gold": 82
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-14",
+        "name": "The Passage 14",
+        "entries": [
+          {
+            "id": "a11-combat-14-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Glasswing Moth Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-glasswing-moth",
+              "enemy-a11-comet-hound",
+              "enemy-a11-astral-devourer"
+            ],
+            "reward": {
+              "experience": 946,
+              "gold": 82
+            }
+          },
+          {
+            "id": "a11-combat-14-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The Astral Scar.",
+            "enemyIds": [
+              "enemy-a11-glasswing-moth",
+              "enemy-a11-gravity-warden",
+              "enemy-a11-astral-devourer"
+            ],
+            "reward": {
+              "experience": 1222,
+              "gold": 106
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-15",
+        "name": "The Passage 15",
+        "entries": [
+          {
+            "id": "a11-combat-15-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Fallen Astrologer Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-fallen-astrologer",
+              "enemy-a11-gravity-warden",
+              "enemy-a11-starved-pilgrim"
+            ],
+            "reward": {
+              "experience": 958,
+              "gold": 83
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-16",
+        "name": "The Passage 16",
+        "entries": [
+          {
+            "id": "a11-combat-16-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Comet Hound Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-comet-hound",
+              "enemy-a11-astral-devourer",
+              "enemy-a11-glasswing-moth"
+            ],
+            "reward": {
+              "experience": 970,
+              "gold": 83
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a11-star-metal",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a11-stage-17",
+        "name": "The Passage 17",
+        "entries": [
+          {
+            "id": "a11-combat-17-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Gravity Warden Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-gravity-warden",
+              "enemy-a11-starved-pilgrim",
+              "enemy-a11-fallen-astrologer"
+            ],
+            "reward": {
+              "experience": 982,
+              "gold": 84
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-18",
+        "name": "A Last Shelter",
+        "entries": [
+          {
+            "id": "a11-event-18",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "A choice on the road",
+            "description": "",
+            "eventId": "event-a11-refuge",
+            "reward": {
+              "experience": 276,
+              "gold": 30
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-19",
+        "name": "The Passage 19",
+        "entries": [
+          {
+            "id": "a11-combat-19-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Starved Pilgrim Ambush",
+            "description": "The path through The Astral Scar closes behind you.",
+            "enemyIds": [
+              "enemy-a11-starved-pilgrim",
+              "enemy-a11-fallen-astrologer",
+              "enemy-a11-gravity-warden"
+            ],
+            "reward": {
+              "experience": 1006,
+              "gold": 85
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a11-stage-20",
+        "name": "Heart of The Astral Scar",
+        "entries": [
+          {
+            "id": "a11-boss",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Seraphel, the Fallen Star",
+            "description": "Seraphel, the Fallen Star bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "enemyIds": [
+              "enemy-a11-seraphel-fallen-star",
+              "enemy-a11-gravity-warden",
+              "enemy-a11-astral-devourer"
+            ],
+            "reward": {
+              "experience": 2370,
+              "gold": 304
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "gear-a11-cometfall",
+            "chance": 8
+          },
+          {
+            "itemId": "item-a11-astral-glass",
+            "chance": 100
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "world-below",
+    "name": "The World Below",
+    "description": "The stair beneath the fallen star descends beyond every map. Here the roots of Arkenfall coil around a sealed hunger, and the first voices still remember how the world was made.",
+    "recommendedLevel": 50,
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/world-below-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/world-below-edge.webp",
+    "prerequisiteAdventureId": "astral-scar",
+    "travelText": "Descending the endless stair into the World Below",
+    "completionTitle": "The First Hunger Bound",
+    "completionDescription": "Eidolon is driven back behind the First Gate. The roots of Arkenfall close around the wound, and the deep voices fall silent—for now.",
+    "stages": [
+      {
+        "id": "a12-stage-1",
+        "name": "The Passage 1",
+        "entries": [
+          {
+            "id": "a12-combat-1-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Rootless Titan Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-rootless-titan"
+            ],
+            "reward": {
+              "experience": 860,
+              "gold": 84
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a12-worldroot-heartwood",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a12-stage-2",
+        "name": "The Passage 2",
+        "entries": [
+          {
+            "id": "a12-combat-2-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Pale Burrower Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-pale-burrower"
+            ],
+            "reward": {
+              "experience": 872,
+              "gold": 84
+            }
+          },
+          {
+            "id": "a12-combat-2-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The World Below.",
+            "enemyIds": [
+              "enemy-a12-pale-burrower",
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-abyssal-choir"
+            ],
+            "reward": {
+              "experience": 1173,
+              "gold": 117
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-3",
+        "name": "The Broken Way",
+        "entries": [
+          {
+            "id": "a12-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "A choice on the road",
+            "description": "",
+            "eventId": "event-a12-hazard",
+            "reward": {
+              "experience": 301,
+              "gold": 33
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-4",
+        "name": "The Passage 4",
+        "entries": [
+          {
+            "id": "a12-combat-4-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Worldvein Elemental Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-worldvein-elemental"
+            ],
+            "reward": {
+              "experience": 896,
+              "gold": 85
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-5",
+        "name": "The Passage 5",
+        "entries": [
+          {
+            "id": "a12-combat-5-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Firstborn Shade Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-firstborn-shade"
+            ],
+            "reward": {
+              "experience": 908,
+              "gold": 86
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-6",
+        "name": "The Passage 6",
+        "entries": [
+          {
+            "id": "a12-combat-6-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Abyssal Choir Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-abyssal-choir",
+              "enemy-a12-pale-burrower"
+            ],
+            "reward": {
+              "experience": 920,
+              "gold": 86
+            }
+          },
+          {
+            "id": "a12-combat-6-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The World Below.",
+            "enemyIds": [
+              "enemy-a12-abyssal-choir",
+              "enemy-a12-deep-oracle",
+              "enemy-a12-worldvein-elemental"
+            ],
+            "reward": {
+              "experience": 1221,
+              "gold": 117
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a12-abyssal-hide",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a12-stage-7",
+        "name": "The Passage 7",
+        "entries": [
+          {
+            "id": "a12-combat-7-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Rootless Titan Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-rootless-titan",
+              "enemy-a12-deep-oracle"
+            ],
+            "reward": {
+              "experience": 932,
+              "gold": 87
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-8",
+        "name": "The Passage 8",
+        "entries": [
+          {
+            "id": "a12-combat-8-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Pale Burrower Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-pale-burrower",
+              "enemy-a12-worldvein-elemental"
+            ],
+            "reward": {
+              "experience": 944,
+              "gold": 87
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-9",
+        "name": "The Passage 9",
+        "entries": [
+          {
+            "id": "a12-combat-9-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Deep Oracle Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-deep-oracle",
+              "enemy-a12-firstborn-shade"
+            ],
+            "reward": {
+              "experience": 956,
+              "gold": 88
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-10",
+        "name": "The Passage 10",
+        "entries": [
+          {
+            "id": "a12-combat-10-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Worldvein Elemental Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-worldvein-elemental",
+              "enemy-a12-abyssal-choir"
+            ],
+            "reward": {
+              "experience": 968,
+              "gold": 88
+            }
+          },
+          {
+            "id": "a12-combat-10-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The World Below.",
+            "enemyIds": [
+              "enemy-a12-worldvein-elemental",
+              "enemy-a12-rootless-titan",
+              "enemy-a12-pale-burrower"
+            ],
+            "reward": {
+              "experience": 1269,
+              "gold": 117
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-11",
+        "name": "The Passage 11",
+        "entries": [
+          {
+            "id": "a12-combat-11-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Firstborn Shade Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-rootless-titan",
+              "enemy-a12-deep-oracle"
+            ],
+            "reward": {
+              "experience": 980,
+              "gold": 89
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a12-first-echo",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a12-stage-12",
+        "name": "A Last Shelter",
+        "entries": [
+          {
+            "id": "a12-event-12",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "A choice on the road",
+            "description": "",
+            "eventId": "event-a12-relic",
+            "reward": {
+              "experience": 301,
+              "gold": 33
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-13",
+        "name": "The Passage 13",
+        "entries": [
+          {
+            "id": "a12-combat-13-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Rootless Titan Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-rootless-titan",
+              "enemy-a12-deep-oracle",
+              "enemy-a12-firstborn-shade"
+            ],
+            "reward": {
+              "experience": 1004,
+              "gold": 90
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-14",
+        "name": "The Passage 14",
+        "entries": [
+          {
+            "id": "a12-combat-14-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Pale Burrower Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-pale-burrower",
+              "enemy-a12-worldvein-elemental",
+              "enemy-a12-abyssal-choir"
+            ],
+            "reward": {
+              "experience": 1016,
+              "gold": 90
+            }
+          },
+          {
+            "id": "a12-combat-14-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The World Below.",
+            "enemyIds": [
+              "enemy-a12-pale-burrower",
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-abyssal-choir"
+            ],
+            "reward": {
+              "experience": 1317,
+              "gold": 117
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-15",
+        "name": "The Passage 15",
+        "entries": [
+          {
+            "id": "a12-combat-15-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Deep Oracle Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-deep-oracle",
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-rootless-titan"
+            ],
+            "reward": {
+              "experience": 1028,
+              "gold": 91
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-16",
+        "name": "The Passage 16",
+        "entries": [
+          {
+            "id": "a12-combat-16-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Worldvein Elemental Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-worldvein-elemental",
+              "enemy-a12-abyssal-choir",
+              "enemy-a12-pale-burrower"
+            ],
+            "reward": {
+              "experience": 1040,
+              "gold": 91
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a12-worldroot-heartwood",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a12-stage-17",
+        "name": "The Passage 17",
+        "entries": [
+          {
+            "id": "a12-combat-17-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Firstborn Shade Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-rootless-titan",
+              "enemy-a12-deep-oracle"
+            ],
+            "reward": {
+              "experience": 1052,
+              "gold": 92
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-18",
+        "name": "The Passage 18",
+        "entries": [
+          {
+            "id": "a12-combat-18-a",
+            "type": "combat",
+            "chance": 65,
+            "eyebrow": "Encounter",
+            "title": "Abyssal Choir Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-abyssal-choir",
+              "enemy-a12-pale-burrower",
+              "enemy-a12-worldvein-elemental"
+            ],
+            "reward": {
+              "experience": 1064,
+              "gold": 92
+            }
+          },
+          {
+            "id": "a12-combat-18-b",
+            "type": "combat",
+            "chance": 35,
+            "eyebrow": "Elite Encounter",
+            "title": "Coordinated Hunters",
+            "description": "A dangerous group has prepared the ground in The World Below.",
+            "enemyIds": [
+              "enemy-a12-abyssal-choir",
+              "enemy-a12-deep-oracle",
+              "enemy-a12-worldvein-elemental"
+            ],
+            "reward": {
+              "experience": 1365,
+              "gold": 117
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-19",
+        "name": "The Passage 19",
+        "entries": [
+          {
+            "id": "a12-combat-19-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Rootless Titan Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-rootless-titan",
+              "enemy-a12-deep-oracle",
+              "enemy-a12-firstborn-shade"
+            ],
+            "reward": {
+              "experience": 1076,
+              "gold": 93
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-20",
+        "name": "A Last Shelter",
+        "entries": [
+          {
+            "id": "a12-event-20",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "A choice on the road",
+            "description": "",
+            "eventId": "event-a12-refuge",
+            "reward": {
+              "experience": 301,
+              "gold": 33
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a12-stage-21",
+        "name": "The Passage 21",
+        "entries": [
+          {
+            "id": "a12-combat-21-a",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Encounter",
+            "title": "Deep Oracle Ambush",
+            "description": "The path through The World Below closes behind you.",
+            "enemyIds": [
+              "enemy-a12-deep-oracle",
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-rootless-titan"
+            ],
+            "reward": {
+              "experience": 1100,
+              "gold": 94
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "item-a12-abyssal-hide",
+            "chance": 45
+          }
+        ]
+      },
+      {
+        "id": "a12-stage-22",
+        "name": "Heart of The World Below",
+        "entries": [
+          {
+            "id": "a12-boss",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Eidolon, the First Hunger",
+            "description": "Eidolon, the First Hunger bars the final path. Read the setup, survive the charged attack, and punish the recovery window.",
+            "enemyIds": [
+              "enemy-a12-eidolon-first-hunger",
+              "enemy-a12-firstborn-shade",
+              "enemy-a12-abyssal-choir"
+            ],
+            "reward": {
+              "experience": 2580,
+              "gold": 336
+            }
+          }
+        ],
+        "dropTable": [
+          {
+            "itemId": "gear-a12-worldsplitter",
+            "chance": 8
+          },
+          {
+            "itemId": "item-a12-first-echo",
             "chance": 100
           }
         ]

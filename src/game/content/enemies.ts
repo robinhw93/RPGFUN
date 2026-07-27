@@ -5434,5 +5434,1139 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
     "behavior": "priority",
     "maxActionsPerTurn": 2,
     "accent": "#8e714a"
+  },
+  "enemy-a11-starved-pilgrim": {
+    "id": "enemy-a11-starved-pilgrim",
+    "name": "Starved Pilgrim",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a11-starved-pilgrim.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-starved-pilgrim.webp",
+    "maxHp": 279,
+    "physicalPower": 49,
+    "spellPower": 0,
+    "armor": 9,
+    "magicResistance": 9,
+    "hitChance": 1.04,
+    "dodgeChance": 0.08,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a11-starforged-head",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a11-starforged-chest",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-starved-pilgrim-strike",
+        "name": "Gravitic Cut",
+        "description": "Deals 156% Physical Power as Physical damage and applies Vulnerable.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a11-starved-pilgrim-pressure",
+        "name": "Orbiting Ruin",
+        "description": "Strikes twice for 65% Physical Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_bite_claw"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#8c69c7"
+  },
+  "enemy-a11-glasswing-moth": {
+    "id": "enemy-a11-glasswing-moth",
+    "name": "Glasswing Moth",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a11-glasswing-moth.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-glasswing-moth.webp",
+    "maxHp": 288,
+    "physicalPower": 22,
+    "spellPower": 50,
+    "armor": 10,
+    "magicResistance": 10,
+    "hitChance": 1.04,
+    "dodgeChance": 0.11000000000000001,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a11-starforged-pants",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a11-starforged-boots",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-glasswing-moth-strike",
+        "name": "Prismatic Dust",
+        "description": "Deals 156% Spell Power as Spell damage and applies Blind.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "blind",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a11-glasswing-moth-pressure",
+        "name": "Glasswing Flurry",
+        "description": "Strikes twice for 65% Spell Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_natures_beam"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#8c69c7"
+  },
+  "enemy-a11-fallen-astrologer": {
+    "id": "enemy-a11-fallen-astrologer",
+    "name": "Fallen Astrologer",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a11-fallen-astrologer.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-fallen-astrologer.webp",
+    "maxHp": 297,
+    "physicalPower": 22,
+    "spellPower": 51,
+    "armor": 11,
+    "magicResistance": 8,
+    "hitChance": 1.04,
+    "dodgeChance": 0.14,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a11-starforged-ring",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a11-voidstrider-head",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-fallen-astrologer-strike",
+        "name": "Forbidden Constellation",
+        "description": "Deals 156% Spell Power as Arcane damage and applies ArcaneWound.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "arcane",
+        "spellPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "arcaneWound",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a11-fallen-astrologer-pressure",
+        "name": "Orrery Barrage",
+        "description": "Strikes twice for 65% Spell Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_natures_beam"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#8c69c7"
+  },
+  "enemy-a11-comet-hound": {
+    "id": "enemy-a11-comet-hound",
+    "name": "Comet Hound",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a11-comet-hound.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-comet-hound.webp",
+    "maxHp": 306,
+    "physicalPower": 52,
+    "spellPower": 0,
+    "armor": 9,
+    "magicResistance": 9,
+    "hitChance": 1.04,
+    "dodgeChance": 0.08,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a11-voidstrider-chest",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a11-voidstrider-pants",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-comet-hound-strike",
+        "name": "Meteor Fang",
+        "description": "Deals 156% Physical Power as Fire damage and applies Burn.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "melee",
+        "damageType": "fire",
+        "physicalPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "burn",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a11-comet-hound-pressure",
+        "name": "Comet Rush",
+        "description": "Strikes twice for 65% Physical Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_bite_claw"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#8c69c7"
+  },
+  "enemy-a11-gravity-warden": {
+    "id": "enemy-a11-gravity-warden",
+    "name": "Gravity Warden",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a11-gravity-warden.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-gravity-warden.webp",
+    "maxHp": 315,
+    "physicalPower": 53,
+    "spellPower": 53,
+    "armor": 10,
+    "magicResistance": 10,
+    "hitChance": 1.04,
+    "dodgeChance": 0.11000000000000001,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a11-voidstrider-boots",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a11-voidstrider-ring",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-gravity-warden-strike",
+        "name": "Crushing Horizon",
+        "description": "Deals 156% Spell Power as Spell damage and applies Slowed.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "slowed",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a11-gravity-warden-pressure",
+        "name": "Singularity Press",
+        "description": "Strikes twice for 65% Physical Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_bite_claw"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#8c69c7"
+  },
+  "enemy-a11-astral-devourer": {
+    "id": "enemy-a11-astral-devourer",
+    "name": "Astral Devourer",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a11-astral-devourer.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-astral-devourer.webp",
+    "maxHp": 324,
+    "physicalPower": 24,
+    "spellPower": 54,
+    "armor": 11,
+    "magicResistance": 8,
+    "hitChance": 1.04,
+    "dodgeChance": 0.14,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a11-astral-savant-head",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a11-astral-savant-chest",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-astral-devourer-strike",
+        "name": "Consume Light",
+        "description": "Deals 156% Spell Power as Spell damage and applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.56,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a11-astral-devourer-pressure",
+        "name": "Many-Jawed Hunger",
+        "description": "Strikes twice for 65% Spell Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_natures_beam"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#8c69c7"
+  },
+  "enemy-a11-seraphel-fallen-star": {
+    "id": "enemy-a11-seraphel-fallen-star",
+    "name": "Seraphel, the Fallen Star",
+    "title": "Adventure Boss",
+    "imageUrl": "/assets/enemies/full/a11-seraphel-fallen-star.webp",
+    "portraitUrl": "/assets/enemies/portraits/a11-seraphel-fallen-star.webp",
+    "maxHp": 1834,
+    "physicalPower": 55,
+    "spellPower": 55,
+    "armor": 9,
+    "magicResistance": 9,
+    "hitChance": 1.04,
+    "dodgeChance": 0.08,
+    "critChance": 0.16999999999999998,
+    "energyRegen": 3,
+    "maxEnergy": 10,
+    "startingEnergy": 10,
+    "dropTable": [
+      {
+        "itemId": "item-a11-star-metal",
+        "chance": 100
+      },
+      {
+        "itemId": "item-a11-astral-glass",
+        "chance": 80
+      },
+      {
+        "itemId": "item-a11-comet-silk",
+        "chance": 70
+      },
+      {
+        "itemId": "gear-a11-astral-savant-pants",
+        "chance": 14
+      },
+      {
+        "itemId": "gear-a11-astral-savant-boots",
+        "chance": 12
+      },
+      {
+        "itemId": "gear-a11-cometfall",
+        "chance": 8
+      },
+      {
+        "itemId": "gear-a11-orrery-staff",
+        "chance": 8
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a11-seraphel-fallen-star-setup",
+        "name": "Collapse the Heavens",
+        "description": "Applies ArcaneWound and Blind.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "target",
+        "statusApplications": [
+          {
+            "status": "arcaneWound",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "blind",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "arcane_overload"
+      },
+      {
+        "id": "enemy-ability-a11-seraphel-fallen-star-execution",
+        "name": "Starfall Extinction",
+        "description": "Charges for one turn, then deals 260% Spell Power as Arcane damage.",
+        "energyCost": 7,
+        "cooldownTurns": 5,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "arcane",
+        "spellPowerScaling": 2.6,
+        "chargeTurns": 1,
+        "chargeText": "Seraphel, the Fallen Star begins preparing a devastating attack.",
+        "chargeVfx": "enemy_impale_charge",
+        "vfx": "elemental_fury"
+      },
+      {
+        "id": "enemy-ability-a11-seraphel-fallen-star-recover",
+        "name": "Sovereign Recovery",
+        "description": "Restores 10% maximum Health and gains Guard.",
+        "energyCost": 3,
+        "cooldownTurns": 5,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "guard",
+            "stacks": 32,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      }
+    ],
+    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#8c69c7"
+  },
+  "enemy-a12-rootless-titan": {
+    "id": "enemy-a12-rootless-titan",
+    "name": "Rootless Titan",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a12-rootless-titan.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-rootless-titan.webp",
+    "maxHp": 307,
+    "physicalPower": 54,
+    "spellPower": 0,
+    "armor": 10,
+    "magicResistance": 10,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.08499999999999999,
+    "critChance": 0.185,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a12-worldroot-bastion-head",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a12-worldroot-bastion-chest",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-rootless-titan-strike",
+        "name": "Worldstone Blow",
+        "description": "Deals 164% Physical Power as Physical damage.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6400000000000001,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a12-rootless-titan-stance",
+        "name": "Hold the Line",
+        "description": "Gains Guard.",
+        "energyCost": 1,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "selfStatusApplications": [
+          {
+            "status": "guard",
+            "stacks": 32,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_protect"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b17a43"
+  },
+  "enemy-a12-pale-burrower": {
+    "id": "enemy-a12-pale-burrower",
+    "name": "Pale Burrower",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a12-pale-burrower.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-pale-burrower.webp",
+    "maxHp": 316,
+    "physicalPower": 55,
+    "spellPower": 0,
+    "armor": 11,
+    "magicResistance": 11,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.115,
+    "critChance": 0.185,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a12-worldroot-bastion-pants",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a12-worldroot-bastion-boots",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-pale-burrower-strike",
+        "name": "Heartseeker Claw",
+        "description": "Deals 164% Physical Power as Physical damage and applies Bleed.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6400000000000001,
+        "statusApplications": [
+          {
+            "status": "bleed",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a12-pale-burrower-pressure",
+        "name": "Burrowing Frenzy",
+        "description": "Strikes twice for 65% Physical Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_bite_claw"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b17a43"
+  },
+  "enemy-a12-deep-oracle": {
+    "id": "enemy-a12-deep-oracle",
+    "name": "Deep Oracle",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a12-deep-oracle.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-deep-oracle.webp",
+    "maxHp": 325,
+    "physicalPower": 25,
+    "spellPower": 56,
+    "armor": 12,
+    "magicResistance": 9,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.14500000000000002,
+    "critChance": 0.185,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a12-worldroot-bastion-ring",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a12-deepstalker-head",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-deep-oracle-strike",
+        "name": "Buried Revelation",
+        "description": "Deals 164% Spell Power as Spell damage and applies Blind.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.6400000000000001,
+        "statusApplications": [
+          {
+            "status": "blind",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a12-deep-oracle-pressure",
+        "name": "Prophetic Chorus",
+        "description": "Strikes twice for 65% Spell Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_natures_beam"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b17a43"
+  },
+  "enemy-a12-worldvein-elemental": {
+    "id": "enemy-a12-worldvein-elemental",
+    "name": "Worldvein Elemental",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a12-worldvein-elemental.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-worldvein-elemental.webp",
+    "maxHp": 334,
+    "physicalPower": 57,
+    "spellPower": 57,
+    "armor": 10,
+    "magicResistance": 10,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.08499999999999999,
+    "critChance": 0.185,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a12-deepstalker-chest",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a12-deepstalker-pants",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-worldvein-elemental-strike",
+        "name": "Worldvein Fist",
+        "description": "Deals 164% Spell Power as Fire damage and applies Burn.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "fire",
+        "spellPowerScaling": 1.6400000000000001,
+        "statusApplications": [
+          {
+            "status": "burn",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "fireball"
+      },
+      {
+        "id": "enemy-ability-a12-worldvein-elemental-pressure",
+        "name": "Magma Pulse",
+        "description": "Strikes twice for 65% Physical Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_bite_claw"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b17a43"
+  },
+  "enemy-a12-firstborn-shade": {
+    "id": "enemy-a12-firstborn-shade",
+    "name": "Firstborn Shade",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a12-firstborn-shade.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-firstborn-shade.webp",
+    "maxHp": 343,
+    "physicalPower": 58,
+    "spellPower": 0,
+    "armor": 11,
+    "magicResistance": 11,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.115,
+    "critChance": 0.185,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a12-deepstalker-boots",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a12-deepstalker-ring",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-firstborn-shade-strike",
+        "name": "Before Memory",
+        "description": "Deals 164% Physical Power as Physical damage.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "melee",
+        "damageType": "physical",
+        "physicalPowerScaling": 1.6400000000000001,
+        "vfx": "enemy_heavy_cleave"
+      },
+      {
+        "id": "enemy-ability-a12-firstborn-shade-stance",
+        "name": "Vanish",
+        "description": "Gains Stealth.",
+        "energyCost": 1,
+        "cooldownTurns": 3,
+        "range": "melee",
+        "selfStatusApplications": [
+          {
+            "status": "stealth",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_quickstabber_stealth"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b17a43"
+  },
+  "enemy-a12-abyssal-choir": {
+    "id": "enemy-a12-abyssal-choir",
+    "name": "Abyssal Choir",
+    "title": "Creature",
+    "imageUrl": "/assets/enemies/full/a12-abyssal-choir.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-abyssal-choir.webp",
+    "maxHp": 352,
+    "physicalPower": 26,
+    "spellPower": 59,
+    "armor": 12,
+    "magicResistance": 9,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.14500000000000002,
+    "critChance": 0.185,
+    "energyRegen": 2,
+    "maxEnergy": 10,
+    "startingEnergy": 6,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 30
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 18
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 25
+      },
+      {
+        "itemId": "gear-a12-first-tongue-head",
+        "chance": 3
+      },
+      {
+        "itemId": "gear-a12-first-tongue-chest",
+        "chance": 2
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-abyssal-choir-strike",
+        "name": "Unraveling Hymn",
+        "description": "Deals 164% Spell Power as Spell damage and applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 1.6400000000000001,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a12-abyssal-choir-pressure",
+        "name": "Fivefold Dirge",
+        "description": "Strikes twice for 65% Spell Power per hit.",
+        "energyCost": 4,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "spell",
+        "spellPowerScaling": 0.65,
+        "hits": 2,
+        "vfx": "enemy_natures_beam"
+      }
+    ],
+    "behaviorNotes": "Uses its first ready ability, prioritizing the listed order.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b17a43"
+  },
+  "enemy-a12-eidolon-first-hunger": {
+    "id": "enemy-a12-eidolon-first-hunger",
+    "name": "Eidolon, the First Hunger",
+    "title": "Adventure Boss",
+    "imageUrl": "/assets/enemies/full/a12-eidolon-first-hunger.webp",
+    "portraitUrl": "/assets/enemies/portraits/a12-eidolon-first-hunger.webp",
+    "maxHp": 2276,
+    "physicalPower": 60,
+    "spellPower": 60,
+    "armor": 10,
+    "magicResistance": 10,
+    "hitChance": 1.0550000000000002,
+    "dodgeChance": 0.08499999999999999,
+    "critChance": 0.185,
+    "energyRegen": 3,
+    "maxEnergy": 10,
+    "startingEnergy": 10,
+    "dropTable": [
+      {
+        "itemId": "item-a12-worldroot-heartwood",
+        "chance": 100
+      },
+      {
+        "itemId": "item-a12-first-echo",
+        "chance": 80
+      },
+      {
+        "itemId": "item-a12-abyssal-hide",
+        "chance": 70
+      },
+      {
+        "itemId": "gear-a12-first-tongue-pants",
+        "chance": 14
+      },
+      {
+        "itemId": "gear-a12-first-tongue-boots",
+        "chance": 12
+      },
+      {
+        "itemId": "gear-a12-worldsplitter",
+        "chance": 8
+      },
+      {
+        "itemId": "gear-a12-voice-below",
+        "chance": 8
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a12-eidolon-first-hunger-setup",
+        "name": "Unmake the Living",
+        "description": "Applies Vulnerable and Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "rangedPresentation": "target",
+        "statusApplications": [
+          {
+            "status": "vulnerable",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a12-eidolon-first-hunger-execution",
+        "name": "The World Devours",
+        "description": "Charges for one turn, then deals 260% Spell Power as Shadow damage.",
+        "energyCost": 7,
+        "cooldownTurns": 5,
+        "range": "ranged",
+        "rangedPresentation": "projectile",
+        "damageType": "shadow",
+        "spellPowerScaling": 2.6,
+        "chargeTurns": 1,
+        "chargeText": "Eidolon, the First Hunger begins preparing a devastating attack.",
+        "chargeVfx": "enemy_impale_charge",
+        "vfx": "enemy_hex"
+      },
+      {
+        "id": "enemy-ability-a12-eidolon-first-hunger-recover",
+        "name": "Sovereign Recovery",
+        "description": "Restores 10% maximum Health and gains Guard.",
+        "energyCost": 3,
+        "cooldownTurns": 5,
+        "range": "melee",
+        "selfHealMaxHpRatio": 0.1,
+        "selfStatusApplications": [
+          {
+            "status": "guard",
+            "stacks": 34,
+            "duration": 3
+          }
+        ],
+        "vfx": "enemy_spirit_heal"
+      }
+    ],
+    "behaviorNotes": "Applies its setup statuses first, prepares its charged execution, and uses Sovereign Recovery while its larger attacks cool down.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#b17a43"
   }
 };

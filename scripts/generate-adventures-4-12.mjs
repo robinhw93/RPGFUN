@@ -10,8 +10,17 @@ const lateAdventureIds = new Set([
   "frostbound-expanse",
   "stormspire-aerie",
   "hollow-crown",
+  "astral-scar",
+  "world-below",
 ]);
-const latePrefixes = ["enemy-a4-", "enemy-a5-", "enemy-a6-", "enemy-a7-", "enemy-a8-", "enemy-a9-", "enemy-a10-", "item-a4-", "item-a5-", "item-a6-", "item-a7-", "item-a8-", "item-a9-", "item-a10-", "gear-a4-", "gear-a5-", "gear-a6-", "gear-a7-", "gear-a8-", "gear-a9-", "gear-a10-", "set-a4-", "set-a5-", "set-a6-", "set-a7-", "set-a8-", "set-a9-", "set-a10-", "consumable-a4-", "consumable-a5-", "consumable-a6-", "consumable-a7-", "consumable-a8-", "consumable-a9-", "consumable-a10-", "event-a4-", "event-a5-", "event-a6-", "event-a7-", "event-a8-", "event-a9-", "event-a10-"];
+const latePrefixes = Array.from({ length: 9 }, (_, index) => index + 4).flatMap((number) => [
+  `enemy-a${number}-`,
+  `item-a${number}-`,
+  `gear-a${number}-`,
+  `set-a${number}-`,
+  `consumable-a${number}-`,
+  `event-a${number}-`,
+]);
 const isLateId = (id) => latePrefixes.some((prefix) => id.startsWith(prefix)) || lateAdventureIds.has(id);
 
 async function loadModule(entryPoint) {
@@ -225,9 +234,65 @@ const specs = [
     ],
     weapons: [["crown-sunder", "Crown-Sunder", "sword", "oneHand", "physical"], ["last-oracle-staff", "Staff of the Last Oracle", "staff", "twoHand", "magical"]],
   },
+  {
+    number: 11, id: "astral-scar", name: "The Astral Scar", level: 49, stages: 20, prerequisite: "hollow-crown",
+    description: "Beyond the Hollow Crown, a fallen star has split an ancient observatory open. Gravity twists, constellations bleed, and pilgrims kneel to something burning beneath the crater.",
+    travelText: "Crossing the broken causeway toward the Astral Scar", completionTitle: "The Fallen Star Extinguished",
+    completionDescription: "Seraphel collapses into a rain of quiet embers. The observatory steadies, and a stair older than the stars opens beneath the crater.",
+    cardImageUrl: "/assets/backgrounds/astral-scar-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/astral-scar-edge.webp",
+    accent: "#8c69c7", statuses: ["arcaneWound", "blind"], materials: [
+      ["star-metal", "Star Metal", "/assets/items/silver-ore.webp"],
+      ["astral-glass", "Astral Glass", "/assets/items/arcane-crystal.webp"],
+      ["comet-silk", "Comet Silk", "/assets/items/fine-cloth.webp"],
+    ],
+    enemies: [
+      ["starved-pilgrim", "Starved Pilgrim", "A hollow-eyed pilgrim whose prayer beads orbit a gravity wound.", "physical", "vulnerable"],
+      ["glasswing-moth", "Glasswing Moth", "A great lunar moth scattering blinding dust from translucent wings.", "spell", "blind"],
+      ["fallen-astrologer", "Fallen Astrologer", "An observatory sage branded with constellations that no longer exist.", "spell", "arcaneWound"],
+      ["comet-hound", "Comet Hound", "A lean celestial predator with molten stone burning beneath its hide.", "physical", "burn"],
+      ["gravity-warden", "Gravity Warden", "A black-armored sentinel bending the crater floor around its shield.", "hybrid", "slowed"],
+      ["astral-devourer", "Astral Devourer", "A many-jawed void beast feeding on light and memory.", "spell", "weaken"],
+      ["seraphel-fallen-star", "Seraphel, the Fallen Star", "A wounded celestial giant chained inside the crater it created.", "hybrid", "arcaneWound"],
+    ],
+    sets: [
+      ["starforged", "Starforged", "plate", "vitality", "barrier"],
+      ["voidstrider", "Voidstrider", "leather", "agility", "stealth"],
+      ["astral-savant", "Astral Savant", "cloth", "intelligence", "arcaneWound"],
+    ],
+    weapons: [["cometfall", "Cometfall", "mace", "twoHand", "physical"], ["orrery-staff", "Staff of the Last Orrery", "staff", "twoHand", "magical"]],
+  },
+  {
+    number: 12, id: "world-below", name: "The World Below", level: 50, stages: 22, prerequisite: "astral-scar",
+    description: "The stair beneath the fallen star descends beyond every map. Here the roots of Arkenfall coil around a sealed hunger, and the first voices still remember how the world was made.",
+    travelText: "Descending the endless stair into the World Below", completionTitle: "The First Hunger Bound",
+    completionDescription: "Eidolon is driven back behind the First Gate. The roots of Arkenfall close around the wound, and the deep voices fall silent—for now.",
+    cardImageUrl: "/assets/backgrounds/world-below-adventure.webp", combatBackgroundUrl: "/assets/backgrounds/world-below-edge.webp",
+    accent: "#b17a43", statuses: ["vulnerable", "weaken"], materials: [
+      ["worldroot-heartwood", "Worldroot Heartwood", "/assets/items/hardwood.webp"],
+      ["first-echo", "First Echo", "/assets/items/arcane-crystal.webp"],
+      ["abyssal-hide", "Abyssal Hide", "/assets/items/monster-hide.webp"],
+    ],
+    enemies: [
+      ["rootless-titan", "Rootless Titan", "A stone colossus torn free from the roots that once restrained it.", "physical", "guard"],
+      ["pale-burrower", "Pale Burrower", "A blind plated horror that listens for heartbeats through the rock.", "physical", "bleed"],
+      ["deep-oracle", "Deep Oracle", "A many-eyed prophet speaking with the voice of buried ages.", "spell", "blind"],
+      ["worldvein-elemental", "Worldvein Elemental", "Living magma and root sap forced into a towering shape.", "hybrid", "burn"],
+      ["firstborn-shade", "Firstborn Shade", "The shadow of a creature erased before history began.", "physical", "stealth"],
+      ["abyssal-choir", "Abyssal Choir", "A ring of faceless singers whose harmony unravels courage.", "spell", "weaken"],
+      ["eidolon-first-hunger", "Eidolon, the First Hunger", "An ancient devourer pressing its countless limbs through the First Gate.", "hybrid", "vulnerable"],
+    ],
+    sets: [
+      ["worldroot-bastion", "Worldroot Bastion", "plate", "strength", "guard"],
+      ["deepstalker", "Deepstalker", "leather", "agility", "bleed"],
+      ["first-tongue", "First Tongue", "cloth", "intelligence", "vulnerable"],
+    ],
+    weapons: [["worldsplitter", "Worldsplitter", "axe", "twoHand", "physical"], ["voice-below", "Voice of the World Below", "tome", "offHand", "magical"]],
+  },
 ];
 
 const rarityFor = (number) => number >= 8 ? "epic" : number === 4 ? "uncommon" : "rare";
+const itemRarityFor = (number) => number >= 11 ? "legendary" : rarityFor(number);
+const materialRarityFor = (number) => number >= 11 ? "epic" : rarityFor(number);
 const gearIcon = (slot, material, index) => slot === "ring"
   ? `/assets/gear-icons/ring-0${(index % 5) + 1}.webp`
   : `/assets/gear-icons/${slot === "head" ? "head" : slot}-0${(index % 5) + 1}.webp`;
@@ -251,6 +316,12 @@ function passiveSpecial(setSlug, status, material) {
   if (setSlug === "crownless") return { startingAbsorptionMaxHpRatios: { guard: 0.2 }, guardGeneration: 0.25 };
   if (setSlug === "veilborn") return { statusApplicationStacks: { poison: 1 }, statusDamageLeech: { poison: 0.2 } };
   if (setSlug === "ashen-oracle") return { statusApplicationCompanions: { burn: ["arcaneWound"] }, statusDamage: { burn: 0.4 } };
+  if (setSlug === "starforged") return { statusImmunities: ["arcaneWound"], startingAbsorptionMaxHpRatios: { barrier: 0.22 } };
+  if (setSlug === "voidstrider") return { statusImmunities: ["blind"], dodgeChance: 0.12 };
+  if (setSlug === "astral-savant") return { statusApplicationStacks: { arcaneWound: 1 }, magicalPowerMultiplier: 0.16 };
+  if (setSlug === "worldroot-bastion") return { startingAbsorptionMaxHpRatios: { guard: 0.25 }, guardGeneration: 0.35 };
+  if (setSlug === "deepstalker") return { statusDamage: { bleed: 0.45 }, statusDamageLeech: { bleed: 0.2 } };
+  if (setSlug === "first-tongue") return { statusDurationBonuses: { vulnerable: 1 }, magicalPowerMultiplier: 0.18 };
   return { statusDamage: { [status]: 0.25 } };
 }
 
@@ -271,6 +342,12 @@ function finalDescription(setSlug) {
     crownless: "Begin combat with Guard equal to 20% of maximum Health and generate 25% more Guard.",
     veilborn: "Whenever you apply Poison, apply 1 additional stack; Poison restores Health equal to 20% of its damage.",
     "ashen-oracle": "Applying Burn also applies Arcane Wound, and your Burn deals 40% more damage.",
+    starforged: "Arcane Wound cannot afflict you, and begin combat with Barrier equal to 22% of maximum Health.",
+    voidstrider: "Blind cannot afflict you, and gain +12% Dodge Chance.",
+    "astral-savant": "Whenever you apply Arcane Wound, apply 1 additional stack; gain 16% more Spell Power.",
+    "worldroot-bastion": "Begin combat with Guard equal to 25% of maximum Health and generate 35% more Guard.",
+    deepstalker: "Your Bleed deals 45% more damage and restores Health equal to 20% of its damage.",
+    "first-tongue": "Your Vulnerable lasts 1 additional turn; gain 18% more Spell Power.",
   };
   return descriptions[setSlug];
 }
@@ -278,7 +355,7 @@ function finalDescription(setSlug) {
 function buildSetsAndGear(spec) {
   const sets = [];
   const items = [];
-  const rarity = rarityFor(spec.number);
+  const rarity = itemRarityFor(spec.number);
   const scale = 2 + (spec.number - 4) * 2;
   const materialIds = spec.materials.map(([slug]) => materialId(spec, slug));
   spec.sets.forEach(([slug, name, material, attribute, status], setIndex) => {
@@ -370,15 +447,31 @@ function buildSetsAndGear(spec) {
 
 function baseAbility(spec, enemy, index) {
   const [slug, name, , power, status] = enemy;
+  const flavorNames = {
+    "a11-starved-pilgrim": ["Gravitic Cut", "Orbiting Ruin"],
+    "a11-glasswing-moth": ["Prismatic Dust", "Glasswing Flurry"],
+    "a11-fallen-astrologer": ["Forbidden Constellation", "Orrery Barrage"],
+    "a11-comet-hound": ["Meteor Fang", "Comet Rush"],
+    "a11-gravity-warden": ["Crushing Horizon", "Singularity Press"],
+    "a11-astral-devourer": ["Consume Light", "Many-Jawed Hunger"],
+    "a12-rootless-titan": ["Worldstone Blow", "Titan's Advance"],
+    "a12-pale-burrower": ["Heartseeker Claw", "Burrowing Frenzy"],
+    "a12-deep-oracle": ["Buried Revelation", "Prophetic Chorus"],
+    "a12-worldvein-elemental": ["Worldvein Fist", "Magma Pulse"],
+    "a12-firstborn-shade": ["Before Memory", "Nameless Assault"],
+    "a12-abyssal-choir": ["Unraveling Hymn", "Fivefold Dirge"],
+  };
+  const [strikeName] = flavorNames[`a${spec.number}-${slug}`] ?? [];
   const scale = 1 + (spec.number - 4) * 0.08;
   const magical = power === "spell" || power === "hybrid";
   const damageType = status === "burn" || status === "charred" ? "fire"
     : status === "cold" || status === "frozen" ? "frost"
       : status === "electrified" || status === "stunned" ? "lightning"
+        : status === "arcaneWound" ? "arcane"
         : magical ? "spell" : "physical";
   return {
     id: `enemy-ability-a${spec.number}-${slug}-strike`,
-    name: magical ? "Ruinous Bolt" : "Savage Strike",
+    name: strikeName ?? (magical ? "Ruinous Bolt" : "Savage Strike"),
     description: `Deals ${Math.round(scale * 100)}% ${magical ? "Spell" : "Physical"} Power as ${damageType === "physical" ? "Physical" : damageType[0].toUpperCase() + damageType.slice(1)} damage${["guard", "barrier", "stealth", "evasion", "enlightened"].includes(status) ? "" : ` and applies ${status[0].toUpperCase() + status.slice(1)}`}.`,
     energyCost: 2,
     cooldownTurns: 1,
@@ -393,6 +486,20 @@ function baseAbility(spec, enemy, index) {
 
 function utilityAbility(spec, enemy, index) {
   const [slug, name, , power, status] = enemy;
+  const flavorNames = {
+    "a11-starved-pilgrim": "Orbiting Ruin",
+    "a11-glasswing-moth": "Glasswing Flurry",
+    "a11-fallen-astrologer": "Orrery Barrage",
+    "a11-comet-hound": "Comet Rush",
+    "a11-gravity-warden": "Singularity Press",
+    "a11-astral-devourer": "Many-Jawed Hunger",
+    "a12-rootless-titan": "Titan's Advance",
+    "a12-pale-burrower": "Burrowing Frenzy",
+    "a12-deep-oracle": "Prophetic Chorus",
+    "a12-worldvein-elemental": "Magma Pulse",
+    "a12-firstborn-shade": "Nameless Assault",
+    "a12-abyssal-choir": "Fivefold Dirge",
+  };
   if (["guard", "barrier", "stealth", "evasion", "enlightened"].includes(status)) {
     return {
       id: `enemy-ability-a${spec.number}-${slug}-stance`,
@@ -407,7 +514,7 @@ function utilityAbility(spec, enemy, index) {
   }
   return {
     id: `enemy-ability-a${spec.number}-${slug}-pressure`,
-    name: "Relentless Pressure",
+    name: flavorNames[`a${spec.number}-${slug}`] ?? "Relentless Pressure",
     description: `Strikes twice for 65% ${power === "spell" ? "Spell" : "Physical"} Power per hit.`,
     energyCost: 4,
     cooldownTurns: 3,
@@ -422,13 +529,13 @@ function bossAbilities(spec, boss) {
   const [slug, name] = boss;
   const status = spec.statuses[0];
   const secondStatus = spec.statuses[1];
-  const damageType = spec.number === 5 ? "fire" : spec.number === 6 || spec.number === 9 ? "lightning" : spec.number === 8 ? "frost" : spec.number === 10 ? "shadow" : "physical";
+  const damageType = spec.number === 5 ? "fire" : spec.number === 6 || spec.number === 9 ? "lightning" : spec.number === 8 ? "frost" : spec.number === 10 ? "shadow" : spec.number === 11 ? "arcane" : spec.number === 12 ? "shadow" : "physical";
   const powerField = damageType === "physical" ? "physicalPowerScaling" : "spellPowerScaling";
   const firstStatusIsSelfBuff = ["guard", "barrier", "stealth", "evasion", "enlightened"].includes(status);
   return [
     {
       id: `enemy-ability-a${spec.number}-${slug}-setup`,
-      name: spec.number === 4 ? "Brood Call" : spec.number === 5 ? "Stoke the Furnace" : spec.number === 6 ? "Drown the Future" : spec.number === 7 ? "Hall of Mirrors" : spec.number === 8 ? "Absolute Winter" : spec.number === 9 ? "Storm Chains" : "Royal Decree",
+      name: spec.number === 4 ? "Brood Call" : spec.number === 5 ? "Stoke the Furnace" : spec.number === 6 ? "Drown the Future" : spec.number === 7 ? "Hall of Mirrors" : spec.number === 8 ? "Absolute Winter" : spec.number === 9 ? "Storm Chains" : spec.number === 10 ? "Royal Decree" : spec.number === 11 ? "Collapse the Heavens" : "Unmake the Living",
       description: `Applies ${status[0].toUpperCase() + status.slice(1)} and ${secondStatus[0].toUpperCase() + secondStatus.slice(1)}.`,
       energyCost: 2,
       cooldownTurns: 4,
@@ -439,11 +546,11 @@ function bossAbilities(spec, boss) {
         { status: secondStatus, stacks: 1, duration: 3 },
       ],
       ...(firstStatusIsSelfBuff ? { selfStatusApplications: [{ status, stacks: 1, duration: 3 }] } : {}),
-      vfx: spec.number === 5 ? "enemy_burning_glare" : spec.number === 8 ? "deep_freeze" : spec.number === 9 ? "thunderstorm" : "enemy_hex",
+      vfx: spec.number === 5 ? "enemy_burning_glare" : spec.number === 8 ? "deep_freeze" : spec.number === 9 ? "thunderstorm" : spec.number === 11 ? "arcane_overload" : "enemy_hex",
     },
     {
       id: `enemy-ability-a${spec.number}-${slug}-execution`,
-      name: spec.number === 4 ? "Venom Deluge" : spec.number === 5 ? "Core Meltdown" : spec.number === 6 ? "Foretold Tempest" : spec.number === 7 ? "Shatter the Self" : spec.number === 8 ? "Whiteout Devour" : spec.number === 9 ? "Heavenfall" : "The Last Night",
+      name: spec.number === 4 ? "Venom Deluge" : spec.number === 5 ? "Core Meltdown" : spec.number === 6 ? "Foretold Tempest" : spec.number === 7 ? "Shatter the Self" : spec.number === 8 ? "Whiteout Devour" : spec.number === 9 ? "Heavenfall" : spec.number === 10 ? "The Last Night" : spec.number === 11 ? "Starfall Extinction" : "The World Devours",
       description: `Charges for one turn, then deals 260% ${damageType === "physical" ? "Physical" : "Spell"} Power as ${damageType[0].toUpperCase() + damageType.slice(1)} damage.`,
       energyCost: 7,
       cooldownTurns: 5,
@@ -454,7 +561,7 @@ function bossAbilities(spec, boss) {
       chargeTurns: 1,
       chargeText: `${name} begins preparing a devastating attack.`,
       chargeVfx: "enemy_impale_charge",
-      vfx: damageType === "fire" ? "firestorm" : damageType === "frost" ? "absolute_zero" : damageType === "lightning" ? "thunderstorm" : "enemy_impale",
+      vfx: damageType === "fire" ? "firestorm" : damageType === "frost" ? "absolute_zero" : damageType === "lightning" ? "thunderstorm" : damageType === "arcane" ? "elemental_fury" : damageType === "shadow" && spec.number >= 12 ? "enemy_hex" : "enemy_impale",
     },
     {
       id: `enemy-ability-a${spec.number}-${slug}-recover`,
@@ -488,7 +595,7 @@ function buildEnemies(spec, items) {
       { itemId: materialIds[1], chance: boss ? 80 : 18 },
       { itemId: materialIds[2], chance: boss ? 70 : 25 },
       { itemId: setPieces[(index * 2) % setPieces.length], chance: boss ? 14 : spec.number >= 8 ? 3 : 5 },
-      ...(index % 2 === 0 ? [{ itemId: setPieces[(index * 2 + 1) % setPieces.length], chance: boss ? 12 : spec.number >= 8 ? 2 : 4 }] : []),
+      ...((spec.number >= 11 || index % 2 === 0) ? [{ itemId: setPieces[(index * 2 + 1) % setPieces.length], chance: boss ? 12 : spec.number >= 8 ? 2 : 4 }] : []),
       ...(boss ? weapons.map((itemId) => ({ itemId, chance: spec.number >= 8 ? 8 : 12 })) : []),
     ];
     const abilities = boss ? bossAbilities(spec, enemy) : [baseAbility(spec, enemy, index), utilityAbility(spec, enemy, index)];
@@ -637,7 +744,7 @@ for (const spec of specs) {
     id: materialId(spec, slug),
     name,
     goldCost: 8 + spec.number * 4 + index * 3,
-    rarity: rarityFor(spec.number),
+    rarity: materialRarityFor(spec.number),
     description: `A crafting material recovered from ${spec.name}.`,
     iconUrl,
     arkenfallVendor: null,
