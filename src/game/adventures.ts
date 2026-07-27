@@ -14,6 +14,7 @@ export function getAdventureDefinition(id = DEFAULT_ADVENTURE_ID): AdventureDefi
 export function getAdventureDefaultTravelText(theme: AdventureTheme): string {
   if (theme === "arkenfall_highlands") return "Crossing the windswept highlands";
   if (theme === "highfall_mountains") return "Climbing into the Highfall Mountains";
+  if (theme === "custom") return "Traveling deeper into Arkenfall";
   return "Walking beneath the Windsong canopy";
 }
 

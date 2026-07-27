@@ -137,7 +137,14 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           const availability = getStoryAdventureAvailability(definition, game.character.completedAdventureIds);
           const requirementName = definition.prerequisiteAdventureId ? getAdventureDefinition(definition.prerequisiteAdventureId).name : null;
           return (
-            <div className={`hero-card adventure-theme-${definition.theme.replaceAll("_", "-")} ${availability === "completed" ? "completed" : ""}`} style={{ "--adventure-card-order": index } as CSSProperties} key={definition.id}>
+            <div
+              className={`hero-card adventure-theme-${definition.theme.replaceAll("_", "-")} ${availability === "completed" ? "completed" : ""}`}
+              style={{
+                "--adventure-card-order": index,
+                ...(definition.cardImageUrl ? { backgroundImage: `url("${definition.cardImageUrl}")` } : {}),
+              } as CSSProperties}
+              key={definition.id}
+            >
               <div className="hero-copy">
                 {availability === "completed" && <div className="adventure-completed-mark"><CircleCheckBig /><strong>Completed</strong></div>}
                 <p className="eyebrow">{availability === "completed" ? "Completed Adventure" : index === 0 ? "Available Adventure" : "Story Adventure"}</p>
@@ -241,7 +248,12 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
-    <section className={`combat-page compact-combat ${adventure.mode === "story" ? `${getAdventureDefinition(adventure.adventureId).theme.replaceAll("_", "-")}-combat` : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}>
+    <section
+      className={`combat-page compact-combat ${adventure.mode === "story" ? `${getAdventureDefinition(adventure.adventureId).theme.replaceAll("_", "-")}-combat` : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}
+      style={adventure.mode === "story" && getAdventureDefinition(adventure.adventureId).combatBackgroundUrl
+        ? { "--combat-background-image": `url("${getAdventureDefinition(adventure.adventureId).combatBackgroundUrl}")` } as CSSProperties
+        : undefined}
+    >
       <button type="button" className="combat-log-button combat-log-corner" onClick={() => setLogOpen(true)} aria-label="Open Combat Log"><BookOpen size={15} /></button>
       <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />
       <TurnOrderBar combat={combat} />

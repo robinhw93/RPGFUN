@@ -1,8 +1,8 @@
 import { getDerivedStats } from "./character";
 import { describeConsumableEffect, removeOneConsumable } from "./items";
-import { absorbIncomingDamage, addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "./statusEffects";
+import { STATUS_EFFECTS, absorbIncomingDamage, addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "./statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, ConsumableEffect, ConsumableItem, EnemyState, InspectableInfo } from "./types";
-import { makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamageAtEvent, queueEnergyChange, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus } from "./combat/eventQueue";
+import { makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamageAtEvent, queueEnergyChange, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation } from "./combat/eventQueue";
 import { isEnemyStealthed, isEnemyTargetable } from "./combat/state";
 
 function effectTargets(effect: ConsumableEffect, enemies: EnemyState[], selectedEnemyId: string): Array<"player" | string> {
@@ -91,6 +91,31 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
           });
         }
         vfxTargets.add(targetId);
+      });
+      return;
+    }
+
+    if (effect.type === "remove_status") {
+      targets.forEach((targetId) => {
+        if (targetId === "player") {
+          const previous = playerStatuses;
+          playerStatuses = playerStatuses.filter((status) => status.id !== effect.status);
+          if (playerStatuses.length !== previous.length) {
+            queueStatusReconciliation(pendingEffects, eventIndex, "player", previous, playerStatuses);
+            queuePassiveAnimation(pendingEffects, eventIndex, "player", `${STATUS_EFFECTS[effect.status].name} removed`);
+            vfxTargets.add("player");
+          }
+          return;
+        }
+        enemies = enemies.map((enemy) => {
+          if (enemy.instanceId !== targetId) return enemy;
+          const statuses = enemy.statuses.filter((status) => status.id !== effect.status);
+          if (statuses.length === enemy.statuses.length) return enemy;
+          queueStatusReconciliation(pendingEffects, eventIndex, targetId, enemy.statuses, statuses);
+          queuePassiveAnimation(pendingEffects, eventIndex, targetId, `${STATUS_EFFECTS[effect.status].name} removed`);
+          vfxTargets.add(targetId);
+          return { ...enemy, statuses };
+        });
       });
       return;
     }

@@ -326,6 +326,46 @@ function testContentIntegrity() {
       });
     });
   });
+  const lateAdventureExpectations = [
+    ["mirefen-marsh", 13, 12, "highfall-mountains"],
+    ["ashen-foundry", 18, 13, "mirefen-marsh"],
+    ["sunken-reliquary", 23, 14, "ashen-foundry"],
+    ["nightglass-citadel", 28, 15, "sunken-reliquary"],
+    ["frostbound-expanse", 34, 16, "nightglass-citadel"],
+    ["stormspire-aerie", 40, 17, "frostbound-expanse"],
+    ["hollow-crown", 46, 18, "stormspire-aerie"],
+  ] as const;
+  assert.equal(ADVENTURES.length, 10, "The complete story route must contain Adventures 1 through 10.");
+  lateAdventureExpectations.forEach(([id, level, stageCount, prerequisite]) => {
+    const adventure = ADVENTURES.find((candidate) => candidate.id === id);
+    assert.ok(adventure, `Missing late-game adventure ${id}.`);
+    assert.equal(adventure.recommendedLevel, level, `${adventure.name} needs its intended level gate.`);
+    assert.equal(adventure.stages.length, stageCount, `${adventure.name} needs the intended increasing stage count.`);
+    assert.equal(adventure.prerequisiteAdventureId, prerequisite, `${adventure.name} must remain in the linear story chain.`);
+    assert.equal(adventure.theme, "custom", `${adventure.name} must use data-owned custom artwork.`);
+    assert.ok(adventure.cardImageUrl && existsSync(join(process.cwd(), "public", adventure.cardImageUrl)), `${adventure.name} needs adventure-card artwork.`);
+    assert.ok(adventure.combatBackgroundUrl && existsSync(join(process.cwd(), "public", adventure.combatBackgroundUrl)), `${adventure.name} needs combat-board artwork.`);
+    const enemyIds = new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.enemyIds ?? [])));
+    assert.equal(enemyIds.size, 7, `${adventure.name} must use exactly seven biome enemies including its boss.`);
+    const eventIds = new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.eventId ? [entry.eventId] : [])));
+    assert.equal(eventIds.size, 3, `${adventure.name} must offer three editable skill-check events.`);
+    const finalEntries = adventure.stages.at(-1)?.entries ?? [];
+    assert.ok(finalEntries.some((entry) => entry.type === "boss"), `${adventure.name} must end in a boss encounter.`);
+  });
+  const lateEnemies = Object.values(ENEMIES).filter((enemy) => /^enemy-a(?:[4-9]|10)-/.test(enemy.id));
+  assert.equal(lateEnemies.length, 49, "Adventures 4 through 10 need seven new enemies each.");
+  const lateSets = GEAR_SETS.filter((set) => /^set-a(?:[4-9]|10)-/.test(set.id));
+  assert.equal(lateSets.length, 15, "Adventures 4 through 10 need fifteen new five-piece sets.");
+  lateSets.forEach((set) => {
+    assert.equal(set.pieceCount, 5, `${set.name} must contain five pieces.`);
+    assert.deepEqual(set.bonuses.map((bonus) => bonus.requiredPieces), [2, 3, 4, 5], `${set.name} must unlock bonuses at 2, 3, 4, and 5 pieces.`);
+    assert.ok(set.bonuses.at(-1)?.passive, `${set.name}'s five-piece threshold needs an executable special effect.`);
+    assert.equal(ITEMS.filter((item) => isGearItem(item) && item.set === set.id).length, 5, `${set.name} needs exactly five equippable pieces.`);
+  });
+  const lateItems = ITEMS.filter((item) => /^(?:item|gear|consumable)-a(?:[4-9]|10)-/.test(item.id));
+  assert.equal(lateItems.length, 113, "The late-game content pack must retain its complete item catalog.");
+  assert.ok(lateItems.every((item) => item.rarity !== "legendary"), "Legendary items must not drop or appear in Adventures 4 through 10.");
+  assert.ok(lateItems.filter((item) => item.rarity === "epic").every((item) => /-a(?:8|9|10)-/.test(item.id)), "Epic items must begin at Adventure 8, after Adventure 7.");
   const questIds = new Set(QUESTS.map((quest) => quest.id));
   assert.equal(questIds.size, QUESTS.length, "Quest IDs must be unique.");
   QUESTS.forEach((quest) => {
@@ -1234,6 +1274,26 @@ function testCombatConsumable() {
   const poison = resolved.enemies[0].statuses.find((status) => status.id === "poison");
   assert.equal(poison?.stacks, 2, "Consumable statuses must reach the selected enemy.");
   assert.equal(poison?.duration, 3, "Consumable status duration must be preserved.");
+
+  const remedy: ConsumableItem = {
+    kind: "consumable",
+    id: "regression-antivenom",
+    name: "Regression Antivenom",
+    rarity: "uncommon",
+    description: "Removes Poison.",
+    effects: [{ type: "remove_status", target: "self", status: "poison" }],
+  };
+  const poisonedCombat = {
+    ...created,
+    playerStatuses: [createStatusEffect("poison", { stacks: 3, duration: 3 })],
+    turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")],
+    activeTurnIndex: 0,
+    initiativeRevealed: true,
+  };
+  const remedyCharacter = { ...character, inventory: [structuredClone(remedy)] };
+  const remedyUsed = useConsumable(poisonedCombat, remedyCharacter, remedy);
+  const remedyResolved = resolveCombatEvent(remedyUsed.combat, remedyUsed.combat.eventId, 0);
+  assert.equal(remedyResolved.playerStatuses.some((status) => status.id === "poison"), false, "A status-removal consumable must clear its configured status at presentation time.");
 }
 
 function testIndependentItemDrops() {

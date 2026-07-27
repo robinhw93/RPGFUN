@@ -1959,6 +1959,2743 @@ export const ITEMS: InventoryItem[] = [
       "prerequisiteAdventureId": null
     },
     "vendorPrerequisiteAdventureId": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a4-bog-iron",
+    "name": "Bog Iron",
+    "goldCost": 24,
+    "rarity": "uncommon",
+    "description": "A crafting material recovered from Mirefen Marsh.",
+    "iconUrl": "/assets/items/iron-ore.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a4-venom-sac",
+    "name": "Venom Sac",
+    "goldCost": 27,
+    "rarity": "uncommon",
+    "description": "A crafting material recovered from Mirefen Marsh.",
+    "iconUrl": "/assets/items/poison-gland.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a4-mire-reed",
+    "name": "Mire Reed",
+    "goldCost": 30,
+    "rarity": "uncommon",
+    "description": "A crafting material recovered from Mirefen Marsh.",
+    "iconUrl": "/assets/items/moonpetal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-fenwarden-head",
+    "name": "Fenwarden Helm",
+    "goldCost": 220,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "uncommon",
+    "description": "A uncommon plate piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "strength": 1,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a4-fenwarden",
+    "setName": "Fenwarden",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-fenwarden-chest",
+    "name": "Fenwarden Cuirass",
+    "goldCost": 228,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "uncommon",
+    "description": "A uncommon plate piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "armor": 6,
+    "set": "set-a4-fenwarden",
+    "setName": "Fenwarden",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-fenwarden-pants",
+    "name": "Fenwarden Greaves",
+    "goldCost": 236,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "uncommon",
+    "description": "A uncommon plate piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "strength": 1,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a4-fenwarden",
+    "setName": "Fenwarden",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-fenwarden-boots",
+    "name": "Fenwarden Sabatons",
+    "goldCost": 244,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "uncommon",
+    "description": "A uncommon plate piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "strength": 1,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a4-fenwarden",
+    "setName": "Fenwarden",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-fenwarden-ring",
+    "name": "Fenwarden Signet",
+    "goldCost": 252,
+    "slot": "ring",
+    "rarity": "uncommon",
+    "description": "A uncommon ring piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "strength": 1,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a4-fenwarden",
+    "setName": "Fenwarden",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a4-bog-iron",
+          "quantity": 8
+        },
+        {
+          "itemId": "item-a4-venom-sac",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a4-mire-reed",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "mirefen-marsh"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-mirestalker-head",
+    "name": "Mirestalker Cowl",
+    "goldCost": 220,
+    "slot": "head",
+    "armorMaterial": "leather",
+    "rarity": "uncommon",
+    "description": "A uncommon leather piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "agility": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    },
+    "set": "set-a4-mirestalker",
+    "setName": "Mirestalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-mirestalker-chest",
+    "name": "Mirestalker Jerkin",
+    "goldCost": 228,
+    "slot": "chest",
+    "armorMaterial": "leather",
+    "rarity": "uncommon",
+    "description": "A uncommon leather piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 2,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    },
+    "set": "set-a4-mirestalker",
+    "setName": "Mirestalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-mirestalker-pants",
+    "name": "Mirestalker Legwraps",
+    "goldCost": 236,
+    "slot": "pants",
+    "armorMaterial": "leather",
+    "rarity": "uncommon",
+    "description": "A uncommon leather piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "agility": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    },
+    "set": "set-a4-mirestalker",
+    "setName": "Mirestalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-mirestalker-boots",
+    "name": "Mirestalker Treads",
+    "goldCost": 244,
+    "slot": "boots",
+    "armorMaterial": "leather",
+    "rarity": "uncommon",
+    "description": "A uncommon leather piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    },
+    "set": "set-a4-mirestalker",
+    "setName": "Mirestalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-mirestalker-ring",
+    "name": "Mirestalker Band",
+    "goldCost": 252,
+    "slot": "ring",
+    "rarity": "uncommon",
+    "description": "A uncommon ring piece shaped by the dangers of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "agility": 1,
+      "luck": 1
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.01
+      }
+    },
+    "set": "set-a4-mirestalker",
+    "setName": "Mirestalker",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "leatherworker",
+      "ingredients": [
+        {
+          "itemId": "item-a4-bog-iron",
+          "quantity": 8
+        },
+        {
+          "itemId": "item-a4-venom-sac",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a4-mire-reed",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "mirefen-marsh"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-bogcleaver",
+    "name": "Bogcleaver",
+    "goldCost": 320,
+    "slot": "mainHand",
+    "weaponEquipType": "oneHand",
+    "weaponKind": "axe",
+    "rarity": "uncommon",
+    "description": "Bogcleaver carries the hard-won power of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/axe-05.webp",
+    "stats": {
+      "strength": 1
+    },
+    "physicalPower": 8,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a4-bog-iron",
+          "quantity": 11
+        },
+        {
+          "itemId": "item-a4-venom-sac",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a4-mire-reed",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "mirefen-marsh"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a4-witchlight-wand",
+    "name": "Witchlight Wand",
+    "goldCost": 320,
+    "slot": "mainHand",
+    "weaponEquipType": "mainHand",
+    "weaponKind": "wand",
+    "rarity": "uncommon",
+    "description": "Witchlight Wand carries the hard-won power of Mirefen Marsh.",
+    "iconUrl": "/assets/gear-icons/wand-01.webp",
+    "stats": {
+      "intelligence": 1
+    },
+    "magicalPower": 8,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a4-bog-iron",
+          "quantity": 11
+        },
+        {
+          "itemId": "item-a4-venom-sac",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a4-mire-reed",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "mirefen-marsh"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a5-cindersteel",
+    "name": "Cindersteel Ore",
+    "goldCost": 28,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Ashen Foundry.",
+    "iconUrl": "/assets/items/copper-ore.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a5-ember-fragment",
+    "name": "Ember Core Fragment",
+    "goldCost": 31,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Ashen Foundry.",
+    "iconUrl": "/assets/items/ember-core.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a5-sootweave",
+    "name": "Sootweave",
+    "goldCost": 34,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Ashen Foundry.",
+    "iconUrl": "/assets/items/fine-cloth.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-emberforged-head",
+    "name": "Emberforged Helm",
+    "goldCost": 255,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a5-emberforged",
+    "setName": "Emberforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-emberforged-chest",
+    "name": "Emberforged Cuirass",
+    "goldCost": 263,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "strength": 3,
+      "vitality": 1
+    },
+    "armor": 6,
+    "set": "set-a5-emberforged",
+    "setName": "Emberforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-emberforged-pants",
+    "name": "Emberforged Greaves",
+    "goldCost": 271,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a5-emberforged",
+    "setName": "Emberforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-emberforged-boots",
+    "name": "Emberforged Sabatons",
+    "goldCost": 279,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a5-emberforged",
+    "setName": "Emberforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-emberforged-ring",
+    "name": "Emberforged Signet",
+    "goldCost": 287,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "A rare ring piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "strength": 2,
+      "vitality": 1
+    },
+    "armor": 4,
+    "set": "set-a5-emberforged",
+    "setName": "Emberforged",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a5-cindersteel",
+          "quantity": 9
+        },
+        {
+          "itemId": "item-a5-ember-fragment",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a5-sootweave",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "ashen-foundry"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-cinderweave-head",
+    "name": "Cinderweave Hood",
+    "goldCost": 255,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "magicResistance": 4,
+    "set": "set-a5-cinderweave",
+    "setName": "Cinderweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-cinderweave-chest",
+    "name": "Cinderweave Robes",
+    "goldCost": 263,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 1
+    },
+    "magicResistance": 6,
+    "set": "set-a5-cinderweave",
+    "setName": "Cinderweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-cinderweave-pants",
+    "name": "Cinderweave Leggings",
+    "goldCost": 271,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "magicResistance": 4,
+    "set": "set-a5-cinderweave",
+    "setName": "Cinderweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-cinderweave-boots",
+    "name": "Cinderweave Slippers",
+    "goldCost": 279,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "magicResistance": 4,
+    "set": "set-a5-cinderweave",
+    "setName": "Cinderweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-cinderweave-ring",
+    "name": "Cinderweave Loop",
+    "goldCost": 287,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "A rare ring piece shaped by the dangers of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "intelligence": 2,
+      "vitality": 1
+    },
+    "magicResistance": 4,
+    "set": "set-a5-cinderweave",
+    "setName": "Cinderweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a5-cindersteel",
+          "quantity": 9
+        },
+        {
+          "itemId": "item-a5-ember-fragment",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a5-sootweave",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "ashen-foundry"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-foundry-maul",
+    "name": "Foundry Maul",
+    "goldCost": 365,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "mace",
+    "rarity": "rare",
+    "description": "Foundry Maul carries the hard-won power of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/mace-01.webp",
+    "stats": {
+      "strength": 2
+    },
+    "physicalPower": 12,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a5-cindersteel",
+          "quantity": 12
+        },
+        {
+          "itemId": "item-a5-ember-fragment",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a5-sootweave",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "ashen-foundry"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a5-cinderbrand",
+    "name": "Cinderbrand",
+    "goldCost": 365,
+    "slot": "mainHand",
+    "weaponEquipType": "oneHand",
+    "weaponKind": "sword",
+    "rarity": "rare",
+    "description": "Cinderbrand carries the hard-won power of Ashen Foundry.",
+    "iconUrl": "/assets/gear-icons/sword-02.webp",
+    "stats": {
+      "strength": 2
+    },
+    "physicalPower": 12,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a5-cindersteel",
+          "quantity": 12
+        },
+        {
+          "itemId": "item-a5-ember-fragment",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a5-sootweave",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "ashen-foundry"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a6-abyssal-pearl",
+    "name": "Abyssal Pearl",
+    "goldCost": 32,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Sunken Reliquary.",
+    "iconUrl": "/assets/items/arcane-crystal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a6-relic-shard",
+    "name": "Drowned Relic Shard",
+    "goldCost": 35,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Sunken Reliquary.",
+    "iconUrl": "/assets/items/bone-fragments.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a6-tideglass",
+    "name": "Tideglass",
+    "goldCost": 38,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Sunken Reliquary.",
+    "iconUrl": "/assets/items/frost-shard.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-depthguard-head",
+    "name": "Depthguard Helm",
+    "goldCost": 290,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a6-depthguard",
+    "setName": "Depthguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-depthguard-chest",
+    "name": "Depthguard Cuirass",
+    "goldCost": 298,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "vitality": 2
+    },
+    "armor": 7,
+    "set": "set-a6-depthguard",
+    "setName": "Depthguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-depthguard-pants",
+    "name": "Depthguard Greaves",
+    "goldCost": 306,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a6-depthguard",
+    "setName": "Depthguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-depthguard-boots",
+    "name": "Depthguard Sabatons",
+    "goldCost": 314,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a6-depthguard",
+    "setName": "Depthguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-depthguard-ring",
+    "name": "Depthguard Signet",
+    "goldCost": 322,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "A rare ring piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a6-depthguard",
+    "setName": "Depthguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a6-abyssal-pearl",
+          "quantity": 10
+        },
+        {
+          "itemId": "item-a6-relic-shard",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a6-tideglass",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "sunken-reliquary"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-tidecaller-head",
+    "name": "Tidecaller Hood",
+    "goldCost": 290,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 2
+    },
+    "magicResistance": 5,
+    "set": "set-a6-tidecaller",
+    "setName": "Tidecaller",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-tidecaller-chest",
+    "name": "Tidecaller Robes",
+    "goldCost": 298,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "intelligence": 4,
+      "vitality": 2
+    },
+    "magicResistance": 7,
+    "set": "set-a6-tidecaller",
+    "setName": "Tidecaller",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-tidecaller-pants",
+    "name": "Tidecaller Leggings",
+    "goldCost": 306,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 2
+    },
+    "magicResistance": 5,
+    "set": "set-a6-tidecaller",
+    "setName": "Tidecaller",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-tidecaller-boots",
+    "name": "Tidecaller Slippers",
+    "goldCost": 314,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "rare",
+    "description": "A rare cloth piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 2
+    },
+    "magicResistance": 5,
+    "set": "set-a6-tidecaller",
+    "setName": "Tidecaller",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-tidecaller-ring",
+    "name": "Tidecaller Loop",
+    "goldCost": 322,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "A rare ring piece shaped by the dangers of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "intelligence": 3,
+      "vitality": 2
+    },
+    "magicResistance": 5,
+    "set": "set-a6-tidecaller",
+    "setName": "Tidecaller",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a6-abyssal-pearl",
+          "quantity": 10
+        },
+        {
+          "itemId": "item-a6-relic-shard",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a6-tideglass",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "sunken-reliquary"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-tidebreaker",
+    "name": "Tidebreaker",
+    "goldCost": 410,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "polearm",
+    "rarity": "rare",
+    "description": "Tidebreaker carries the hard-won power of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/polearm-02.webp",
+    "stats": {
+      "strength": 3
+    },
+    "physicalPower": 16,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a6-abyssal-pearl",
+          "quantity": 13
+        },
+        {
+          "itemId": "item-a6-relic-shard",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a6-tideglass",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "sunken-reliquary"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a6-oracle-tome",
+    "name": "Oracle's Tide Tome",
+    "goldCost": 410,
+    "slot": "offHand",
+    "weaponEquipType": "offHand",
+    "weaponKind": "tome",
+    "rarity": "rare",
+    "description": "Oracle's Tide Tome carries the hard-won power of Sunken Reliquary.",
+    "iconUrl": "/assets/gear-icons/tome-03.webp",
+    "stats": {
+      "intelligence": 3
+    },
+    "magicalPower": 16,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a6-abyssal-pearl",
+          "quantity": 13
+        },
+        {
+          "itemId": "item-a6-relic-shard",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a6-tideglass",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "sunken-reliquary"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a7-nightglass",
+    "name": "Nightglass Shard",
+    "goldCost": 36,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Nightglass Citadel.",
+    "iconUrl": "/assets/items/arcane-crystal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a7-umbral-silk",
+    "name": "Umbral Silk",
+    "goldCost": 39,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Nightglass Citadel.",
+    "iconUrl": "/assets/items/spider-silk.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a7-bloodstone",
+    "name": "Bloodstone",
+    "goldCost": 42,
+    "rarity": "rare",
+    "description": "A crafting material recovered from Nightglass Citadel.",
+    "iconUrl": "/assets/items/gold-ore.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-nightglass-head",
+    "name": "Nightglass Cowl",
+    "goldCost": 325,
+    "slot": "head",
+    "armorMaterial": "leather",
+    "rarity": "rare",
+    "description": "A rare leather piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "agility": 4,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    },
+    "set": "set-a7-nightglass",
+    "setName": "Nightglass",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-nightglass-chest",
+    "name": "Nightglass Jerkin",
+    "goldCost": 333,
+    "slot": "chest",
+    "armorMaterial": "leather",
+    "rarity": "rare",
+    "description": "A rare leather piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "agility": 5,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    },
+    "set": "set-a7-nightglass",
+    "setName": "Nightglass",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-nightglass-pants",
+    "name": "Nightglass Legwraps",
+    "goldCost": 341,
+    "slot": "pants",
+    "armorMaterial": "leather",
+    "rarity": "rare",
+    "description": "A rare leather piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "agility": 4,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    },
+    "set": "set-a7-nightglass",
+    "setName": "Nightglass",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-nightglass-boots",
+    "name": "Nightglass Treads",
+    "goldCost": 349,
+    "slot": "boots",
+    "armorMaterial": "leather",
+    "rarity": "rare",
+    "description": "A rare leather piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "agility": 4,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    },
+    "set": "set-a7-nightglass",
+    "setName": "Nightglass",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-nightglass-ring",
+    "name": "Nightglass Band",
+    "goldCost": 357,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "A rare ring piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "agility": 4,
+      "luck": 2
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.02
+      }
+    },
+    "set": "set-a7-nightglass",
+    "setName": "Nightglass",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "leatherworker",
+      "ingredients": [
+        {
+          "itemId": "item-a7-nightglass",
+          "quantity": 11
+        },
+        {
+          "itemId": "item-a7-umbral-silk",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a7-bloodstone",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "nightglass-citadel"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-bloodbound-head",
+    "name": "Bloodbound Helm",
+    "goldCost": 325,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "strength": 4,
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a7-bloodbound",
+    "setName": "Bloodbound",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-bloodbound-chest",
+    "name": "Bloodbound Cuirass",
+    "goldCost": 333,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "strength": 5,
+      "vitality": 2
+    },
+    "armor": 7,
+    "set": "set-a7-bloodbound",
+    "setName": "Bloodbound",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-bloodbound-pants",
+    "name": "Bloodbound Greaves",
+    "goldCost": 341,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "strength": 4,
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a7-bloodbound",
+    "setName": "Bloodbound",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-bloodbound-boots",
+    "name": "Bloodbound Sabatons",
+    "goldCost": 349,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "rare",
+    "description": "A rare plate piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "strength": 4,
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a7-bloodbound",
+    "setName": "Bloodbound",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-bloodbound-ring",
+    "name": "Bloodbound Signet",
+    "goldCost": 357,
+    "slot": "ring",
+    "rarity": "rare",
+    "description": "A rare ring piece shaped by the dangers of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "strength": 4,
+      "vitality": 2
+    },
+    "armor": 5,
+    "set": "set-a7-bloodbound",
+    "setName": "Bloodbound",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a7-nightglass",
+          "quantity": 11
+        },
+        {
+          "itemId": "item-a7-umbral-silk",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a7-bloodstone",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "nightglass-citadel"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-mirrorfang",
+    "name": "Mirrorfang",
+    "goldCost": 455,
+    "slot": "mainHand",
+    "weaponEquipType": "oneHand",
+    "weaponKind": "dagger",
+    "rarity": "rare",
+    "description": "Mirrorfang carries the hard-won power of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/dagger-03.webp",
+    "stats": {
+      "strength": 4
+    },
+    "physicalPower": 20,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a7-nightglass",
+          "quantity": 14
+        },
+        {
+          "itemId": "item-a7-umbral-silk",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a7-bloodstone",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "nightglass-citadel"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a7-eclipse-staff",
+    "name": "Eclipse Staff",
+    "goldCost": 455,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "staff",
+    "rarity": "rare",
+    "description": "Eclipse Staff carries the hard-won power of Nightglass Citadel.",
+    "iconUrl": "/assets/gear-icons/staff-04.webp",
+    "stats": {
+      "intelligence": 4
+    },
+    "magicalPower": 20,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a7-nightglass",
+          "quantity": 14
+        },
+        {
+          "itemId": "item-a7-umbral-silk",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a7-bloodstone",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "nightglass-citadel"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a8-rimebone",
+    "name": "Rimebone",
+    "goldCost": 40,
+    "rarity": "epic",
+    "description": "A crafting material recovered from Frostbound Expanse.",
+    "iconUrl": "/assets/items/bone-fragments.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a8-frostheart",
+    "name": "Frostheart Crystal",
+    "goldCost": 43,
+    "rarity": "epic",
+    "description": "A crafting material recovered from Frostbound Expanse.",
+    "iconUrl": "/assets/items/frost-shard.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a8-white-pelt",
+    "name": "White Pelt",
+    "goldCost": 46,
+    "rarity": "epic",
+    "description": "A crafting material recovered from Frostbound Expanse.",
+    "iconUrl": "/assets/items/fur.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-rimeguard-head",
+    "name": "Rimeguard Helm",
+    "goldCost": 360,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "vitality": 3
+    },
+    "armor": 6,
+    "set": "set-a8-rimeguard",
+    "setName": "Rimeguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-rimeguard-chest",
+    "name": "Rimeguard Cuirass",
+    "goldCost": 368,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "vitality": 3
+    },
+    "armor": 8,
+    "set": "set-a8-rimeguard",
+    "setName": "Rimeguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-rimeguard-pants",
+    "name": "Rimeguard Greaves",
+    "goldCost": 376,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "vitality": 3
+    },
+    "armor": 6,
+    "set": "set-a8-rimeguard",
+    "setName": "Rimeguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-rimeguard-boots",
+    "name": "Rimeguard Sabatons",
+    "goldCost": 384,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "vitality": 3
+    },
+    "armor": 6,
+    "set": "set-a8-rimeguard",
+    "setName": "Rimeguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-rimeguard-ring",
+    "name": "Rimeguard Signet",
+    "goldCost": 392,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "vitality": 3
+    },
+    "armor": 6,
+    "set": "set-a8-rimeguard",
+    "setName": "Rimeguard",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a8-rimebone",
+          "quantity": 12
+        },
+        {
+          "itemId": "item-a8-frostheart",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a8-white-pelt",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "frostbound-expanse"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-winterweave-head",
+    "name": "Winterweave Hood",
+    "goldCost": 360,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "intelligence": 5,
+      "vitality": 3
+    },
+    "magicResistance": 6,
+    "set": "set-a8-winterweave",
+    "setName": "Winterweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-winterweave-chest",
+    "name": "Winterweave Robes",
+    "goldCost": 368,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 3
+    },
+    "magicResistance": 8,
+    "set": "set-a8-winterweave",
+    "setName": "Winterweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-winterweave-pants",
+    "name": "Winterweave Leggings",
+    "goldCost": 376,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "intelligence": 5,
+      "vitality": 3
+    },
+    "magicResistance": 6,
+    "set": "set-a8-winterweave",
+    "setName": "Winterweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-winterweave-boots",
+    "name": "Winterweave Slippers",
+    "goldCost": 384,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "intelligence": 5,
+      "vitality": 3
+    },
+    "magicResistance": 6,
+    "set": "set-a8-winterweave",
+    "setName": "Winterweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-winterweave-ring",
+    "name": "Winterweave Loop",
+    "goldCost": 392,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "intelligence": 5,
+      "vitality": 3
+    },
+    "magicResistance": 6,
+    "set": "set-a8-winterweave",
+    "setName": "Winterweave",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a8-rimebone",
+          "quantity": 12
+        },
+        {
+          "itemId": "item-a8-frostheart",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a8-white-pelt",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "frostbound-expanse"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-white-maw-axe",
+    "name": "White Maw Greataxe",
+    "goldCost": 500,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "axe",
+    "rarity": "epic",
+    "description": "White Maw Greataxe carries the hard-won power of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/axe-04.webp",
+    "stats": {
+      "strength": 5
+    },
+    "physicalPower": 24,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a8-rimebone",
+          "quantity": 15
+        },
+        {
+          "itemId": "item-a8-frostheart",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a8-white-pelt",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "frostbound-expanse"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a8-aurora-wand",
+    "name": "Aurora Wand",
+    "goldCost": 500,
+    "slot": "mainHand",
+    "weaponEquipType": "mainHand",
+    "weaponKind": "wand",
+    "rarity": "epic",
+    "description": "Aurora Wand carries the hard-won power of Frostbound Expanse.",
+    "iconUrl": "/assets/gear-icons/wand-05.webp",
+    "stats": {
+      "intelligence": 5
+    },
+    "magicalPower": 24,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a8-rimebone",
+          "quantity": 15
+        },
+        {
+          "itemId": "item-a8-frostheart",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a8-white-pelt",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "frostbound-expanse"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a9-skyiron",
+    "name": "Skyiron",
+    "goldCost": 44,
+    "rarity": "epic",
+    "description": "A crafting material recovered from Stormspire Aerie.",
+    "iconUrl": "/assets/items/silver-ore.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a9-storm-core",
+    "name": "Condensed Storm Essence",
+    "goldCost": 47,
+    "rarity": "epic",
+    "description": "A crafting material recovered from Stormspire Aerie.",
+    "iconUrl": "/assets/items/storm-essence.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a9-cloudfeather",
+    "name": "Cloudfeather",
+    "goldCost": 50,
+    "rarity": "epic",
+    "description": "A crafting material recovered from Stormspire Aerie.",
+    "iconUrl": "/assets/items/fine-cloth.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-stormrunner-head",
+    "name": "Stormrunner Cowl",
+    "goldCost": 395,
+    "slot": "head",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "agility": 6,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    },
+    "set": "set-a9-stormrunner",
+    "setName": "Stormrunner",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-stormrunner-chest",
+    "name": "Stormrunner Jerkin",
+    "goldCost": 403,
+    "slot": "chest",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "agility": 7,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    },
+    "set": "set-a9-stormrunner",
+    "setName": "Stormrunner",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-stormrunner-pants",
+    "name": "Stormrunner Legwraps",
+    "goldCost": 411,
+    "slot": "pants",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "agility": 6,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    },
+    "set": "set-a9-stormrunner",
+    "setName": "Stormrunner",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-stormrunner-boots",
+    "name": "Stormrunner Treads",
+    "goldCost": 419,
+    "slot": "boots",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "agility": 6,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    },
+    "set": "set-a9-stormrunner",
+    "setName": "Stormrunner",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-stormrunner-ring",
+    "name": "Stormrunner Band",
+    "goldCost": 427,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "agility": 6,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.03
+      }
+    },
+    "set": "set-a9-stormrunner",
+    "setName": "Stormrunner",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "leatherworker",
+      "ingredients": [
+        {
+          "itemId": "item-a9-skyiron",
+          "quantity": 13
+        },
+        {
+          "itemId": "item-a9-storm-core",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a9-cloudfeather",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "stormspire-aerie"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-tempest-sage-head",
+    "name": "Tempest Sage Hood",
+    "goldCost": 395,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 4
+    },
+    "magicResistance": 6,
+    "set": "set-a9-tempest-sage",
+    "setName": "Tempest Sage",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-tempest-sage-chest",
+    "name": "Tempest Sage Robes",
+    "goldCost": 403,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 4
+    },
+    "magicResistance": 8,
+    "set": "set-a9-tempest-sage",
+    "setName": "Tempest Sage",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-tempest-sage-pants",
+    "name": "Tempest Sage Leggings",
+    "goldCost": 411,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 4
+    },
+    "magicResistance": 6,
+    "set": "set-a9-tempest-sage",
+    "setName": "Tempest Sage",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-tempest-sage-boots",
+    "name": "Tempest Sage Slippers",
+    "goldCost": 419,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 4
+    },
+    "magicResistance": 6,
+    "set": "set-a9-tempest-sage",
+    "setName": "Tempest Sage",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-tempest-sage-ring",
+    "name": "Tempest Sage Loop",
+    "goldCost": 427,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "intelligence": 6,
+      "vitality": 4
+    },
+    "magicResistance": 6,
+    "set": "set-a9-tempest-sage",
+    "setName": "Tempest Sage",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a9-skyiron",
+          "quantity": 13
+        },
+        {
+          "itemId": "item-a9-storm-core",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a9-cloudfeather",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "stormspire-aerie"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-skybreaker",
+    "name": "Skybreaker Spear",
+    "goldCost": 545,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "polearm",
+    "rarity": "epic",
+    "description": "Skybreaker Spear carries the hard-won power of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/polearm-05.webp",
+    "stats": {
+      "strength": 6
+    },
+    "physicalPower": 28,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a9-skyiron",
+          "quantity": 16
+        },
+        {
+          "itemId": "item-a9-storm-core",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a9-cloudfeather",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "stormspire-aerie"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a9-stormcallers-tome",
+    "name": "Stormcaller's Tome",
+    "goldCost": 545,
+    "slot": "offHand",
+    "weaponEquipType": "offHand",
+    "weaponKind": "tome",
+    "rarity": "epic",
+    "description": "Stormcaller's Tome carries the hard-won power of Stormspire Aerie.",
+    "iconUrl": "/assets/gear-icons/tome-01.webp",
+    "stats": {
+      "intelligence": 6
+    },
+    "magicalPower": 28,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a9-skyiron",
+          "quantity": 16
+        },
+        {
+          "itemId": "item-a9-storm-core",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a9-cloudfeather",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "stormspire-aerie"
+    }
+  },
+  {
+    "kind": "misc",
+    "id": "item-a10-hollowsteel",
+    "name": "Hollowsteel",
+    "goldCost": 48,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The Hollow Crown.",
+    "iconUrl": "/assets/items/gold-ore.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a10-crown-shard",
+    "name": "Crown Shard",
+    "goldCost": 51,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The Hollow Crown.",
+    "iconUrl": "/assets/items/arcane-crystal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "misc",
+    "id": "item-a10-soul-ash",
+    "name": "Soul Ash",
+    "goldCost": 54,
+    "rarity": "epic",
+    "description": "A crafting material recovered from The Hollow Crown.",
+    "iconUrl": "/assets/items/coal.webp",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-crownless-head",
+    "name": "Crownless Helm",
+    "goldCost": 430,
+    "slot": "head",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/head-01.webp",
+    "stats": {
+      "strength": 7,
+      "vitality": 4
+    },
+    "armor": 7,
+    "set": "set-a10-crownless",
+    "setName": "Crownless",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-crownless-chest",
+    "name": "Crownless Cuirass",
+    "goldCost": 438,
+    "slot": "chest",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/chest-02.webp",
+    "stats": {
+      "strength": 8,
+      "vitality": 4
+    },
+    "armor": 9,
+    "set": "set-a10-crownless",
+    "setName": "Crownless",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-crownless-pants",
+    "name": "Crownless Greaves",
+    "goldCost": 446,
+    "slot": "pants",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/pants-03.webp",
+    "stats": {
+      "strength": 7,
+      "vitality": 4
+    },
+    "armor": 7,
+    "set": "set-a10-crownless",
+    "setName": "Crownless",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-crownless-boots",
+    "name": "Crownless Sabatons",
+    "goldCost": 454,
+    "slot": "boots",
+    "armorMaterial": "plate",
+    "rarity": "epic",
+    "description": "A epic plate piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/boots-04.webp",
+    "stats": {
+      "strength": 7,
+      "vitality": 4
+    },
+    "armor": 7,
+    "set": "set-a10-crownless",
+    "setName": "Crownless",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-crownless-ring",
+    "name": "Crownless Signet",
+    "goldCost": 462,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "strength": 7,
+      "vitality": 4
+    },
+    "armor": 7,
+    "set": "set-a10-crownless",
+    "setName": "Crownless",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a10-hollowsteel",
+          "quantity": 14
+        },
+        {
+          "itemId": "item-a10-crown-shard",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a10-soul-ash",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "hollow-crown"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-veilborn-head",
+    "name": "Veilborn Cowl",
+    "goldCost": 430,
+    "slot": "head",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/head-02.webp",
+    "stats": {
+      "agility": 7,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a10-veilborn",
+    "setName": "Veilborn",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-veilborn-chest",
+    "name": "Veilborn Jerkin",
+    "goldCost": 438,
+    "slot": "chest",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/chest-03.webp",
+    "stats": {
+      "agility": 8,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a10-veilborn",
+    "setName": "Veilborn",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-veilborn-pants",
+    "name": "Veilborn Legwraps",
+    "goldCost": 446,
+    "slot": "pants",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/pants-04.webp",
+    "stats": {
+      "agility": 7,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a10-veilborn",
+    "setName": "Veilborn",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-veilborn-boots",
+    "name": "Veilborn Treads",
+    "goldCost": 454,
+    "slot": "boots",
+    "armorMaterial": "leather",
+    "rarity": "epic",
+    "description": "A epic leather piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 7,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a10-veilborn",
+    "setName": "Veilborn",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-veilborn-ring",
+    "name": "Veilborn Band",
+    "goldCost": 462,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/ring-01.webp",
+    "stats": {
+      "agility": 7,
+      "luck": 4
+    },
+    "combat": {
+      "passive": {
+        "dodgeChance": 0.04
+      }
+    },
+    "set": "set-a10-veilborn",
+    "setName": "Veilborn",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "leatherworker",
+      "ingredients": [
+        {
+          "itemId": "item-a10-hollowsteel",
+          "quantity": 14
+        },
+        {
+          "itemId": "item-a10-crown-shard",
+          "quantity": 3
+        },
+        {
+          "itemId": "item-a10-soul-ash",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "hollow-crown"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-ashen-oracle-head",
+    "name": "Ashen Oracle Hood",
+    "goldCost": 430,
+    "slot": "head",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/head-03.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 4
+    },
+    "magicResistance": 7,
+    "set": "set-a10-ashen-oracle",
+    "setName": "Ashen Oracle",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-ashen-oracle-chest",
+    "name": "Ashen Oracle Robes",
+    "goldCost": 438,
+    "slot": "chest",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/chest-04.webp",
+    "stats": {
+      "intelligence": 8,
+      "vitality": 4
+    },
+    "magicResistance": 9,
+    "set": "set-a10-ashen-oracle",
+    "setName": "Ashen Oracle",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-ashen-oracle-pants",
+    "name": "Ashen Oracle Leggings",
+    "goldCost": 446,
+    "slot": "pants",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 4
+    },
+    "magicResistance": 7,
+    "set": "set-a10-ashen-oracle",
+    "setName": "Ashen Oracle",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-ashen-oracle-boots",
+    "name": "Ashen Oracle Slippers",
+    "goldCost": 454,
+    "slot": "boots",
+    "armorMaterial": "cloth",
+    "rarity": "epic",
+    "description": "A epic cloth piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/boots-01.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 4
+    },
+    "magicResistance": 7,
+    "set": "set-a10-ashen-oracle",
+    "setName": "Ashen Oracle",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": null
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-ashen-oracle-ring",
+    "name": "Ashen Oracle Loop",
+    "goldCost": 462,
+    "slot": "ring",
+    "rarity": "epic",
+    "description": "A epic ring piece shaped by the dangers of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/ring-02.webp",
+    "stats": {
+      "intelligence": 7,
+      "vitality": 4
+    },
+    "magicResistance": 7,
+    "set": "set-a10-ashen-oracle",
+    "setName": "Ashen Oracle",
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "tailor",
+      "ingredients": [
+        {
+          "itemId": "item-a10-hollowsteel",
+          "quantity": 14
+        },
+        {
+          "itemId": "item-a10-crown-shard",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a10-soul-ash",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "hollow-crown"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-crown-sunder",
+    "name": "Crown-Sunder",
+    "goldCost": 590,
+    "slot": "mainHand",
+    "weaponEquipType": "oneHand",
+    "weaponKind": "sword",
+    "rarity": "epic",
+    "description": "Crown-Sunder carries the hard-won power of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/sword-01.webp",
+    "stats": {
+      "strength": 7
+    },
+    "physicalPower": 32,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "blacksmith",
+      "ingredients": [
+        {
+          "itemId": "item-a10-hollowsteel",
+          "quantity": 17
+        },
+        {
+          "itemId": "item-a10-crown-shard",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a10-soul-ash",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "hollow-crown"
+    }
+  },
+  {
+    "kind": "gear",
+    "id": "gear-a10-last-oracle-staff",
+    "name": "Staff of the Last Oracle",
+    "goldCost": 590,
+    "slot": "mainHand",
+    "weaponEquipType": "twoHand",
+    "weaponKind": "staff",
+    "rarity": "epic",
+    "description": "Staff of the Last Oracle carries the hard-won power of The Hollow Crown.",
+    "iconUrl": "/assets/gear-icons/staff-02.webp",
+    "stats": {
+      "intelligence": 7
+    },
+    "magicalPower": 32,
+    "arkenfallVendor": null,
+    "vendorPrerequisiteAdventureId": null,
+    "craftingRecipe": {
+      "station": "jeweler",
+      "ingredients": [
+        {
+          "itemId": "item-a10-hollowsteel",
+          "quantity": 17
+        },
+        {
+          "itemId": "item-a10-crown-shard",
+          "quantity": 4
+        },
+        {
+          "itemId": "item-a10-soul-ash",
+          "quantity": 4
+        }
+      ],
+      "prerequisiteAdventureId": "hollow-crown"
+    }
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-a4-antivenom",
+    "name": "Mirefen Antivenom",
+    "goldCost": 45,
+    "rarity": "uncommon",
+    "description": "A sharp herbal antidote that removes Poison.",
+    "iconUrl": "/assets/items/potion-green-normal.webp",
+    "effects": [
+      {
+        "type": "remove_status",
+        "target": "self",
+        "status": "poison"
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
+    "craftingRecipe": {
+      "station": "alchemist",
+      "ingredients": [
+        {
+          "itemId": "item-a4-venom-sac",
+          "quantity": 2
+        },
+        {
+          "itemId": "item-a4-mire-reed",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "mirefen-marsh"
+    }
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-a5-cooling-salve",
+    "name": "Cooling Salve",
+    "goldCost": 60,
+    "rarity": "rare",
+    "description": "A frost-laced salve that removes Burn.",
+    "iconUrl": "/assets/items/potion-blue-normal.webp",
+    "effects": [
+      {
+        "type": "remove_status",
+        "target": "self",
+        "status": "burn"
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "vendorPrerequisiteAdventureId": "ashen-foundry",
+    "craftingRecipe": {
+      "station": "alchemist",
+      "ingredients": [
+        {
+          "itemId": "item-a5-ember-fragment",
+          "quantity": 1
+        },
+        {
+          "itemId": "item-a4-mire-reed",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "ashen-foundry"
+    }
+  },
+  {
+    "kind": "consumable",
+    "id": "consumable-a6-coagulant",
+    "name": "Coagulant Bandage",
+    "goldCost": 75,
+    "rarity": "rare",
+    "description": "A treated field dressing that removes Bleed.",
+    "iconUrl": "/assets/items/potion-red-normal.webp",
+    "effects": [
+      {
+        "type": "remove_status",
+        "target": "self",
+        "status": "bleed"
+      }
+    ],
+    "arkenfallVendor": "alchemist",
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
+    "craftingRecipe": {
+      "station": "alchemist",
+      "ingredients": [
+        {
+          "itemId": "item-a6-relic-shard",
+          "quantity": 1
+        },
+        {
+          "itemId": "item-a5-sootweave",
+          "quantity": 3
+        }
+      ],
+      "prerequisiteAdventureId": "sunken-reliquary"
+    }
   }
 ];
 
@@ -2234,6 +4971,667 @@ export const GEAR_SETS: GearSetDefinition[] = [
         "passive": {
           "stats": {
             "vitality": 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a4-fenwarden",
+    "name": "Fenwarden",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+2 Strength.",
+        "passive": {
+          "stats": {
+            "strength": 2
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+4 Physical Power.",
+        "passive": {
+          "physicalPower": 4
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Poison deals 20% more damage.",
+        "passive": {
+          "statusDamage": {
+            "poison": 0.2
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Venom cannot afflict you, and Bleed deals 20% less damage.",
+        "passive": {
+          "statusImmunities": [
+            "poison"
+          ],
+          "bleedDamageReduction": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a4-mirestalker",
+    "name": "Mirestalker",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+2 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 2
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+4 Physical Power.",
+        "passive": {
+          "physicalPower": 4
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Poison deals 20% more damage.",
+        "passive": {
+          "statusDamage": {
+            "poison": 0.2
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Whenever you apply Poison, apply 1 additional stack; your Poison deals 25% more damage.",
+        "passive": {
+          "statusApplicationStacks": {
+            "poison": 1
+          },
+          "statusDamage": {
+            "poison": 0.25
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a5-emberforged",
+    "name": "Emberforged",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+4 Strength.",
+        "passive": {
+          "stats": {
+            "strength": 4
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+6 Physical Power.",
+        "passive": {
+          "physicalPower": 6
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Burn deals 22% more damage.",
+        "passive": {
+          "statusDamage": {
+            "burn": 0.22
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Burn cannot afflict you, and begin each combat with Guard equal to 12% of maximum Health.",
+        "passive": {
+          "statusImmunities": [
+            "burn"
+          ],
+          "startingAbsorptionMaxHpRatios": {
+            "guard": 0.12
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a5-cinderweave",
+    "name": "Cinderweave",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+4 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 4
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+6 Spell Power.",
+        "passive": {
+          "magicalPower": 6
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Burn deals 22% more damage.",
+        "passive": {
+          "statusDamage": {
+            "burn": 0.22
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Your Burn deals 35% more damage and restores Health equal to 10% of its damage.",
+        "passive": {
+          "statusDamage": {
+            "burn": 0.35
+          },
+          "statusDamageLeech": {
+            "burn": 0.1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a6-depthguard",
+    "name": "Depthguard",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+6 Vitality.",
+        "passive": {
+          "stats": {
+            "vitality": 6
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+8 Physical Power.",
+        "passive": {
+          "physicalPower": 8
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Wet lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "wet": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Wet cannot afflict you, and begin each combat with Barrier equal to 15% of maximum Health.",
+        "passive": {
+          "statusImmunities": [
+            "wet"
+          ],
+          "startingAbsorptionMaxHpRatios": {
+            "barrier": 0.15
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a6-tidecaller",
+    "name": "Tidecaller",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+6 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 6
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+8 Spell Power.",
+        "passive": {
+          "magicalPower": 8
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Electrified lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "electrified": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Applying Wet also applies Electrified, and your Electrified lasts 1 additional turn.",
+        "passive": {
+          "statusApplicationCompanions": {
+            "wet": [
+              "electrified"
+            ]
+          },
+          "statusDurationBonuses": {
+            "electrified": 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a7-nightglass",
+    "name": "Nightglass",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+8 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 8
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+10 Physical Power.",
+        "passive": {
+          "physicalPower": 10
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "+6% Dodge Chance.",
+        "passive": {
+          "dodgeChance": 0.06
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Begin combat in Stealth and gain +8% Dodge Chance.",
+        "passive": {
+          "dodgeChance": 0.08,
+          "startingStatuses": [
+            {
+              "id": "stealth",
+              "name": "Stealth",
+              "kind": "buff",
+              "duration": 2,
+              "stacks": 1,
+              "description": "Cannot be targeted by enemies. Ends after attacking or taking damage."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a7-bloodbound",
+    "name": "Bloodbound",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+8 Strength.",
+        "passive": {
+          "stats": {
+            "strength": 8
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+10 Physical Power.",
+        "passive": {
+          "physicalPower": 10
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Bleed deals 26% more damage.",
+        "passive": {
+          "statusDamage": {
+            "bleed": 0.26
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Your Bleed deals 35% more damage and restores Health equal to 15% of its damage.",
+        "passive": {
+          "statusDamage": {
+            "bleed": 0.35
+          },
+          "statusDamageLeech": {
+            "bleed": 0.15
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a8-rimeguard",
+    "name": "Rimeguard",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+10 Vitality.",
+        "passive": {
+          "stats": {
+            "vitality": 10
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+12 Physical Power.",
+        "passive": {
+          "physicalPower": 12
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Frozen lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "frozen": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Cold and Frozen cannot afflict you, and you take 30% less damage while Stunned.",
+        "passive": {
+          "statusImmunities": [
+            "cold",
+            "frozen"
+          ],
+          "incomingDamageMultiplierWhileStunned": 0.7
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a8-winterweave",
+    "name": "Winterweave",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+10 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 10
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+12 Spell Power.",
+        "passive": {
+          "magicalPower": 12
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Cold lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "cold": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Applying Cold has a 15% chance to also Freeze, and your Cold effects deal 25% more damage.",
+        "passive": {
+          "statusApplicationCompanionChances": {
+            "cold": [
+              {
+                "status": "frozen",
+                "chance": 0.15
+              }
+            ]
+          },
+          "statusDamage": {
+            "cold": 0.25
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a9-stormrunner",
+    "name": "Stormrunner",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+12 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 12
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+14 Physical Power.",
+        "passive": {
+          "physicalPower": 14
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Electrified lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "electrified": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Your Electrified lasts 1 additional turn and you gain +10% Dodge Chance.",
+        "passive": {
+          "statusDurationBonuses": {
+            "electrified": 1
+          },
+          "dodgeChance": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a9-tempest-sage",
+    "name": "Tempest Sage",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+12 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 12
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+14 Spell Power.",
+        "passive": {
+          "magicalPower": 14
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Electrified lasts 1 additional turn.",
+        "passive": {
+          "statusDurationBonuses": {
+            "electrified": 1
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Whenever you apply Electrified, apply 1 additional stack; gain 12% more Spell Power.",
+        "passive": {
+          "statusApplicationStacks": {
+            "electrified": 1
+          },
+          "magicalPowerMultiplier": 0.12
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a10-crownless",
+    "name": "Crownless",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+14 Strength.",
+        "passive": {
+          "stats": {
+            "strength": 14
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+16 Physical Power.",
+        "passive": {
+          "physicalPower": 16
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Generate 32% more Guard.",
+        "passive": {
+          "guardGeneration": 0.32
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Begin combat with Guard equal to 20% of maximum Health and generate 25% more Guard.",
+        "passive": {
+          "startingAbsorptionMaxHpRatios": {
+            "guard": 0.2
+          },
+          "guardGeneration": 0.25
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a10-veilborn",
+    "name": "Veilborn",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+14 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 14
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+16 Physical Power.",
+        "passive": {
+          "physicalPower": 16
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Poison deals 32% more damage.",
+        "passive": {
+          "statusDamage": {
+            "poison": 0.32
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Whenever you apply Poison, apply 1 additional stack; Poison restores Health equal to 20% of its damage.",
+        "passive": {
+          "statusApplicationStacks": {
+            "poison": 1
+          },
+          "statusDamageLeech": {
+            "poison": 0.2
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "set-a10-ashen-oracle",
+    "name": "Ashen Oracle",
+    "pieceCount": 5,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+14 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 14
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+16 Spell Power.",
+        "passive": {
+          "magicalPower": 16
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Burn deals 32% more damage.",
+        "passive": {
+          "statusDamage": {
+            "burn": 0.32
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Applying Burn also applies Arcane Wound, and your Burn deals 40% more damage.",
+        "passive": {
+          "statusApplicationCompanions": {
+            "burn": [
+              "arcaneWound"
+            ]
+          },
+          "statusDamage": {
+            "burn": 0.4
           }
         }
       }

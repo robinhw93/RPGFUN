@@ -681,7 +681,8 @@ export type ConsumableEffect =
   | { type: "change_next_turn_energy_regen"; amount: number }
   | { type: "change_energy"; amount: number }
   | { type: "damage"; target: ConsumableTarget; amount: number }
-  | { type: "apply_status"; target: ConsumableTarget; status: StatusEffectId; stacks: number; duration: number };
+  | { type: "apply_status"; target: ConsumableTarget; status: StatusEffectId; stacks: number; duration: number }
+  | { type: "remove_status"; target: ConsumableTarget; status: StatusEffectId };
 
 export interface ConsumableItem extends ArkenfallItemAvailability {
   kind: "consumable";
@@ -1086,7 +1087,7 @@ export interface AdventureStageDefinition {
   entries: AdventureStageEntry[];
 }
 
-export type AdventureTheme = "windsong_forest" | "arkenfall_highlands" | "highfall_mountains";
+export type AdventureTheme = "windsong_forest" | "arkenfall_highlands" | "highfall_mountains" | "custom";
 
 export interface AdventureDefinition {
   id: string;
@@ -1095,6 +1096,10 @@ export interface AdventureDefinition {
   recommendedLevel: number;
   prerequisiteAdventureId?: string;
   theme: AdventureTheme;
+  /** Optional data-owned art used by the adventure card. */
+  cardImageUrl?: string;
+  /** Optional data-owned art used behind story combat. */
+  combatBackgroundUrl?: string;
   /** Text shown beside the footsteps during this adventure's travel transition. */
   travelText?: string;
   stages: AdventureStageDefinition[];

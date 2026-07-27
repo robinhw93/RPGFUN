@@ -610,11 +610,73 @@ Highfall Mountains uses the travel loading text **“Climbing into the Highfall 
 
 The Highfall events are **The Sheltered Spring**, **Stormbound Camp**, **The Frozen Cairn**, and **Highfall Merchant**. Their choices combine direct recovery, high-probability healing-item finds, attribute checks, next-combat statuses, the Cairnkeeper's Loop reward, and the adventure's dedicated merchant stock.
 
+## Late-campaign adventures
+
+Adventures 4–10 form one linear route after Highfall Mountains. Each has three canonical events: a dangerous shortcut, a forgotten relic, and an abandoned refuge. Every event offers two increasing d100 checks and one safe direct choice. Successful checks award experience, Gold, healing, or local materials; failure can remove Health, apply a next-combat debuff, strengthen enemies, or launch an immediate encounter. The exact choices, thresholds, effects, stages, encounter weights, and rewards are stored in `ADVENTURE_EVENTS` and `ADVENTURES` and are editable through Event Manager and Adventure Editor.
+
+| Adventure | Recommended level | Stages | Main tactics | Final boss |
+| --- | ---: | ---: | --- | --- |
+| Mirefen Marsh | 13 | 12 | Poison, Bleed, Wet, and Guard. | Vespara, Broodmother: establishes Poison pressure, charges Venomous Broodfall, then exposes a recovery turn. |
+| Ashen Foundry | 18 | 13 | Burn, Charred, Guard, and sustained Fire damage. | The Furnace Tyrant: raises furnace pressure, charges Foundry Cataclysm, then vents and becomes punishable. |
+| Sunken Reliquary | 23 | 14 | Wet, Electrified, Barrier, and Shatter. | Nhalos, the Drowned Seer: prepares the flooded font, charges Drowned Prophecy, then loses momentum. |
+| Nightglass Citadel | 28 | 15 | Stealth, Blind, Bleed, Shatter, and Evasion. | Lady Noctra, the Last Reflection: vanishes, charges Mirrorfall, then re-forms during a recovery window. |
+| Frostbound Expanse | 34 | 16 | Cold, Frozen, Blind, Guard, and frost control. | Skara, the White Maw: establishes Frozen pressure, charges Whiteout Devour, then recovers in the broken ice. |
+| Stormspire Aerie | 40 | 17 | Electrified, Stunned, Evasion, and Guard. | Vaelith, the Tempest Roc: electrifies the field, charges Tempest Unbound, then lands in a vulnerable recovery state. |
+| The Hollow Crown | 46 | 18 | Guard, Burn, Bleed, Weaken, Vulnerable, Stealth, and Arcane Wound. | Aldren, the Hollow King: marks the party Vulnerable, charges Crownfall, then recovers before repeating the cycle. |
+
+The final stage of each late adventure contains its boss plus two role-complementary adds. Bosses begin with 10 Energy, may resolve two ready actions per turn, and prioritize their setup/charged/recovery sequence. Combat and stage rewards rise with each recommended level. The generated late-campaign enemy roster contains exactly seven templates per biome:
+
+| Adventure | Enemy roster |
+| --- | --- |
+| Mirefen Marsh | Reed Stalker; Bog Leech; Mirefen Spitter; Drowned Warden; Fen Witch; Brood Guard; Vespara, Broodmother. |
+| Ashen Foundry | Ash Hound; Cinder Smith; Slag Elemental; Furnace Acolyte; Ironbound Overseer; Spark Swarm; The Furnace Tyrant. |
+| Sunken Reliquary | Brine Crawler; Drowned Acolyte; Relic Sentinel; Vault Shock Eel; Tidebound Knight; Siren Oracle; Nhalos, the Drowned Seer. |
+| Nightglass Citadel | Mirror Stalker; Gloom Archer; Bloodbound Knight; Shard Magus; Veil Dancer; Reflection Wraith; Lady Noctra, the Last Reflection. |
+| Frostbound Expanse | Rime Wolf; Icebound Raider; Aurora Wisp; Frost Hermit; Glacier Golem; Snowblind Harrier; Skara, the White Maw. |
+| Stormspire Aerie | Thunder Talon; Spire Zealot; Storm Channeler; Cloud Djinn; Thunderhead Colossus; Chainwing Matron; Vaelith, the Tempest Roc. |
+| The Hollow Crown | Crownless Guard; Ashen Confessor; Veilbound Executioner; Hollow Courtier; Crown Seraph; The Royal Shadow; Aldren, the Hollow King. |
+
+All 49 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy has two ordered executable abilities. Every boss has three tactical abilities, explicit priority behavior, and dedicated status/damage presentation.
+
+### Late-campaign loot and crafting
+
+Each late adventure contributes three ordinary crafting materials, two weapons, and two five-piece sets; The Hollow Crown contributes three sets. Set pieces and weapons can drop independently from local enemies and stages. The two weapons and each set's ring are craftable after completing that same adventure. All recipes consume the biome's three materials. Adventure 4 gear is Uncommon, Adventures 5–7 gear is Rare, and Epic gear begins with Adventure 8. No current item is Legendary.
+
+| Adventure | Materials | Weapons | Sets |
+| --- | --- | --- | --- |
+| Mirefen Marsh | Bog Iron; Venom Sac; Mire Reed | Bogcleaver; Witchlight Wand | Fenwarden; Mirestalker |
+| Ashen Foundry | Cindersteel Ore; Ember Core Fragment; Sootweave | Foundry Maul; Cinderbrand | Emberforged; Cinderweave |
+| Sunken Reliquary | Abyssal Pearl; Drowned Relic Shard; Tideglass | Tidebreaker; Oracle's Tide Tome | Depthguard; Tidecaller |
+| Nightglass Citadel | Nightglass Shard; Umbral Silk; Bloodstone | Mirrorfang; Eclipse Staff | Nightglass; Bloodbound |
+| Frostbound Expanse | Rimebone; Frostheart Crystal; White Pelt | White Maw Greataxe; Aurora Wand | Rimeguard; Winterweave |
+| Stormspire Aerie | Skyiron; Condensed Storm Essence; Cloudfeather | Skybreaker Spear; Stormcaller's Tome | Stormrunner; Tempest Sage |
+| The Hollow Crown | Hollowsteel; Crown Shard; Soul Ash | Crown-Sunder; Staff of the Last Oracle | Crownless; Veilborn; Ashen Oracle |
+
+Every late set has Head, Chest, Pants, Boots, and Ring pieces and thresholds at 2, 3, 4, and 5 equipped pieces. The 2-piece bonus grants the set's primary attribute, the 3-piece bonus grants Physical or Spell Power, and the 4-piece bonus advances the set's status/defense identity. The executable 5-piece specials are:
+
+| Set | Five-piece special |
+| --- | --- |
+| Fenwarden | Immune to Poison; Bleed deals 20% less damage. |
+| Mirestalker | Applies 1 additional Poison stack; Poison deals 25% more damage. |
+| Emberforged | Immune to Burn; begins combat with Guard equal to 12% of maximum Health. |
+| Cinderweave | Burn deals 35% more damage and restores Health equal to 10% of its damage. |
+| Depthguard | Immune to Wet; begins combat with Barrier equal to 15% of maximum Health. |
+| Tidecaller | Applying Wet also applies Electrified; Electrified lasts 1 additional turn. |
+| Nightglass | Begins combat in Stealth and grants +8% Dodge Chance. |
+| Bloodbound | Bleed deals 35% more damage and restores Health equal to 15% of its damage. |
+| Rimeguard | Immune to Cold and Frozen; takes 30% less damage while Stunned. |
+| Winterweave | Applying Cold has a 15% chance to also Freeze; Cold deals 25% more damage. |
+| Stormrunner | Electrified lasts 1 additional turn and grants +10% Dodge Chance. |
+| Tempest Sage | Applies 1 additional Electrified stack and grants 12% more Spell Power. |
+| Crownless | Begins combat with Guard equal to 20% of maximum Health and generates 25% more Guard. |
+| Veilborn | Applies 1 additional Poison stack; Poison restores Health equal to 20% of its damage. |
+| Ashen Oracle | Applying Burn also applies Arcane Wound; Burn deals 40% more damage. |
+
 ## Item catalog
 
 ### Available gear
 
-New characters begin with no equipped gear and an empty inventory. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
+New characters begin with no equipped gear and an empty inventory. The live catalog contains 194 items: 147 gear, 17 consumables, and 30 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
 
 The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. No live item currently uses Legendary. Every live item ID is registered in the shared optimized icon catalog.
 
@@ -677,6 +739,9 @@ Consumables use one inventory slot per copy and can be queued from the **Invento
 | Highfall Restorative | Uncommon | 55 | Restores 65 Health. |
 | Stonebloom Draught | Rare | 60 | Restores 30 Health and applies Regenerate for 3 turns. |
 | Whisperbloom Tonic | Uncommon | 30 | Restores 12 Health and 2 Energy. |
+| Mirefen Antivenom | Uncommon | 45 | Removes Poison from the player. |
+| Cooling Salve | Rare | 60 | Removes Burn from the player. |
+| Coagulant Bandage | Rare | 75 | Removes Bleed from the player. |
 
 ### Other items
 

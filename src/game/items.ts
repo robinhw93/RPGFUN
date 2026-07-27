@@ -127,5 +127,10 @@ export function describeConsumableEffect(effect: ConsumableEffect): string {
       const target = effect.target === "self" ? "yourself" : effect.target === "target" ? "the selected enemy" : "all enemies";
       return `Apply ${effect.stacks} ${status.name} for ${effect.duration} turn${effect.duration === 1 ? "" : "s"} to ${target}.`;
     }
+    case "remove_status": {
+      const status = STATUS_EFFECTS[effect.status];
+      const target = effect.target === "self" ? "yourself" : effect.target === "target" ? "the selected enemy" : "all enemies";
+      return `Remove ${status.name} from ${target}.`;
+    }
   }
 }

@@ -196,9 +196,10 @@ A change is complete only when the applicable items are true:
 
 At the time of this handoff:
 
-- Windsong Forest is the only player-facing story adventure. It currently has nine ordered stages, four reusable event definitions, six fixed combat/boss stages, one weighted event-or-combat stage, a dedicated merchant stage, and a berry event. The internal `ENDLESS_ADVENTURE`/DUMMY definition still exists for testing but is not listed as a normal player adventure.
-- The enemy catalog has 11 templates: DUMMY, five Windsong creatures, and five Highlands goblins. The goblins are implemented with executable abilities, dedicated Highlands artwork, portraits, starting Energy, behavior priorities, and independent drop rows, but no current Windsong stage references them.
-- The live item source currently contains 30 definitions: 19 gear, 3 consumables, and 8 ordinary items. Goblin Scavanger and Hexcaster are the two current three-piece sets.
+- The player-facing story route contains ten adventures from Windsong Forest through The Hollow Crown. Adventures 4–10 have 12–18 stages, seven dedicated enemies, three skill-check events, one tactical final boss, and data-owned card/combat artwork each.
+- The enemy catalog has 67 templates. The 49 Adventure 4–10 enemies have dedicated full artwork and portraits, executable abilities, behavior priorities, starting Energy, independent drop rows, and tactical boss sequences.
+- The live item source contains 194 definitions: 147 gear, 17 consumables, and 30 ordinary items. There are 24 sets; the fifteen Adventure 4–10 sets each have five pieces and executable 2/3/4/5-piece bonuses. Epic items begin in Adventure 8 and no live item is Legendary.
+- Enemy Editor Save replaces the complete canonical enemy catalog, Adventure Editor supports custom card/combat artwork, and Item Editor preserves executable set passives and named status-removal consumables.
 - Shadow, Arcanist, and Brute each have 87 live nodes including their class node. Shadow's latest extensions add Physical Power, Agility, Intelligence, and Spell Power routes.
 - Arcanist includes Fire, Frost, Lightning, Arcane, Barrier, self-Burn, Frozen Path, Conductor, Arcane Wound consumption, frost-control combinations, Electrified-chain mechanics, Elemental Fury, and later Spell Power, Intelligence, Hit Chance, and Critical Strike routes.
 - Brute includes Fire, Bleed, Armor/Guard, holy-vigor, Smite, Spell Power, and hybrid Power paths. Cultist currently has only its class node.
@@ -208,15 +209,4 @@ Use `docs/CONTENT_REFERENCE.md` rather than this summary for exact live values a
 
 ## Working-tree handoff
 
-At the documentation sync dated 2026-07-26, the owner has uncommitted content changes in:
-
-```text
-src/game/content/abilities.ts
-src/game/content/adventures.ts
-src/game/content/enemies.ts
-src/game/content/gear.ts
-```
-
-Treat them as intentional, user-owned work. They currently contain the 50% Physical Power Quick Slash value, the nine-stage Windsong Forest/event rewrite, expanded goblin drop tables, and the new Goblin Scavanger/Hexcaster gear, materials, and set bonuses. Do not restore, reformat, or include those files in an unrelated commit.
-
-The current full `npm test` run stops at the item-art integrity assertion because eight new item IDs are not yet registered in `ITEM_ICON_URLS`: the three Goblin Scavanger pieces, three Hexcaster pieces, Linen Scraps, and Spider Silk Thread. The two materials have direct `/assets/items/` artwork, but the central map still lacks them; the six gear pieces also lack the fallback used by `ItemIcon`. `npm run docs:check` and `npm run build` pass at this snapshot. This is a known unfinished content-integration task, not a reason to discard the content edits.
+At the Adventure 4–10 integration sync dated 2026-07-27, the earlier Windsong/Highlands/Highfall content edits and missing item-icon registrations have been incorporated. No known catalog or artwork integrity failure remains. Always inspect the live worktree before a new change because later owner edits still take precedence over this snapshot.

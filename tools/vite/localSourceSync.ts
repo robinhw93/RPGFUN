@@ -146,6 +146,74 @@ function validateDropTable(value: unknown, itemIds: Set<string>, label: string, 
   return drops;
 }
 
+const enemyBehaviors = new Set([
+  "single", "rabid_rat", "priority", "wisp_barrage", "brown_bear", "forest_spirit",
+  "goblin_longseer", "goblin_woundfixer", "goblin_biggrown", "goblin_chieftain",
+  "hill_troll", "mountain_troll", "troll_shaman", "bandit_enforcer", "loot_goblin",
+  "bandit_trapper", "troll_bandit_king",
+]);
+
+function validateEnemyExchange(exchangeValue: unknown, itemIds: Set<string>, statusIds: Set<string>): Record<string, unknown> {
+  const exchange = catalogObject(exchangeValue, "Enemy exchange");
+  if (exchange.format !== "arkenfall-enemies" || exchange.version !== 3 || !Array.isArray(exchange.enemies)) throw new Error("Unsupported enemy exchange format.");
+  const ids = exchange.enemies.map((raw: unknown) => catalogId(catalogObject(raw, "Enemy").id, "Enemy ID"));
+  assertUniqueIds(ids, "Enemy");
+  const record: Record<string, unknown> = {};
+  exchange.enemies.forEach((raw: unknown) => {
+    const enemy = catalogObject(raw, "Enemy");
+    const id = catalogId(enemy.id, "Enemy ID");
+    const name = catalogString(enemy.name, "Enemy name");
+    catalogString(enemy.title, `${name} title`);
+    if (!/^\/assets\/enemies\/full\/[a-z0-9-]+\.webp$/i.test(catalogString(enemy.imageUrl, `${name} full artwork`))) throw new Error(`${name} has an invalid full artwork URL.`);
+    if (!/^\/assets\/enemies\/portraits\/[a-z0-9-]+\.webp$/i.test(catalogString(enemy.portraitUrl, `${name} portrait`))) throw new Error(`${name} has an invalid portrait URL.`);
+    ["maxHp", "physicalPower", "spellPower", "armor", "magicResistance", "energyRegen", "maxEnergy", "startingEnergy"].forEach((field) => catalogNumber(enemy[field], `${name} ${field}`, field === "maxHp" || field === "maxEnergy" ? 1 : 0));
+    if (enemy.startingEnergy > enemy.maxEnergy) throw new Error(`${name} Starting Energy cannot exceed Max Energy.`);
+    ["hitChance", "dodgeChance", "critChance"].forEach((field) => {
+      const percent = catalogNumber(enemy[field], `${name} ${field}`);
+      if (percent > 1000) throw new Error(`${name} ${field} is too large.`);
+    });
+    const dropTable = validateDropTable(enemy.dropTable, itemIds, `${name} drop table`, true);
+    if (!Array.isArray(enemy.abilities)) throw new Error(`${name} abilities must be a list.`);
+    const abilityIds = enemy.abilities.map((rawAbility: unknown) => catalogId(catalogObject(rawAbility, `${name} ability`).id, `${name} ability ID`));
+    assertUniqueIds(abilityIds, `${name} ability`);
+    const abilities = enemy.abilities.map((rawAbility: unknown) => {
+      const ability = catalogObject(rawAbility, `${name} ability`);
+      catalogString(ability.name, `${name} ability name`);
+      catalogString(ability.effect, `${name} ability effect`, true);
+      catalogNumber(ability.energyCost, `${name} ability Energy cost`);
+      catalogNumber(ability.cooldownTurns, `${name} ability cooldown`);
+      if (ability.range !== "melee" && ability.range !== "ranged") throw new Error(`${name} ability range is invalid.`);
+      catalogString(ability.vfx, `${name} ability VFX`);
+      ["statusApplications", "selfStatusApplications", "selfStatusApplicationsWhenEnergyDepleted", "friendlyStatusApplications"].forEach((field) => {
+        if (ability[field] === undefined) return;
+        if (!Array.isArray(ability[field])) throw new Error(`${name} ${field} must be a list.`);
+        ability[field].forEach((rawStatus: unknown) => {
+          const application = catalogObject(rawStatus, `${name} status application`);
+          const status = catalogId(application.status, `${name} status`);
+          if (!statusIds.has(status)) throw new Error(`${name} references unknown status ${status}.`);
+        });
+      });
+      const { effect, ...sourceAbility } = ability;
+      return { ...sourceAbility, description: effect };
+    });
+    catalogString(enemy.behaviorNotes, `${name} behavior notes`, true);
+    if (!enemyBehaviors.has(enemy.behavior as string)) throw new Error(`${name} behavior is invalid.`);
+    const maxActionsPerTurn = catalogNumber(enemy.maxActionsPerTurn, `${name} maximum actions`, 1);
+    if (!Number.isInteger(maxActionsPerTurn)) throw new Error(`${name} maximum actions must be a whole number.`);
+    catalogString(enemy.accent, `${name} accent`);
+    const sourceEnemy = {
+      ...enemy,
+      hitChance: enemy.hitChance / 100,
+      dodgeChance: enemy.dodgeChance / 100,
+      critChance: enemy.critChance / 100,
+      dropTable,
+      abilities,
+    };
+    record[id] = sourceEnemy;
+  });
+  return record;
+}
+
 const positiveEventEffects = new Set(["heal", "playerNextCombatBuff", "gainGold", "gainItem", "openMerchant", "gainExperience", "gainTalentPoints", "gainAttributePoints", "enemiesNextCombatDebuff"]);
 const negativeEventEffects = new Set(["loseHealth", "loseGold", "playerNextCombatDebuff", "loseExperience", "enemiesNextCombatBuff", "immediateEncounter"]);
 const allEventEffects = new Set([...positiveEventEffects, ...negativeEventEffects]);
@@ -243,7 +311,10 @@ function validateAdventureExchange(exchangeValue: unknown, enemyIds: Set<string>
     catalogString(adventure.name, "Adventure name");
     catalogString(adventure.description, "Adventure description");
     catalogNumber(adventure.recommendedLevel, "Recommended level", 1);
-    if (adventure.theme !== "windsong_forest" && adventure.theme !== "arkenfall_highlands" && adventure.theme !== "highfall_mountains") throw new Error("Adventure theme is invalid.");
+    if (adventure.theme !== "windsong_forest" && adventure.theme !== "arkenfall_highlands" && adventure.theme !== "highfall_mountains" && adventure.theme !== "custom") throw new Error("Adventure theme is invalid.");
+    if (adventure.cardImageUrl !== undefined && !/^\/assets\/backgrounds\/[a-z0-9-]+\.webp$/i.test(catalogString(adventure.cardImageUrl, "Adventure card image"))) throw new Error("Adventure card image is invalid.");
+    if (adventure.combatBackgroundUrl !== undefined && !/^\/assets\/backgrounds\/[a-z0-9-]+\.webp$/i.test(catalogString(adventure.combatBackgroundUrl, "Adventure combat background"))) throw new Error("Adventure combat background is invalid.");
+    if (adventure.theme === "custom" && (!adventure.cardImageUrl || !adventure.combatBackgroundUrl)) throw new Error(`${adventure.name} needs both custom background images.`);
     if (adventure.travelText !== undefined) catalogString(adventure.travelText, "Travel loading text");
     catalogString(adventure.completionTitle, "Completion title");
     catalogString(adventure.completionDescription, "Completion description", true);
@@ -380,17 +451,19 @@ function validateItemExchange(exchangeValue: unknown, statusIds: Set<string>, ad
       item.effects.forEach((rawEffect: unknown, index: number) => {
         const effect = catalogObject(rawEffect, `${item.name} effect ${index + 1}`);
         const type = catalogString(effect.type, "Consumable effect type");
-        if (!["heal", "gain_energy", "change_next_turn_energy_regen", "change_energy", "damage", "apply_status"].includes(type)) throw new Error(`${type} is not a supported consumable effect.`);
-        if (type !== "apply_status") {
+        if (!["heal", "gain_energy", "change_next_turn_energy_regen", "change_energy", "damage", "apply_status", "remove_status"].includes(type)) throw new Error(`${type} is not a supported consumable effect.`);
+        if (type !== "apply_status" && type !== "remove_status") {
           const amount = catalogFiniteNumber(effect.amount, `${item.name} effect amount`);
           if (!["change_energy", "change_next_turn_energy_regen"].includes(type) && amount < 0) throw new Error(`${item.name} effect amount cannot be negative.`);
         }
-        if (type === "damage" || type === "apply_status") {
+        if (type === "damage" || type === "apply_status" || type === "remove_status") {
           if (!["self", "target", "all_enemies"].includes(effect.target)) throw new Error(`${item.name} has an invalid effect target.`);
         }
-        if (type === "apply_status") {
+        if (type === "apply_status" || type === "remove_status") {
           const status = catalogId(effect.status, "Consumable status");
           if (!statusIds.has(status)) throw new Error(`${status} is not a live status effect.`);
+        }
+        if (type === "apply_status") {
           catalogNumber(effect.stacks, "Consumable status stacks", 1);
           catalogNumber(effect.duration, "Consumable status duration", 1);
         }
@@ -715,7 +788,7 @@ export function localSourceSync() {
         request.on("end", async () => {
           try {
             const payload = JSON.parse(body) as { kind?: unknown; exchange?: unknown };
-            if (payload.kind !== "events" && payload.kind !== "adventures" && payload.kind !== "items" && payload.kind !== "quests") throw new Error("Unknown live content catalog.");
+            if (payload.kind !== "enemies" && payload.kind !== "events" && payload.kind !== "adventures" && payload.kind !== "items" && payload.kind !== "quests") throw new Error("Unknown live content catalog.");
 
             await enqueueSourceMutation(async () => {
               const [adventureSource, enemySource, gearSource, statusSource, questSource] = await Promise.all([
@@ -746,6 +819,18 @@ export function localSourceSync() {
                 const kind = objectStringProperty(object, "kind");
                 return id && kind ? [[id, kind] as const] : [];
               }));
+
+              if (payload.kind === "enemies") {
+                const enemyCatalog = validateEnemyExchange(payload.exchange, itemIds, new Set(statusKinds.keys()));
+                const enemiesInitializer = variableInitializer(enemySourceFile, "ENEMIES");
+                if (!enemiesInitializer) throw new Error("The live enemy catalog could not be located.");
+                await writeFile(enemySourcePath, applySourceEdits(enemySource, [{
+                  start: enemiesInitializer.getStart(enemySourceFile),
+                  end: enemiesInitializer.getEnd(),
+                  text: JSON.stringify(enemyCatalog, null, 2),
+                }]), "utf8");
+                return;
+              }
 
               if (payload.kind === "items") {
                 const itemCatalog = validateItemExchange(payload.exchange, new Set(statusKinds.keys()), adventureIds);

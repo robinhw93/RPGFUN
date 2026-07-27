@@ -2,7 +2,7 @@ import { ArrowUp, BookOpen, ClipboardList, Copy, Download, Gem, Gift, Image, Loc
 import { useEffect, useRef, useState } from "react";
 import { ENEMIES, ITEMS } from "../../game/data";
 import { MAX_LEVEL } from "../../game/progression";
-import type { AbilityRange, AdventureDefinition, AdventureEventDefinition, AdventureEventOutcome, GearSetDefinition, InventoryItem, ItemDropDefinition, QuestDefinition, QuestlineDefinition, StatName } from "../../game/types";
+import type { AdventureDefinition, AdventureEventDefinition, AdventureEventOutcome, EnemyAbilityDefinition, EnemyBehaviorKind, EnemyTemplate, GearSetDefinition, InventoryItem, ItemDropDefinition, QuestDefinition, QuestlineDefinition, StatName } from "../../game/types";
 
 export type DevtoolKind = "talentDevtool" | "enemyDevtool" | "eventDevtool" | "adventureDevtool" | "itemDevtool" | "questDevtool" | "portraitDevtool";
 
@@ -17,6 +17,8 @@ export interface EnemyDraft {
   id: string;
   name: string;
   title: string;
+  imageUrl: string;
+  portraitUrl: string;
   maxHp: number;
   physicalPower: number;
   spellPower: number;
@@ -31,15 +33,13 @@ export interface EnemyDraft {
   dropTable: ItemDropDefinition[];
   abilities: EnemyAbilityDraft[];
   behaviorNotes: string;
+  behavior: EnemyBehaviorKind;
+  maxActionsPerTurn: number;
+  healOnAllyDeath?: EnemyTemplate["healOnAllyDeath"];
   accent: string;
 }
 
-export interface EnemyAbilityDraft {
-  id: string;
-  name: string;
-  energyCost: number;
-  cooldownTurns: number;
-  range: AbilityRange;
+export interface EnemyAbilityDraft extends Omit<EnemyAbilityDefinition, "description"> {
   effect: string;
 }
 
@@ -122,7 +122,7 @@ export async function copyJson(value: unknown) {
   await navigator.clipboard.writeText(JSON.stringify(value, null, 2));
 }
 
-export async function saveLiveCatalog(kind: "events" | "adventures" | "items" | "quests", exchange: EventExchange | AdventureExchange | ItemExchange | QuestExchange) {
+export async function saveLiveCatalog(kind: "enemies" | "events" | "adventures" | "items" | "quests", exchange: EnemyExchange | EventExchange | AdventureExchange | ItemExchange | QuestExchange) {
   const response = await fetch("/__arkenfall/content-catalog", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -130,6 +130,24 @@ export async function saveLiveCatalog(kind: "events" | "adventures" | "items" | 
   });
   const result = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
   if (!response.ok || !result?.ok) throw new Error(result?.error ?? "The live source could not be updated. Run the game through the local Vite development server.");
+}
+
+export function JsonObjectField({ label, value, onCommit }: { label: string; value: Record<string, unknown>; onCommit: (value: Record<string, unknown>) => void }) {
+  const serialized = JSON.stringify(value, null, 2);
+  const [draft, setDraft] = useState(serialized);
+  const [error, setError] = useState("");
+  useEffect(() => { setDraft(serialized); setError(""); }, [serialized]);
+  const commit = () => {
+    try {
+      const parsed = JSON.parse(draft) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Enter one JSON object.");
+      onCommit(parsed as Record<string, unknown>);
+      setError("");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Invalid JSON.");
+    }
+  };
+  return <label className="wide-field"><span>{label}</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commit} spellCheck={false} />{error && <small className="field-error">{error}</small>}</label>;
 }
 
 export function useLocalDraft<T>(key: string, fallback: T, normalize: (value: T) => T = (value) => value) {
