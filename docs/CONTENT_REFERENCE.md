@@ -105,7 +105,7 @@ These definitions are executable, but a normal new character cannot unlock or eq
 
 ## Talent tree
 
-The live tree has 263 nodes: the origin, four first-direction class nodes, 86 later Shadow nodes, 86 later Arcanist nodes, and 86 later Brute nodes. Branch counts are Shadow 87, Arcanist 87, Brute 87, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked.
+The live tree has 263 nodes: the origin, four first-direction class nodes, 86 later Shadow nodes, 86 later Arcanist nodes, and 86 later Brute nodes. Branch counts are Shadow 87, Arcanist 87, Brute 87, and Cultist 1; the Talent Editor displays these values live. Every listed node currently costs 1 point except Wayfarer's Spark, which is free and starts unlocked. During character introduction, choosing Arcanist, Brute, or Shadow directly grants that class node without consuming the character's separate starting Talent Point; Cultist is displayed as Coming Soon and cannot be selected.
 
 Connections are bidirectional: unlocking either end can make the node at the other end available. Each edge is declared only once in the data. Every node uses **Any**, so one adjacent unlocked node is always enough.
 

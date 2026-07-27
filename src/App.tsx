@@ -31,8 +31,10 @@ import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 import { AdventureView } from "./components/adventure/AdventureView";
 
 import { CharacterCreation } from "./components/character/CharacterCreation";
+import { ClassSelection } from "./components/character/ClassSelection";
 
 import { CharacterAssetBoundary, CharacterView } from "./components/character/CharacterView";
+import { chooseStartingClass, hasSpentIntroductionTalentPoint } from "./game/characterIntroduction";
 
 import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, type CharacterSection } from "./ui/gameUi";
 
@@ -65,13 +67,9 @@ function loadInitialGame(): GameState {
   };
 }
 
-function hasUnlockedStartingClass(character: CharacterState): boolean {
-  return TALENTS.some((talent) => talent.id !== "origin" && talent.kind === "class" && character.unlockedTalents.includes(talent.id));
-}
-
 function App() {
   const [game, setGame] = useState<GameState>(loadInitialGame);
-  const [view, setView] = useState<View>(() => game.characterIntroductionStep === "attributes" || game.characterIntroductionStep === "talents" ? "character" : game.adventure.active ? "adventure" : game.characterIntroductionStep === "town" ? "town" : "adventure");
+  const [view, setView] = useState<View>(() => game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" ? "character" : game.adventure.active ? "adventure" : game.characterIntroductionStep === "town" ? "town" : "adventure");
   const [characterSection, setCharacterSection] = useState<CharacterSection>(() => game.characterIntroductionStep === "talents" ? "talents" : "overview");
   const [travelTransition, setTravelTransition] = useState<{ phase: "travel" | "encounter"; dots: number; travelLabel: string } | null>(null);
   const [encounterFlavor, setEncounterFlavor] = useState<{ message: string; phase: EncounterFlavorPhase } | null>(null);
@@ -89,7 +87,7 @@ function App() {
   const combatLocked = game.adventure.combat?.outcome === "active";
   const activeNode = getAdventureNode(game.adventure);
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
-  const characterIntroductionActive = game.characterIntroductionStep === "attributes" || game.characterIntroductionStep === "talents";
+  const characterIntroductionActive = game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents";
   const recommendStartingItem = game.characterIntroductionStep === "town" && !Object.values(game.character.equipment).some(Boolean);
 
   useEffect(() => {
@@ -122,7 +120,7 @@ function App() {
   }, [game.character.avatarId]);
 
   const navigate = (next: View) => {
-    if (game.characterIntroductionStep === "attributes" || game.characterIntroductionStep === "talents") {
+    if (game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents") {
       setCharacterSection(game.characterIntroductionStep === "talents" ? "talents" : "overview");
       setView("character");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -525,7 +523,7 @@ function App() {
     setGame((current) => ({
       ...current,
       characterCreated: true,
-      characterIntroductionStep: "attributes",
+      characterIntroductionStep: "class",
       character: { ...current.character, name: name.trim(), avatarId, unspentStatPoints: 2 },
     }));
     setCharacterSection("overview");
@@ -533,19 +531,21 @@ function App() {
     window.scrollTo({ top: 0 });
   };
 
-  const continueIntroductionToTalents = () => {
-    if (game.characterIntroductionStep !== "attributes" || game.character.unspentStatPoints > 0) return;
-    setGame((current) => current.characterIntroductionStep === "attributes" && current.character.unspentStatPoints === 0
-      ? { ...current, characterIntroductionStep: "talents" }
-      : current);
+  const selectIntroductionClass = (talentId: string) => {
+    if (game.characterIntroductionStep !== "class") return;
+    setGame((current) => {
+      if (current.characterIntroductionStep !== "class") return current;
+      const character = chooseStartingClass(current.character, talentId);
+      return character === current.character ? current : { ...current, characterIntroductionStep: "talents", character };
+    });
     setCharacterSection("talents");
     setView("character");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const continueIntroductionToTown = () => {
-    if (game.characterIntroductionStep !== "talents" || !hasUnlockedStartingClass(game.character)) return;
-    setGame((current) => current.characterIntroductionStep === "talents" && hasUnlockedStartingClass(current.character)
+    if (game.characterIntroductionStep !== "talents" || !hasSpentIntroductionTalentPoint(game.character)) return;
+    setGame((current) => current.characterIntroductionStep === "talents" && hasSpentIntroductionTalentPoint(current.character)
       ? { ...current, characterIntroductionStep: "town" }
       : current);
     setTownEntryLocation("square");
@@ -609,6 +609,7 @@ function App() {
         )}
         {view === "character" && (
           <>
+            {game.characterIntroductionStep === "class" ? <ClassSelection onChoose={selectIntroductionClass} /> : <>
             {!characterIntroductionActive && <nav className="character-submenu" aria-label="Character sections">
               <button type="button" className={characterSection === "overview" ? "active" : ""} aria-current={characterSection === "overview" ? "page" : undefined} onClick={() => openCharacterSection("overview")}><UserRound size={16} /> Character</button>
               <button type="button" className={characterSection === "equipment" ? "active" : ""} aria-current={characterSection === "equipment" ? "page" : undefined} onClick={() => openCharacterSection("equipment")}><Shield size={16} /> Equipment and Inventory</button>
@@ -616,13 +617,14 @@ function App() {
             </nav>}
             {characterSection !== "talents" ? (
               <CharacterAssetBoundary preloaded={characterAssetsReady} assetKey={game.character.avatarId}>
-                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "attributes"} onNext={continueIntroductionToTalents} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
+                <CharacterView mode={characterSection} character={game.character} locked={combatLocked} onEquip={equipItem} onUnequip={unequipItem} onAllocateStat={allocateStat} />
               </CharacterAssetBoundary>
             ) : (
               <Suspense fallback={null}>
                 <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} onNext={continueIntroductionToTown} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
               </Suspense>
             )}
+            </>}
           </>
         )}
         {view === "town" && (

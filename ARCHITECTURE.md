@@ -37,7 +37,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 ### Application and UI
 
 - `src/App.tsx` owns top-level React state, navigation, application orchestration, and the high-level commands sent to game modules. It lazy-loads the talent screen and developer tools so those large editing surfaces are absent from the initial bundle.
-- `src/components/character/` owns character creation plus the Character and Equipment/Inventory screens. Its gear-detail modal is also reused in read-only form by merchant, score-screen, and town-shop surfaces so item rules and equipped-item comparison remain visually consistent without exposing Equip actions.
+- `src/components/character/` owns character creation, the starting-class selection screen, and the Character and Equipment/Inventory screens. Its class selection reads the canonical class Talent and ability definitions, while its gear-detail modal is also reused in read-only form by merchant, score-screen, and town-shop surfaces so item rules and equipped-item comparison remain visually consistent without exposing Equip actions.
 - `src/components/adventure/` owns adventure selection, combat-screen composition, score screens, and the cinematic event sequence. `EventPresentation.tsx` reveals the title, scenario, choices, precomputed d100 result, derived-stat bonus, and outcome in order without recalculating the event rule; direct merchant choices instead reveal their resolved outcome text and stock together.
 - `src/components/town/` owns the illustrated Arkenfall hub, the Blacksmith/Alchemist/Tailor/Leatherworker/Jeweler vendor destinations and tabs, recipe/material presentation, shared centered floating confirmations for purchases and meals, inline crafting/error feedback, and tavern-rest screen. It calls shared game transitions and does not mutate Inventory, gold, or carried Health itself.
 - `src/components/combat/` owns the combat HUD, initiative presentation, and transient combat/VFX renderers.
@@ -396,6 +396,8 @@ Consumables are executable inventory definitions rather than equipment. `useCons
 ## Talent prerequisites and runtime tree
 
 `areTalentRequirementsMet` is shared by visual availability and the actual unlock action. `isAdditionalClassTalentLocked` is applied by both paths as a second gate: once any non-origin class node is unlocked, other class nodes remain unavailable below level 10.
+
+Fresh characters choose Arcanist, Brute, or Shadow before entering the runtime tree; Cultist is visible but unavailable. `characterIntroduction.ts` unlocks the selected canonical class node and equips its granted ability without consuming the separate starting Talent Point. The introductory talent tree centers on that class node and requires the remaining point to be spent on a connected non-class node before continuing to Town.
 
 - `getTalentConnectionIds` treats every stored edge as undirected by combining a node's own `requires` IDs with every node that references it.
 - A node with no adjacent connections is available.

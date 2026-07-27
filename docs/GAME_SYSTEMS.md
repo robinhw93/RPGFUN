@@ -18,16 +18,16 @@ Death is permanent. When combat reaches defeat, the browser save is deleted. The
 
 Character creation requires a non-empty name and an appearance. Appearance has no mechanical effect. The selected appearance supplies both the full Character-screen figure and the cropped head portrait shown on the player's combat card. Combat portraits use a compact clipped square image with clearance above the Health bar; enemies always use a thin dark-red portrait frame. Clicking the player's portrait opens the character's five current Attributes plus combat-adjusted stats such as Spell Power, Hit Chance, Critical Strike Chance, defenses, Initiative, and Energy. Temporary statuses are included there through the same rules used by combat, so Fierce raises the displayed Critical Strike Chance while Blind, Shatter, Slowed, Evasion, and Exhausted adjust their corresponding values. Clicking an enemy portrait opens the enemy's equally icon-led, combat-adjusted information.
 
-After creation, a new character follows a saved two-step introduction. The first step opens the Character stats page with 2 Attribute Points and reveals **Next** only after both are assigned. The second step opens Talents and reveals **Next** after the starting Talent Point is spent on one of the four non-origin class nodes. **Next** then opens Arkenfall Town. The Town **Shops** destination remains highlighted with a starting-item recommendation until the character equips an item for the first time. Buying an item is recommended but never required, so Adventures and every other Town destination remain available.
+After creation, a new character follows a saved two-step introduction. The first step presents Arcanist, Brute, Shadow, and Cultist with their class bonus, combat identity, and signature ability. Arcanist, Brute, and Shadow can be selected; Cultist is shown as **Coming Soon** and cannot yet be chosen. Choosing a class directly unlocks its canonical class node, applies its passive bonus, and equips its granted ability without consuming the separate starting Talent Point. The second step opens the Talent tree centered on the chosen class node. **Next** appears after the starting Talent Point is spent on a connected non-class node and then opens Arkenfall Town. The 2 starting Attribute Points remain available on the Character screen but do not block this introduction. The Town **Shops** destination remains highlighted with a starting-item recommendation until the character equips an item for the first time. Buying an item is recommended but never required, so Adventures and every other Town destination remain available.
 
 Every new character starts with:
 
 - Level 1 and 0 experience.
 - 18 gold.
-- 1 talent point.
-- 2 unspent attribute points, assigned during the introduction.
-- Wayfarer's Spark unlocked.
-- No abilities equipped until the first class node is unlocked.
+- 1 talent point to spend after choosing a class.
+- 2 unspent attribute points that may be assigned from the Character screen.
+- Wayfarer's Spark and the chosen class node unlocked.
+- The chosen class node's signature ability equipped.
 - Strength 5, Agility 5, Intelligence 5, Vitality 5, and Luck 5.
 - No equipped gear and an empty inventory.
 

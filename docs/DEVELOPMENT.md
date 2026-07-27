@@ -106,7 +106,7 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | Path | Responsibility |
 | --- | --- |
 | `src/App.tsx` | Top-level state, navigation, application orchestration, high-level actions, and lazy-loaded screen boundaries. |
-| `src/components/character/` | Character creation plus Character and Equipment/Inventory screens, including the reusable gear-detail modal. |
+| `src/components/character/` | Character creation, canonical starting-class selection, and Character and Equipment/Inventory screens, including the reusable gear-detail modal. |
 | `src/components/adventure/` | Adventure selection, event/score presentation, and combat-screen composition. |
 | `src/components/town/` | Illustrated Arkenfall hub, five shop/crafting vendor surfaces, and tavern rest presentation. |
 | `src/components/combat/` | Combat HUD, initiative presentation, and transient combat/VFX renderers. |

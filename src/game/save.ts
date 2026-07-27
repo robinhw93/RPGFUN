@@ -16,7 +16,7 @@ const REMOVED_TALENT_COSTS: Record<string, number> = {
   arcanist_3: 2,
 };
 
-const CHARACTER_INTRODUCTION_STEPS = new Set<CharacterIntroductionStep>(["attributes", "talents", "town", "complete"]);
+const CHARACTER_INTRODUCTION_STEPS = new Set<CharacterIntroductionStep>(["class", "talents", "town", "complete"]);
 
 export function loadGame(): GameState | null {
   try {
@@ -63,9 +63,21 @@ export function loadGame(): GameState | null {
       delete equipment.offHand;
     }
     const savedIntroductionStep = (state as { characterIntroductionStep?: unknown }).characterIntroductionStep;
-    const characterIntroductionStep = typeof savedIntroductionStep === "string" && CHARACTER_INTRODUCTION_STEPS.has(savedIntroductionStep as CharacterIntroductionStep)
-      ? savedIntroductionStep as CharacterIntroductionStep
-      : "complete";
+    const hasStartingClass = TALENTS.some((talent) => talent.id !== "origin" && talent.kind === "class" && unlockedTalents.includes(talent.id));
+    const hasPostClassTalent = TALENTS.some((talent) => talent.id !== "origin" && talent.kind !== "class" && unlockedTalents.includes(talent.id));
+    const characterIntroductionStep: CharacterIntroductionStep = savedIntroductionStep === "attributes"
+      ? hasStartingClass ? "talents" : "class"
+      : typeof savedIntroductionStep === "string" && CHARACTER_INTRODUCTION_STEPS.has(savedIntroductionStep as CharacterIntroductionStep)
+        ? savedIntroductionStep === "class" && hasStartingClass
+          ? "talents"
+          : savedIntroductionStep === "talents" && !hasStartingClass
+            ? "class"
+            : savedIntroductionStep as CharacterIntroductionStep
+        : "complete";
+    const refundedTalentPoints = talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0);
+    const normalizedTalentPoints = savedIntroductionStep === "talents" && hasStartingClass && !hasPostClassTalent && refundedTalentPoints === 0
+      ? 1
+      : refundedTalentPoints;
     return {
       ...state,
       characterCreated: state.characterCreated ?? Boolean(state.character.name?.trim() && state.character.name !== "The Wayfarer"),
@@ -78,7 +90,7 @@ export function loadGame(): GameState | null {
         level: normalizedLevel,
         xp: normalizedLevel >= MAX_LEVEL ? 0 : Math.max(0, state.character.xp ?? 0),
         unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (normalizedLevel - 1) * 3),
-        talentPoints: talentPoints + removedTalents.reduce((total, id) => total + (REMOVED_TALENT_COSTS[id] ?? 0), 0),
+        talentPoints: normalizedTalentPoints,
         unlockedTalents,
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),
         inventory,

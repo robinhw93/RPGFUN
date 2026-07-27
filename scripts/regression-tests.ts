@@ -10,6 +10,7 @@ import { GEAR_ICON_URLS, GEAR_ICON_VARIANTS, getGearIconCategory, getGearIconCho
 import { ABILITIES, ADVENTURES, ADVENTURE_EVENTS, ENEMIES, GEAR_SETS, ITEMS, TALENTS } from "../src/game/data";
 import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getStoryAdventureAvailability, getStoryNodeIntroduction } from "../src/game/adventures";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
+import { chooseStartingClass, getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../src/game/characterIntroduction";
 import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
@@ -64,7 +65,7 @@ function testDeveloperCharacterTools() {
 }
 
 function testNewCharacterIntroductionDefaults() {
-  assert.equal(INITIAL_GAME.characterIntroductionStep, "attributes", "A new character must begin at the Attribute introduction step.");
+  assert.equal(INITIAL_GAME.characterIntroductionStep, "class", "A new character must begin at the class-selection introduction step.");
   assert.equal(INITIAL_GAME.character.unspentStatPoints, 2, "A new character must receive two starting Attribute Points.");
   assert.equal(INITIAL_GAME.character.talentPoints, 1, "A new character must receive one starting Talent Point.");
   assert.deepEqual(INITIAL_GAME.character.unlockedTalents, ["origin"], "Only Wayfarer's Spark may be unlocked before choosing a class.");
@@ -72,6 +73,24 @@ function testNewCharacterIntroductionDefaults() {
   const startingClasses = TALENTS.filter((talent) => talent.id !== "origin" && talent.kind === "class" && talent.requires.includes("origin"));
   assert.equal(startingClasses.length, 4, "The introduction must offer four class nodes connected to Wayfarer's Spark.");
   assert.ok(startingClasses.every((talent) => talent.cost === 1), "Every starting class node must cost the single starting Talent Point.");
+
+  const arcanist = chooseStartingClass(structuredClone(INITIAL_GAME.character), "arcanist_1");
+  assert.equal(getUnlockedStartingClass(arcanist)?.id, "arcanist_1", "Choosing Arcanist must unlock its real class node.");
+  assert.equal(arcanist.talentPoints, 1, "Choosing a starting class must preserve the point used for the first connected Talent.");
+  assert.ok(arcanist.equippedAbilities.includes("arcaneBolt"), "Choosing Arcanist must equip Arcane Bolt.");
+  assert.equal(getDerivedStats(arcanist).intelligence, 7, "Choosing Arcanist must immediately apply its +2 Intelligence class bonus.");
+  assert.equal(hasSpentIntroductionTalentPoint(arcanist), false, "The introduction cannot finish before the post-class Talent Point is spent.");
+  assert.deepEqual(chooseStartingClass(arcanist, "brute_1"), arcanist, "A starting class cannot be replaced after it is chosen.");
+  assert.deepEqual(chooseStartingClass(structuredClone(INITIAL_GAME.character), "cultist_1"), INITIAL_GAME.character, "Cultist must remain unavailable while it is marked Coming Soon.");
+
+  const connectedTalent = TALENTS.find((talent) => talent.kind !== "class" && talent.requires.includes("arcanist_1"));
+  assert.ok(connectedTalent, "Arcanist must have a connected first Talent for the introduction.");
+  const afterFirstTalent = {
+    ...arcanist,
+    talentPoints: 0,
+    unlockedTalents: [...arcanist.unlockedTalents, connectedTalent.id],
+  };
+  assert.equal(hasSpentIntroductionTalentPoint(afterFirstTalent), true, "Spending the post-class Talent Point must complete the Talent step.");
 }
 
 function testCraftingMaterialArtworkLibrary() {

@@ -8,6 +8,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost } from "../../game/combatFeatures";
 import { ABILITIES, TALENT_TREE_CANVAS, TALENTS } from "../../game/data";
+import { getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../../game/characterIntroduction";
 import { areTalentRequirementsMet, getTalentConnectionIds, isAdditionalClassTalentLocked } from "../../game/talentRequirements";
 import type { CharacterState } from "../../game/types";
 
@@ -290,7 +291,8 @@ export function TalentsView({ character, locked, introduction = false, onNext, o
   const treeGestureRef = useRef<RuntimeTalentGesture | null>(null);
   const closeTalentDetails = useCallback(() => setSelectedTalentId(null), []);
   const closeAbilityLoadout = useCallback(() => setAbilityLoadoutOpen(false), []);
-  const startingClassUnlocked = TALENTS.some((talent) => talent.id !== "origin" && talent.kind === "class" && character.unlockedTalents.includes(talent.id));
+  const startingClass = getUnlockedStartingClass(character);
+  const introductionTalentSpent = hasSpentIntroductionTalentPoint(character);
   const padding = 260;
   const xs = TALENTS.map((talent) => talent.position.x / 100 * TALENT_TREE_CANVAS.width);
   const ys = TALENTS.map((talent) => talent.position.y / 100 * TALENT_TREE_CANVAS.height);
@@ -393,14 +395,14 @@ export function TalentsView({ character, locked, introduction = false, onNext, o
 
   useEffect(() => {
     const scroller = treeScrollRef.current;
-    const origin = nodePositions.get("origin");
-    if (!scroller || !origin) return;
+    const focusNode = nodePositions.get(introduction ? startingClass?.id ?? "origin" : "origin");
+    if (!scroller || !focusNode) return;
     const frame = window.requestAnimationFrame(() => {
-      scroller.scrollLeft = Math.max(0, RUNTIME_TALENT_SCREEN_GUTTER + origin.x * treeZoomRef.current - scroller.clientWidth / 2);
-      scroller.scrollTop = Math.max(0, RUNTIME_TALENT_SCREEN_GUTTER + origin.y * treeZoomRef.current - scroller.clientHeight / 2);
+      scroller.scrollLeft = Math.max(0, RUNTIME_TALENT_SCREEN_GUTTER + focusNode.x * treeZoomRef.current - scroller.clientWidth / 2);
+      scroller.scrollTop = Math.max(0, RUNTIME_TALENT_SCREEN_GUTTER + focusNode.y * treeZoomRef.current - scroller.clientHeight / 2);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [treeHeight, treeWidth]);
+  }, [introduction, startingClass?.id, treeHeight, treeWidth]);
 
   const beginTreeGesture = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0 && event.button !== 1) return;
@@ -489,8 +491,8 @@ export function TalentsView({ character, locked, introduction = false, onNext, o
   return (
     <section className="page talents-page">
       {introduction && <aside className="character-introduction-guide talent-introduction-guide" aria-label="Talent introduction">
-        <div><p className="eyebrow">Getting Started · Step 2 of 2</p><h2>Choose Your First Path</h2><p>Spend your starting Talent Point on one of the four class nodes connected to Wayfarer's Spark.</p></div>
-        {startingClassUnlocked && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
+        <div><p className="eyebrow">Getting Started · Step 2 of 2</p><h2>Take Your First Step</h2><p>Spend your starting Talent Point on a node connected to {startingClass?.name ?? "your class"}.</p></div>
+        {introductionTalentSpent && <button type="button" className="primary-button introduction-next-button" onClick={onNext}>Next <ChevronRight size={17} /></button>}
       </aside>}
       {!introduction && <div className="talent-loadout-actions">
         <button type="button" className="talent-loadout-trigger" onClick={() => setAbilityLoadoutOpen(true)}>
