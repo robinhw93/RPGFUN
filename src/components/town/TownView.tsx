@@ -1,12 +1,13 @@
 import { ArrowLeft, BedDouble, Check, Crosshair, Dumbbell, FlaskConical, Gem, Hammer, HeartPulse, Package, Scissors, Shield, ShoppingBag, Sparkles, Utensils, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
+import { ItemDetailModal } from "../character/CharacterView";
 import { ITEMS } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
 import { describeConsumableEffect, getItemGoldCost, isConsumableItem, isGearItem } from "../../game/items";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestCost, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_MEALS, type TavernMealId, type TownActionResult } from "../../game/town";
-import type { ArkenfallVendorId, GameState, InventoryItem } from "../../game/types";
+import type { ArkenfallVendorId, CharacterState, GameState, InventoryItem } from "../../game/types";
 import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon, RARITY_SORT_WEIGHT } from "../../ui/gameUi";
 
 type TownLocation = "square" | "tavern" | ArkenfallVendorId;
@@ -125,7 +126,7 @@ function compareVendorItems(left: InventoryItem, right: InventoryItem, sort: Ven
   return compareNames();
 }
 
-function TownItemDetails({ item, onClose }: { item: InventoryItem; onClose: () => void }) {
+function TownItemDetails({ item, character, onClose }: { item: InventoryItem; character: CharacterState; onClose: () => void }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -133,6 +134,8 @@ function TownItemDetails({ item, onClose }: { item: InventoryItem; onClose: () =
     window.addEventListener("keydown", onKeyDown);
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); };
   }, [onClose]);
+  if (isGearItem(item)) return <ItemDetailModal item={item} character={character} locked viewOnly onClose={onClose} />;
+
   return (
     <div className="town-item-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <article className={`town-item-modal rarity-${item.rarity}`} role="dialog" aria-modal="true" aria-labelledby="town-item-title">
@@ -238,7 +241,7 @@ function VendorView({ vendor, game, onBack, onBuy, onCraft }: {
         {feedback && <div className="town-feedback" role="status">{feedback}</div>}
         {stock.length > 0 ? <div className="town-item-grid">{stock.map((item) => <VendorItemCard key={item.id} item={item} mode={tab} game={game} station={vendor} actionItemId={actionItemId} onInspect={() => setInspected(item)} onAction={() => runAction(item)} />)}</div> : <div className="town-empty-stock"><Package /><h2>{tab === "shop" ? "Nothing on the shelves yet" : presentation.emptyCraftTitle}</h2><p>Items assigned here in the Item Editor will appear automatically.</p></div>}
       </div>
-      {inspected && <TownItemDetails item={inspected} onClose={() => setInspected(null)} />}
+      {inspected && <TownItemDetails item={inspected} character={game.character} onClose={() => setInspected(null)} />}
     </section>
   );
 }

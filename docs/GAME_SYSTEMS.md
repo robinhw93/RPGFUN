@@ -480,7 +480,7 @@ Armor can be Plate, Leather, or Cloth. Weapons currently support Sword, Axe, Mac
 - Item cards show identity and flavor, while all mechanical stats appear in the item details modal.
 - Stats are sorted alphabetically and use stat icons.
 - A compatible equipment slot opens a filtered list of equippable inventory items.
-- Compare shows the equipped and candidate items with green positive and red negative differences.
+- Compare shows the equipped and candidate items with green positive and red negative differences. It remains available when inspecting gear from loot, Wandering Merchants, and Arkenfall shops or crafting lists; those read-only surfaces do not expose Equip actions.
 - Item and equipment modals lock background scrolling.
 - Inventory can be filtered by item type or gear category and sorted by rarity or name.
 - Every item has an editor-owned Gold Cost used by Wandering Merchants.

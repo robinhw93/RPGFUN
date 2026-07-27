@@ -358,6 +358,23 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
   const comparisonSlot = preferredSlot ?? slotForItem(item, character.equipment);
   const comparisonItem = equippedSlot ? undefined : character.equipment[comparisonSlot];
   const comparisonLines = comparisonItem ? getItemComparisonLines(comparisonItem, item) : [];
+  const equipmentActions = equippedSlot ? (
+    <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip?.(equippedSlot)}>Unequip</button>
+  ) : preferredSlot ? (
+    <button type="button" disabled={actionLocked} onClick={() => onEquip?.(item, preferredSlot)}>{actionLocked && !locked ? `${SLOT_LABELS[preferredSlot]} Locked` : `Equip in ${SLOT_LABELS[preferredSlot]}`}</button>
+  ) : equipType === "oneHand" ? (
+    <>
+      <button type="button" disabled={locked} onClick={() => onEquip?.(item, "mainHand")}>Equip Main Hand</button>
+      <button type="button" disabled={locked || offHandLocked} onClick={() => onEquip?.(item, "offHand")}>{offHandLocked ? "Off Hand Locked" : "Equip Off Hand"}</button>
+    </>
+  ) : item.slot === "ring" ? (
+    <>
+      <button type="button" disabled={locked} onClick={() => onEquip?.(item, "ring1")}>Equip Ring I</button>
+      <button type="button" disabled={locked} onClick={() => onEquip?.(item, "ring2")}>Equip Ring II</button>
+    </>
+  ) : (
+    <button type="button" disabled={actionLocked} onClick={() => onEquip?.(item)}>{offHandLocked && equipType === "offHand" ? "Off Hand Locked" : "Equip"}</button>
+  );
 
   return (
     <div className="item-detail-backdrop" role="dialog" aria-modal="true" aria-label={`${item.name} details`} onClick={onClose}>
@@ -384,7 +401,7 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
           </section>
         )}
 
-        {!viewOnly && comparisonOpen && comparisonItem && (
+        {comparisonOpen && comparisonItem && (
           <section className="item-comparison" aria-label={`Compare ${item.name} with ${comparisonItem.name}`}>
             <h3>Item Comparison</h3>
             <div className="comparison-items">
@@ -404,25 +421,9 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
         )}
 
         {!viewOnly && locked && <p className="item-action-lock"><Shield size={14} /> Equipment cannot be changed during combat.</p>}
-        {!viewOnly && <div className="item-detail-actions">
+        {(comparisonItem || !viewOnly) && <div className="item-detail-actions">
           {comparisonItem && <button type="button" className="item-compare-button" aria-expanded={comparisonOpen} onClick={() => setComparisonOpen((open) => !open)}>{comparisonOpen ? "Close Comparison" : "Compare"}</button>}
-          {equippedSlot ? (
-            <button type="button" className="item-unequip-button" disabled={locked} onClick={() => onUnequip?.(equippedSlot)}>Unequip</button>
-          ) : preferredSlot ? (
-            <button type="button" disabled={actionLocked} onClick={() => onEquip?.(item, preferredSlot)}>{actionLocked && !locked ? `${SLOT_LABELS[preferredSlot]} Locked` : `Equip in ${SLOT_LABELS[preferredSlot]}`}</button>
-          ) : equipType === "oneHand" ? (
-            <>
-              <button type="button" disabled={locked} onClick={() => onEquip?.(item, "mainHand")}>Equip Main Hand</button>
-              <button type="button" disabled={locked || offHandLocked} onClick={() => onEquip?.(item, "offHand")}>{offHandLocked ? "Off Hand Locked" : "Equip Off Hand"}</button>
-            </>
-          ) : item.slot === "ring" ? (
-            <>
-              <button type="button" disabled={locked} onClick={() => onEquip?.(item, "ring1")}>Equip Ring I</button>
-              <button type="button" disabled={locked} onClick={() => onEquip?.(item, "ring2")}>Equip Ring II</button>
-            </>
-          ) : (
-            <button type="button" disabled={actionLocked} onClick={() => onEquip?.(item)}>{offHandLocked && equipType === "offHand" ? "Off Hand Locked" : "Equip"}</button>
-          )}
+          {!viewOnly && equipmentActions}
         </div>}
       </article>
     </div>
