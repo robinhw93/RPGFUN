@@ -157,7 +157,7 @@ function testAttributeAndAfflictionScaling() {
 
   assert.equal(getStatusDamage(createStatusEffect("bleed", { stacks: 2, sourcePower: 40 })), 8, "Bleed must scale at 7.5% Physical Power per stack.");
   assert.equal(getStatusDamage(createStatusEffect("poison", { stacks: 2, sourcePower: 80 })), 20, "Poison must scale at 11.25% Spell Power per stack.");
-  assert.equal(getStatusDamage(createStatusEffect("burn", { stacks: 2, sourcePower: 40 })), 14, "Burn must scale at 15% Spell Power per stack.");
+  assert.equal(getStatusDamage(createStatusEffect("burn", { stacks: 2, sourcePower: 40 })), 10, "Burn must scale at 10% Spell Power per stack.");
 }
 
 function testCraftingMaterialArtworkLibrary() {

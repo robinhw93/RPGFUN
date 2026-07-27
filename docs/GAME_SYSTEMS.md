@@ -349,7 +349,7 @@ All status damage is rounded to a whole number after multiplying by stacks.
 ```text
 Bleed per stack  = 1 + source Physical Power × 0.075
 Poison per stack = 1 + source Spell Power × 0.1125
-Burn per stack   = 1 + source Spell Power × 0.15
+Burn per stack   = 1 + source Spell Power × 0.10
 ```
 
 - Bleed triggers whenever the afflicted combatant uses an ability or enemy attack.
