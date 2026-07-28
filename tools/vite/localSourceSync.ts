@@ -229,6 +229,9 @@ function validateEnemyExchange(exchangeValue: unknown, itemIds: Set<string>, sta
             if (!Number.isInteger(count)) throw new Error(`${name} tactical AI ally count must be a whole number.`);
           } else if (type === "energy_at_least") {
             catalogNumber(condition.amount, `${name} tactical AI Energy threshold`, 0);
+          } else if (type === "last_ability_is") {
+            const previousAbilityId = catalogId(condition.abilityId, `${name} tactical AI previous ability ID`);
+            if (!knownAbilityIds.has(previousAbilityId)) throw new Error(`${name} tactical AI references unknown previous ability ${previousAbilityId}.`);
           } else if (type === "phase_is" || type === "phase_is_not") {
             catalogString(condition.phase, `${name} tactical AI phase`);
           } else if (type !== "no_other_living_allies") throw new Error(`${name} tactical AI condition ${type} is invalid.`);

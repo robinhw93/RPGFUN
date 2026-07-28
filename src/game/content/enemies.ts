@@ -2344,7 +2344,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 12,
-            "duration": 3
+            "duration": 1
           }
         ]
       },
@@ -2370,8 +2370,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a4-drowned-warden-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a4-drowned-warden-pressure"
             }
           ]
         },
@@ -2578,7 +2578,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 12,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_protect"
@@ -2605,8 +2605,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a4-brood-guard-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a4-brood-guard-stance"
             }
           ]
         },
@@ -2730,7 +2730,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 18,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -3355,7 +3355,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 14,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_protect"
@@ -3382,8 +3382,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a5-ironbound-overseer-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a5-ironbound-overseer-stance"
             }
           ]
         },
@@ -3624,7 +3624,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 20,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -4260,7 +4260,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 16,
-            "duration": 3
+            "duration": 1
           }
         ]
       },
@@ -4286,8 +4286,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a6-tidebound-knight-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a6-tidebound-knight-pressure"
             }
           ]
         },
@@ -4533,7 +4533,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 22,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -5443,7 +5443,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 24,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -6098,7 +6098,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 20,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_protect"
@@ -6125,8 +6125,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a8-glacier-golem-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a8-glacier-golem-stance"
             }
           ]
         },
@@ -6364,7 +6364,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 26,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -7013,7 +7013,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 22,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_protect"
@@ -7041,8 +7041,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a9-thunderhead-colossus-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a9-thunderhead-colossus-stance"
             }
           ]
         },
@@ -7280,7 +7280,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 28,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -7446,7 +7446,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 24,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_protect"
@@ -7473,8 +7473,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a10-crownless-guard-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a10-crownless-guard-stance"
             }
           ]
         },
@@ -8197,7 +8197,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 30,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -8858,7 +8858,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 26,
-            "duration": 3
+            "duration": 1
           }
         ]
       },
@@ -8892,8 +8892,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a11-gravity-warden-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a11-gravity-warden-pressure"
             }
           ]
         },
@@ -9143,7 +9143,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 32,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"
@@ -9309,7 +9309,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 28,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_protect"
@@ -9336,8 +9336,8 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           "abilityId": "enemy-ability-a12-rootless-titan-payoff",
           "all": [
             {
-              "type": "self_has_status",
-              "status": "guard"
+              "type": "last_ability_is",
+              "abilityId": "enemy-ability-a12-rootless-titan-stance"
             }
           ]
         },
@@ -10072,7 +10072,7 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
           {
             "status": "guard",
             "stacks": 34,
-            "duration": 3
+            "duration": 1
           }
         ],
         "vfx": "enemy_spirit_heal"

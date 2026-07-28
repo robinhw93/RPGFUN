@@ -5,7 +5,7 @@ import type { AbilityRange, EnemyBehaviorKind } from "../../game/types";
 import { copyJson, downloadJson, DropTableEditor, EditorShell, ENEMY_DRAFT_STORAGE_KEY, finiteNumber, JsonObjectField, localItems, makeId, NumberField, saveLiveCatalog, TextField, useLocalDraft, type EnemyAbilityDraft, type EnemyDraft, type EnemyEditableStats, type EnemyExchange } from "./shared";
 
 const ENEMY_DRAFT_CATALOG_SIGNATURE_KEY = `${ENEMY_DRAFT_STORAGE_KEY}.live-catalog-signature`;
-const ENEMY_DRAFT_CATALOG_REVISION = "tactical-enemy-ai-v2";
+const ENEMY_DRAFT_CATALOG_REVISION = "tactical-enemy-ai-v3";
 const CANONICAL_REFRESH_DROP_TABLE_ENEMY_IDS = new Set([
   "enemy-mrxiut2a-k4kgv",
   "enemy-mrxj4o6o-o45ia",

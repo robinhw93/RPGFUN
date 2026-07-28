@@ -28,6 +28,10 @@ export interface EnemyAiContext {
 export const CHAINED_ENEMY_MIN_LEVEL = 6;
 export const CHAINED_ON_ATTACK_CHANCE = 0.1;
 
+function getEnemyAppliedStatusDuration(status: StatusEffectId, requestedDuration?: number): number | undefined {
+  return status === "guard" ? 1 : requestedDuration;
+}
+
 /** One Chained roll per attack ability, regardless of its number of landed hits. */
 export function shouldApplyChainedOnEnemyAttack(enemyLevel: number, successfulHits: number, random: () => number = Math.random): boolean {
   return enemyLevel >= CHAINED_ENEMY_MIN_LEVEL
@@ -52,6 +56,7 @@ function enemyAiConditionMatches(condition: EnemyAiCondition, enemy: EnemyState,
     case "living_allies_at_least": return enemies.filter((candidate) => candidate.hp > 0 && !candidate.fled).length >= condition.count;
     case "no_other_living_allies": return !enemies.some((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp > 0 && !candidate.fled);
     case "energy_at_least": return enemy.energy >= condition.amount;
+    case "last_ability_is": return enemy.lastAbilityId === condition.abilityId;
     case "phase_is": return enemy.behaviorPhase === condition.phase;
     case "phase_is_not": return enemy.behaviorPhase !== condition.phase;
   }
@@ -280,13 +285,13 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       logs.push(makeLog(`${enemy.name} uses ${enemyAbility.name}.`, enemyAttackInfo));
       (enemyAbility.statusApplications ?? []).forEach((application) => {
         if (derived.statusImmunities.includes(application.status) || (playerActionSurvivalPending && isPlayerActionBlockingStatus(application.status)) || Math.random() >= (application.chance ?? 1)) return;
-        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: getEnemyAppliedStatusDuration(application.status, application.duration), sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
         playerStatuses = addOrRefreshStatus(playerStatuses, status);
         logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
         queueStatus(events, pendingEffects, `You gain ${status.name}.`, "player", status, application.status === "stunned", abilityEventIndex);
       });
       (enemyAbility.selfStatusApplications ?? []).forEach((application) => {
-        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: getEnemyAppliedStatusDuration(application.status, application.duration), sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
         enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
         queueStatus(events, pendingEffects, `${enemy.name} gains ${status.name}.`, enemy.instanceId, status, application.status === "stunned", abilityEventIndex);
       });
@@ -333,7 +338,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         }
         (enemyAbility.friendlyStatusApplications ?? []).forEach((application) => {
           if (!canApplyStatusEffect(nextTarget.statuses, application.status)) return;
-          const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+          const status = createStatusEffect(application.status, { stacks: application.stacks, duration: getEnemyAppliedStatusDuration(application.status, application.duration), sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
           nextTarget = { ...nextTarget, statuses: addOrRefreshStatus(nextTarget.statuses, status) };
           logs.push(makeLog(`${target.name} gains ${status.name}.`, statusInfo(status)));
           queueStatus(events, pendingEffects, `${target.name} gains ${status.name}.`, target.instanceId, status, application.status === "stunned", abilityEventIndex, enemy.instanceId);
@@ -428,7 +433,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         let applications = 0;
         for (let hit = 0; hit < successfulHits; hit += 1) if (Math.random() < (application.chance ?? 1)) applications += application.stacks ?? 1;
         if (applications <= 0) return;
-        const status = createStatusEffect(application.status, { stacks: applications, duration: application.duration, sourcePower: enemyAbilityPower, sourceId: enemy.instanceId });
+        const status = createStatusEffect(application.status, { stacks: applications, duration: getEnemyAppliedStatusDuration(application.status, application.duration), sourcePower: enemyAbilityPower, sourceId: enemy.instanceId });
         playerStatuses = addOrRefreshStatus(playerStatuses, status);
         appliedStatusIds.push(application.status);
         logs.push(makeLog(`You gain ${status.name}.`, statusInfo(status)));
@@ -494,7 +499,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     if (spendsResources && energyAfterAbility === 0) {
       (enemyAbility.selfStatusApplicationsWhenEnergyDepleted ?? []).forEach((application) => {
         if (!canApplyStatusEffect(enemy.statuses, application.status)) return;
-        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: application.duration, sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
+        const status = createStatusEffect(application.status, { stacks: application.stacks, duration: getEnemyAppliedStatusDuration(application.status, application.duration), sourcePower: enemy.physicalPower + enemy.spellPower, sourceId: enemy.instanceId });
         enemy.statuses = addOrRefreshStatus(enemy.statuses, status);
         logs.push(makeLog(`${enemy.name} gains ${status.name}.`, statusInfo(status)));
       });

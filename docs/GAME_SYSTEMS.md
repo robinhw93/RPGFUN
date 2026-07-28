@@ -326,7 +326,7 @@ The segmented Energy bar previews Energy that will be available after the next r
 
 ## Damage absorption
 
-Guard is a temporary, stackable absorption status granted by several talents and abilities. Incoming damage removes Guard first; only the remainder reduces Health. Guard duration counts down at the owner's turn start, so normal Guard always expires when the owner's next turn begins. An explicit Guard-duration bonus from a talent or gear can extend it to later turn starts.
+Guard is a temporary, stackable absorption status granted by several talents and abilities. Incoming damage removes Guard first; only the remainder reduces Health. Guard duration counts down at the owner's turn start, so normal Guard always expires when the owner's next turn begins for both players and enemies. An explicit Guard-duration bonus from a player talent or gear can extend it to later turn starts; enemy ability data cannot extend Guard.
 
 Barrier is a visible, stackable absorption buff that lasts three turns. Its stack counter is the remaining Barrier amount, and a persistent shimmer covers the protected combatant. Incoming damage consumes Guard first, then Barrier, then Health; the shimmer pulses whenever Barrier absorbs damage. Barrier protects against both direct and status damage, and its amount changes at the same floating-text event as the damage.
 

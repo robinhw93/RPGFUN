@@ -388,7 +388,7 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Guard | Until next turn start | Yes | Absorbs incoming damage before Health. Its duration counts down at the owner's turn start, so the normal duration of 1 expires there; explicit talent or gear duration bonuses can extend it. |
+| Guard | Until next turn start | Yes | Absorbs incoming damage before Health. Player talents or gear may explicitly extend it; enemy Guard always expires at the start of that enemy's next turn. |
 | Barrier | 3 turns | Yes | Absorbs incoming damage before Health. Its displayed amount is reduced by absorbed damage and it disappears at zero. |
 | Strengthened | 3 turns | No | Deals 20% more Physical damage. |
 | Enlightened | 3 turns | No | Deals 20% more Arcane, Fire, Frost, and Lightning damage. |

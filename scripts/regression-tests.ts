@@ -20,7 +20,7 @@ import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/dev
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { applyAbilityFlatDamage, applyDamageToPlayer, createPlayerGuardStatus, wakeFromDamage } from "../src/game/combat/damage";
-import { moveToNextActor } from "../src/game/combat/flow";
+import { moveToNextActor, processTurnStart } from "../src/game/combat/flow";
 import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
 import { CHAINED_ENEMY_MIN_LEVEL, CHAINED_ON_ATTACK_CHANCE, getReadyEnemyAbility, shouldApplyChainedOnEnemyAttack, type EnemyAiContext } from "../src/game/combat/enemyActions";
 import { getInitialEventPresentationPhase, purchaseEventMerchantItem, resolveAdventureEventChoice, sellEventMerchantItem } from "../src/game/eventOutcomes";
@@ -680,8 +680,15 @@ function testGoblinEnemyBehaviors() {
   assert.ok(healed.pendingEffects.some((effect) => effect.type === "heal" && effect.targetId === woundfixerCombat.enemies[1].instanceId && effect.amount === 6), "Woundfixer must heal the most wounded friendly target for 100% Spell Power.");
 
   const biggrownCombat = combatWithActiveEnemy(["enemy-ms1ftdlw-jz5lo", "enemy-ms1ej4re-xskqn"], 0);
+  biggrownCombat.enemies[0] = {
+    ...biggrownCombat.enemies[0],
+    abilities: biggrownCombat.enemies[0].abilities.map((ability) => ability.name !== "Protect" ? ability : {
+      ...ability,
+      friendlyStatusApplications: ability.friendlyStatusApplications?.map((application) => ({ ...application, duration: 99 })),
+    }),
+  };
   const protectedCombat = takeEnemyTurn(biggrownCombat, INITIAL_GAME.character, biggrownCombat.enemies[0].instanceId);
-  assert.ok(protectedCombat.pendingEffects.some((effect) => effect.type === "status" && effect.targetId === biggrownCombat.enemies[1].instanceId && effect.status.id === "guard" && effect.status.stacks === 5), "Biggrown Protect must grant 5 Guard to other living enemies.");
+  assert.ok(protectedCombat.pendingEffects.some((effect) => effect.type === "status" && effect.targetId === biggrownCombat.enemies[1].instanceId && effect.status.id === "guard" && effect.status.stacks === 5 && effect.status.duration === 1), "Enemy Guard must ignore longer ability data and last only until the recipient's next turn starts.");
   assert.ok(!protectedCombat.pendingEffects.some((effect) => effect.type === "status" && effect.targetId === biggrownCombat.enemies[0].instanceId && effect.status.id === "guard"), "Biggrown must not grant Protect to itself.");
 
   const strizCombat = combatWithActiveEnemy(["enemy-ms1fykbj-rhb65"], 0);
@@ -825,6 +832,17 @@ function testTacticalEnemyAiCatalogAndSelection() {
     (enemy.ai!.fallbackAbilityIds ?? []).forEach((abilityId) => assert.ok(abilityIds.has(abilityId), `${enemy.name}'s tactical fallback references a missing ability.`));
   });
 
+  const enemyGuardApplications = Object.values(ENEMIES).flatMap((enemy) => enemy.abilities.flatMap((ability) => [
+    ...(ability.statusApplications ?? []),
+    ...(ability.selfStatusApplications ?? []),
+    ...(ability.friendlyStatusApplications ?? []),
+    ...(ability.selfStatusApplicationsWhenEnergyDepleted ?? []),
+  ].filter((application) => application.status === "guard")));
+  assert.ok(enemyGuardApplications.length > 0, "The enemy Guard-duration regression requires live enemy Guard abilities.");
+  assert.ok(enemyGuardApplications.every((application) => (application.duration ?? 1) === 1), "Every canonical enemy Guard application must last only until the owner's next turn starts.");
+  const enemyTurnStart = processTurnStart(100, 100, [createStatusEffect("guard", { stacks: 10 })], "enemy-test", "Enemy", [], [], []);
+  assert.equal(enemyTurnStart.statuses.some((status) => status.id === "guard"), false, "Enemy Guard must expire through the real enemy turn-start path.");
+
   const lateRegularEnemies = tacticalEnemies.filter((enemy) => /^enemy-a(?:[4-9]|1[0-2])-/.test(enemy.id) && !enemy.title.toLowerCase().includes("boss"));
   assert.ok(lateRegularEnemies.every((enemy) => enemy.abilities.length >= 3), "Every late-campaign regular enemy needs at least three tactical tools.");
   assert.ok(lateRegularEnemies.every((enemy) => enemy.abilities.every((ability) => !["Savage Strike", "Ruinous Bolt", "Relentless Pressure"].includes(ability.name))), "Late enemies must not retain generic placeholder ability names.");
@@ -903,6 +921,14 @@ function testTacticalEnemyAiCatalogAndSelection() {
 
   const leech = createCombat(INITIAL_GAME.character, ["enemy-a4-bog-leech"]).enemies[0];
   const healthyContext: EnemyAiContext = { playerHp: 100, playerMaxHp: 100, playerStatusIds: [] };
+  const drownedWarden = createCombat(INITIAL_GAME.character, ["enemy-a4-drowned-warden"]).enemies[0];
+  const postStanceWarden = {
+    ...drownedWarden,
+    energy: drownedWarden.maxEnergy,
+    statuses: [],
+    lastAbilityId: "enemy-ability-a4-drowned-warden-pressure",
+  };
+  assert.equal(getReadyEnemyAbility(postStanceWarden, [postStanceWarden], healthyContext)?.name, "Undertow Crush", "A defensive enemy must remember its Guard stance and use its payoff after Guard expires.");
   assert.equal(getReadyEnemyAbility(leech, [leech], healthyContext)?.name, "Open the Vein", "Bog Leech must create Bleed before attempting its payoff.");
   assert.equal(getReadyEnemyAbility(leech, [leech], { ...healthyContext, playerStatusIds: ["bleed"] })?.name, "Blood-Swollen Lunge", "Bog Leech must exploit an existing Bleed with its payoff.");
   const payoffCombat = combatWithActiveEnemy(["enemy-a4-bog-leech"], 0);

@@ -775,6 +775,7 @@ export type EnemyAiCondition =
   | { type: "living_allies_at_least"; count: number }
   | { type: "no_other_living_allies" }
   | { type: "energy_at_least"; amount: number }
+  | { type: "last_ability_is"; abilityId: string }
   | { type: "phase_is" | "phase_is_not"; phase: string };
 
 export interface EnemyAiRule {
