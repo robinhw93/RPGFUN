@@ -432,8 +432,8 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   HolyStrike: {
     range: "melee",
-    id: "HolyStrike", name: "Holy Strike", description: "Deal Physical Damage equal to 75% of your Physical Power and restore 2% of your maximum Health.", energyCost: 2,
-    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.75, selfHealPercentMaxHp: 0.02, icon: "✦", branch: "brute", vfx: "holy_strike",
+    id: "HolyStrike", name: "Holy Strike", description: "Deal Physical Damage equal to 50% of your Physical Power and Arcane Damage equal to 50% of your Spell Power, then restore 8% of your maximum Health.", energyCost: 2,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", damageComponents: [{ damageType: "physical", powerScaling: 0.5, powerSource: "physical" }, { damageType: "arcane", powerScaling: 0.5, powerSource: "magical" }], physicalPowerScaling: 0.5, spellPowerScaling: 0.5, selfHealPercentMaxHp: 0.08, icon: "✦", branch: "brute", vfx: "holy_strike",
   },
   Unbreakable: {
     range: "melee",

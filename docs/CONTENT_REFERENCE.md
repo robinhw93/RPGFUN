@@ -49,7 +49,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Flame Cleave | 4 | 3 | All enemies | Simultaneously deals 60% Physical Power as Physical damage and applies 1 Burn. Scorching Sweep applies 2 Burn to targets already Burning; Wildfire Cleave adds 20% damage per living Burning enemy. |
 | Shield Bash | 2 (1 with Quick Guard) | 2 | Enemy | Deals 60% Physical Power as Physical damage and grants Guard equal to 10% of Armor. Concussive Bash adds a 5% Stun chance plus 0.1 percentage points per Armor. |
 | Bloodletting | 3 | 2 | Enemy | Deals 75% Physical Power as Physical damage and applies 1 Bleed per 3 existing Bleed, or per 2 with Bloodier-Letting. Hemorrhage immediately triggers Bleed damage when at least 3 stacks are applied. |
-| Holy Strike | 2 | 2 | Enemy | Deals 75% Physical Power as Physical damage and restores 2% Max Health. Improved Holy Strike increases the healing to 3% and adds a 10% chance to apply Smite. |
+| Holy Strike | 2 | 2 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Spell Power as Arcane damage, then restores 8% Max Health. Improved Holy Strike adds a 10% chance to apply Smite. |
 | Unbreakable | 3 | 5 | Self | Grants Guard equal to 100% of Armor. Counter also grants +2 Energy regeneration next turn. |
 | Blood Barrier | 2 | 3 | Bleeding enemy | Consumes up to 5 Bleed and grants Guard equal to 10% Max Health per stack. Thick Blood calculates the same Guard without consuming Bleed. |
 | Burning Guard | 2 | 4 | Self | Grants Guard equal to 50% Physical Power for 1 turn. If that Guard is destroyed, applies 3 Burn to the attacker. Magical Fires adds 50% Spell Power to the Guard amount. |
@@ -289,11 +289,11 @@ Unlocking the first non-origin class node locks the other class nodes until leve
 | talent_168 | Flame Cleave | Ability | Burning Momentum | Any | Unlocks Flame Cleave. |
 | talent_169 | Shield Bash | Ability | Heavy Plating | Any | Unlocks Shield Bash. |
 | talent_170 | Bloodletting | Ability | Open Wounds | Any | Unlocks Bloodletting. |
-| talent_171 | Holy Strike | Ability | Divine Vigor | Any | Unlocks Holy Strike. |
+| talent_171 | Holy Strike | Ability | Divine Vigor | Any | Unlocks Holy Strike: 50% Physical Power plus 50% Spell Power damage and 8% Max Health restoration. |
 | talent_172 | Sacred Vigor | Passive | Holy Strike | Any | Restoring Health grants Strengthened for 1 turn. |
 | talent_173 | Scorching Sweep | Passive | Flame Cleave | Any | Flame Cleave applies 2 Burn to already Burning targets. |
 | talent_174 | Wildfire Cleave | Passive | Scorching Sweep | Any | Flame Cleave deals 20% more damage per living Burning enemy. |
-| talent_175 | Improved Holy Strike | Passive | Sacred Vigor | Any | Holy Strike restores 3% Max Health and has a 10% chance to apply Smite. |
+| talent_175 | Improved Holy Strike | Passive | Sacred Vigor | Any | Holy Strike has a 10% chance to apply Smite. |
 | talent_176 | Concussive Bash | Passive | Shield Bash | Any | Shield Bash gains a 5% Stun chance plus 0.1 percentage points per Armor. |
 | talent_177 | Hemorrhage | Passive | Bloodletting | Any | Applying at least 3 Bleed with Bloodletting immediately triggers Bleed damage once. |
 | talent_178 | Quick Guard | Passive | Concussive Bash | Any | Shield Bash costs 1 less Energy. |

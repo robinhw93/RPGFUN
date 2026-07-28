@@ -1656,6 +1656,49 @@ function testBruteCoreAbilityBalance() {
   assert.ok(swiftBladeOverrides.every((description) => description.includes("50%")), "Every modified Swift Blade tooltip must retain its 50% Physical Power scaling.");
 }
 
+function testHolyStrikeBalance() {
+  const holyStrike = ABILITIES.HolyStrike;
+  assert.equal(holyStrike.selfHealPercentMaxHp, 0.08, "Holy Strike must restore 8% of maximum Health.");
+  assert.equal(holyStrike.physicalPowerScaling, 0.5, "Holy Strike must expose 50% Physical Power scaling to the editor.");
+  assert.equal(holyStrike.spellPowerScaling, 0.5, "Holy Strike must expose 50% Spell Power scaling to the editor.");
+  assert.deepEqual(holyStrike.damageComponents, [
+    { damageType: "physical", powerScaling: 0.5, powerSource: "physical" },
+    { damageType: "arcane", powerScaling: 0.5, powerSource: "magical" },
+  ], "Holy Strike must resolve separate Physical and Arcane damage components.");
+  const improved = TALENTS.flatMap((talent) => talent.combat?.abilityModifiers ?? [])
+    .find((modifier) => modifier.id === "improved-holy-strike");
+  assert.ok(improved, "Improved Holy Strike must remain connected to the live ability.");
+  assert.equal(improved.selfHealPercentMaxHp, undefined, "Improved Holy Strike must not override the new 8% base healing.");
+  assert.match(improved.descriptionOverride ?? "", /50% Physical Power.*50% Spell Power.*8%/, "Improved Holy Strike's effective tooltip must retain the hybrid damage and healing values.");
+
+  const character = {
+    ...structuredClone(INITIAL_GAME.character),
+    baseStats: { ...INITIAL_GAME.character.baseStats, strength: 20, intelligence: 20 },
+  };
+  const created = createCombat(character, ["dummy"]);
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const combat = {
+    ...created,
+    turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")],
+    activeTurnIndex: 0,
+    initiativeRevealed: true,
+    playerHp: 10,
+    playerMaxHp: 100,
+  };
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    const result = useAbility(combat, character, "HolyStrike");
+    const healing = result.pendingEffects.find((effect) => effect.type === "heal" && effect.targetId === "player");
+    const damage = result.pendingEffects.find((effect) => "damage" in effect && effect.targetId === created.enemies[0].instanceId);
+    const derived = getDerivedStats(character);
+    assert.equal(healing?.type === "heal" ? healing.amount : 0, 8, "Holy Strike must queue exactly 8% Max Health healing.");
+    assert.equal(damage && "damage" in damage ? damage.damage : 0, Math.max(1, Math.round(derived.physicalPower * 0.5)) + Math.max(1, Math.round(derived.magicalPower * 0.5)), "Holy Strike must resolve both 50% Power components through combat.");
+  } finally {
+    Math.random = originalRandom;
+  }
+}
+
 function testCooldownsCarryBetweenAdventureCombats() {
   const character = { ...structuredClone(INITIAL_GAME.character), name: "Cooldown Tester" };
   const nextCombat = createCombat(character, ["dummy"], undefined, {
@@ -1986,6 +2029,7 @@ testPlayerControlBreakSurvival();
 testBasicPlayerAbility();
 testShadowPoisonAbilityBalance();
 testBruteCoreAbilityBalance();
+testHolyStrikeBalance();
 testCooldownsCarryBetweenAdventureCombats();
 testStructuredEventOutcome();
 testDirectEventMerchant();
