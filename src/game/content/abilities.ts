@@ -343,7 +343,7 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   ManaFracture: {
     range: "ranged",
-    id: "ManaFracture", name: "Mana Fracture", description: "Consume all Arcane Wounds on the target. Restore 1 Energy per 2 stacks consumed.", energyCost: 1,
+    id: "ManaFracture", name: "Mana Fracture", description: "Consume all Arcane Wounds on the target. Restore 1 Energy per 2 stacks consumed, up to your maximum Energy.", energyCost: 1,
     cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "arcaneWound", consumeTargetStatus: "arcaneWound",
     energyPerConsumedTargetStatusStacks: { stacksPerEnergy: 2 }, icon: "✦", branch: "arcanist", vfx: "mana_fracture",
   },

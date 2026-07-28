@@ -1645,6 +1645,36 @@ function testShadowPoisonAbilityBalance() {
   assert.equal(venombornHeal.amount, 6, "Venomborn must heal for 50% of four Poison damage across three turns.");
 }
 
+function testManaFractureEnergyScaling() {
+  const character = { ...structuredClone(INITIAL_GAME.character), name: "Mana Fracture Tester" };
+  const created = createCombat(character, ["dummy"]);
+  const playerEntry = created.turnOrder.find((entry) => entry.kind === "player")!;
+  const target = created.enemies[0];
+  [2, 4, 6].forEach((stacks) => {
+    const combat = {
+      ...created,
+      energy: 1,
+      turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")],
+      activeTurnIndex: 0,
+      initiativeRevealed: true,
+      selectedEnemyId: target.instanceId,
+      enemies: [{ ...target, statuses: [createStatusEffect("arcaneWound", { stacks })] }],
+    };
+    const result = useAbility(combat, character, "ManaFracture");
+    const expectedRestoration = Math.min(combat.maxEnergy, Math.floor(stacks / 2));
+    const restorationEffect = result.pendingEffects.find((effect) => effect.type === "energy_change");
+    assert.equal(
+      result.energy,
+      0,
+      "Mana Fracture must present its Energy cost before restoring Energy at impact.",
+    );
+    assert.equal(restorationEffect?.type === "energy_change" ? restorationEffect.amount : 0, expectedRestoration, `Mana Fracture must queue ${expectedRestoration} Energy from ${stacks} consumed Arcane Wounds.`);
+    const resolved = resolveCombatEvent(result, result.eventId, restorationEffect?.eventIndex ?? -1);
+    assert.equal(resolved.energy, expectedRestoration, `Mana Fracture must restore 1 Energy per two of ${stacks} consumed Arcane Wounds at impact.`);
+    assert.ok(result.floatingEvents.some((event) => event.includes(`restores ${expectedRestoration} Energy`)), "Mana Fracture must announce the exact Energy restored.");
+  });
+}
+
 function testBruteCoreAbilityBalance() {
   assert.equal(ABILITIES.Bash.powerScaling, 0.75, "Bash must deal 75% Physical Power as Physical damage.");
   assert.equal(ABILITIES.SwiftBlade.powerScaling, 0.5, "Swift Blade must deal 50% Physical Power as Physical damage.");
@@ -2028,6 +2058,7 @@ testStatusContracts();
 testPlayerControlBreakSurvival();
 testBasicPlayerAbility();
 testShadowPoisonAbilityBalance();
+testManaFractureEnergyScaling();
 testBruteCoreAbilityBalance();
 testHolyStrikeBalance();
 testCooldownsCarryBetweenAdventureCombats();

@@ -82,7 +82,7 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Frozen Path | 1 | 5 | Self | Gains +30% Dodge Chance for 3 turns; Barbed Boots raises this to +40%, still subject to the 50% Dodge cap. |
 | Conductor | 1 | 5 | All enemies and self | Stuns every enemy and the player, ending the current player turn and skipping every affected combatant's next turn. Electrified Hug also applies Electrified to every enemy. |
 | Firestorm | 5 | 3 | All enemies and self | Simultaneously deals 25% Spell Power as Fire damage to every enemy, then applies 2 Burn to every enemy and the player. |
-| Mana Fracture | 1 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds and restores 1 Energy per 2 stacks consumed. |
+| Mana Fracture | 1 | 3 | Enemy with Arcane Wound | Consumes all Arcane Wounds and restores 1 Energy per 2 stacks consumed at impact, up to maximum Energy. |
 | Rapid Fire | 2 | 4 | Random enemies | Hits three times for 30% Spell Power as Fire damage with +20% Critical Strike Chance; hits six times while Burning. |
 | Focused Blast | 4 | 2 | Enemy with 6 Arcane Wounds | Deals Arcane damage equal to current Barrier and consumes 3 Arcane Wounds. Focus Harder changes the requirement to 5 and consumption to 2. |
 | Absolute Zero | 3 | 4 | Enemy | Deals 50% Spell Power as Frost damage. A Slowed target becomes Frozen; otherwise applies Slowed and Exhausted. |

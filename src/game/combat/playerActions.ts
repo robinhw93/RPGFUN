@@ -19,7 +19,7 @@ import {
 } from "../statusEffects";
 import type { Ability, CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, InspectableInfo, StatusEffect, StatusEffectId } from "../types";
 import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
-import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
+import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueEnergyChange, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, applyPlayerDeathPrevention, moveToNextActor, processTurnEnd, processTurnStart, runDeathPreventionHealingTriggers, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyStealthed, isEnemyTargetable, normalizeEnemies, orderTurnEntries } from "./state";
 
@@ -93,6 +93,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const damagedTargets: string[] = [];
   const pendingEffects: CombatPendingEffect[] = [];
   let energy = combat.energy - effectiveEnergyCost;
+  let deferredEnergyGain = 0;
   let nextTurnEnergyRegenBonus = combat.nextTurnEnergyRegenBonus ?? 0;
   const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(character, ability);
   let abilityCooldowns = effectiveCooldownTurns
@@ -526,12 +527,22 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         if (!consumed) continue;
         const consumedStacks = Math.min(consumed.stacks, Math.max(1, effectiveConsumeTargetStacks ?? consumed.stacks));
         const remainingStacks = retainTargetStatusOnConsume ? consumed.stacks : consumed.stacks - consumedStacks;
+        const requestedEnergy = ability.energyPerConsumedTargetStatusStacks
+          ? Math.floor(consumedStacks / Math.max(1, ability.energyPerConsumedTargetStatusStacks.stacksPerEnergy))
+          : 0;
+        const restoredEnergy = Math.min(combat.maxEnergy - energy, requestedEnergy);
+        energy += restoredEnergy;
         if (!retainTargetStatusOnConsume) enemies = enemies.map((enemy) => enemy.instanceId !== target.instanceId ? enemy : {
           ...enemy,
           statuses: enemy.statuses.flatMap((status) => status.id !== consumed.id ? [status] : remainingStacks > 0 ? [{ ...status, stacks: remainingStacks }] : []),
         });
         const eventIndex = events.length;
-        events.push(retainTargetStatusOnConsume ? `${ability.name} draws on ${consumedStacks} ${consumed.name}.` : `${ability.name} consumes ${consumedStacks} ${consumed.name}.`);
+        const consumptionText = retainTargetStatusOnConsume
+          ? `${ability.name} draws on ${consumedStacks} ${consumed.name}`
+          : `${ability.name} consumes ${consumedStacks} ${consumed.name}`;
+        const resultText = `${consumptionText}${restoredEnergy > 0 ? ` and restores ${restoredEnergy} Energy` : ""}.`;
+        events.push(resultText);
+        logs.push(makeLog(resultText, abilityInfo));
         if (!retainTargetStatusOnConsume) {
           if (remainingStacks > 0) queueStatusSet(pendingEffects, eventIndex, target.instanceId, { ...consumed, stacks: remainingStacks });
           else queueStatusRemoval(pendingEffects, eventIndex, target.instanceId, consumed.id);
@@ -545,9 +556,10 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           queueStatus(events, pendingEffects, `You gain ${gainedGuard} Guard.`, "player", guard, false, eventIndex);
           logs.push(makeLog(`${ability.name} grants ${gainedGuard} Guard.`, statusInfo(guard)));
         }
-        if (ability.energyPerConsumedTargetStatusStacks) {
-          const restored = Math.floor(consumedStacks / Math.max(1, ability.energyPerConsumedTargetStatusStacks.stacksPerEnergy));
-          energy = Math.min(combat.maxEnergy, energy + restored);
+        if (restoredEnergy > 0) {
+          deferredEnergyGain += restoredEnergy;
+          queueEnergyChange(pendingEffects, eventIndex, restoredEnergy);
+          queuePassiveAnimation(pendingEffects, eventIndex, "player", `+${restoredEnergy} Energy`);
         }
         if (ability.vfx) {
           if (ability.vfxDirection === "to_player") queueAbilityVfx(pendingEffects, eventIndex, ability.vfx, "player", target.instanceId);
@@ -1463,7 +1475,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     enemies: displayedEnemies,
     playerHp: displayedPlayerHp,
     playerStatuses: displayedPlayerStatuses,
-    energy,
+    energy: Math.max(0, energy - deferredEnergyGain),
     procUsage,
     deathPreventionUsed,
     playerActionSurvivalPending: false,
