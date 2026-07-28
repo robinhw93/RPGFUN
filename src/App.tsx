@@ -386,7 +386,7 @@ function App() {
 
       const definition = getAdventureDefinition(adventure.adventureId);
       if (adventure.nodeIndex >= definition.stages.length - 1) {
-        const questCharacter = resetArenaAttemptAfterAdventure(resetTavernGamblingAfterAdventure(recordQuestAdventureCompletion(character, definition.id)));
+        const questCharacter = resetArenaAttemptAfterAdventure(resetTavernGamblingAfterAdventure(recordQuestAdventureCompletion(character, definition.id)), definition.id);
         return {
           ...current,
           character: { ...questCharacter, completedAdventureIds: [...new Set([...questCharacter.completedAdventureIds, definition.id])] },

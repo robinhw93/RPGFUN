@@ -111,7 +111,7 @@ export function loadGame(): GameState | null {
         equipment,
         completedAdventureIds: state.character.completedAdventureIds ?? [],
         tavernGamblingAttempts: Math.max(0, Math.floor(state.character.tavernGamblingAttempts ?? 0)),
-        arenaAttemptAvailable: state.character.arenaAttemptAvailable ?? true,
+        arenaAttemptAvailable: state.character.arenaAttemptAvailable ?? false,
         arenaScores,
         acceptedQuestIds: (state.character.acceptedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         completedQuestIds: (state.character.completedQuestIds ?? []).filter((id) => validQuestIds.has(id)),

@@ -1883,6 +1883,7 @@ function testArenaDamageTrial() {
   const initial = structuredClone(INITIAL_GAME);
   initial.characterCreated = true;
   initial.character.name = "Arena Tester";
+  initial.character.arenaAttemptAvailable = true;
   initial.adventure.carryHp = 7;
   const started = startArenaChallenge(initial);
   assert.equal(started.adventure.mode, "arena", "The arena must use its dedicated safe challenge mode.");
@@ -1912,7 +1913,11 @@ function testArenaDamageTrial() {
   assert.equal(rewarded.adventure.pendingReward?.experience, 246, "Arena damage must award 20% of its value as Experience.");
   assert.equal(rewarded.character.arenaScores[0]?.damage, 1234, "Arena damage must be recorded on the personal leaderboard.");
   assert.equal(grantArenaChallengeReward(rewarded, 123457), rewarded, "An arena result must never award Experience twice.");
-  assert.equal(resetArenaAttemptAfterAdventure(rewarded.character).arenaAttemptAvailable, true, "Completing an adventure must restore the arena attempt.");
+  const firstCompletion = resetArenaAttemptAfterAdventure({ ...rewarded.character, completedAdventureIds: [] }, "windsong-forest");
+  assert.equal(firstCompletion.arenaAttemptAvailable, true, "Completing a new story adventure must restore the arena attempt.");
+  const replayCompletion = resetArenaAttemptAfterAdventure({ ...firstCompletion, arenaAttemptAvailable: false, completedAdventureIds: ["windsong-forest"] }, "windsong-forest");
+  assert.equal(replayCompletion.arenaAttemptAvailable, false, "Replaying a completed story adventure must not restore the arena attempt.");
+  assert.equal(INITIAL_GAME.character.arenaAttemptAvailable, false, "A fresh character must earn its first arena attempt from a new story completion.");
 
   const crowdedScores = Array.from({ length: 13 }, (_, index) => ({ id: `score-${index}`, damage: index * 10, turns: 10, level: 1, completedAt: index }));
   assert.deepEqual(getArenaScores({ ...rewarded.character, arenaScores: crowdedScores }).map((score) => score.damage), [120,110,100,90,80,70,60,50,40,30], "The arena leaderboard must retain only the ten highest results.");

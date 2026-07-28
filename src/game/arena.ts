@@ -24,7 +24,8 @@ export function getArenaScores(character: CharacterState): ArenaAttemptRecord[] 
     .slice(0, ARENA_SCORE_LIMIT);
 }
 
-export function resetArenaAttemptAfterAdventure(character: CharacterState): CharacterState {
+export function resetArenaAttemptAfterAdventure(character: CharacterState, completedAdventureId: string): CharacterState {
+  if (character.completedAdventureIds.includes(completedAdventureId)) return character;
   return character.arenaAttemptAvailable ? character : { ...character, arenaAttemptAvailable: true };
 }
 
