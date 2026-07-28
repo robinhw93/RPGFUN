@@ -1973,7 +1973,8 @@ function testArenaDamageTrial() {
   assert.equal(started.adventure.mode, "arena", "The arena must use its dedicated safe challenge mode.");
   assert.equal(started.character.arenaAttemptAvailable, false, "Starting the arena must spend the current attempt.");
   assert.equal(started.adventure.combat?.enemies[0]?.id, "arena-champion", "The damage trial must spawn the Arena Champion.");
-  assert.equal(started.adventure.combat?.enemies[0]?.maxHp, ARENA_CHAMPION_MAX_HP, "The Arena Champion must have exactly 100,000 Health.");
+  assert.equal(ARENA_CHAMPION_MAX_HP, 1_000_000, "The Arena Champion Health contract must remain at 1,000,000.");
+  assert.equal(started.adventure.combat?.enemies[0]?.maxHp, ARENA_CHAMPION_MAX_HP, "The Arena Champion must have exactly 1,000,000 Health.");
   assert.equal(started.adventure.combat?.challenge?.playerTurnLimit, ARENA_TURN_LIMIT, "The damage trial must last ten player turns.");
 
   let combat = started.adventure.combat!;
@@ -1990,13 +1991,21 @@ function testArenaDamageTrial() {
     ...started.adventure.combat!,
     outcome: "victory" as const,
     playerActed: true,
-    enemies: started.adventure.combat!.enemies.map((enemy) => ({ ...enemy, hp: 98766 })),
+    enemies: started.adventure.combat!.enemies.map((enemy) => ({ ...enemy, hp: ARENA_CHAMPION_MAX_HP - 1234 })),
   };
   const rewarded = grantArenaChallengeReward({ ...started, adventure: { ...started.adventure, combat: damagedCombat } }, 123456);
   assert.equal(getArenaExperience(1234), 246, "Arena Experience must be 20% of damage, rounded down to a whole number.");
   assert.equal(rewarded.adventure.pendingReward?.experience, 246, "Arena damage must award 20% of its value as Experience.");
   assert.equal(rewarded.character.arenaScores[0]?.damage, 1234, "Arena damage must be recorded on the personal leaderboard.");
   assert.equal(grantArenaChallengeReward(rewarded, 123457), rewarded, "An arena result must never award Experience twice.");
+  const highDamageCombat = {
+    ...started.adventure.combat!,
+    outcome: "victory" as const,
+    enemies: started.adventure.combat!.enemies.map((enemy) => ({ ...enemy, hp: ARENA_CHAMPION_MAX_HP - 250_000 })),
+  };
+  const highDamageReward = grantArenaChallengeReward({ ...started, adventure: { ...started.adventure, combat: highDamageCombat } }, 123458);
+  assert.equal(highDamageReward.character.arenaScores[0]?.damage, 250_000, "Arena scores above the old 100,000-Health cap must be preserved.");
+  assert.equal(highDamageReward.adventure.pendingReward?.experience, 50_000, "High arena damage must grant its full 20% Experience reward.");
   const firstCompletion = resetArenaAttemptAfterAdventure({ ...rewarded.character, completedAdventureIds: [] }, "windsong-forest");
   assert.equal(firstCompletion.arenaAttemptAvailable, true, "Completing a new story adventure must restore the arena attempt.");
   const replayCompletion = resetArenaAttemptAfterAdventure({ ...firstCompletion, arenaAttemptAvailable: false, completedAdventureIds: ["windsong-forest"] }, "windsong-forest");

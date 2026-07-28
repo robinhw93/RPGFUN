@@ -2,6 +2,7 @@ import type { AdventureDefinition } from "../types";
 
 export const ARENA_ADVENTURE_ID = "arkenfall-arena";
 export const ARENA_CHAMPION_ID = "arena-champion";
+export const ARENA_CHAMPION_MAX_HP = 1_000_000;
 
 export const ARENA_ADVENTURE: AdventureDefinition = {
   id: ARENA_ADVENTURE_ID,

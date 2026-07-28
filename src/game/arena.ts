@@ -1,14 +1,15 @@
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
 import { getDerivedStats } from "./character";
 import { createCombat } from "./combat/state";
-import { ARENA_ADVENTURE, ARENA_CHAMPION_ID } from "./content/arena";
+import { ARENA_ADVENTURE, ARENA_CHAMPION_ID, ARENA_CHAMPION_MAX_HP } from "./content/arena";
 import { addExperience } from "./progression";
 import type { ArenaAttemptRecord, CharacterState, CombatReward, GameState } from "./types";
 
 export const ARENA_TURN_LIMIT = 10;
 export const ARENA_SCORE_LIMIT = 10;
-export const ARENA_CHAMPION_MAX_HP = 100_000;
 export const ARENA_EXPERIENCE_DAMAGE_RATIO = 0.2;
+
+export { ARENA_CHAMPION_MAX_HP } from "./content/arena";
 
 export function getArenaExperience(damage: number): number {
   return Math.floor(Math.max(0, damage) * ARENA_EXPERIENCE_DAMAGE_RATIO);

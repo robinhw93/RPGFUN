@@ -4,6 +4,7 @@ import { normalizeCharacterAvatarId } from "./avatars";
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
 import { isGearItem } from "./items";
 import { MAX_LEVEL } from "./progression";
+import { ARENA_CHAMPION_MAX_HP } from "./content/arena";
 import type { GearItem, InventoryItem } from "./types";
 import type { ArenaAttemptRecord } from "./types";
 
@@ -86,7 +87,7 @@ export function loadGame(): GameState | null {
       if (typeof candidate.id !== "string" || !Number.isFinite(candidate.damage) || !Number.isFinite(candidate.completedAt)) return [];
       return [{
         id: candidate.id,
-        damage: Math.max(0, Math.min(100000, Math.floor(candidate.damage ?? 0))),
+        damage: Math.max(0, Math.min(ARENA_CHAMPION_MAX_HP, Math.floor(candidate.damage ?? 0))),
         turns: Math.max(1, Math.min(10, Math.floor(candidate.turns ?? 10))),
         level: Math.max(1, Math.min(MAX_LEVEL, Math.floor(candidate.level ?? 1))),
         completedAt: Math.max(0, Math.floor(candidate.completedAt ?? 0)),
