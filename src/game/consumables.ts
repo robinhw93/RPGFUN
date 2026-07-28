@@ -5,6 +5,7 @@ import { STATUS_EFFECTS, absorbIncomingDamage, addOrRefreshStatus, canApplyStatu
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, ConsumableEffect, ConsumableItem, EnemyState, InspectableInfo } from "./types";
 import { makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamageAtEvent, queueEnergyChange, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation } from "./combat/eventQueue";
 import { runPlayerTriggerEvent } from "./combat/flow";
+import { applyHealthDamageToEnemy } from "./combat/damage";
 import { isEnemyStealthed, isEnemyTargetable } from "./combat/state";
 
 const PLAYER_CONTROL_STATUS_IDS = new Set(["stunned", "sleep", "frozen"]);
@@ -118,9 +119,10 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
           enemies = enemies.map((enemy) => {
             if (enemy.instanceId !== targetId) return enemy;
             const absorbed = absorbIncomingDamage(enemy.statuses, incoming);
-            queueDamageAtEvent(pendingEffects, eventIndex, targetId, absorbed.damage, item.name);
+            const result = applyHealthDamageToEnemy(enemy, absorbed.damage, absorbed.statuses);
+            queueDamageAtEvent(pendingEffects, eventIndex, targetId, result.damage, item.name);
             queueAbsorptionChanges(pendingEffects, eventIndex, targetId, absorbed);
-            return { ...enemy, hp: Math.max(0, enemy.hp - absorbed.damage), statuses: absorbed.statuses };
+            return result.enemy;
           });
         }
         vfxTargets.add(targetId);

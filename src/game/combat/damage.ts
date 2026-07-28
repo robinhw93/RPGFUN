@@ -10,7 +10,7 @@ import {
   hasStatus,
   isMagicalDamage
 } from "../statusEffects";
-import type { Ability, DamageType, StatusEffect, StatusEffectId } from "../types";
+import type { Ability, DamageType, EnemyState, StatusEffect, StatusEffectId } from "../types";
 
 export const PLAYER_ACTION_BLOCKING_STATUS_IDS = ["sleep", "stunned", "frozen"] as const satisfies readonly StatusEffectId[];
 
@@ -23,6 +23,32 @@ export interface PlayerDamageResult {
   statuses: StatusEffect[];
   survivalPending: boolean;
   removedStatusIds: StatusEffectId[];
+}
+
+export interface EnemyHealthDamageResult {
+  enemy: EnemyState;
+  damage: number;
+}
+
+export function getRemainingEnemyHealthDamageThisRound(enemy: EnemyState): number {
+  if (!hasStatus(enemy.statuses, "resilient")) return Number.POSITIVE_INFINITY;
+  return Math.max(0, Math.ceil(enemy.maxHp * 0.5) - Math.max(0, Math.round(enemy.damageTakenThisRound ?? 0)));
+}
+
+/** Applies Health damage and enforces round-wide defensive limits such as Resilient. */
+export function applyHealthDamageToEnemy(enemy: EnemyState, requestedDamage: number, statuses = enemy.statuses): EnemyHealthDamageResult {
+  const normalizedDamage = Math.max(0, Math.round(requestedDamage));
+  const alreadyTaken = Math.max(0, Math.round(enemy.damageTakenThisRound ?? 0));
+  const damage = Math.min(enemy.hp, normalizedDamage, getRemainingEnemyHealthDamageThisRound(enemy));
+  return {
+    damage,
+    enemy: {
+      ...enemy,
+      hp: Math.max(0, enemy.hp - damage),
+      statuses: wakeFromDamage(statuses, damage),
+      damageTakenThisRound: alreadyTaken + damage,
+    },
+  };
 }
 
 /** Player-only low-Health control break. Enemy wake-up rules remain unchanged. */

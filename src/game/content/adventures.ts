@@ -3725,7 +3725,508 @@ export const ADVENTURE_EVENTS: Record<string, AdventureEventDefinition> = {
         }
       }
     ]
+  },
+  "event-a13-broken-hour": {
+    "id": "event-a13-broken-hour",
+    "name": "The Broken Hour",
+    "eyebrow": "Endgame Event",
+    "description": "A dangerous remnant of The Sepulcher of Hours offers power at a price.",
+    "choices": [
+      {
+        "id": "event-a13-broken-hour-master",
+        "label": "Master the remnant",
+        "description": "Force its power to obey.",
+        "resolution": "check",
+        "stat": "intelligence",
+        "threshold": 58,
+        "success": {
+          "text": "The remnant yields and strengthens you for the next battle.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 120
+            },
+            {
+              "type": "playerNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        },
+        "failure": {
+          "text": "The remnant turns your certainty against you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 85
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "nullify",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a13-broken-hour-steal",
+        "label": "Steal a fragment",
+        "description": "Take something valuable before the remnant notices.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 56,
+        "success": {
+          "text": "You escape with a fragment of impossible wealth.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 260
+            }
+          ]
+        },
+        "failure": {
+          "text": "The trap closes around your limbs and breath.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 70
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a13-broken-hour-leave",
+        "label": "Leave it untouched",
+        "description": "Some bargains deserve no answer.",
+        "resolution": "direct",
+        "stat": "luck",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You pass without disturbing what waits there.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 55
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "event-a14-living-reliquary": {
+    "id": "event-a14-living-reliquary",
+    "name": "The Living Reliquary",
+    "eyebrow": "Endgame Event",
+    "description": "A dangerous remnant of The Sanguine Basilica offers power at a price.",
+    "choices": [
+      {
+        "id": "event-a14-living-reliquary-master",
+        "label": "Master the remnant",
+        "description": "Force its power to obey.",
+        "resolution": "check",
+        "stat": "strength",
+        "threshold": 62,
+        "success": {
+          "text": "The remnant yields and strengthens you for the next battle.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 140
+            },
+            {
+              "type": "playerNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        },
+        "failure": {
+          "text": "The remnant turns your certainty against you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 100
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "disarm",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a14-living-reliquary-steal",
+        "label": "Steal a fragment",
+        "description": "Take something valuable before the remnant notices.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 60,
+        "success": {
+          "text": "You escape with a fragment of impossible wealth.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 305
+            }
+          ]
+        },
+        "failure": {
+          "text": "The trap closes around your limbs and breath.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 85
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a14-living-reliquary-leave",
+        "label": "Leave it untouched",
+        "description": "Some bargains deserve no answer.",
+        "resolution": "direct",
+        "stat": "luck",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You pass without disturbing what waits there.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 65
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "event-a15-sleeping-moon": {
+    "id": "event-a15-sleeping-moon",
+    "name": "The Sleeping Moon",
+    "eyebrow": "Endgame Event",
+    "description": "A dangerous remnant of The Dreaming Wilds offers power at a price.",
+    "choices": [
+      {
+        "id": "event-a15-sleeping-moon-master",
+        "label": "Master the remnant",
+        "description": "Force its power to obey.",
+        "resolution": "check",
+        "stat": "intelligence",
+        "threshold": 66,
+        "success": {
+          "text": "The remnant yields and strengthens you for the next battle.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 160
+            },
+            {
+              "type": "playerNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        },
+        "failure": {
+          "text": "The remnant turns your certainty against you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 115
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "nullify",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a15-sleeping-moon-steal",
+        "label": "Steal a fragment",
+        "description": "Take something valuable before the remnant notices.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 64,
+        "success": {
+          "text": "You escape with a fragment of impossible wealth.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 350
+            }
+          ]
+        },
+        "failure": {
+          "text": "The trap closes around your limbs and breath.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 100
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a15-sleeping-moon-leave",
+        "label": "Leave it untouched",
+        "description": "Some bargains deserve no answer.",
+        "resolution": "direct",
+        "stat": "luck",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You pass without disturbing what waits there.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 75
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "event-a16-zero-foundry": {
+    "id": "event-a16-zero-foundry",
+    "name": "The Zero Foundry",
+    "eyebrow": "Endgame Event",
+    "description": "A dangerous remnant of The Iron Eclipse offers power at a price.",
+    "choices": [
+      {
+        "id": "event-a16-zero-foundry-master",
+        "label": "Master the remnant",
+        "description": "Force its power to obey.",
+        "resolution": "check",
+        "stat": "strength",
+        "threshold": 70,
+        "success": {
+          "text": "The remnant yields and strengthens you for the next battle.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 180
+            },
+            {
+              "type": "playerNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        },
+        "failure": {
+          "text": "The remnant turns your certainty against you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 130
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "disarm",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a16-zero-foundry-steal",
+        "label": "Steal a fragment",
+        "description": "Take something valuable before the remnant notices.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 68,
+        "success": {
+          "text": "You escape with a fragment of impossible wealth.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 395
+            }
+          ]
+        },
+        "failure": {
+          "text": "The trap closes around your limbs and breath.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 115
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a16-zero-foundry-leave",
+        "label": "Leave it untouched",
+        "description": "Some bargains deserve no answer.",
+        "resolution": "direct",
+        "stat": "luck",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You pass without disturbing what waits there.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 85
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "event-a17-empty-coronation": {
+    "id": "event-a17-empty-coronation",
+    "name": "The Empty Coronation",
+    "eyebrow": "Endgame Event",
+    "description": "A dangerous remnant of The Throne Beyond Death offers power at a price.",
+    "choices": [
+      {
+        "id": "event-a17-empty-coronation-master",
+        "label": "Master the remnant",
+        "description": "Force its power to obey.",
+        "resolution": "check",
+        "stat": "intelligence",
+        "threshold": 74,
+        "success": {
+          "text": "The remnant yields and strengthens you for the next battle.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 200
+            },
+            {
+              "type": "playerNextCombatBuff",
+              "status": "fierce",
+              "stacks": 1
+            }
+          ]
+        },
+        "failure": {
+          "text": "The remnant turns your certainty against you.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 145
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "nullify",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a17-empty-coronation-steal",
+        "label": "Steal a fragment",
+        "description": "Take something valuable before the remnant notices.",
+        "resolution": "check",
+        "stat": "agility",
+        "threshold": 72,
+        "success": {
+          "text": "You escape with a fragment of impossible wealth.",
+          "effects": [
+            {
+              "type": "gainGold",
+              "amount": 440
+            }
+          ]
+        },
+        "failure": {
+          "text": "The trap closes around your limbs and breath.",
+          "effects": [
+            {
+              "type": "loseHealth",
+              "amount": 130
+            },
+            {
+              "type": "playerNextCombatDebuff",
+              "status": "exhausted",
+              "stacks": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "event-a17-empty-coronation-leave",
+        "label": "Leave it untouched",
+        "description": "Some bargains deserve no answer.",
+        "resolution": "direct",
+        "stat": "luck",
+        "threshold": 0,
+        "success": {
+          "text": "",
+          "effects": []
+        },
+        "failure": {
+          "text": "",
+          "effects": []
+        },
+        "outcome": {
+          "text": "You pass without disturbing what waits there.",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 95
+            }
+          ]
+        }
+      }
+    ]
   }
+
 };
 
 export const ADVENTURES: AdventureDefinition[] = [
@@ -8794,7 +9295,658 @@ export const ADVENTURES: AdventureDefinition[] = [
         ]
       }
     ]
+  },
+  {
+    "id": "sepulcher-of-hours",
+    "name": "The Sepulcher of Hours",
+    "description": "A five-part endgame assault where enemies restore one another, weaponize debilitating curses, and refuse ordinary death.",
+    "recommendedLevel": 54,
+    "prerequisiteAdventureId": "world-below",
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/sepulcher-of-hours-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/sepulcher-of-hours-edge.webp",
+    "travelText": "Descending through the clocks beneath the dead",
+    "completionTitle": "The Last Bell Falls Silent",
+    "completionDescription": "Oris shatters with the final hourglass. For the first time in an age, the dead are permitted to keep their endings.",
+    "stages": [
+      {
+        "id": "a13-stage-1",
+        "name": "The Outer Threshold",
+        "entries": [
+          {
+            "id": "a13-combat-1",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Hourglass Revenant Formation",
+            "description": "The forces of The Sepulcher of Hours execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a13-hourglass-revenant",
+              "enemy-a13-chronowound-knight"
+            ],
+            "reward": {
+              "experience": 755,
+              "gold": 167
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a13-stage-2",
+        "name": "The Returning Guard",
+        "entries": [
+          {
+            "id": "a13-combat-2",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Chronowound Knight Formation",
+            "description": "The forces of The Sepulcher of Hours execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a13-ashen-mourner",
+              "enemy-a13-hourglass-revenant",
+              "enemy-a13-secondhand-assassin"
+            ],
+            "reward": {
+              "experience": 790,
+              "gold": 189
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a13-stage-3",
+        "name": "The Remnant's Choice",
+        "entries": [
+          {
+            "id": "a13-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "The Broken Hour",
+            "description": "The path narrows around a choice that cannot be undone.",
+            "eventId": "event-a13-broken-hour",
+            "reward": {
+              "experience": 825,
+              "gold": 211
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a13-stage-4",
+        "name": "The Deathless Formation",
+        "entries": [
+          {
+            "id": "a13-combat-4",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Secondhand Assassin Formation",
+            "description": "The forces of The Sepulcher of Hours execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a13-ashen-mourner",
+              "enemy-a13-chronowound-knight",
+              "enemy-a13-secondhand-assassin"
+            ],
+            "reward": {
+              "experience": 860,
+              "gold": 233
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a13-stage-5",
+        "name": "Heart of The Sepulcher of Hours",
+        "entries": [
+          {
+            "id": "a13-boss-5",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Oris, Keeper of Last Dawn",
+            "description": "The forces of The Sepulcher of Hours execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a13-oris-last-dawn",
+              "enemy-a13-ashen-mourner",
+              "enemy-a13-hourglass-revenant"
+            ],
+            "reward": {
+              "experience": 1750,
+              "gold": 520
+            }
+          }
+        ],
+        "dropTable": []
+      }
+    ]
+  },
+  {
+    "id": "sanguine-basilica",
+    "name": "The Sanguine Basilica",
+    "description": "A five-part endgame assault where enemies restore one another, weaponize debilitating curses, and refuse ordinary death.",
+    "recommendedLevel": 58,
+    "prerequisiteAdventureId": "sepulcher-of-hours",
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/sanguine-basilica-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/sanguine-basilica-edge.webp",
+    "travelText": "Climbing the red steps of the blood-lit basilica",
+    "completionTitle": "The Basilica Runs Dry",
+    "completionDescription": "Veyra's stolen blood drains through the black marble. The bells toll once for the lives that can finally remain dead.",
+    "stages": [
+      {
+        "id": "a14-stage-1",
+        "name": "The Outer Threshold",
+        "entries": [
+          {
+            "id": "a14-combat-1",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Crimson Penitent Formation",
+            "description": "The forces of The Sanguine Basilica execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a14-crimson-penitent",
+              "enemy-a14-vein-choir"
+            ],
+            "reward": {
+              "experience": 865,
+              "gold": 167
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a14-stage-2",
+        "name": "The Returning Guard",
+        "entries": [
+          {
+            "id": "a14-combat-2",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Vein Choir Formation",
+            "description": "The forces of The Sanguine Basilica execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a14-bloodwake-hierophant",
+              "enemy-a14-crimson-penitent",
+              "enemy-a14-reliquary-gargoyle"
+            ],
+            "reward": {
+              "experience": 900,
+              "gold": 189
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a14-stage-3",
+        "name": "The Remnant's Choice",
+        "entries": [
+          {
+            "id": "a14-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "The Living Reliquary",
+            "description": "The path narrows around a choice that cannot be undone.",
+            "eventId": "event-a14-living-reliquary",
+            "reward": {
+              "experience": 935,
+              "gold": 211
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a14-stage-4",
+        "name": "The Deathless Formation",
+        "entries": [
+          {
+            "id": "a14-combat-4",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Reliquary Gargoyle Formation",
+            "description": "The forces of The Sanguine Basilica execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a14-bloodwake-hierophant",
+              "enemy-a14-vein-choir",
+              "enemy-a14-reliquary-gargoyle"
+            ],
+            "reward": {
+              "experience": 970,
+              "gold": 233
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a14-stage-5",
+        "name": "Heart of The Sanguine Basilica",
+        "entries": [
+          {
+            "id": "a14-boss-5",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Saint Veyra, the Undying",
+            "description": "The forces of The Sanguine Basilica execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a14-saint-veyra-undying",
+              "enemy-a14-bloodwake-hierophant",
+              "enemy-a14-reliquary-gargoyle"
+            ],
+            "reward": {
+              "experience": 1990,
+              "gold": 605
+            }
+          }
+        ],
+        "dropTable": []
+      }
+    ]
+  },
+  {
+    "id": "dreaming-wilds",
+    "name": "The Dreaming Wilds",
+    "description": "A five-part endgame assault where enemies restore one another, weaponize debilitating curses, and refuse ordinary death.",
+    "recommendedLevel": 62,
+    "prerequisiteAdventureId": "sanguine-basilica",
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/dreaming-wilds-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/dreaming-wilds-edge.webp",
+    "travelText": "Following a path that changes whenever you blink",
+    "completionTitle": "The Dream Releases Its Roots",
+    "completionDescription": "Morwyn wakes for one lucid breath and lets the nightmare canopy dissolve into quiet silver rain.",
+    "stages": [
+      {
+        "id": "a15-stage-1",
+        "name": "The Outer Threshold",
+        "entries": [
+          {
+            "id": "a15-combat-1",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Nightmare Stag Formation",
+            "description": "The forces of The Dreaming Wilds execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a15-nightmare-stag",
+              "enemy-a15-dream-eater-moth"
+            ],
+            "reward": {
+              "experience": 975,
+              "gold": 167
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a15-stage-2",
+        "name": "The Returning Guard",
+        "entries": [
+          {
+            "id": "a15-combat-2",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Dream-Eater Moth Formation",
+            "description": "The forces of The Dreaming Wilds execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a15-somnolent-dryad",
+              "enemy-a15-nightmare-stag",
+              "enemy-a15-briar-doppelganger"
+            ],
+            "reward": {
+              "experience": 1010,
+              "gold": 189
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a15-stage-3",
+        "name": "The Remnant's Choice",
+        "entries": [
+          {
+            "id": "a15-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "The Sleeping Moon",
+            "description": "The path narrows around a choice that cannot be undone.",
+            "eventId": "event-a15-sleeping-moon",
+            "reward": {
+              "experience": 1045,
+              "gold": 211
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a15-stage-4",
+        "name": "The Deathless Formation",
+        "entries": [
+          {
+            "id": "a15-combat-4",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Briar Doppelganger Formation",
+            "description": "The forces of The Dreaming Wilds execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a15-somnolent-dryad",
+              "enemy-a15-dream-eater-moth",
+              "enemy-a15-briar-doppelganger"
+            ],
+            "reward": {
+              "experience": 1080,
+              "gold": 233
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a15-stage-5",
+        "name": "Heart of The Dreaming Wilds",
+        "entries": [
+          {
+            "id": "a15-boss-5",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Morwyn, Root of Dreams",
+            "description": "The forces of The Dreaming Wilds execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a15-morwyn-root-of-dreams",
+              "enemy-a15-somnolent-dryad",
+              "enemy-a15-nightmare-stag"
+            ],
+            "reward": {
+              "experience": 2230,
+              "gold": 690
+            }
+          }
+        ],
+        "dropTable": []
+      }
+    ]
+  },
+  {
+    "id": "iron-eclipse",
+    "name": "The Iron Eclipse",
+    "description": "A five-part endgame assault where enemies restore one another, weaponize debilitating curses, and refuse ordinary death.",
+    "recommendedLevel": 66,
+    "prerequisiteAdventureId": "dreaming-wilds",
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/iron-eclipse-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/iron-eclipse-edge.webp",
+    "travelText": "Crossing the foundry beneath the black sun",
+    "completionTitle": "The Black Sun Powers Down",
+    "completionDescription": "Axiom-9's last command expires. The eclipse opens, revealing stars no machine had allowed the world to see.",
+    "stages": [
+      {
+        "id": "a16-stage-1",
+        "name": "The Outer Threshold",
+        "entries": [
+          {
+            "id": "a16-combat-1",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Eclipse Centurion Formation",
+            "description": "The forces of The Iron Eclipse execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a16-eclipse-centurion",
+              "enemy-a16-nullstar-artificer"
+            ],
+            "reward": {
+              "experience": 1085,
+              "gold": 167
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a16-stage-2",
+        "name": "The Returning Guard",
+        "entries": [
+          {
+            "id": "a16-combat-2",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Nullstar Artificer Formation",
+            "description": "The forces of The Iron Eclipse execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a16-continuance-engine",
+              "enemy-a16-eclipse-centurion",
+              "enemy-a16-black-sun-harrier"
+            ],
+            "reward": {
+              "experience": 1120,
+              "gold": 189
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a16-stage-3",
+        "name": "The Remnant's Choice",
+        "entries": [
+          {
+            "id": "a16-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "The Zero Foundry",
+            "description": "The path narrows around a choice that cannot be undone.",
+            "eventId": "event-a16-zero-foundry",
+            "reward": {
+              "experience": 1155,
+              "gold": 211
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a16-stage-4",
+        "name": "The Deathless Formation",
+        "entries": [
+          {
+            "id": "a16-combat-4",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Black-Sun Harrier Formation",
+            "description": "The forces of The Iron Eclipse execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a16-continuance-engine",
+              "enemy-a16-nullstar-artificer",
+              "enemy-a16-black-sun-harrier"
+            ],
+            "reward": {
+              "experience": 1190,
+              "gold": 233
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a16-stage-5",
+        "name": "Heart of The Iron Eclipse",
+        "entries": [
+          {
+            "id": "a16-boss-5",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Axiom-9, the Final Engine",
+            "description": "The forces of The Iron Eclipse execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a16-axiom-9-final-engine",
+              "enemy-a16-continuance-engine",
+              "enemy-a16-black-sun-harrier"
+            ],
+            "reward": {
+              "experience": 2470,
+              "gold": 775
+            }
+          }
+        ],
+        "dropTable": []
+      }
+    ]
+  },
+  {
+    "id": "throne-beyond-death",
+    "name": "The Throne Beyond Death",
+    "description": "A five-part endgame assault where enemies restore one another, weaponize debilitating curses, and refuse ordinary death.",
+    "recommendedLevel": 70,
+    "prerequisiteAdventureId": "iron-eclipse",
+    "theme": "custom",
+    "cardImageUrl": "/assets/backgrounds/throne-beyond-death-adventure.webp",
+    "combatBackgroundUrl": "/assets/backgrounds/throne-beyond-death-edge.webp",
+    "travelText": "Walking the road reserved for souls without graves",
+    "completionTitle": "No Throne Is Eternal",
+    "completionDescription": "Nhal's crown breaks into seven dying stars. The road back to Arkenfall opens, and every soul behind you remembers how to move on.",
+    "stages": [
+      {
+        "id": "a17-stage-1",
+        "name": "The Outer Threshold",
+        "entries": [
+          {
+            "id": "a17-combat-1",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Oathless Seraph Formation",
+            "description": "The forces of The Throne Beyond Death execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a17-oathless-seraph",
+              "enemy-a17-grave-tide-leviathan"
+            ],
+            "reward": {
+              "experience": 1195,
+              "gold": 167
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a17-stage-2",
+        "name": "The Returning Guard",
+        "entries": [
+          {
+            "id": "a17-combat-2",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Grave-Tide Leviathan Formation",
+            "description": "The forces of The Throne Beyond Death execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a17-soulbound-archon",
+              "enemy-a17-oathless-seraph",
+              "enemy-a17-crown-eater"
+            ],
+            "reward": {
+              "experience": 1230,
+              "gold": 189
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a17-stage-3",
+        "name": "The Remnant's Choice",
+        "entries": [
+          {
+            "id": "a17-event-3",
+            "type": "event",
+            "chance": 100,
+            "eyebrow": "Event",
+            "title": "The Empty Coronation",
+            "description": "The path narrows around a choice that cannot be undone.",
+            "eventId": "event-a17-empty-coronation",
+            "reward": {
+              "experience": 1265,
+              "gold": 211
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a17-stage-4",
+        "name": "The Deathless Formation",
+        "entries": [
+          {
+            "id": "a17-combat-4",
+            "type": "combat",
+            "chance": 100,
+            "eyebrow": "Endgame Encounter",
+            "title": "Crown-Eater Formation",
+            "description": "The forces of The Throne Beyond Death execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a17-soulbound-archon",
+              "enemy-a17-grave-tide-leviathan",
+              "enemy-a17-crown-eater"
+            ],
+            "reward": {
+              "experience": 1300,
+              "gold": 233
+            }
+          }
+        ],
+        "dropTable": []
+      },
+      {
+        "id": "a17-stage-5",
+        "name": "Heart of The Throne Beyond Death",
+        "entries": [
+          {
+            "id": "a17-boss-5",
+            "type": "boss",
+            "chance": 100,
+            "eyebrow": "Boss Encounter",
+            "title": "Nhal, Sovereign of Returning",
+            "description": "The forces of The Throne Beyond Death execute a prepared formation.",
+            "enemyIds": [
+              "enemy-a17-nhal-sovereign-returning",
+              "enemy-a17-soulbound-archon",
+              "enemy-a17-oathless-seraph"
+            ],
+            "reward": {
+              "experience": 2710,
+              "gold": 860
+            }
+          }
+        ],
+        "dropTable": []
+      }
+    ]
   }
+
 ];
 
 export const ENDLESS_ADVENTURE: AdventureNode = {

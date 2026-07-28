@@ -20,7 +20,7 @@ import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/dev
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
 import { MAX_CONSUMABLES_PER_TURN, MAX_PLAYER_ACTIONS_PER_TURN } from "../src/game/combatLimits";
-import { applyAbilityFlatDamage, applyDamageToPlayer, createPlayerGuardStatus, wakeFromDamage } from "../src/game/combat/damage";
+import { applyAbilityFlatDamage, applyDamageToPlayer, applyHealthDamageToEnemy, createPlayerGuardStatus, wakeFromDamage } from "../src/game/combat/damage";
 import { moveToNextActor, processTurnStart } from "../src/game/combat/flow";
 import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
 import { CHAINED_ENEMY_MIN_LEVEL, CHAINED_ON_ATTACK_CHANCE, getReadyEnemyAbility, shouldApplyChainedOnEnemyAttack, type EnemyAiContext } from "../src/game/combat/enemyActions";
@@ -405,7 +405,7 @@ function testContentIntegrity() {
     11: { armor: 50, magicResistance: 10 },
     12: { armor: 100, magicResistance: 100 },
   };
-  assert.equal(ADVENTURES.length, 12, "The complete story route must contain Adventures 1 through 12.");
+  assert.equal(ADVENTURES.length, 17, "The complete story route must contain Adventures 1 through 17.");
   lateAdventureExpectations.forEach(([id, level, stageCount, prerequisite]) => {
     const adventure = ADVENTURES.find((candidate) => candidate.id === id);
     assert.ok(adventure, `Missing late-game adventure ${id}.`);
@@ -477,6 +477,37 @@ function testContentIntegrity() {
       });
     });
   });
+  const endgameAdventureIds = ["sepulcher-of-hours", "sanguine-basilica", "dreaming-wilds", "iron-eclipse", "throne-beyond-death"];
+  endgameAdventureIds.forEach((adventureId, index) => {
+    const adventure = ADVENTURES.find((candidate) => candidate.id === adventureId)!;
+    assert.ok(adventure, `Missing endgame adventure ${adventureId}.`);
+    assert.equal(adventure.recommendedLevel, 54 + index * 4, `${adventure.name} needs its intended endgame level.`);
+    assert.equal(adventure.stages.length, 5, `${adventure.name} must contain exactly five stages.`);
+    assert.equal(new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.eventId ? [entry.eventId] : []))).size, 1, `${adventure.name} must contain exactly one event.`);
+    assert.ok(adventure.stages[4].entries.some((entry) => entry.type === "boss"), `${adventure.name} must end with a boss.`);
+    const enemyIds = new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.enemyIds ?? [])));
+    assert.equal(enemyIds.size, 5, `${adventure.name} must introduce five dedicated enemies.`);
+    const resurrector = [...enemyIds].map((enemyId) => ENEMIES[enemyId]).find((enemy) => enemy.abilities.some((ability) => ability.resurrectFriendlyMaxHpRatio === 1));
+    assert.ok(resurrector, `${adventure.name} needs a full-Health resurrector.`);
+    assert.ok(resurrector.startingStatuses?.some((status) => status.status === "resilient"), `${resurrector.name} must begin combat with Resilient.`);
+    [...enemyIds].forEach((enemyId) => {
+      const enemy = ENEMIES[enemyId];
+      const legendaryDrops = (enemy.dropTable ?? []).filter((drop) => ITEMS.some((item) => item.id === drop.itemId && item.rarity === "legendary" && isGearItem(item) && Boolean(item.set)));
+      assert.ok(legendaryDrops.length > 0, `${enemy.name} must drop a new Legendary set item.`);
+      assert.ok(enemy.abilities.some((ability) => (ability.selfHealMaxHpRatio ?? 0) > 0 || (ability.friendlyHealSpellPowerScaling ?? 0) > 0), `${enemy.name} needs meaningful healing.`);
+      assert.ok(enemy.abilities.some((ability) => (ability.statusApplications?.length ?? 0) > 0), `${enemy.name} must debuff the player.`);
+    });
+  });
+  const endgameSets = GEAR_SETS.filter((set) => ["set-eclipsed-oath", "set-infinite-equation", "set-last-rampart", "set-grave-communion"].includes(set.id));
+  assert.equal(endgameSets.length, 4, "The endgame route needs one seven-piece Legendary set for every class.");
+  endgameSets.forEach((set) => {
+    assert.equal(set.pieceCount, 7, `${set.name} must contain seven pieces.`);
+    assert.deepEqual(set.bonuses.map((bonus) => bonus.requiredPieces), [2, 3, 4, 5, 6, 7], `${set.name} must progress through every endgame set threshold.`);
+    const pieces = ITEMS.filter((item) => isGearItem(item) && item.set === set.id);
+    assert.equal(pieces.length, 7, `${set.name} needs exactly seven equippable pieces.`);
+    assert.ok(pieces.every((item) => item.rarity === "legendary"), `${set.name} must be entirely Legendary.`);
+    assert.ok(set.bonuses.at(-1)?.passive, `${set.name}'s seven-piece bonus must be executable.`);
+  });
   const lateEnemies = Object.values(ENEMIES).filter((enemy) => /^enemy-a(?:[4-9]|1[0-2])-/.test(enemy.id));
   assert.equal(lateEnemies.length, 63, "Adventures 4 through 12 need seven new enemies each.");
   const lateSets = GEAR_SETS.filter((set) => /^set-a(?:[4-9]|1[0-2])-/.test(set.id));
@@ -505,7 +536,7 @@ function testContentIntegrity() {
     assert.ok(legendaryDropIds.has(item.id) || item.craftingRecipe, `${item.name} must be obtainable from a drop or its endgame recipe.`);
   });
   const questIds = new Set(QUESTS.map((quest) => quest.id));
-  assert.equal(QUESTS.length, 39, "The live Quest Board catalog must contain all campaign quest packs.");
+  assert.equal(QUESTS.length, 49, "The live Quest Board catalog must contain the original campaign and five endgame quest pairs.");
   assert.equal(questIds.size, QUESTS.length, "Quest IDs must be unique.");
   QUESTS.forEach((quest) => {
     assert.ok(quest.title.trim() && quest.description.trim(), `${quest.id} needs a title and description.`);
@@ -520,16 +551,50 @@ function testContentIntegrity() {
   assert.equal(new Set(assignedQuests).size, assignedQuests.length, "A quest can belong to only one questline.");
   assignedQuests.forEach((questId) => assert.ok(questIds.has(questId), `Questline references missing quest ${questId}.`));
   assert.equal(QUESTLINES.length, 4, "The campaign needs the original notice chain plus three adventure-wide questlines.");
-  ADVENTURES.forEach((adventure) => {
+  ADVENTURES.forEach((adventure, adventureIndex) => {
     const enemyIds = new Set(adventure.stages.flatMap((stage) => stage.entries.flatMap((entry) => entry.enemyIds ?? [])));
     const dropItemIds = new Set([
       ...adventure.stages.flatMap((stage) => stage.dropTable.map((drop) => drop.itemId)),
       ...[...enemyIds].flatMap((enemyId) => ENEMIES[enemyId]?.dropTable.map((drop) => drop.itemId) ?? []),
     ]);
     assert.ok(QUESTS.some((quest) => quest.objective.type === "kill_enemy" && enemyIds.has(quest.objective.enemyId)), `${adventure.name} needs a local enemy bounty.`);
-    assert.ok(QUESTS.some((quest) => quest.objective.type === "collect_item" && dropItemIds.has(quest.objective.itemId)), `${adventure.name} needs a local material requisition.`);
+    if (adventureIndex < 12) assert.ok(QUESTS.some((quest) => quest.objective.type === "collect_item" && dropItemIds.has(quest.objective.itemId)), `${adventure.name} needs a local material requisition.`);
     assert.ok(QUESTS.some((quest) => quest.objective.type === "complete_adventure" && quest.objective.adventureId === adventure.id), `${adventure.name} needs a completion quest.`);
   });
+}
+
+function testResilientRoundLimit() {
+  const combat = createCombat(INITIAL_GAME.character, ["enemy-a13-ashen-mourner"], undefined, { enemyLevel: 54 });
+  const enemy = combat.enemies[0];
+  const first = applyHealthDamageToEnemy(enemy, enemy.maxHp);
+  assert.equal(first.damage, Math.ceil(enemy.maxHp * 0.5), "Resilient must cap cumulative Health loss at 50% of maximum Health per round.");
+  const second = applyHealthDamageToEnemy(first.enemy, 99999);
+  assert.equal(second.damage, 0, "Resilient must block further Health loss after its round limit is reached.");
+  const nextRoundEnemy = { ...second.enemy, damageTakenThisRound: 0 };
+  assert.ok(applyHealthDamageToEnemy(nextRoundEnemy, 1).damage > 0, "Resilient must allow damage again after the round limit resets.");
+}
+
+function testEnemyResurrection() {
+  const created = createCombat(INITIAL_GAME.character, ["enemy-a13-ashen-mourner", "enemy-a13-hourglass-revenant"], undefined, { enemyLevel: 54 });
+  const reviver = created.enemies[0];
+  const fallen = created.enemies[1];
+  const prepared: CombatState = {
+    ...created,
+    initiativeRevealed: true,
+    activeTurnIndex: 0,
+    turnOrder: [
+      { actorId: reviver.instanceId, kind: "enemy", name: reviver.name, roll: 100, bonus: 0, initiative: 100 },
+      { actorId: "player", kind: "player", name: INITIAL_GAME.character.name, roll: 50, bonus: 0, initiative: 50 },
+      { actorId: fallen.instanceId, kind: "enemy", name: fallen.name, roll: 1, bonus: 0, initiative: 1 },
+    ],
+    enemies: [reviver, { ...fallen, hp: 0, statuses: [] }],
+  };
+  const acted = takeEnemyTurn(prepared, INITIAL_GAME.character, reviver.instanceId);
+  const resurrection = acted.pendingEffects.find((effect) => effect.type === "resurrect");
+  assert.ok(resurrection, "A resurrector must prioritize a defeated ally when it has enough Energy.");
+  const presented = resolveCombatEvent(acted, acted.eventId, resurrection.eventIndex);
+  const returned = presented.enemies.find((enemy) => enemy.instanceId === fallen.instanceId)!;
+  assert.equal(returned.hp, returned.maxHp, "Resurrect must restore the defeated ally to 100% Health at its presentation event.");
 }
 
 function testQuestLifecycle() {
@@ -845,7 +910,7 @@ function testHighfallEnemyBehaviorsAndLoot() {
 
 function testTacticalEnemyAiCatalogAndSelection() {
   const tacticalEnemies = Object.values(ENEMIES).filter((enemy) => enemy.ai);
-  assert.equal(tacticalEnemies.length, 75, "Every distinct enemy introduced from recommended level 4 onward needs data-owned tactical AI.");
+  assert.equal(tacticalEnemies.length, 100, "Every distinct enemy introduced from recommended level 4 onward needs data-owned tactical AI.");
   tacticalEnemies.forEach((enemy) => {
     const abilityIds = new Set(enemy.abilities.map((ability) => ability.id));
     enemy.ai!.rules.forEach((rule) => assert.ok(abilityIds.has(rule.abilityId), `${enemy.name}'s tactical AI references a missing ability.`));
@@ -876,6 +941,7 @@ function testTacticalEnemyAiCatalogAndSelection() {
     "enemy-a12-deep-oracle",
   ];
   const exhaustedEnemies = Object.values(ENEMIES)
+    .filter((enemy) => /^enemy-a(?:[7-9]|1[0-2])-/.test(enemy.id))
     .filter((enemy) => enemy.abilities.some((ability) => ability.statusApplications?.some((application) => application.status === "exhausted")))
     .map((enemy) => enemy.id);
   assert.deepEqual(exhaustedEnemies, expectedExhaustedEnemies, "Adventures 7-12 must each have exactly one regular enemy that applies Exhausted.");
@@ -893,6 +959,7 @@ function testTacticalEnemyAiCatalogAndSelection() {
     { enemyId: "enemy-a12-abyssal-choir", status: "sleep", chance: 0.1, duration: 1 },
   ] as const;
   const rareControlEnemies = Object.values(ENEMIES)
+    .filter((enemy) => /^enemy-a(?:[7-9]|1[0-2])-/.test(enemy.id))
     .filter((enemy) => enemy.abilities.some((ability) => ability.statusApplications?.some((application) => application.status === "sleep" || application.status === "reckless")))
     .map((enemy) => enemy.id);
   assert.deepEqual(rareControlEnemies, expectedRareControlSources.map((source) => source.enemyId), "Adventures 7-12 must each have exactly one enemy-inflicted Sleep or Reckless source.");
@@ -920,7 +987,9 @@ function testTacticalEnemyAiCatalogAndSelection() {
     { enemyId: "enemy-a12-deep-oracle", status: "nullify" },
     { enemyId: "enemy-a12-rootless-titan", status: "disarm" },
   ] as const;
-  const powerSuppressionSources = Object.values(ENEMIES).flatMap((enemy) => enemy.abilities.flatMap((ability) => (
+  const powerSuppressionSources = Object.values(ENEMIES)
+    .filter((enemy) => /^enemy-a(?:[7-9]|1[0-2])-/.test(enemy.id))
+    .flatMap((enemy) => enemy.abilities.flatMap((ability) => (
     (ability.statusApplications ?? [])
       .filter((application) => application.status === "nullify" || application.status === "disarm")
       .map((application) => ({
@@ -2207,6 +2276,8 @@ testNewCharacterIntroductionDefaults();
 testTalentRespecRules();
 testAttributeAndAfflictionScaling();
 testEnemyStartingEnergy();
+testResilientRoundLimit();
+testEnemyResurrection();
 testEnemyChainedAttacks();
 testEnemyEditorSynchronizesLiveDropTables();
 testGoblinEnemyBehaviors();

@@ -10167,5 +10167,3233 @@ export const ENEMIES: Record<string, EnemyTemplate> = {
       ],
       "fallback": "ordered"
     }
+  },
+  "enemy-a13-hourglass-revenant": {
+    "id": "enemy-a13-hourglass-revenant",
+    "name": "Hourglass Revenant",
+    "title": "Time-Lost Duelist",
+    "imageUrl": "/assets/enemies/full/a13-hourglass-revenant.webp",
+    "portraitUrl": "/assets/enemies/portraits/a13-hourglass-revenant.webp",
+    "maxHp": 710,
+    "physicalPower": 82,
+    "spellPower": 33,
+    "armor": 42,
+    "magicResistance": 48,
+    "hitChance": 1.04,
+    "dodgeChance": 0.09,
+    "critChance": 0.14,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-head",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a13-hourglass-revenant-signature",
+        "name": "Borrowed Second",
+        "description": "A tactical physical attack that applies slowed.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 12,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "slowed",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-hourglass-revenant-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-hourglass-revenant-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 5,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Rewinds its wounds, then punishes Slowed targets.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b99a68",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a13-hourglass-revenant-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-hourglass-revenant-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "slowed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a13-hourglass-revenant-pressure",
+        "enemy-ability-a13-hourglass-revenant-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a13-chronowound-knight": {
+    "id": "enemy-a13-chronowound-knight",
+    "name": "Chronowound Knight",
+    "title": "Keeper of Repeated Wounds",
+    "imageUrl": "/assets/enemies/full/a13-chronowound-knight.webp",
+    "portraitUrl": "/assets/enemies/portraits/a13-chronowound-knight.webp",
+    "maxHp": 752,
+    "physicalPower": 86,
+    "spellPower": 33,
+    "armor": 44,
+    "magicResistance": 46,
+    "hitChance": 1.04,
+    "dodgeChance": 0.105,
+    "critChance": 0.14,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-chest",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a13-chronowound-knight-signature",
+        "name": "Looping Cleave",
+        "description": "A tactical physical attack that applies bleed.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 12,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "bleed",
+            "stacks": 3,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-chronowound-knight-recover",
+        "name": "Sustain the Line",
+        "description": "Heals the most wounded ally and grants it Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 2.25,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-chronowound-knight-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 5,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Builds Bleed and converts weakness into a guarded counterattack.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b99a68",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a13-chronowound-knight-recover",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-chronowound-knight-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a13-chronowound-knight-pressure",
+        "enemy-ability-a13-chronowound-knight-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a13-ashen-mourner": {
+    "id": "enemy-a13-ashen-mourner",
+    "name": "Ashen Mourner",
+    "title": "Cantor of Returning",
+    "imageUrl": "/assets/enemies/full/a13-ashen-mourner.webp",
+    "portraitUrl": "/assets/enemies/portraits/a13-ashen-mourner.webp",
+    "maxHp": 900,
+    "physicalPower": 45,
+    "spellPower": 96,
+    "armor": 38,
+    "magicResistance": 48,
+    "hitChance": 1.06,
+    "dodgeChance": 0.08,
+    "critChance": 0.13,
+    "energyRegen": 4,
+    "maxEnergy": 12,
+    "startingEnergy": 12,
+    "startingStatuses": [
+      {
+        "status": "resilient",
+        "stacks": 1,
+        "duration": 3
+      }
+    ],
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-pants",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a13-ashen-mourner-resurrect",
+        "name": "Last Rites Reversed",
+        "description": "Resurrects one defeated ally with 100% of its maximum Health.",
+        "energyCost": 7,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "resurrectFriendlyMaxHpRatio": 1
+      },
+      {
+        "id": "enemy-ability-a13-ashen-mourner-restore",
+        "name": "Deathless Benediction",
+        "description": "Restores massive Health to every living ally and grants Shielded.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "all_enemies",
+        "friendlyHealSpellPowerScaling": 2.4,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-ashen-mourner-curse",
+        "name": "Funeral Malediction",
+        "description": "Afflicts the player with exhausted while the caster restores 18% of maximum Health.",
+        "energyCost": 3,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 2
+          }
+        ],
+        "selfHealMaxHpRatio": 0.18
+      }
+    ],
+    "behaviorNotes": "Resurrects the fallen before flooding the formation with restorative ash.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b99a68",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a13-ashen-mourner-resurrect",
+          "all": [
+            {
+              "type": "dead_ally_exists"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-ashen-mourner-restore",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.72
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-ashen-mourner-curse",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "exhausted"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a13-ashen-mourner-restore",
+        "enemy-ability-a13-ashen-mourner-curse"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a13-secondhand-assassin": {
+    "id": "enemy-a13-secondhand-assassin",
+    "name": "Secondhand Assassin",
+    "title": "Blade Between Moments",
+    "imageUrl": "/assets/enemies/full/a13-secondhand-assassin.webp",
+    "portraitUrl": "/assets/enemies/portraits/a13-secondhand-assassin.webp",
+    "maxHp": 836,
+    "physicalPower": 94,
+    "spellPower": 33,
+    "armor": 48,
+    "magicResistance": 42,
+    "hitChance": 1.04,
+    "dodgeChance": 0.135,
+    "critChance": 0.14,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-boots",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a13-secondhand-assassin-signature",
+        "name": "Stolen Moment",
+        "description": "A tactical physical attack that applies reckless.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 12,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 2,
+        "statusApplications": [
+          {
+            "status": "reckless",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-secondhand-assassin-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-secondhand-assassin-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 5,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Uses rapid hits, then vanishes behind Stealth while healing.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#b99a68",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a13-secondhand-assassin-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-secondhand-assassin-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "reckless"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a13-secondhand-assassin-pressure",
+        "enemy-ability-a13-secondhand-assassin-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a13-oris-last-dawn": {
+    "id": "enemy-a13-oris-last-dawn",
+    "name": "Oris, Keeper of Last Dawn",
+    "title": "Final Bell of the Sepulcher",
+    "imageUrl": "/assets/enemies/full/a13-oris-last-dawn.webp",
+    "portraitUrl": "/assets/enemies/portraits/a13-oris-last-dawn.webp",
+    "maxHp": 1850,
+    "physicalPower": 100,
+    "spellPower": 106,
+    "armor": 58,
+    "magicResistance": 60,
+    "hitChance": 1.1,
+    "dodgeChance": 0.1,
+    "critChance": 0.18,
+    "energyRegen": 5,
+    "maxEnergy": 14,
+    "startingEnergy": 14,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-mainhand",
+        "chance": 28
+      },
+      {
+        "itemId": "gear-endgame-grave-communion-mainhand",
+        "chance": 28
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a13-oris-last-dawn-setup",
+        "name": "Sovereign's Mark",
+        "description": "Applies 2 stacks of arcaneWound and Vulnerable.",
+        "energyCost": 3,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "arcaneWound",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-oris-last-dawn-charge",
+        "name": "Hour Zero",
+        "description": "Charges for one turn, then releases a devastating arcane attack.",
+        "energyCost": 8,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "elemental_fury",
+        "damageType": "arcane",
+        "baseDamage": 28,
+        "spellPowerScaling": 2.15,
+        "physicalPowerScaling": 0,
+        "chargeTurns": 1,
+        "chargeText": "Oris, Keeper of Last Dawn bends the battlefield toward Hour Zero.",
+        "chargeVfx": "elemental_fury"
+      },
+      {
+        "id": "enemy-ability-a13-oris-last-dawn-execution",
+        "name": "End the Pilgrimage",
+        "description": "Deals 80% more damage while the player has arcaneWound.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "arcane",
+        "baseDamage": 16,
+        "spellPowerScaling": 1.75,
+        "physicalPowerScaling": 0,
+        "targetStatusDamageBonus": {
+          "status": "arcaneWound",
+          "multiplier": 1.8
+        }
+      },
+      {
+        "id": "enemy-ability-a13-oris-last-dawn-recover",
+        "name": "Sovereign Renewal",
+        "description": "Restores 32% of maximum Health and gains Shielded.",
+        "energyCost": 5,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.32,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a13-oris-last-dawn-basic",
+        "name": "Thronebreaker",
+        "description": "A reliable arcane attack that applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "arcane",
+        "baseDamage": 8,
+        "spellPowerScaling": 1.35,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.35
+          }
+        ]
+      }
+    ],
+    "behaviorNotes": "Marks the player with Arcane Wound, charges Hour Zero, and rewinds itself under pressure.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#b99a68",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a13-oris-last-dawn-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.55
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-oris-last-dawn-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "arcaneWound"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-oris-last-dawn-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "arcaneWound"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a13-oris-last-dawn-charge",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 8
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a13-oris-last-dawn-basic"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a14-crimson-penitent": {
+    "id": "enemy-a14-crimson-penitent",
+    "name": "Crimson Penitent",
+    "title": "Flagellant Vanguard",
+    "imageUrl": "/assets/enemies/full/a14-crimson-penitent.webp",
+    "portraitUrl": "/assets/enemies/portraits/a14-crimson-penitent.webp",
+    "maxHp": 815,
+    "physicalPower": 92,
+    "spellPower": 37,
+    "armor": 47,
+    "magicResistance": 53,
+    "hitChance": 1.05,
+    "dodgeChance": 0.09,
+    "critChance": 0.15000000000000002,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-offhand",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a14-crimson-penitent-signature",
+        "name": "Penance Due",
+        "description": "A tactical physical attack that applies vulnerable.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 15,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-crimson-penitent-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-crimson-penitent-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 7,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Hurts itself through Reckless pressure, then restores itself from the opening it creates.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b23b50",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a14-crimson-penitent-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-crimson-penitent-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a14-crimson-penitent-pressure",
+        "enemy-ability-a14-crimson-penitent-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a14-vein-choir": {
+    "id": "enemy-a14-vein-choir",
+    "name": "Vein Choir",
+    "title": "Many-Throated Canticle",
+    "imageUrl": "/assets/enemies/full/a14-vein-choir.webp",
+    "portraitUrl": "/assets/enemies/portraits/a14-vein-choir.webp",
+    "maxHp": 857,
+    "physicalPower": 51,
+    "spellPower": 96,
+    "armor": 49,
+    "magicResistance": 51,
+    "hitChance": 1.05,
+    "dodgeChance": 0.105,
+    "critChance": 0.15000000000000002,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-eclipsed-oath-ring",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a14-vein-choir-signature",
+        "name": "Arterial Hymn",
+        "description": "A tactical shadow attack that applies nullify.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 15,
+        "spellPowerScaling": 1.65,
+        "physicalPowerScaling": 0,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-vein-choir-recover",
+        "name": "Sustain the Line",
+        "description": "Heals the most wounded ally and grants it Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 2.35,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-vein-choir-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "damageType": "shadow",
+        "baseDamage": 7,
+        "spellPowerScaling": 1.15,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Nullifies spellcasters and heals every surviving voice in its choir.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b23b50",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a14-vein-choir-recover",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-vein-choir-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "nullify"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a14-vein-choir-pressure",
+        "enemy-ability-a14-vein-choir-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a14-bloodwake-hierophant": {
+    "id": "enemy-a14-bloodwake-hierophant",
+    "name": "Bloodwake Hierophant",
+    "title": "Priest of the Open Vein",
+    "imageUrl": "/assets/enemies/full/a14-bloodwake-hierophant.webp",
+    "portraitUrl": "/assets/enemies/portraits/a14-bloodwake-hierophant.webp",
+    "maxHp": 1035,
+    "physicalPower": 51,
+    "spellPower": 106,
+    "armor": 43,
+    "magicResistance": 54,
+    "hitChance": 1.07,
+    "dodgeChance": 0.09,
+    "critChance": 0.14,
+    "energyRegen": 4,
+    "maxEnergy": 12,
+    "startingEnergy": 12,
+    "startingStatuses": [
+      {
+        "status": "resilient",
+        "stacks": 1,
+        "duration": 3
+      }
+    ],
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-head",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a14-bloodwake-hierophant-resurrect",
+        "name": "Red Resurrection",
+        "description": "Resurrects one defeated ally with 100% of its maximum Health.",
+        "energyCost": 7,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "resurrectFriendlyMaxHpRatio": 1
+      },
+      {
+        "id": "enemy-ability-a14-bloodwake-hierophant-restore",
+        "name": "Deathless Benediction",
+        "description": "Restores massive Health to every living ally and grants Shielded.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "all_enemies",
+        "friendlyHealSpellPowerScaling": 2.52,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-bloodwake-hierophant-curse",
+        "name": "Funeral Malediction",
+        "description": "Afflicts the player with bleed while the caster restores 18% of maximum Health.",
+        "energyCost": 3,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "bleed",
+            "stacks": 3,
+            "duration": 2
+          }
+        ],
+        "selfHealMaxHpRatio": 0.18
+      }
+    ],
+    "behaviorNotes": "Resurrects a fallen worshipper and sustains the group through massive blood rites.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#b23b50",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a14-bloodwake-hierophant-resurrect",
+          "all": [
+            {
+              "type": "dead_ally_exists"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-bloodwake-hierophant-restore",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.72
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-bloodwake-hierophant-curse",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "bleed"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a14-bloodwake-hierophant-restore",
+        "enemy-ability-a14-bloodwake-hierophant-curse"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a14-reliquary-gargoyle": {
+    "id": "enemy-a14-reliquary-gargoyle",
+    "name": "Reliquary Gargoyle",
+    "title": "Stone Vessel of Saints",
+    "imageUrl": "/assets/enemies/full/a14-reliquary-gargoyle.webp",
+    "portraitUrl": "/assets/enemies/portraits/a14-reliquary-gargoyle.webp",
+    "maxHp": 941,
+    "physicalPower": 104,
+    "spellPower": 37,
+    "armor": 53,
+    "magicResistance": 47,
+    "hitChance": 1.05,
+    "dodgeChance": 0.135,
+    "critChance": 0.15000000000000002,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-chest",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a14-reliquary-gargoyle-signature",
+        "name": "Reliquary Crash",
+        "description": "A tactical physical attack that applies disarm.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 15,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 2,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-reliquary-gargoyle-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-reliquary-gargoyle-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 7,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Disarms physical attackers and turns incoming pressure into heavy self-restoration.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#b23b50",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a14-reliquary-gargoyle-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-reliquary-gargoyle-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "disarm"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a14-reliquary-gargoyle-pressure",
+        "enemy-ability-a14-reliquary-gargoyle-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a14-saint-veyra-undying": {
+    "id": "enemy-a14-saint-veyra-undying",
+    "name": "Saint Veyra, the Undying",
+    "title": "Blood Saint of the Basilica",
+    "imageUrl": "/assets/enemies/full/a14-saint-veyra-undying.webp",
+    "portraitUrl": "/assets/enemies/portraits/a14-saint-veyra-undying.webp",
+    "maxHp": 2110,
+    "physicalPower": 110,
+    "spellPower": 116,
+    "armor": 64,
+    "magicResistance": 67,
+    "hitChance": 1.11,
+    "dodgeChance": 0.11,
+    "critChance": 0.195,
+    "energyRegen": 5,
+    "maxEnergy": 14,
+    "startingEnergy": 14,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-pants",
+        "chance": 28
+      },
+      {
+        "itemId": "gear-endgame-grave-communion-offhand",
+        "chance": 28
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a14-saint-veyra-undying-setup",
+        "name": "Sovereign's Mark",
+        "description": "Applies 2 stacks of smite and Vulnerable.",
+        "energyCost": 3,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "smite",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-saint-veyra-undying-charge",
+        "name": "Communion of Knives",
+        "description": "Charges for one turn, then releases a devastating shadow attack.",
+        "energyCost": 8,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "elemental_fury",
+        "damageType": "shadow",
+        "baseDamage": 33,
+        "spellPowerScaling": 2.15,
+        "physicalPowerScaling": 0,
+        "chargeTurns": 1,
+        "chargeText": "Saint Veyra, the Undying bends the battlefield toward Communion of Knives.",
+        "chargeVfx": "elemental_fury"
+      },
+      {
+        "id": "enemy-ability-a14-saint-veyra-undying-execution",
+        "name": "End the Pilgrimage",
+        "description": "Deals 80% more damage while the player has smite.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 20,
+        "spellPowerScaling": 1.75,
+        "physicalPowerScaling": 0,
+        "targetStatusDamageBonus": {
+          "status": "smite",
+          "multiplier": 1.8
+        }
+      },
+      {
+        "id": "enemy-ability-a14-saint-veyra-undying-recover",
+        "name": "Sovereign Renewal",
+        "description": "Restores 32% of maximum Health and gains Shielded.",
+        "energyCost": 5,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.32,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a14-saint-veyra-undying-basic",
+        "name": "Thronebreaker",
+        "description": "A reliable shadow attack that applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 11,
+        "spellPowerScaling": 1.35,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.35
+          }
+        ]
+      }
+    ],
+    "behaviorNotes": "Applies Smite, drains momentum with Bleed, and restores a third of her Health when the communion turns.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#b23b50",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a14-saint-veyra-undying-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.55
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-saint-veyra-undying-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "smite"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-saint-veyra-undying-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "smite"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a14-saint-veyra-undying-charge",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 8
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a14-saint-veyra-undying-basic"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a15-nightmare-stag": {
+    "id": "enemy-a15-nightmare-stag",
+    "name": "Nightmare Stag",
+    "title": "Antlered Pursuer",
+    "imageUrl": "/assets/enemies/full/a15-nightmare-stag.webp",
+    "portraitUrl": "/assets/enemies/portraits/a15-nightmare-stag.webp",
+    "maxHp": 920,
+    "physicalPower": 102,
+    "spellPower": 41,
+    "armor": 52,
+    "magicResistance": 58,
+    "hitChance": 1.06,
+    "dodgeChance": 0.09,
+    "critChance": 0.16,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-boots",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a15-nightmare-stag-signature",
+        "name": "Dream-Gore",
+        "description": "A tactical physical attack that applies sleep.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 18,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "sleep",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-nightmare-stag-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-nightmare-stag-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 9,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Rarely forces Sleep, then delivers a brutal waking strike and regrows its flesh.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#7c5ab8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a15-nightmare-stag-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-nightmare-stag-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "sleep"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a15-nightmare-stag-pressure",
+        "enemy-ability-a15-nightmare-stag-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a15-dream-eater-moth": {
+    "id": "enemy-a15-dream-eater-moth",
+    "name": "Dream-Eater Moth",
+    "title": "Powder-Winged Null",
+    "imageUrl": "/assets/enemies/full/a15-dream-eater-moth.webp",
+    "portraitUrl": "/assets/enemies/portraits/a15-dream-eater-moth.webp",
+    "maxHp": 962,
+    "physicalPower": 56,
+    "spellPower": 106,
+    "armor": 54,
+    "magicResistance": 56,
+    "hitChance": 1.06,
+    "dodgeChance": 0.105,
+    "critChance": 0.16,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-mainhand",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a15-dream-eater-moth-signature",
+        "name": "Devour Color",
+        "description": "A tactical shadow attack that applies blind.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 18,
+        "spellPowerScaling": 1.65,
+        "physicalPowerScaling": 0,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "blind",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-dream-eater-moth-recover",
+        "name": "Sustain the Line",
+        "description": "Heals the most wounded ally and grants it Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 2.45,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-dream-eater-moth-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "damageType": "shadow",
+        "baseDamage": 9,
+        "spellPowerScaling": 1.15,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Blinds accurate builds and heals by wrapping itself in dream-dust.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#7c5ab8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a15-dream-eater-moth-recover",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-dream-eater-moth-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "blind"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a15-dream-eater-moth-pressure",
+        "enemy-ability-a15-dream-eater-moth-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a15-somnolent-dryad": {
+    "id": "enemy-a15-somnolent-dryad",
+    "name": "Somnolent Dryad",
+    "title": "Root of Returning",
+    "imageUrl": "/assets/enemies/full/a15-somnolent-dryad.webp",
+    "portraitUrl": "/assets/enemies/portraits/a15-somnolent-dryad.webp",
+    "maxHp": 1170,
+    "physicalPower": 56,
+    "spellPower": 116,
+    "armor": 48,
+    "magicResistance": 60,
+    "hitChance": 1.08,
+    "dodgeChance": 0.1,
+    "critChance": 0.15,
+    "energyRegen": 4,
+    "maxEnergy": 12,
+    "startingEnergy": 12,
+    "startingStatuses": [
+      {
+        "status": "resilient",
+        "stacks": 1,
+        "duration": 3
+      }
+    ],
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-offhand",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a15-somnolent-dryad-resurrect",
+        "name": "Wake the Buried",
+        "description": "Resurrects one defeated ally with 100% of its maximum Health.",
+        "energyCost": 7,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "resurrectFriendlyMaxHpRatio": 1
+      },
+      {
+        "id": "enemy-ability-a15-somnolent-dryad-restore",
+        "name": "Deathless Benediction",
+        "description": "Restores massive Health to every living ally and grants Shielded.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "all_enemies",
+        "friendlyHealSpellPowerScaling": 2.6399999999999997,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-somnolent-dryad-curse",
+        "name": "Funeral Malediction",
+        "description": "Afflicts the player with weaken while the caster restores 18% of maximum Health.",
+        "energyCost": 3,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2
+          }
+        ],
+        "selfHealMaxHpRatio": 0.18
+      }
+    ],
+    "behaviorNotes": "Resurrects dead beasts at full Health and maintains the grove through deep restoration.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#7c5ab8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a15-somnolent-dryad-resurrect",
+          "all": [
+            {
+              "type": "dead_ally_exists"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-somnolent-dryad-restore",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.72
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-somnolent-dryad-curse",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "weaken"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a15-somnolent-dryad-restore",
+        "enemy-ability-a15-somnolent-dryad-curse"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a15-briar-doppelganger": {
+    "id": "enemy-a15-briar-doppelganger",
+    "name": "Briar Doppelganger",
+    "title": "Thorned Reflection",
+    "imageUrl": "/assets/enemies/full/a15-briar-doppelganger.webp",
+    "portraitUrl": "/assets/enemies/portraits/a15-briar-doppelganger.webp",
+    "maxHp": 1046,
+    "physicalPower": 114,
+    "spellPower": 41,
+    "armor": 58,
+    "magicResistance": 52,
+    "hitChance": 1.06,
+    "dodgeChance": 0.135,
+    "critChance": 0.16,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-infinite-equation-ring",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a15-briar-doppelganger-signature",
+        "name": "Mirror Thorn",
+        "description": "A tactical physical attack that applies poison.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 18,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 2,
+        "statusApplications": [
+          {
+            "status": "poison",
+            "stacks": 3,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-briar-doppelganger-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-briar-doppelganger-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 9,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Poisons the player, gains Evasion, and heals whenever its reflection begins to crack.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#7c5ab8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a15-briar-doppelganger-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-briar-doppelganger-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "poison"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a15-briar-doppelganger-pressure",
+        "enemy-ability-a15-briar-doppelganger-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a15-morwyn-root-of-dreams": {
+    "id": "enemy-a15-morwyn-root-of-dreams",
+    "name": "Morwyn, Root of Dreams",
+    "title": "The Dream Beneath All Leaves",
+    "imageUrl": "/assets/enemies/full/a15-morwyn-root-of-dreams.webp",
+    "portraitUrl": "/assets/enemies/portraits/a15-morwyn-root-of-dreams.webp",
+    "maxHp": 2370,
+    "physicalPower": 120,
+    "spellPower": 126,
+    "armor": 70,
+    "magicResistance": 74,
+    "hitChance": 1.12,
+    "dodgeChance": 0.12000000000000001,
+    "critChance": 0.21,
+    "energyRegen": 5,
+    "maxEnergy": 14,
+    "startingEnergy": 14,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-head",
+        "chance": 28
+      },
+      {
+        "itemId": "gear-endgame-grave-communion-ring",
+        "chance": 28
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a15-morwyn-root-of-dreams-setup",
+        "name": "Sovereign's Mark",
+        "description": "Applies 2 stacks of sleep and Vulnerable.",
+        "energyCost": 3,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "sleep",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-morwyn-root-of-dreams-charge",
+        "name": "Night Without Morning",
+        "description": "Charges for one turn, then releases a devastating shadow attack.",
+        "energyCost": 8,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "elemental_fury",
+        "damageType": "shadow",
+        "baseDamage": 38,
+        "spellPowerScaling": 2.15,
+        "physicalPowerScaling": 0,
+        "chargeTurns": 1,
+        "chargeText": "Morwyn, Root of Dreams bends the battlefield toward Night Without Morning.",
+        "chargeVfx": "elemental_fury"
+      },
+      {
+        "id": "enemy-ability-a15-morwyn-root-of-dreams-execution",
+        "name": "End the Pilgrimage",
+        "description": "Deals 80% more damage while the player has sleep.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 24,
+        "spellPowerScaling": 1.75,
+        "physicalPowerScaling": 0,
+        "targetStatusDamageBonus": {
+          "status": "sleep",
+          "multiplier": 1.8
+        }
+      },
+      {
+        "id": "enemy-ability-a15-morwyn-root-of-dreams-recover",
+        "name": "Sovereign Renewal",
+        "description": "Restores 32% of maximum Health and gains Shielded.",
+        "energyCost": 5,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.32,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a15-morwyn-root-of-dreams-basic",
+        "name": "Thronebreaker",
+        "description": "A reliable shadow attack that applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 14,
+        "spellPowerScaling": 1.35,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.35
+          }
+        ]
+      }
+    ],
+    "behaviorNotes": "Cycles Sleep, Poison, and a charged nightmare while repeatedly regrowing its ancient body.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#7c5ab8",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a15-morwyn-root-of-dreams-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.55
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-morwyn-root-of-dreams-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "sleep"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-morwyn-root-of-dreams-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "sleep"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a15-morwyn-root-of-dreams-charge",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 8
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a15-morwyn-root-of-dreams-basic"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a16-eclipse-centurion": {
+    "id": "enemy-a16-eclipse-centurion",
+    "name": "Eclipse Centurion",
+    "title": "Black-Sun Phalanx",
+    "imageUrl": "/assets/enemies/full/a16-eclipse-centurion.webp",
+    "portraitUrl": "/assets/enemies/portraits/a16-eclipse-centurion.webp",
+    "maxHp": 1025,
+    "physicalPower": 112,
+    "spellPower": 45,
+    "armor": 57,
+    "magicResistance": 63,
+    "hitChance": 1.07,
+    "dodgeChance": 0.09,
+    "critChance": 0.17,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-chest",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a16-eclipse-centurion-signature",
+        "name": "Formation Break",
+        "description": "A tactical physical attack that applies disarm.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 21,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "disarm",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-eclipse-centurion-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-eclipse-centurion-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 11,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Disarms the player, fortifies itself, and counters exposed turns with crushing force.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#52728e",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a16-eclipse-centurion-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-eclipse-centurion-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "disarm"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a16-eclipse-centurion-pressure",
+        "enemy-ability-a16-eclipse-centurion-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a16-nullstar-artificer": {
+    "id": "enemy-a16-nullstar-artificer",
+    "name": "Nullstar Artificer",
+    "title": "Engineer of Silence",
+    "imageUrl": "/assets/enemies/full/a16-nullstar-artificer.webp",
+    "portraitUrl": "/assets/enemies/portraits/a16-nullstar-artificer.webp",
+    "maxHp": 1067,
+    "physicalPower": 62,
+    "spellPower": 116,
+    "armor": 59,
+    "magicResistance": 61,
+    "hitChance": 1.07,
+    "dodgeChance": 0.105,
+    "critChance": 0.17,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-pants",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a16-nullstar-artificer-signature",
+        "name": "Silence Engine",
+        "description": "A tactical arcane attack that applies nullify.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "arcane",
+        "baseDamage": 21,
+        "spellPowerScaling": 1.65,
+        "physicalPowerScaling": 0,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-nullstar-artificer-recover",
+        "name": "Sustain the Line",
+        "description": "Heals the most wounded ally and grants it Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 2.55,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-nullstar-artificer-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "damageType": "arcane",
+        "baseDamage": 11,
+        "spellPowerScaling": 1.15,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Nullifies Spell Power and repairs the most damaged construct before attacking again.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#52728e",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a16-nullstar-artificer-recover",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-nullstar-artificer-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "nullify"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a16-nullstar-artificer-pressure",
+        "enemy-ability-a16-nullstar-artificer-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a16-continuance-engine": {
+    "id": "enemy-a16-continuance-engine",
+    "name": "Continuance Engine",
+    "title": "Machine That Refuses Endings",
+    "imageUrl": "/assets/enemies/full/a16-continuance-engine.webp",
+    "portraitUrl": "/assets/enemies/portraits/a16-continuance-engine.webp",
+    "maxHp": 1305,
+    "physicalPower": 62,
+    "spellPower": 126,
+    "armor": 53,
+    "magicResistance": 66,
+    "hitChance": 1.09,
+    "dodgeChance": 0.11,
+    "critChance": 0.16,
+    "energyRegen": 4,
+    "maxEnergy": 12,
+    "startingEnergy": 12,
+    "startingStatuses": [
+      {
+        "status": "resilient",
+        "stacks": 1,
+        "duration": 3
+      }
+    ],
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-boots",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a16-continuance-engine-resurrect",
+        "name": "Recompile the Fallen",
+        "description": "Resurrects one defeated ally with 100% of its maximum Health.",
+        "energyCost": 7,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "resurrectFriendlyMaxHpRatio": 1
+      },
+      {
+        "id": "enemy-ability-a16-continuance-engine-restore",
+        "name": "Deathless Benediction",
+        "description": "Restores massive Health to every living ally and grants Shielded.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "all_enemies",
+        "friendlyHealSpellPowerScaling": 2.76,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-continuance-engine-curse",
+        "name": "Funeral Malediction",
+        "description": "Afflicts the player with chained while the caster restores 18% of maximum Health.",
+        "energyCost": 3,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "chained",
+            "stacks": 1,
+            "duration": 2
+          }
+        ],
+        "selfHealMaxHpRatio": 0.18
+      }
+    ],
+    "behaviorNotes": "Rebuilds a destroyed ally at full integrity and repairs the entire formation.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#52728e",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a16-continuance-engine-resurrect",
+          "all": [
+            {
+              "type": "dead_ally_exists"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-continuance-engine-restore",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.72
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-continuance-engine-curse",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "chained"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a16-continuance-engine-restore",
+        "enemy-ability-a16-continuance-engine-curse"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a16-black-sun-harrier": {
+    "id": "enemy-a16-black-sun-harrier",
+    "name": "Black-Sun Harrier",
+    "title": "Winged Pursuit Frame",
+    "imageUrl": "/assets/enemies/full/a16-black-sun-harrier.webp",
+    "portraitUrl": "/assets/enemies/portraits/a16-black-sun-harrier.webp",
+    "maxHp": 1151,
+    "physicalPower": 62,
+    "spellPower": 124,
+    "armor": 63,
+    "magicResistance": 57,
+    "hitChance": 1.07,
+    "dodgeChance": 0.135,
+    "critChance": 0.17,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-mainhand",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a16-black-sun-harrier-signature",
+        "name": "Event-Horizon Dive",
+        "description": "A tactical lightning attack that applies exhausted.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "lightning",
+        "baseDamage": 21,
+        "spellPowerScaling": 1.65,
+        "physicalPowerScaling": 0,
+        "hits": 2,
+        "statusApplications": [
+          {
+            "status": "exhausted",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-black-sun-harrier-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-black-sun-harrier-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "damageType": "lightning",
+        "baseDamage": 11,
+        "spellPowerScaling": 1.15,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Drains Energy through Exhausted, attacks twice, and restores its shell behind Evasion.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#52728e",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a16-black-sun-harrier-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-black-sun-harrier-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "exhausted"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a16-black-sun-harrier-pressure",
+        "enemy-ability-a16-black-sun-harrier-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a16-axiom-9-final-engine": {
+    "id": "enemy-a16-axiom-9-final-engine",
+    "name": "Axiom-9, the Final Engine",
+    "title": "Perfect Weapon of the Eclipse",
+    "imageUrl": "/assets/enemies/full/a16-axiom-9-final-engine.webp",
+    "portraitUrl": "/assets/enemies/portraits/a16-axiom-9-final-engine.webp",
+    "maxHp": 2630,
+    "physicalPower": 130,
+    "spellPower": 136,
+    "armor": 76,
+    "magicResistance": 81,
+    "hitChance": 1.1300000000000001,
+    "dodgeChance": 0.13,
+    "critChance": 0.22499999999999998,
+    "energyRegen": 5,
+    "maxEnergy": 14,
+    "startingEnergy": 14,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-offhand",
+        "chance": 28
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a16-axiom-9-final-engine-setup",
+        "name": "Sovereign's Mark",
+        "description": "Applies 2 stacks of nullify and Vulnerable.",
+        "energyCost": 3,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "nullify",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-axiom-9-final-engine-charge",
+        "name": "Terminal Proof",
+        "description": "Charges for one turn, then releases a devastating arcane attack.",
+        "energyCost": 8,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "elemental_fury",
+        "damageType": "arcane",
+        "baseDamage": 43,
+        "spellPowerScaling": 2.15,
+        "physicalPowerScaling": 0,
+        "chargeTurns": 1,
+        "chargeText": "Axiom-9, the Final Engine bends the battlefield toward Terminal Proof.",
+        "chargeVfx": "elemental_fury"
+      },
+      {
+        "id": "enemy-ability-a16-axiom-9-final-engine-execution",
+        "name": "End the Pilgrimage",
+        "description": "Deals 80% more damage while the player has nullify.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "arcane",
+        "baseDamage": 28,
+        "spellPowerScaling": 1.75,
+        "physicalPowerScaling": 0,
+        "targetStatusDamageBonus": {
+          "status": "nullify",
+          "multiplier": 1.8
+        }
+      },
+      {
+        "id": "enemy-ability-a16-axiom-9-final-engine-recover",
+        "name": "Sovereign Renewal",
+        "description": "Restores 32% of maximum Health and gains Shielded.",
+        "energyCost": 5,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.32,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a16-axiom-9-final-engine-basic",
+        "name": "Thronebreaker",
+        "description": "A reliable arcane attack that applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "arcane",
+        "baseDamage": 17,
+        "spellPowerScaling": 1.35,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.35
+          }
+        ]
+      }
+    ],
+    "behaviorNotes": "Alternates Nullify and Disarm, charges Terminal Proof, and initiates emergency reconstruction below half Health.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#52728e",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a16-axiom-9-final-engine-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.55
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-axiom-9-final-engine-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "nullify"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-axiom-9-final-engine-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "nullify"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a16-axiom-9-final-engine-charge",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 8
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a16-axiom-9-final-engine-basic"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a17-oathless-seraph": {
+    "id": "enemy-a17-oathless-seraph",
+    "name": "Oathless Seraph",
+    "title": "Angel Without a Heaven",
+    "imageUrl": "/assets/enemies/full/a17-oathless-seraph.webp",
+    "portraitUrl": "/assets/enemies/portraits/a17-oathless-seraph.webp",
+    "maxHp": 1130,
+    "physicalPower": 67,
+    "spellPower": 122,
+    "armor": 62,
+    "magicResistance": 68,
+    "hitChance": 1.08,
+    "dodgeChance": 0.09,
+    "critChance": 0.18000000000000002,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-last-rampart-ring",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a17-oathless-seraph-signature",
+        "name": "Forsworn Radiance",
+        "description": "A tactical fire attack that applies burn.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "fire",
+        "baseDamage": 24,
+        "spellPowerScaling": 1.65,
+        "physicalPowerScaling": 0,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "burn",
+            "stacks": 3,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-oathless-seraph-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-oathless-seraph-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "damageType": "fire",
+        "baseDamage": 13,
+        "spellPowerScaling": 1.15,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Burns and Blinds the player, then restores itself in stolen holy light.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#d3b767",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a17-oathless-seraph-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-oathless-seraph-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "burn"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a17-oathless-seraph-pressure",
+        "enemy-ability-a17-oathless-seraph-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a17-grave-tide-leviathan": {
+    "id": "enemy-a17-grave-tide-leviathan",
+    "name": "Grave-Tide Leviathan",
+    "title": "Beast Beneath the Soul-Road",
+    "imageUrl": "/assets/enemies/full/a17-grave-tide-leviathan.webp",
+    "portraitUrl": "/assets/enemies/portraits/a17-grave-tide-leviathan.webp",
+    "maxHp": 1172,
+    "physicalPower": 67,
+    "spellPower": 126,
+    "armor": 64,
+    "magicResistance": 66,
+    "hitChance": 1.08,
+    "dodgeChance": 0.105,
+    "critChance": 0.18000000000000002,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-grave-communion-head",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a17-grave-tide-leviathan-signature",
+        "name": "Drowning Memory",
+        "description": "A tactical frost attack that applies wet.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "frost",
+        "baseDamage": 24,
+        "spellPowerScaling": 1.65,
+        "physicalPowerScaling": 0,
+        "hits": 1,
+        "statusApplications": [
+          {
+            "status": "wet",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-grave-tide-leviathan-recover",
+        "name": "Sustain the Line",
+        "description": "Heals the most wounded ally and grants it Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "lowest_health",
+        "friendlyHealSpellPowerScaling": 2.65,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-grave-tide-leviathan-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "damageType": "frost",
+        "baseDamage": 13,
+        "spellPowerScaling": 1.15,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Applies Wet before crushing with Frost and heals through the tide it summons.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#d3b767",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a17-grave-tide-leviathan-recover",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-grave-tide-leviathan-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "wet"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a17-grave-tide-leviathan-pressure",
+        "enemy-ability-a17-grave-tide-leviathan-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a17-soulbound-archon": {
+    "id": "enemy-a17-soulbound-archon",
+    "name": "Soulbound Archon",
+    "title": "Warden of Returning Souls",
+    "imageUrl": "/assets/enemies/full/a17-soulbound-archon.webp",
+    "portraitUrl": "/assets/enemies/portraits/a17-soulbound-archon.webp",
+    "maxHp": 1440,
+    "physicalPower": 67,
+    "spellPower": 136,
+    "armor": 58,
+    "magicResistance": 72,
+    "hitChance": 1.1,
+    "dodgeChance": 0.12,
+    "critChance": 0.17,
+    "energyRegen": 4,
+    "maxEnergy": 12,
+    "startingEnergy": 12,
+    "startingStatuses": [
+      {
+        "status": "resilient",
+        "stacks": 1,
+        "duration": 3
+      }
+    ],
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-grave-communion-chest",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a17-soulbound-archon-resurrect",
+        "name": "Sovereign Recall",
+        "description": "Resurrects one defeated ally with 100% of its maximum Health.",
+        "energyCost": 7,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "resurrectFriendlyMaxHpRatio": 1
+      },
+      {
+        "id": "enemy-ability-a17-soulbound-archon-restore",
+        "name": "Deathless Benediction",
+        "description": "Restores massive Health to every living ally and grants Shielded.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "friendlyTarget": "all_enemies",
+        "friendlyHealSpellPowerScaling": 2.88,
+        "friendlyStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-soulbound-archon-curse",
+        "name": "Funeral Malediction",
+        "description": "Afflicts the player with vulnerable while the caster restores 18% of maximum Health.",
+        "energyCost": 3,
+        "cooldownTurns": 1,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ],
+        "selfHealMaxHpRatio": 0.18
+      }
+    ],
+    "behaviorNotes": "Returns a fallen servant at full Health and seals every survivor in restorative soul-light.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 1,
+    "accent": "#d3b767",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a17-soulbound-archon-resurrect",
+          "all": [
+            {
+              "type": "dead_ally_exists"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-soulbound-archon-restore",
+          "all": [
+            {
+              "type": "any_ally_hp_below",
+              "ratio": 0.72
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-soulbound-archon-curse",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a17-soulbound-archon-restore",
+        "enemy-ability-a17-soulbound-archon-curse"
+      ],
+      "fallback": "ordered"
+    }
+  },
+  "enemy-a17-crown-eater": {
+    "id": "enemy-a17-crown-eater",
+    "name": "Crown-Eater",
+    "title": "Devourer of Final Names",
+    "imageUrl": "/assets/enemies/full/a17-crown-eater.webp",
+    "portraitUrl": "/assets/enemies/portraits/a17-crown-eater.webp",
+    "maxHp": 1256,
+    "physicalPower": 134,
+    "spellPower": 49,
+    "armor": 68,
+    "magicResistance": 62,
+    "hitChance": 1.08,
+    "dodgeChance": 0.135,
+    "critChance": 0.18000000000000002,
+    "energyRegen": 4,
+    "maxEnergy": 11,
+    "startingEnergy": 9,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-grave-communion-pants",
+        "chance": 15
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a17-crown-eater-signature",
+        "name": "Eat the Name",
+        "description": "A tactical physical attack that applies reckless.",
+        "energyCost": 5,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_heavy_cleave",
+        "damageType": "physical",
+        "baseDamage": 24,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.65,
+        "hits": 2,
+        "statusApplications": [
+          {
+            "status": "reckless",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-crown-eater-recover",
+        "name": "Refuse the Wound",
+        "description": "Restores 24% of maximum Health and gains Shielded.",
+        "energyCost": 4,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.24,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-crown-eater-pressure",
+        "name": "Relentless Pressure",
+        "description": "A low-cost attack that applies Weaken and restores 10% of maximum Health.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_bite_claw",
+        "damageType": "physical",
+        "baseDamage": 13,
+        "spellPowerScaling": 0,
+        "physicalPowerScaling": 1.15,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.3
+          }
+        ],
+        "selfHealMaxHpRatio": 0.1
+      }
+    ],
+    "behaviorNotes": "Forces Reckless, tears away certainty with Blind, and feeds on the resulting chaos.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#d3b767",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a17-crown-eater-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.62
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-crown-eater-signature",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "reckless"
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a17-crown-eater-pressure",
+        "enemy-ability-a17-crown-eater-signature"
+      ],
+      "fallback": "cycle"
+    }
+  },
+  "enemy-a17-nhal-sovereign-returning": {
+    "id": "enemy-a17-nhal-sovereign-returning",
+    "name": "Nhal, Sovereign of Returning",
+    "title": "King Beyond the Final Door",
+    "imageUrl": "/assets/enemies/full/a17-nhal-sovereign-returning.webp",
+    "portraitUrl": "/assets/enemies/portraits/a17-nhal-sovereign-returning.webp",
+    "maxHp": 2890,
+    "physicalPower": 140,
+    "spellPower": 146,
+    "armor": 82,
+    "magicResistance": 88,
+    "hitChance": 1.1400000000000001,
+    "dodgeChance": 0.14,
+    "critChance": 0.24,
+    "energyRegen": 5,
+    "maxEnergy": 14,
+    "startingEnergy": 14,
+    "dropTable": [
+      {
+        "itemId": "gear-endgame-grave-communion-boots",
+        "chance": 28
+      }
+    ],
+    "abilities": [
+      {
+        "id": "enemy-ability-a17-nhal-sovereign-returning-setup",
+        "name": "Sovereign's Mark",
+        "description": "Applies 2 stacks of vulnerable and Vulnerable.",
+        "energyCost": 3,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_hex",
+        "statusApplications": [
+          {
+            "status": "vulnerable",
+            "stacks": 2,
+            "duration": 3
+          },
+          {
+            "status": "vulnerable",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-nhal-sovereign-returning-charge",
+        "name": "The Last Return",
+        "description": "Charges for one turn, then releases a devastating shadow attack.",
+        "energyCost": 8,
+        "cooldownTurns": 4,
+        "range": "ranged",
+        "vfx": "elemental_fury",
+        "damageType": "shadow",
+        "baseDamage": 48,
+        "spellPowerScaling": 2.15,
+        "physicalPowerScaling": 0,
+        "chargeTurns": 1,
+        "chargeText": "Nhal, Sovereign of Returning bends the battlefield toward The Last Return.",
+        "chargeVfx": "elemental_fury"
+      },
+      {
+        "id": "enemy-ability-a17-nhal-sovereign-returning-execution",
+        "name": "End the Pilgrimage",
+        "description": "Deals 80% more damage while the player has vulnerable.",
+        "energyCost": 6,
+        "cooldownTurns": 2,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 32,
+        "spellPowerScaling": 1.75,
+        "physicalPowerScaling": 0,
+        "targetStatusDamageBonus": {
+          "status": "vulnerable",
+          "multiplier": 1.8
+        }
+      },
+      {
+        "id": "enemy-ability-a17-nhal-sovereign-returning-recover",
+        "name": "Sovereign Renewal",
+        "description": "Restores 32% of maximum Health and gains Shielded.",
+        "energyCost": 5,
+        "cooldownTurns": 3,
+        "range": "ranged",
+        "vfx": "enemy_spirit_heal",
+        "selfHealMaxHpRatio": 0.32,
+        "selfStatusApplications": [
+          {
+            "status": "shielded",
+            "stacks": 1,
+            "duration": 2
+          }
+        ]
+      },
+      {
+        "id": "enemy-ability-a17-nhal-sovereign-returning-basic",
+        "name": "Thronebreaker",
+        "description": "A reliable shadow attack that applies Weaken.",
+        "energyCost": 2,
+        "cooldownTurns": 0,
+        "range": "ranged",
+        "vfx": "enemy_natures_beam",
+        "damageType": "shadow",
+        "baseDamage": 20,
+        "spellPowerScaling": 1.35,
+        "physicalPowerScaling": 0,
+        "statusApplications": [
+          {
+            "status": "weaken",
+            "stacks": 1,
+            "duration": 2,
+            "chance": 0.35
+          }
+        ]
+      }
+    ],
+    "behaviorNotes": "Chains lethal curses, heals through every phase, and charges The Last Return when the player is exposed.",
+    "behavior": "priority",
+    "maxActionsPerTurn": 2,
+    "accent": "#d3b767",
+    "ai": {
+      "rules": [
+        {
+          "abilityId": "enemy-ability-a17-nhal-sovereign-returning-recover",
+          "all": [
+            {
+              "type": "self_hp_below",
+              "ratio": 0.55
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-nhal-sovereign-returning-execution",
+          "all": [
+            {
+              "type": "player_has_status",
+              "status": "vulnerable"
+            },
+            {
+              "type": "energy_at_least",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-nhal-sovereign-returning-setup",
+          "all": [
+            {
+              "type": "player_missing_status",
+              "status": "vulnerable"
+            }
+          ]
+        },
+        {
+          "abilityId": "enemy-ability-a17-nhal-sovereign-returning-charge",
+          "all": [
+            {
+              "type": "energy_at_least",
+              "amount": 8
+            }
+          ]
+        }
+      ],
+      "fallbackAbilityIds": [
+        "enemy-ability-a17-nhal-sovereign-returning-basic"
+      ],
+      "fallback": "ordered"
+    }
   }
+
 };

@@ -8354,6 +8354,615 @@ export const ITEMS: InventoryItem[] = [
     "craftingRecipe": null,
     "vendorPrerequisiteAdventureId": "world-below"
   },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-head",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Crown",
+    "slot": "head",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/head-05.webp",
+    "stats": {
+      "agility": 18,
+      "vitality": 10
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "leather",
+    "armor": 30,
+    "magicResistance": 22
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-chest",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Vestment",
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "agility": 18,
+      "vitality": 10
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "leather",
+    "armor": 33,
+    "magicResistance": 24
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-pants",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Legguards",
+    "slot": "pants",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "agility": 19,
+      "vitality": 11
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "leather",
+    "armor": 36,
+    "magicResistance": 26
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-boots",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Treads",
+    "slot": "boots",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "agility": 19,
+      "vitality": 11
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "leather",
+    "armor": 39,
+    "magicResistance": 28
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-mainhand",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Weapon",
+    "slot": "mainHand",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/dagger-05.webp",
+    "stats": {
+      "agility": 20,
+      "vitality": 12
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "dagger",
+    "weaponEquipType": "oneHand",
+    "physicalPower": 42
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-offhand",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Focus",
+    "slot": "offHand",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/dagger-04.webp",
+    "stats": {
+      "agility": 20,
+      "vitality": 12
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "dagger",
+    "weaponEquipType": "oneHand",
+    "physicalPower": 43
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-eclipsed-oath-ring",
+    "goldCost": 1200,
+    "name": "Eclipsed Oath Seal",
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A Shadow relic claimed beyond the known world. Part of the seven-piece Eclipsed Oath set.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "agility": 21,
+      "vitality": 13
+    },
+    "set": "set-eclipsed-oath",
+    "setName": "Eclipsed Oath",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "physicalPower": 22
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-head",
+    "goldCost": 1200,
+    "name": "Infinite Equation Crown",
+    "slot": "head",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/head-05.webp",
+    "stats": {
+      "intelligence": 20,
+      "vitality": 10
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 33,
+    "magicResistance": 25
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-chest",
+    "goldCost": 1200,
+    "name": "Infinite Equation Vestment",
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "intelligence": 20,
+      "vitality": 10
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 36,
+    "magicResistance": 27
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-pants",
+    "goldCost": 1200,
+    "name": "Infinite Equation Legguards",
+    "slot": "pants",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "intelligence": 21,
+      "vitality": 11
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 39,
+    "magicResistance": 29
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-boots",
+    "goldCost": 1200,
+    "name": "Infinite Equation Treads",
+    "slot": "boots",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "intelligence": 21,
+      "vitality": 11
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 42,
+    "magicResistance": 31
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-mainhand",
+    "goldCost": 1200,
+    "name": "Infinite Equation Weapon",
+    "slot": "mainHand",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/wand-05.webp",
+    "stats": {
+      "intelligence": 22,
+      "vitality": 12
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "wand",
+    "weaponEquipType": "mainHand",
+    "magicalPower": 47
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-offhand",
+    "goldCost": 1200,
+    "name": "Infinite Equation Focus",
+    "slot": "offHand",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/tome-05.webp",
+    "stats": {
+      "intelligence": 22,
+      "vitality": 12
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "tome",
+    "weaponEquipType": "offHand",
+    "magicalPower": 48
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-infinite-equation-ring",
+    "goldCost": 1200,
+    "name": "Infinite Equation Seal",
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A Arcanist relic claimed beyond the known world. Part of the seven-piece Infinite Equation set.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "intelligence": 23,
+      "vitality": 13
+    },
+    "set": "set-infinite-equation",
+    "setName": "Infinite Equation",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "magicalPower": 22
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-head",
+    "goldCost": 1200,
+    "name": "Last Rampart Crown",
+    "slot": "head",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/head-05.webp",
+    "stats": {
+      "strength": 22,
+      "vitality": 10
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "plate",
+    "armor": 36,
+    "magicResistance": 28
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-chest",
+    "goldCost": 1200,
+    "name": "Last Rampart Vestment",
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "strength": 22,
+      "vitality": 10
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "plate",
+    "armor": 39,
+    "magicResistance": 30
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-pants",
+    "goldCost": 1200,
+    "name": "Last Rampart Legguards",
+    "slot": "pants",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "strength": 23,
+      "vitality": 11
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "plate",
+    "armor": 42,
+    "magicResistance": 32
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-boots",
+    "goldCost": 1200,
+    "name": "Last Rampart Treads",
+    "slot": "boots",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "strength": 23,
+      "vitality": 11
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "plate",
+    "armor": 45,
+    "magicResistance": 34
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-mainhand",
+    "goldCost": 1200,
+    "name": "Last Rampart Weapon",
+    "slot": "mainHand",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/mace-05.webp",
+    "stats": {
+      "strength": 24,
+      "vitality": 12
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "mace",
+    "weaponEquipType": "mainHand",
+    "physicalPower": 48
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-offhand",
+    "goldCost": 1200,
+    "name": "Last Rampart Focus",
+    "slot": "offHand",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/shield-05.webp",
+    "stats": {
+      "strength": 24,
+      "vitality": 12
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "shield",
+    "weaponEquipType": "offHand",
+    "physicalPower": 49
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-last-rampart-ring",
+    "goldCost": 1200,
+    "name": "Last Rampart Seal",
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A Brute relic claimed beyond the known world. Part of the seven-piece Last Rampart set.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "strength": 25,
+      "vitality": 13
+    },
+    "set": "set-last-rampart",
+    "setName": "Last Rampart",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "physicalPower": 22
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-head",
+    "goldCost": 1200,
+    "name": "Grave Communion Crown",
+    "slot": "head",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/head-05.webp",
+    "stats": {
+      "intelligence": 24,
+      "vitality": 10
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 39,
+    "magicResistance": 31
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-chest",
+    "goldCost": 1200,
+    "name": "Grave Communion Vestment",
+    "slot": "chest",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/chest-05.webp",
+    "stats": {
+      "intelligence": 24,
+      "vitality": 10
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 42,
+    "magicResistance": 33
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-pants",
+    "goldCost": 1200,
+    "name": "Grave Communion Legguards",
+    "slot": "pants",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/pants-05.webp",
+    "stats": {
+      "intelligence": 25,
+      "vitality": 11
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 45,
+    "magicResistance": 35
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-boots",
+    "goldCost": 1200,
+    "name": "Grave Communion Treads",
+    "slot": "boots",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/boots-05.webp",
+    "stats": {
+      "intelligence": 25,
+      "vitality": 11
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "armorMaterial": "cloth",
+    "armor": 48,
+    "magicResistance": 37
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-mainhand",
+    "goldCost": 1200,
+    "name": "Grave Communion Weapon",
+    "slot": "mainHand",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/wand-04.webp",
+    "stats": {
+      "intelligence": 26,
+      "vitality": 12
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "wand",
+    "weaponEquipType": "mainHand",
+    "magicalPower": 53
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-offhand",
+    "goldCost": 1200,
+    "name": "Grave Communion Focus",
+    "slot": "offHand",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/tome-04.webp",
+    "stats": {
+      "intelligence": 26,
+      "vitality": 12
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "weaponKind": "tome",
+    "weaponEquipType": "offHand",
+    "magicalPower": 54
+  },
+  {
+    "kind": "gear",
+    "id": "gear-endgame-grave-communion-ring",
+    "goldCost": 1200,
+    "name": "Grave Communion Seal",
+    "slot": "ring",
+    "rarity": "legendary",
+    "description": "A Cultist relic claimed beyond the known world. Part of the seven-piece Grave Communion set.",
+    "iconUrl": "/assets/gear-icons/ring-05.webp",
+    "stats": {
+      "intelligence": 27,
+      "vitality": 13
+    },
+    "set": "set-grave-communion",
+    "setName": "Grave Communion",
+    "arkenfallVendor": null,
+    "craftingRecipe": null,
+    "vendorPrerequisiteAdventureId": null,
+    "magicalPower": 22
+  }
+
   // SHOP PROGRESSION END
 ];
 
@@ -9547,6 +10156,251 @@ export const GEAR_SETS: GearSetDefinition[] = [
       }
     ]
   },
+  {
+    "id": "set-eclipsed-oath",
+    "name": "Eclipsed Oath",
+    "pieceCount": 7,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+24 Agility.",
+        "passive": {
+          "stats": {
+            "agility": 24
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+32 Physical Power.",
+        "passive": {
+          "physicalPower": 32
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "+12% Critical Strike Chance.",
+        "passive": {
+          "critChance": 0.12
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Your Poison and Bleed deal 40% more damage.",
+        "passive": {
+          "statusDamage": {
+            "poison": 0.4,
+            "bleed": 0.4
+          }
+        }
+      },
+      {
+        "requiredPieces": 6,
+        "description": "+10% Dodge Chance.",
+        "passive": {
+          "dodgeChance": 0.1
+        }
+      },
+      {
+        "requiredPieces": 7,
+        "description": "Whenever you apply Poison or Bleed, apply 2 additional stacks and restore Health equal to 20% of their damage.",
+        "passive": {
+          "statusApplicationStacks": {
+            "poison": 2,
+            "bleed": 2
+          },
+          "statusDamageLeech": {
+            "poison": 0.2,
+            "bleed": 0.2
+          }
+        },
+        "specialEffectNotes": "Eclipsed Oath's class-defining seven-piece effect."
+      }
+    ]
+  },
+  {
+    "id": "set-infinite-equation",
+    "name": "Infinite Equation",
+    "pieceCount": 7,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+24 Intelligence.",
+        "passive": {
+          "stats": {
+            "intelligence": 24
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+32 Spell Power.",
+        "passive": {
+          "magicalPower": 32
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "+12% Hit Chance.",
+        "passive": {
+          "hitChance": 0.12
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Apply 2 additional Arcane Wounds whenever you apply Arcane Wound.",
+        "passive": {
+          "statusApplicationStacks": {
+            "arcaneWound": 2
+          }
+        }
+      },
+      {
+        "requiredPieces": 6,
+        "description": "+2 Energy regeneration.",
+        "passive": {
+          "energyRegen": 2
+        }
+      },
+      {
+        "requiredPieces": 7,
+        "description": "Gain 25% more Spell Power. Your Burn, Cold, Electrified, and Arcane Wound last 1 additional turn.",
+        "passive": {
+          "magicalPowerMultiplier": 0.25,
+          "statusDurationBonuses": {
+            "burn": 1,
+            "cold": 1,
+            "electrified": 1,
+            "arcaneWound": 1
+          }
+        },
+        "specialEffectNotes": "Infinite Equation's class-defining seven-piece effect."
+      }
+    ]
+  },
+  {
+    "id": "set-last-rampart",
+    "name": "Last Rampart",
+    "pieceCount": 7,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+24 Strength.",
+        "passive": {
+          "stats": {
+            "strength": 24
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+32 Physical Power.",
+        "passive": {
+          "physicalPower": 32
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "+42 Armor.",
+        "passive": {
+          "armor": 42
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Generate 45% more Guard.",
+        "passive": {
+          "guardGeneration": 0.45
+        }
+      },
+      {
+        "requiredPieces": 6,
+        "description": "Add direct damage equal to 12% of your Armor.",
+        "passive": {
+          "bonusDirectDamageFromArmorRatio": 0.12
+        }
+      },
+      {
+        "requiredPieces": 7,
+        "description": "Begin combat with Guard equal to 35% of maximum Health and gain 25% more Armor.",
+        "passive": {
+          "startingAbsorptionMaxHpRatios": {
+            "guard": 0.35
+          },
+          "armorMultiplier": 0.25
+        },
+        "specialEffectNotes": "Last Rampart's class-defining seven-piece effect."
+      }
+    ]
+  },
+  {
+    "id": "set-grave-communion",
+    "name": "Grave Communion",
+    "pieceCount": 7,
+    "bonuses": [
+      {
+        "requiredPieces": 2,
+        "description": "+18 Intelligence and +18 Vitality.",
+        "passive": {
+          "stats": {
+            "intelligence": 18,
+            "vitality": 18
+          }
+        }
+      },
+      {
+        "requiredPieces": 3,
+        "description": "+30 Spell Power.",
+        "passive": {
+          "magicalPower": 30
+        }
+      },
+      {
+        "requiredPieces": 4,
+        "description": "Your Poison, Burn, and Bleed deal 35% more damage.",
+        "passive": {
+          "statusDamage": {
+            "poison": 0.35,
+            "burn": 0.35,
+            "bleed": 0.35
+          }
+        }
+      },
+      {
+        "requiredPieces": 5,
+        "description": "Restore Health equal to 18% of your Poison, Burn, and Bleed damage.",
+        "passive": {
+          "statusDamageLeech": {
+            "poison": 0.18,
+            "burn": 0.18,
+            "bleed": 0.18
+          }
+        }
+      },
+      {
+        "requiredPieces": 6,
+        "description": "+25% healing received.",
+        "passive": {
+          "healingReceived": 0.25
+        }
+      },
+      {
+        "requiredPieces": 7,
+        "description": "Blood Covenant: enter combat wounded by 15%. The first lethal hit instead restores 35% of maximum Health, and your afflictions deal 50% more damage.",
+        "passive": {
+          "fullHealthCombatStartSelfDamageMaxHpRatio": 0.15,
+          "deathPreventionHealRatio": 0.35,
+          "statusDamage": {
+            "poison": 0.5,
+            "burn": 0.5,
+            "bleed": 0.5
+          }
+        },
+        "specialEffectNotes": "Grave Communion's class-defining seven-piece effect."
+      }
+    ]
+  },
+
   // SHOP PROGRESSION SETS START
   {
     "id": "set-shop-a2-galehunter",

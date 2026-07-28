@@ -14,7 +14,7 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "../types";
-import { applyDamageToPlayer, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
+import { applyDamageToPlayer, applyHealthDamageToEnemy, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
 import { absorptionSuffix, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueOutcome, queuePassiveAnimation, queuePlayerSurvivalWindow, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueTurn, queueTurnAtEvent, statusInfo } from "./eventQueue";
 import { reorderCombat } from "./state";
 
@@ -44,6 +44,7 @@ export function processTurnStart(
   magicResistance = 0,
   playerStatusDamageMultiplier = 1,
   playerActionSurvivalPending = false,
+  healthDamageLimit = Number.POSITIVE_INFINITY,
 ): StatusTurnResult {
   let nextHp = hp;
   let nextStatuses = [...statuses];
@@ -58,7 +59,7 @@ export function processTurnStart(
   if (burn) {
     const sourceMultiplier = burn.sourceId === "player" ? playerStatusDamageMultiplier : 1;
     const absorption = absorbIncomingDamage(nextStatuses, Math.round(getAfflictionDamage(burn, nextStatuses, sourceMultiplier, armor, magicResistance) * incomingDamageMultiplier));
-    const damage = absorption.damage;
+    const damage = Math.min(absorption.damage, Math.max(0, healthDamageLimit));
     burnDamage = damage;
     const playerDamage = targetId === "player"
       ? applyDamageToPlayer(nextHp, maxHp, absorption.statuses, damage, survivalPending)
@@ -150,6 +151,7 @@ export function processTurnEnd(
   incomingDamageMultiplier = 1,
   armor = 0,
   magicResistance = 0,
+  healthDamageLimit = Number.POSITIVE_INFINITY,
 ): { hp: number; statuses: StatusEffect[]; poisonDamage: number } {
   let nextHp = hp;
   let nextStatuses = [...statuses];
@@ -158,7 +160,7 @@ export function processTurnEnd(
   if (poison) {
     const sourceMultiplier = poison.sourceId === "player" ? playerPoisonDamageMultiplier : 1;
     const absorption = absorbIncomingDamage(nextStatuses, Math.round(getAfflictionDamage(poison, nextStatuses, sourceMultiplier, armor, magicResistance) * incomingDamageMultiplier));
-    const damage = absorption.damage;
+    const damage = Math.min(absorption.damage, Math.max(0, healthDamageLimit));
     poisonDamage = damage;
     nextHp = Math.max(0, nextHp - damage);
     nextStatuses = wakeFromDamage(absorption.statuses, damage);
@@ -180,11 +182,12 @@ export function applyBleedAfterAbility(
   pendingEffects: CombatPendingEffect[],
   extraMultiplier = 1,
   armor = 0,
+  healthDamageLimit = Number.POSITIVE_INFINITY,
 ): { hp: number; statuses: StatusEffect[]; damage: number; eventIndex: number | null; sourceId?: string } {
   const bleed = statuses.find((status) => status.id === "bleed");
   if (!bleed) return { hp, statuses, damage: 0, eventIndex: null };
   const absorption = absorbIncomingDamage(statuses, getAfflictionDamage(bleed, statuses, extraMultiplier, armor));
-  const damage = absorption.damage;
+  const damage = Math.min(absorption.damage, Math.max(0, healthDamageLimit));
   const text = targetId === "player" ? `You take ${damage} damage from Bleed${absorptionSuffix(absorption.absorbed)}.` : `${targetName} takes ${damage} damage from Bleed${absorptionSuffix(absorption.absorbed)}.`;
   logs.push(makeLog(text, statusInfo(bleed)));
   const damageEventIndex = queueDamage(events, pendingEffects, text, targetId, damage, { sourceLabel: bleed.name });
@@ -307,6 +310,7 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
   if (!nextActor) {
     nextTurn += 1;
     nextActedActorIds = [];
+    combat = { ...combat, enemies: combat.enemies.map((enemy) => ({ ...enemy, damageTakenThisRound: 0 })) };
     nextActor = combat.turnOrder.find((actor) => isActorAlive(combat, actor));
   }
   if (!nextActor) return combat;
@@ -490,8 +494,13 @@ export function applyPlayerProcs(
           enemyTargets.forEach((target) => {
             const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId) ?? target;
             const absorption = absorbIncomingDamage(currentTarget.statuses, getModifiedDamage(baseDamage, playerStatuses, currentTarget.statuses, effect.damageType));
-            const damage = absorption.damage;
-            enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(absorption.statuses, damage) } : enemy);
+            let damage = absorption.damage;
+            enemies = enemies.map((enemy) => {
+              if (enemy.instanceId !== currentTarget.instanceId) return enemy;
+              const result = applyHealthDamageToEnemy(enemy, damage, absorption.statuses);
+              damage = result.damage;
+              return result.enemy;
+            });
             logs.push(makeLog(`${proc.name} deals ${damage} damage to ${currentTarget.name}${absorptionSuffix(absorption.absorbed)}.`, procInfo));
             markPassive(currentTarget.instanceId, proc.name);
             queueDamageAtEvent(pendingEffects, passiveEventIndex, currentTarget.instanceId, damage);
@@ -516,12 +525,13 @@ export function applyPlayerProcs(
           const currentTarget = enemies.find((enemy) => enemy.instanceId === target.instanceId) ?? target;
           const baseDamage = Math.max(1, Math.round(currentTarget.hp * Math.max(0, effect.ratio)));
           const absorption = absorbIncomingDamage(currentTarget.statuses, getModifiedDamage(baseDamage, playerStatuses, currentTarget.statuses, effect.damageType));
-          const damage = absorption.damage;
-          enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? {
-            ...enemy,
-            hp: Math.max(0, enemy.hp - damage),
-            statuses: wakeFromDamage(absorption.statuses, damage),
-          } : enemy);
+          let damage = absorption.damage;
+          enemies = enemies.map((enemy) => {
+            if (enemy.instanceId !== currentTarget.instanceId) return enemy;
+            const result = applyHealthDamageToEnemy(enemy, damage, absorption.statuses);
+            damage = result.damage;
+            return result.enemy;
+          });
           logs.push(makeLog(`${proc.name} deals ${damage} damage to ${currentTarget.name}${absorptionSuffix(absorption.absorbed)}.`, procInfo));
           markPassive(currentTarget.instanceId, proc.name);
           queueDamageAtEvent(pendingEffects, passiveEventIndex, currentTarget.instanceId, damage);
@@ -674,12 +684,13 @@ export function applySmiteRetribution(
     const defense = getDefense(target.armor, target.magicResistance, target.statuses, "arcane");
     const incoming = getModifiedDamage(Math.max(1, rawDamage - defense), state.playerStatuses, target.statuses, "arcane");
     const absorption = absorbIncomingDamage(target.statuses, incoming);
-    const damage = absorption.damage;
-    enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
-      ...enemy,
-      hp: Math.max(0, enemy.hp - damage),
-      statuses: wakeFromDamage(absorption.statuses, damage),
-    } : enemy);
+    let damage = absorption.damage;
+    enemies = enemies.map((enemy) => {
+      if (enemy.instanceId !== target.instanceId) return enemy;
+      const result = applyHealthDamageToEnemy(enemy, damage, absorption.statuses);
+      damage = result.damage;
+      return result.enemy;
+    });
     logs.push(makeLog(`Smite deals ${damage} Magic Damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, statusInfo(target.statuses.find((status) => status.id === "smite") ?? createStatusEffect("smite"))));
     queueDamageAtEvent(pendingEffects, eventIndex, target.instanceId, damage, "Smite");
     queueAbsorptionChanges(pendingEffects, eventIndex, target.instanceId, absorption);

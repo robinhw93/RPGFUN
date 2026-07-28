@@ -14,10 +14,10 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, EnemyAbilityDefinition, EnemyAiCondition, EnemyState, InspectableInfo, StatusEffectId } from "../types";
-import { applyDamageToPlayer, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, isPlayerActionBlockingStatus, wakeFromDamage } from "./damage";
+import { applyDamageToPlayer, applyHealthDamageToEnemy, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getRemainingEnemyHealthDamageThisRound, isPlayerActionBlockingStatus, wakeFromDamage } from "./damage";
 import { absorptionSuffix, makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueHeal, queueHealAtEvent, queuePassiveAnimation, queuePlayerSurvivalWindow, queueStatus, queueStatusReconciliation, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, moveToNextActor, processTurnEnd, processTurnStart, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
-import { ensureCombatState, isEnemyTargetable, normalizeEnemies } from "./state";
+import { ensureCombatState, getEnemyStartingEnergy, isEnemyTargetable, normalizeEnemies } from "./state";
 
 export interface EnemyAiContext {
   playerHp: number;
@@ -55,6 +55,7 @@ function enemyAiConditionMatches(condition: EnemyAiCondition, enemy: EnemyState,
     case "any_ally_missing_status": return enemies.some((candidate) => candidate.hp > 0 && !candidate.fled && !hasStatus(candidate.statuses, condition.status));
     case "living_allies_at_least": return enemies.filter((candidate) => candidate.hp > 0 && !candidate.fled).length >= condition.count;
     case "no_other_living_allies": return !enemies.some((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp > 0 && !candidate.fled);
+    case "dead_ally_exists": return enemies.some((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp <= 0 && !candidate.fled);
     case "energy_at_least": return enemy.energy >= condition.amount;
     case "last_ability_is": return enemy.lastAbilityId === condition.abilityId;
     case "phase_is": return enemy.behaviorPhase === condition.phase;
@@ -155,6 +156,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
   const displayedEnemyStatuses = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.statuses]));
+  const displayedEnemyRoundDamage = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.damageTakenThisRound]));
   const displayedEnemyCharges = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.chargingAbilityId]));
   const displayedPlayerHp = combat.playerHp;
   const displayedPlayerStatuses = combat.playerStatuses;
@@ -187,6 +189,8 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       originalEnemy.armor,
       originalEnemy.magicResistance,
       (derived.statusDamageMultipliers.burn ?? 1) * getCharacterStatusDamageMultiplier(character, "burn", combat.playerStatuses),
+      false,
+      getRemainingEnemyHealthDamageThisRound(originalEnemy),
     );
   const abilityCooldowns = continuingEnemyTurn
     ? originalEnemy.abilityCooldowns ?? {}
@@ -202,6 +206,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     stunned: false,
     abilityCooldowns,
     nextTurnEnergyRegenBonus: continuingEnemyTurn ? originalEnemy.nextTurnEnergyRegenBonus : 0,
+    damageTakenThisRound: (originalEnemy.damageTakenThisRound ?? 0) + enemyStart.burnDamage,
   };
   enemies[enemyIndex] = enemy;
   const sourceBurn = originalEnemy.statuses.find((status) => status.id === "burn");
@@ -311,6 +316,41 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         logs.push(makeLog(`${enemy.name} escapes with its loot.`, enemyAttackInfo));
       }
       enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? enemy : candidate);
+      const defeatedFriendly = (enemyAbility.resurrectFriendlyMaxHpRatio ?? 0) > 0
+        ? enemies.find((candidate) => candidate.instanceId !== enemy.instanceId && candidate.hp <= 0 && !candidate.fled)
+        : undefined;
+      if (defeatedFriendly) {
+        const resurrectedStatuses = (defeatedFriendly.startingStatuses ?? []).map((application) => createStatusEffect(application.status, {
+          stacks: application.stacks,
+          duration: application.duration,
+          sourceId: defeatedFriendly.id,
+        }));
+        const resurrectedHp = Math.max(1, Math.min(defeatedFriendly.maxHp, Math.round(defeatedFriendly.maxHp * (enemyAbility.resurrectFriendlyMaxHpRatio ?? 1))));
+        const resurrected = {
+          ...defeatedFriendly,
+          hp: resurrectedHp,
+          energy: getEnemyStartingEnergy(defeatedFriendly),
+          statuses: resurrectedStatuses,
+          stunned: false,
+          abilityCooldowns: {},
+          nextTurnEnergyRegenBonus: 0,
+          damageTakenThisRound: 0,
+          chargingAbilityId: undefined,
+        };
+        enemies = enemies.map((candidate) => candidate.instanceId === resurrected.instanceId ? resurrected : candidate);
+        pendingEffects.push({
+          id: `enemy-resurrect-${Date.now()}-${resurrected.instanceId}`,
+          eventIndex: abilityEventIndex,
+          type: "resurrect",
+          targetId: resurrected.instanceId,
+          hp: resurrected.hp,
+          energy: resurrected.energy,
+          statuses: resurrected.statuses,
+        });
+        queuePassiveAnimation(pendingEffects, abilityEventIndex, resurrected.instanceId, "Resurrected");
+        queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, resurrected.instanceId, enemy.instanceId, true);
+        logs.push(makeLog(`${enemy.name} resurrects ${resurrected.name} at full Health.`, enemyAttackInfo));
+      }
       const livingFriendlies = enemies.filter((candidate) => candidate.hp > 0);
       const friendlyTargets = enemyAbility.friendlyTarget === "lowest_health"
         ? livingFriendlies
@@ -353,8 +393,9 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         || enemyAbility.fleeCombat === true
         || (enemyAbility.nextTurnEnergyRegen ?? 0) > 0
         || enemyAbility.restoreFullEnergyNextTurn === true
+        || Boolean(enemyAbility.resurrectFriendlyMaxHpRatio)
         || Boolean(enemyAbility.friendlyTarget);
-      if (friendlyTargets.length === 0) queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId, true);
+      if (friendlyTargets.length === 0 && !defeatedFriendly) queueAbilityVfx(pendingEffects, abilityEventIndex, enemyAbility.vfx, isSelfUtility ? enemy.instanceId : "player", enemy.instanceId, true);
     } else if (successfulHits === 0) {
       logs.push(makeLog(`${enemy.name} misses you.`, enemyAttackInfo));
       queueDamage(events, pendingEffects, "You dodge the attack.", "player", 0, { attackerId: enemy.instanceId, attackRange: enemyAbility.range, attackPresentation: enemyAbility.range === "ranged" ? enemyAbility.rangedPresentation ?? "projectile" : "melee", projectileVfx: enemyAbility.vfx, projectileDamageType: enemyAbility.damageType, animationHitCount: abilityHits, missed: true });
@@ -480,10 +521,11 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
         const reckless = enemy.statuses.find((status) => status.id === "reckless")!;
         const recoil = Math.max(1, Math.round(damage * 0.5));
         const recoilAbsorption = absorbIncomingDamage(enemy.statuses, recoil);
-        enemy = { ...enemy, hp: Math.max(0, enemy.hp - recoilAbsorption.damage), statuses: wakeFromDamage(recoilAbsorption.statuses, recoilAbsorption.damage) };
+        const recoilResult = applyHealthDamageToEnemy(enemy, recoilAbsorption.damage, recoilAbsorption.statuses);
+        enemy = recoilResult.enemy;
         enemies[enemyIndex] = enemy;
-        logs.push(makeLog(`${enemy.name} takes ${recoilAbsorption.damage} damage from Reckless.`, statusInfo(reckless)));
-        const recoilEventIndex = queueDamage(events, pendingEffects, `${enemy.name} takes ${recoilAbsorption.damage} damage from Reckless${absorptionSuffix(recoilAbsorption.absorbed)}.`, enemy.instanceId, recoilAbsorption.damage, { sourceLabel: "Reckless" });
+        logs.push(makeLog(`${enemy.name} takes ${recoilResult.damage} damage from Reckless.`, statusInfo(reckless)));
+        const recoilEventIndex = queueDamage(events, pendingEffects, `${enemy.name} takes ${recoilResult.damage} damage from Reckless${absorptionSuffix(recoilAbsorption.absorbed)}.`, enemy.instanceId, recoilResult.damage, { sourceLabel: "Reckless" });
         queueAbsorptionChanges(pendingEffects, recoilEventIndex, enemy.instanceId, recoilAbsorption);
       }
     }
@@ -518,8 +560,8 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       if (enemyAbility.name === "Burning Glare") enemy.behaviorPhase = "burning";
     }
     if (enemy.behavior === "troll_bandit_king" && enemyAbility.name === "No Patience") enemy.behaviorPhase = "toying";
-    const bleedResult = applyBleedAfterAbility(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, 1, enemy.armor);
-    enemy = { ...enemy, hp: bleedResult.hp, statuses: bleedResult.statuses };
+    const bleedResult = applyBleedAfterAbility(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, 1, enemy.armor, getRemainingEnemyHealthDamageThisRound(enemy));
+    enemy = { ...enemy, hp: bleedResult.hp, statuses: bleedResult.statuses, damageTakenThisRound: enemy.damageTakenThisRound + bleedResult.damage };
     enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId
       ? { ...candidate, ...enemy, energy: energyAfterAbility }
       : candidate);
@@ -577,6 +619,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
       ...candidate,
       hp: displayedEnemyHp.get(candidate.instanceId) ?? candidate.hp,
       statuses: displayedEnemyStatuses.get(candidate.instanceId) ?? candidate.statuses,
+      damageTakenThisRound: displayedEnemyRoundDamage.get(candidate.instanceId) ?? candidate.damageTakenThisRound,
       chargingAbilityId: displayedEnemyCharges.get(candidate.instanceId),
     }));
     return {
@@ -598,9 +641,9 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
   if (enemy.hp > 0) {
     const hpBeforePoison = enemy.hp;
     const poisonEventIndex = events.length;
-    const enemyEnd = processTurnEnd(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, derived.statusDamageMultipliers.poison ?? 1, 1, enemy.armor, enemy.magicResistance);
+    const enemyEnd = processTurnEnd(enemy.hp, enemy.statuses, enemy.instanceId, enemy.name, logs, events, pendingEffects, derived.statusDamageMultipliers.poison ?? 1, 1, enemy.armor, enemy.magicResistance, getRemainingEnemyHealthDamageThisRound(enemy));
     if (enemy.statuses.some((status) => status.id === "poison")) statusResolutionEventIndex = poisonEventIndex;
-    enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, hp: enemyEnd.hp, statuses: enemyEnd.statuses } : candidate);
+    enemies = enemies.map((candidate) => candidate.instanceId === enemy.instanceId ? { ...candidate, hp: enemyEnd.hp, statuses: enemyEnd.statuses, damageTakenThisRound: candidate.damageTakenThisRound + enemyEnd.poisonDamage } : candidate);
     const poison = enemy.statuses.find((status) => status.id === "poison");
     if (enemyEnd.poisonDamage > 0 && poison?.sourceId === "player") {
       const poisonTriggers = runPlayerTriggerEvents(
@@ -707,6 +750,7 @@ export function takeEnemyTurn(combat: CombatState, character: CharacterState, ex
     ...candidate,
     hp: displayedEnemyHp.get(candidate.instanceId) ?? candidate.hp,
     statuses: displayedEnemyStatuses.get(candidate.instanceId) ?? candidate.statuses,
+    damageTakenThisRound: displayedEnemyRoundDamage.get(candidate.instanceId) ?? candidate.damageTakenThisRound,
     chargingAbilityId: displayedEnemyCharges.get(candidate.instanceId),
   }));
   return {

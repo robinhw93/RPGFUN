@@ -19,7 +19,7 @@ import {
   isStatusEffectId
 } from "../statusEffects";
 import type { Ability, CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, InspectableInfo, StatusEffect, StatusEffectId } from "../types";
-import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
+import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, applyHealthDamageToEnemy, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
 import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueEnergyChange, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, applyPlayerDeathPrevention, moveToNextActor, processTurnEnd, processTurnStart, runDeathPreventionHealingTriggers, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyStealthed, isEnemyTargetable, normalizeEnemies, orderTurnEntries } from "./state";
@@ -40,6 +40,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const abilityModifiers = getCharacterAbilityModifiers(character, ability.id);
   let enemies = normalizeEnemies(combat.enemies);
   const displayedEnemyHp = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.hp]));
+  const displayedEnemyRoundDamage = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.damageTakenThisRound]));
   const displayedEnemyStatuses = new Map(enemies.map((enemy) => [enemy.instanceId, enemy.statuses]));
   const displayedPlayerHp = combat.playerHp;
   const displayedPlayerStatuses = combat.playerStatuses;
@@ -468,16 +469,17 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           ? (derived.statusDamageMultipliers[detonatedStatus.id] ?? 1) * getCharacterStatusDamageMultiplier(character, detonatedStatus.id, playerStatuses)
           : 1;
         const absorption = absorbIncomingDamage(target.statuses, getAfflictionDamage(detonatedStatus, target.statuses, statusDamageMultiplier, target.armor, target.magicResistance) * Math.max(1, detonatedStatus.duration));
-        const damage = absorption.damage;
+        let damage = absorption.damage;
         const modifierRetention = abilityModifiers.reduce((ratio, modifier) => Math.max(ratio, modifier.detonationRetainedStackRatio ?? 0), 0);
         const retentionRatio = derived.preserveStatusOnDetonation.includes(detonatedStatus.id) ? 1 : modifierRetention;
         const retainedStacks = Math.ceil(detonatedStatus.stacks * Math.max(0, Math.min(1, retentionRatio)));
         const retainedStatus = retainedStacks > 0 ? { ...detonatedStatus, stacks: retainedStacks } : null;
-        enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? {
-          ...enemy,
-          hp: Math.max(0, enemy.hp - damage),
-          statuses: wakeFromDamage(absorption.statuses.flatMap((status) => status.id !== detonatedStatus.id ? [status] : retainedStatus ? [retainedStatus] : []), damage),
-        } : enemy);
+        enemies = enemies.map((enemy) => {
+          if (enemy.instanceId !== target.instanceId) return enemy;
+          const result = applyHealthDamageToEnemy(enemy, damage, absorption.statuses.flatMap((status) => status.id !== detonatedStatus.id ? [status] : retainedStatus ? [retainedStatus] : []));
+          damage = result.damage;
+          return result.enemy;
+        });
         logs.push(makeLog(`${ability.name} detonates ${detonatedStatus.name} on ${target.name} for ${damage} damage.`, abilityInfo));
         const damageEventIndex = queueDamage(events, pendingEffects, `${detonatedStatus.name} detonates for ${damage} damage${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, { attackerId: "player", sourceLabel: detonatedStatus.name, ...getAbilityAttackPresentation(ability) });
         queueAbsorptionChanges(pendingEffects, damageEventIndex, target.instanceId, absorption);
@@ -810,9 +812,14 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       const absorption = ability.ignoresAbsorption
         ? { damage: incomingDamage, statuses: target.statuses, absorbed: 0, absorbedBy: {} }
         : absorbIncomingDamage(target.statuses, incomingDamage);
-      const damage = absorption.damage;
+      let damage = absorption.damage;
       const targetHpBeforePercent = target.hp / target.maxHp;
-      enemies = enemies.map((enemy) => enemy.instanceId === target.instanceId ? { ...enemy, hp: Math.max(0, enemy.hp - damage), statuses: wakeFromDamage(absorption.statuses, damage) } : enemy);
+      enemies = enemies.map((enemy) => {
+        if (enemy.instanceId !== target.instanceId) return enemy;
+        const result = applyHealthDamageToEnemy(enemy, damage, absorption.statuses);
+        damage = result.damage;
+        return result.enemy;
+      });
       logs.push(makeLog(`${ability.name} hits ${target.name} for ${damage}${critical ? " critical" : ""} damage.`, abilityInfo));
       const strikeLabel = totalHits > 1 ? `Strike ${hitIndex + 1} deals` : "It deals";
       const damageEventIndex = queueDamage(events, pendingEffects, `${critical ? "Critical hit! " : ""}${strikeLabel} ${damage} damage to ${target.name}${absorptionSuffix(absorption.absorbed)}.`, target.instanceId, damage, {
@@ -952,12 +959,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         if (currentTarget && tickingStatus && thresholdMet) {
           const statusMultiplier = derived.statusDamageMultipliers[tickingStatus.id] ?? 1;
           const tickAbsorption = absorbIncomingDamage(currentTarget.statuses, getAfflictionDamage(tickingStatus, currentTarget.statuses, statusMultiplier, currentTarget.armor, currentTarget.magicResistance));
-          const tickDamage = tickAbsorption.damage;
-          enemies = enemies.map((enemy) => enemy.instanceId === currentTarget.instanceId ? {
-            ...enemy,
-            hp: Math.max(0, enemy.hp - tickDamage),
-            statuses: wakeFromDamage(tickAbsorption.statuses, tickDamage),
-          } : enemy);
+          let tickDamage = tickAbsorption.damage;
+          enemies = enemies.map((enemy) => {
+            if (enemy.instanceId !== currentTarget.instanceId) return enemy;
+            const result = applyHealthDamageToEnemy(enemy, tickDamage, tickAbsorption.statuses);
+            tickDamage = result.damage;
+            return result.enemy;
+          });
           logs.push(makeLog(`${tickingStatus.name} immediately deals ${tickDamage} damage to ${currentTarget.name}${absorptionSuffix(tickAbsorption.absorbed)}.`, statusInfo(tickingStatus)));
           queueDamageAtEvent(pendingEffects, damageEventIndex, currentTarget.instanceId, tickDamage, tickingStatus.name);
           queueAbsorptionChanges(pendingEffects, damageEventIndex, currentTarget.instanceId, tickAbsorption);
@@ -1102,12 +1110,13 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
             const rawDamage = getAfflictionDamage(consumed, destination.statuses, statusDamageMultiplier, destination.armor, destination.magicResistance)
               * Math.max(1, consumed.duration);
             const areaAbsorption = absorbIncomingDamage(destination.statuses, rawDamage);
-            const areaDamage = areaAbsorption.damage;
-            enemies = enemies.map((enemy) => enemy.instanceId === destination.instanceId ? {
-              ...enemy,
-              hp: Math.max(0, enemy.hp - areaDamage),
-              statuses: wakeFromDamage(areaAbsorption.statuses, areaDamage),
-            } : enemy);
+            let areaDamage = areaAbsorption.damage;
+            enemies = enemies.map((enemy) => {
+              if (enemy.instanceId !== destination.instanceId) return enemy;
+              const result = applyHealthDamageToEnemy(enemy, areaDamage, areaAbsorption.statuses);
+              areaDamage = result.damage;
+              return result.enemy;
+            });
             logs.push(makeLog(`${ability.name} detonates ${consumed.name} for ${areaDamage} damage against ${destination.name}${absorptionSuffix(areaAbsorption.absorbed)}.`, abilityInfo));
             queueDamageAtEvent(pendingEffects, damageEventIndex, destination.instanceId, areaDamage, consumed.name);
             queueAbsorptionChanges(pendingEffects, damageEventIndex, destination.instanceId, areaAbsorption);
@@ -1328,7 +1337,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
 
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
-    const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
+    const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses, damageTakenThisRound: displayedEnemyRoundDamage.get(enemy.instanceId) ?? enemy.damageTakenThisRound }));
     return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: displayedPlayerHp, playerStatuses: displayedPlayerStatuses, energy, procUsage, deathPreventionUsed, playerActionSurvivalPending: false, playerHasMissed, nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0, abilityCooldowns, playerActed: true, playerActionsThisTurn: combat.playerActionsThisTurn + 1, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
   }
 
@@ -1438,7 +1447,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
       ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
       ?? "";
-    const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
+    const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses, damageTakenThisRound: displayedEnemyRoundDamage.get(enemy.instanceId) ?? enemy.damageTakenThisRound }));
     return {
       ...combat,
       eventId: (combat.eventId ?? 0) + 1,
@@ -1467,7 +1476,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const nextSelected = enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId && isEnemyTargetable(enemies, enemy))?.instanceId
     ?? enemies.find((enemy) => isEnemyTargetable(enemies, enemy))?.instanceId
     ?? "";
-  const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
+  const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses, damageTakenThisRound: displayedEnemyRoundDamage.get(enemy.instanceId) ?? enemy.damageTakenThisRound }));
   return {
     ...combat,
     eventId: (combat.eventId ?? 0) + 1,

@@ -168,6 +168,14 @@ function validateEnemyExchange(exchangeValue: unknown, itemIds: Set<string>, sta
     if (!/^\/assets\/enemies\/portraits\/[a-z0-9-]+\.webp$/i.test(catalogString(enemy.portraitUrl, `${name} portrait`))) throw new Error(`${name} has an invalid portrait URL.`);
     ["maxHp", "physicalPower", "spellPower", "armor", "magicResistance", "energyRegen", "maxEnergy", "startingEnergy"].forEach((field) => catalogNumber(enemy[field], `${name} ${field}`, field === "maxHp" || field === "maxEnergy" ? 1 : 0));
     if (enemy.startingEnergy > enemy.maxEnergy) throw new Error(`${name} Starting Energy cannot exceed Max Energy.`);
+    if (enemy.startingStatuses !== undefined) {
+      if (!Array.isArray(enemy.startingStatuses)) throw new Error(`${name} starting statuses must be a list.`);
+      enemy.startingStatuses.forEach((rawStatus: unknown) => {
+        const application = catalogObject(rawStatus, `${name} starting status`);
+        const status = catalogId(application.status, `${name} starting status ID`);
+        if (!statusIds.has(status)) throw new Error(`${name} references unknown starting status ${status}.`);
+      });
+    }
     ["hitChance", "dodgeChance", "critChance"].forEach((field) => {
       const percent = catalogNumber(enemy[field], `${name} ${field}`);
       if (percent > 1000) throw new Error(`${name} ${field} is too large.`);
@@ -184,6 +192,10 @@ function validateEnemyExchange(exchangeValue: unknown, itemIds: Set<string>, sta
       catalogNumber(ability.cooldownTurns, `${name} ability cooldown`);
       if (ability.range !== "melee" && ability.range !== "ranged") throw new Error(`${name} ability range is invalid.`);
       catalogString(ability.vfx, `${name} ability VFX`);
+      if (ability.resurrectFriendlyMaxHpRatio !== undefined) {
+        const ratio = catalogNumber(ability.resurrectFriendlyMaxHpRatio, `${name} resurrection Health ratio`, 0);
+        if (ratio > 1) throw new Error(`${name} resurrection Health ratio cannot exceed 1.`);
+      }
       ["statusApplications", "selfStatusApplications", "selfStatusApplicationsWhenEnergyDepleted", "friendlyStatusApplications"].forEach((field) => {
         if (ability[field] === undefined) return;
         if (!Array.isArray(ability[field])) throw new Error(`${name} ${field} must be a list.`);
@@ -234,7 +246,7 @@ function validateEnemyExchange(exchangeValue: unknown, itemIds: Set<string>, sta
             if (!knownAbilityIds.has(previousAbilityId)) throw new Error(`${name} tactical AI references unknown previous ability ${previousAbilityId}.`);
           } else if (type === "phase_is" || type === "phase_is_not") {
             catalogString(condition.phase, `${name} tactical AI phase`);
-          } else if (type !== "no_other_living_allies") throw new Error(`${name} tactical AI condition ${type} is invalid.`);
+          } else if (type !== "no_other_living_allies" && type !== "dead_ally_exists") throw new Error(`${name} tactical AI condition ${type} is invalid.`);
         });
       });
       if (ai.fallbackAbilityIds !== undefined) {

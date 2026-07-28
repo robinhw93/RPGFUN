@@ -433,6 +433,7 @@ The duration is the default duration created by the status library. Ability or t
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Smite | 3 turns | No | Whenever the player restores Health from any combat source, including a consumable, takes Magic damage equal to 50% of the Health actually restored. |
 | Sleep | 3 turns | No | Cannot act and has a 20% chance to wake at turn start. Enemies wake upon taking damage; the player wakes when damage leaves them below 30% Health. |
+| Resilient | Permanent | No | Can lose at most 50% of maximum Health in one initiative round. The limit resets when the next round begins. |
 
 For the player only, crossing below 30% Health while affected by Stunned, Frozen, or Sleep removes all three action-blocking controls and starts a survival window. The player remains at a minimum of 1 Health and cannot receive another action-blocking control until using an ability or consumable, or ending the turn. The same window starts when one of these effects actually skips the player's turn. Enemies receive neither the low-Health control break nor the survival window.
 
@@ -555,11 +556,11 @@ The specialization-ring effects progress as follows:
 
 ### Live quests
 
-The live catalog contains **39 quests** across four ordered questlines. Quest Board projects at most six relevant postings at once and a character may track at most six accepted quests. Required collect-item copies are consumed at turn-in.
+The live catalog contains **49 quests** across four ordered questlines. Quest Board projects at most six relevant postings at once and a character may track at most six accepted quests. Required collect-item copies are consumed at turn-in.
 
 **Storehouse Troubles** remains the three-part introduction: defeat 3 Rabid Rats for 35 XP and a Minor Healing Potion, bring 2 Rats Tails for 50 XP, then complete Windsong Forest for 100 XP and a Wisp Essence.
 
-The other three questlines each cover all twelve adventures. Every row below represents one enemy bounty in **The Roadwarden's Ledger**, one material hand-in in **Guild Requisitions**, and one completion report in **The Chronicle of Arkenfall**.
+The other three questlines cover the original twelve adventures. Every row below represents one enemy bounty in **The Roadwarden's Ledger**, one material hand-in in **Guild Requisitions**, and one completion report in **The Chronicle of Arkenfall**.
 
 | Adventure | Enemy bounty | Material requisition | Completion report reward |
 | --- | --- | --- | --- |
@@ -575,6 +576,16 @@ The other three questlines each cover all twelve adventures. Every row below rep
 | The Hollow Crown | 6 Veilbound Executioners; 3,500 XP and Soul Ash. | 4 Crown Shards; 3,800 XP and 2 Soul Ash. | 6,800 XP and 2 Hollowsteel. |
 | The Astral Scar | 6 Astral Devourers; 4,300 XP and Comet Silk. | 4 Astral Glass; 4,700 XP and 2 Comet Silk. | 8,000 XP and 2 Star Metal. |
 | The World Below | 6 Deep Oracles; 2 Worldroot Heartwood. | 5 First Echoes; 2 Abyssal Hide. | Worldsplitter. |
+
+The Roadwarden and Chronicle questlines continue through Adventures 13–17; these compact chapters do not add material requisitions.
+
+| Adventure | Enemy bounty | Completion report |
+| --- | --- | --- |
+| The Sepulcher of Hours | Defeat 4 Hourglass Revenants; 9,000 XP. | 11,000 XP. |
+| The Sanguine Basilica | Defeat 4 Crimson Penitents; 10,500 XP. | 12,500 XP. |
+| The Dreaming Wilds | Defeat 4 Nightmare Stags; 12,000 XP. | 14,500 XP. |
+| The Iron Eclipse | Defeat 4 Eclipse Centurions; 14,000 XP. | 16,500 XP. |
+| The Throne Beyond Death | Defeat 4 Oathless Seraphs; 16,000 XP. | Grave Communion Seal. |
 
 Explicit item fields are authoritative: `arkenfallVendor: null` means the item is not sold in town, and a missing recipe means it is not craftable. Vendor stock and crafting recipes may independently require completion of a selected story adventure; unmet entries remain completely hidden from the corresponding town tab. Hexcaster Staff currently has no recipe.
 
@@ -693,6 +704,16 @@ Adventures 4–12 form one linear route after Highfall Mountains. Each has three
 | The Astral Scar | 49 | 20 | Arcane Wound, Blind, Vulnerable, Burn, Slow, Exhausted, rare Reckless, and Weaken. | Seraphel, the Fallen Star: collapses the heavens around the target, charges Starfall Extinction, then restores itself behind Guard. |
 | The World Below | 50 | 22 | Guard, Bleed, Blind, Burn, Stealth, Exhausted, rare Sleep, Weaken, and Vulnerable. | Eidolon, the First Hunger: begins to unmake its target, charges The World Devours, then retreats behind ancient defenses. |
 
+Adventures 13–17 continue the route as compact five-stage endgame assaults. Each has two opening combats, its single event on stage three, a penultimate formation, and a boss encounter on stage five. Each chapter introduces five enemies with unique full artwork and portraits. One named support template begins every fight with permanent Resilient, prioritizes resurrecting a dead ally at 100% Health, and otherwise provides large formation healing.
+
+| Adventure | Recommended level | Resilient resurrector | Final boss |
+| --- | ---: | --- | --- |
+| The Sepulcher of Hours | 54 | Ashen Mourner | Oris, Keeper of Last Dawn |
+| The Sanguine Basilica | 58 | Bloodwake Hierophant | Saint Veyra, the Undying |
+| The Dreaming Wilds | 62 | Somnolent Dryad | Morwyn, Root of Dreams |
+| The Iron Eclipse | 66 | Continuance Engine | Axiom-9, the Final Engine |
+| The Throne Beyond Death | 70 | Soulbound Archon | Nhal, Sovereign of Returning |
+
 The final stage of each late adventure contains its boss plus two role-complementary adds. Every Adventure 4–12 boss has 30% more Max Health than the route's original generated curve, rounded to the nearest whole point. After that curve is applied, every enemy template in Adventures 7–12—including bosses—gains 100 Max Health and then has the resulting total increased by 50%, rounded to the nearest whole point. Armor and Magic Resistance on every Adventure 7–12 enemy are then reduced by 50%, rounded to the nearest whole point, so their Health and tactical abilities carry the difficulty without repeated one-damage hits. Every enemy template in Adventures 9–12 also has both its generated Physical Power and Spell Power increased by 30%, rounded to the nearest whole point. Bosses begin with 10 Energy, may resolve two ready actions per turn, and prioritize their setup/charged/recovery sequence. Combat and stage rewards rise with each recommended level. The generated late-campaign enemy roster contains exactly seven templates per biome:
 
 Adventures 5–12 add the following defenses to every enemy template after its generated base stats. The local boss receives twice the listed Armor and Magic Resistance bonus. Values for Adventures 7–12 in this table are the pre-reduction curve; the final stored Armor and Magic Resistance are 50% of the resulting totals.
@@ -720,7 +741,7 @@ Adventures 5–12 add the following defenses to every enemy template after its g
 | The Astral Scar | Starved Pilgrim; Glasswing Moth; Fallen Astrologer; Comet Hound; Gravity Warden; Astral Devourer; Seraphel, the Fallen Star. |
 | The World Below | Rootless Titan; Pale Burrower; Deep Oracle; Worldvein Elemental; Firstborn Shade; Abyssal Choir; Eidolon, the First Hunger. |
 
-All 63 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy now has at least three named executable abilities and one of four readable tactical roles: status setup/payoff, defensive stance, evasive ambush, or ally support. The former Savage Strike, Ruinous Bolt, and Relentless Pressure placeholders are no longer used in this route. Every boss has five abilities: its setup, status-amplified charged execution, defensive recovery, unique below-40%-Health phase, and a basic recovery-turn attack. Aurora Wisp's Boreal Mantle grants 11 points of damage-absorbing Barrier to each living enemy for three turns. From Adventure 7 onward, exactly one regular enemy per adventure applies one-turn Exhausted: Gloom Archer, Frost Hermit, Storm Channeler, Veilbound Executioner, Gravity Warden, and Deep Oracle. Those adventures also contain exactly one rare Sleep or Reckless source each: Crimson Oath, Zealot's Brand, and Pilgrim's Burden have a 15% chance to apply two-turn Reckless, while Aurora Ray, Courtly Malice, and Unraveling Hymn have a 10% chance to apply one-turn Sleep. Each Adventure 7–12 roster additionally has one Nullify source and one separate Disarm source, both at 25% per successful hit: Shard Magus/Bloodbound Knight, Frost Hermit/Icebound Raider, Storm Channeler/Thunder Talon, Crown Seraph/Crownless Guard, Fallen Astrologer/Gravity Warden, and Deep Oracle/Rootless Titan respectively. Together with the twelve distinct Highlands and Highfall templates, 75 enemies from recommended level 4 onward use editable data-owned tactical AI.
+All 63 Adventure 4–12 templates have dedicated full artwork and matching combat portraits. Every ordinary late enemy now has at least three named executable abilities and one of four readable tactical roles: status setup/payoff, defensive stance, evasive ambush, or ally support. The former Savage Strike, Ruinous Bolt, and Relentless Pressure placeholders are no longer used in this route. Every boss has five abilities: its setup, status-amplified charged execution, defensive recovery, unique below-40%-Health phase, and a basic recovery-turn attack. Aurora Wisp's Boreal Mantle grants 11 points of damage-absorbing Barrier to each living enemy for three turns. From Adventure 7 onward, exactly one regular enemy per adventure applies one-turn Exhausted: Gloom Archer, Frost Hermit, Storm Channeler, Veilbound Executioner, Gravity Warden, and Deep Oracle. Those adventures also contain exactly one rare Sleep or Reckless source each: Crimson Oath, Zealot's Brand, and Pilgrim's Burden have a 15% chance to apply two-turn Reckless, while Aurora Ray, Courtly Malice, and Unraveling Hymn have a 10% chance to apply one-turn Sleep. Each Adventure 7–12 roster additionally has one Nullify source and one separate Disarm source, both at 25% per successful hit: Shard Magus/Bloodbound Knight, Frost Hermit/Icebound Raider, Storm Channeler/Thunder Talon, Crown Seraph/Crownless Guard, Fallen Astrologer/Gravity Warden, and Deep Oracle/Rootless Titan respectively. Adventures 13–17 add another 25 fully illustrated tactical templates, bringing the recommended-level-4-and-higher tactical catalog to 100 enemies.
 
 ### Late-campaign loot and crafting
 
@@ -766,11 +787,20 @@ Every late set has Head, Chest, Pants, Boots, and Ring pieces and thresholds at 
 | Deepstalker | Bleed deals 45% more damage and restores Health equal to 20% of its damage. |
 | First Tongue | Vulnerable lasts 1 additional turn and grants 18% more Spell Power. |
 
+Adventures 13–17 add four class-focused Legendary sets. Every set contains seven simultaneously equippable pieces—Head, Chest, Pants, Boots, Main Hand, Off Hand, and Ring—with executable bonuses at 2, 3, 4, 5, 6, and 7 pieces. Every one of the 25 enemies drops at least one of these new pieces independently.
+
+| Class focus | Seven-piece set | Seven-piece special |
+| --- | --- | --- |
+| Shadow | Eclipsed Oath | Poison and Bleed gain 2 additional stacks and restore Health equal to 20% of their damage. |
+| Arcanist | Infinite Equation | +25% Spell Power; Burn, Cold, Electrified, and Arcane Wound last 1 additional turn. |
+| Brute | Last Rampart | Begins combat with Guard equal to 35% maximum Health and gains 25% more Armor. |
+| Cultist | Grave Communion | Begins combat 15% wounded; the first lethal hit restores 35% maximum Health, and afflictions deal 50% more damage. |
+
 ## Item catalog
 
 ### Available gear
 
-New characters begin with no equipped gear and an empty inventory. The live catalog contains 354 items: 277 gear, 41 consumables, and 36 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
+New characters begin with no equipped gear and an empty inventory. The live catalog contains 382 items: 305 gear, 41 consumables, and 36 ordinary items. Item visuals are a two-part contract: the canonical item definition supplies content and optional source artwork, while the shared item-icon catalog supplies the optimized square icon used across runtime surfaces.
 
 The supported rarity order is Common, Uncommon, Rare, Epic, then Legendary. Legendary gear begins with The Astral Scar. Every live item ID is registered in the shared optimized icon catalog.
 

@@ -184,6 +184,7 @@ export const STATUS_ICONS: Record<StatusEffectId, LucideIcon> = {
   enlightened: Brain,
   fierce: Crosshair,
   shielded: ShieldCheck,
+  resilient: ShieldCheck,
   regenerate: HeartPulse,
   taunt: Megaphone,
   stealth: EyeOff,

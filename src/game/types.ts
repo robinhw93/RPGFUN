@@ -44,6 +44,7 @@ export type StatusEffectId =
   | "enlightened"
   | "fierce"
   | "shielded"
+  | "resilient"
   | "regenerate"
   | "taunt"
   | "stealth"
@@ -747,6 +748,8 @@ export interface EnemyAbilityDefinition {
   friendlyHealSpellPowerScaling?: number;
   /** Statuses applied to the selected friendly recipients. */
   friendlyStatusApplications?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
+  /** Returns one defeated ally to combat with this fraction of maximum Health. */
+  resurrectFriendlyMaxHpRatio?: number;
   /** Restores this fraction of the caster's maximum Health when the ability resolves. */
   selfHealMaxHpRatio?: number;
   /** Restores Energy to the caster immediately after paying the ability cost. */
@@ -774,6 +777,7 @@ export type EnemyAiCondition =
   | { type: "any_ally_missing_status"; status: StatusEffectId }
   | { type: "living_allies_at_least"; count: number }
   | { type: "no_other_living_allies" }
+  | { type: "dead_ally_exists" }
   | { type: "energy_at_least"; amount: number }
   | { type: "last_ability_is"; abilityId: string }
   | { type: "phase_is" | "phase_is_not"; phase: string };
@@ -829,6 +833,8 @@ export interface EnemyTemplate {
   maxEnergy: number;
   /** Defaults to Max Energy when omitted by an older enemy definition. */
   startingEnergy?: number;
+  /** Innate statuses applied whenever a new instance enters combat. */
+  startingStatuses?: Array<{ status: StatusEffectId; stacks?: number; duration?: number }>;
   /** Each defeated enemy instance rolls every entry independently. */
   dropTable?: ItemDropDefinition[];
   /** Executable abilities implemented in source after their editor drafts are integrated. */
@@ -851,6 +857,8 @@ export interface EnemyState extends EnemyTemplate {
   energy: number;
   maxEnergy: number;
   statuses: StatusEffect[];
+  /** Health damage already suffered during the current initiative round. */
+  damageTakenThisRound: number;
   stunned: boolean;
   abilityCooldowns: Record<string, number>;
   nextTurnEnergyRegenBonus: number;
@@ -916,6 +924,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "enemy_charge"; targetId: string; abilityId?: string }
   | { id: string; eventIndex: number; type: "enemy_flee"; targetId: string }
+  | { id: string; eventIndex: number; type: "resurrect"; targetId: string; hp: number; energy: number; statuses: StatusEffect[] }
   | { id: string; eventIndex: number; type: "player_survival_window"; removedStatusIds: StatusEffectId[] }
   | { id: string; eventIndex: number; type: "outcome"; outcome: "victory" | "defeat" }
   | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerActionsThisTurn?: number; consumablesUsedThisTurn?: number; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };

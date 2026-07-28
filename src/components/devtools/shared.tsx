@@ -30,6 +30,7 @@ export interface EnemyDraft {
   energyRegen: number;
   maxEnergy: number;
   startingEnergy: number;
+  startingStatuses?: EnemyTemplate["startingStatuses"];
   dropTable: ItemDropDefinition[];
   abilities: EnemyAbilityDraft[];
   behaviorNotes: string;

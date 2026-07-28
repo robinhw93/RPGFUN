@@ -5,7 +5,7 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CombatPendingEffect, CombatState } from "../types";
-import { isPlayerActionBlockingStatus, wakeFromDamage } from "./damage";
+import { applyHealthDamageToEnemy, isPlayerActionBlockingStatus } from "./damage";
 import { isEnemyTargetable, reorderCombat } from "./state";
 
 export function resolveCombatEvent(combat: CombatState, eventId: number, eventIndex: number): CombatState {
@@ -62,6 +62,23 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
     if (effect.type === "enemy_flee") {
       enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
         ? { ...enemy, hp: 0, fled: true, statuses: [] }
+        : enemy);
+      return;
+    }
+    if (effect.type === "resurrect") {
+      enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId
+        ? {
+          ...enemy,
+          hp: effect.hp,
+          energy: effect.energy,
+          statuses: effect.statuses,
+          stunned: false,
+          abilityCooldowns: {},
+          nextTurnEnergyRegenBonus: 0,
+          damageTakenThisRound: 0,
+          chargingAbilityId: undefined,
+          fled: false,
+        }
         : enemy);
       return;
     }
@@ -156,8 +173,14 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       }
       return;
     }
-    enemies = enemies.map((enemy) => enemy.instanceId === effect.targetId ? { ...enemy, hp: Math.max(0, enemy.hp - effect.damage), statuses: wakeFromDamage(enemy.statuses, effect.damage) } : enemy);
-    if (effect.damage > 0) damagedTargets.push(effect.targetId);
+    let appliedDamage = 0;
+    enemies = enemies.map((enemy) => {
+      if (enemy.instanceId !== effect.targetId) return enemy;
+      const result = applyHealthDamageToEnemy(enemy, effect.damage);
+      appliedDamage = result.damage;
+      return result.enemy;
+    });
+    if (appliedDamage > 0) damagedTargets.push(effect.targetId);
   });
 
   const newlyDefeated = combat.enemies.filter((before) => {

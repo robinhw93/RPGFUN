@@ -23,6 +23,7 @@ export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
   enlightened: { id: "enlightened", name: "Enlightened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Magic Damage." },
   fierce: { id: "fierce", name: "Fierce", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "+20% Critical Strike Chance." },
   shielded: { id: "shielded", name: "Shielded", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Reduces damage taken by 25%." },
+  resilient: { id: "resilient", name: "Resilient", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "Can lose at most 50% of maximum Health each round. The limit resets when a new round begins." },
   regenerate: { id: "regenerate", name: "Regenerate", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Restores 3 Health plus 20% of the applier's Spell Power at the start of each turn." },
   taunt: { id: "taunt", name: "Taunt", kind: "buff", duration: PERMANENT_STATUS_DURATION, permanent: true, description: "You must target this enemy with single-target attacks." },
   stealth: { id: "stealth", name: "Stealth", kind: "buff", duration: 2, stackable: false, expiresAtTurnStart: false, description: "Cannot be targeted until the end of your next turn." },

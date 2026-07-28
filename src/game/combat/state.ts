@@ -51,10 +51,14 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
   const enemyLevel = Math.max(1, Math.round(startEffects.enemyLevel ?? 1));
   const enemies: EnemyState[] = enemyIds.map((id, index) => {
     const template = ENEMIES[id];
+    const innateStatuses = (template.startingStatuses ?? []).reduce<StatusEffect[]>((current, effect) => {
+      const status = createStatusEffect(effect.status, { stacks: effect.stacks, duration: effect.duration, sourceId: template.id });
+      return addOrRefreshStatus(current, status);
+    }, []);
     const statuses = (startEffects.enemyStatuses ?? []).reduce<StatusEffect[]>((current, effect) => {
       const status = createEventStartStatus(effect);
       return status ? addOrRefreshStatus(current, status) : current;
-    }, []);
+    }, innateStatuses);
     return {
       ...template,
       instanceId: `${id}-${index}`,
@@ -63,6 +67,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
       energy: getEnemyStartingEnergy(template),
       maxEnergy: template.maxEnergy,
       statuses,
+      damageTakenThisRound: 0,
       stunned: statuses.some((status) => status.id === "stunned"),
       abilityCooldowns: {},
       nextTurnEnergyRegenBonus: 0,
@@ -203,6 +208,11 @@ export function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
     };
     const template = ENEMIES[enemy.id] ?? ENEMIES[legacyEnemyIds[enemy.id]] ?? ENEMIES.dummy;
     let statuses = normalizeStatuses(enemy.statuses ?? []);
+    if (enemy.hp > 0) {
+      (template.startingStatuses ?? []).forEach((effect) => {
+        if (!hasStatus(statuses, effect.status)) statuses = addOrRefreshStatus(statuses, createStatusEffect(effect.status, { stacks: effect.stacks, duration: effect.duration, sourceId: template.id }));
+      });
+    }
     if (enemy.stunned && !hasStatus(statuses, "stunned") && canApplyStatusEffect(statuses, "stunned")) statuses = addOrRefreshStatus(statuses, createStatusEffect("stunned"));
     return {
       ...template,
@@ -228,6 +238,7 @@ export function normalizeEnemies(enemies: EnemyState[]): EnemyState[] {
         ? enemy.chargingAbilityId
         : undefined,
       statuses,
+      damageTakenThisRound: Math.max(0, Math.round(enemy.damageTakenThisRound ?? 0)),
       stunned: hasStatus(statuses, "stunned"),
     };
   });
