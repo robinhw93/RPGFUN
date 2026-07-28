@@ -1645,6 +1645,17 @@ function testShadowPoisonAbilityBalance() {
   assert.equal(venombornHeal.amount, 6, "Venomborn must heal for 50% of four Poison damage across three turns.");
 }
 
+function testBruteCoreAbilityBalance() {
+  assert.equal(ABILITIES.Bash.powerScaling, 0.75, "Bash must deal 75% Physical Power as Physical damage.");
+  assert.equal(ABILITIES.SwiftBlade.powerScaling, 0.5, "Swift Blade must deal 50% Physical Power as Physical damage.");
+  assert.match(ABILITIES.Bash.description, /75% of your Physical Power/, "Bash's live tooltip must match its damage scaling.");
+  assert.match(ABILITIES.SwiftBlade.description, /50% of your Physical Power/, "Swift Blade's live tooltip must match its damage scaling.");
+  const swiftBladeOverrides = TALENTS.flatMap((talent) => talent.combat?.abilityModifiers ?? [])
+    .filter((modifier) => modifier.abilityIds.includes("SwiftBlade") && modifier.descriptionOverride)
+    .map((modifier) => modifier.descriptionOverride!);
+  assert.ok(swiftBladeOverrides.every((description) => description.includes("50%")), "Every modified Swift Blade tooltip must retain its 50% Physical Power scaling.");
+}
+
 function testCooldownsCarryBetweenAdventureCombats() {
   const character = { ...structuredClone(INITIAL_GAME.character), name: "Cooldown Tester" };
   const nextCombat = createCombat(character, ["dummy"], undefined, {
@@ -1974,6 +1985,7 @@ testStatusContracts();
 testPlayerControlBreakSurvival();
 testBasicPlayerAbility();
 testShadowPoisonAbilityBalance();
+testBruteCoreAbilityBalance();
 testCooldownsCarryBetweenAdventureCombats();
 testStructuredEventOutcome();
 testDirectEventMerchant();

@@ -400,8 +400,8 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   Bash: {
     range: "melee",
-    id: "Bash", name: "Bash", description: "Deal Physical Damage equal to 60% of your Physical Power. Has a 30% chance to grant +1 Energy regeneration next turn.", energyCost: 1,
-    cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.6, icon: "✦", branch: "brute", vfx: "bash",
+    id: "Bash", name: "Bash", description: "Deal Physical Damage equal to 75% of your Physical Power. Has a 30% chance to grant +1 Energy regeneration next turn.", energyCost: 1,
+    cooldownTurns: 1, target: "enemy", damageType: "physical", powerScaling: 0.75, icon: "✦", branch: "brute", vfx: "bash",
   },
   WoundingStrike: {
     physicalPowerScaling: 0.6,
@@ -412,8 +412,8 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   SwiftBlade: {
     range: "melee",
-    id: "SwiftBlade", name: "Swift Blade", description: "Deal Physical Damage equal to 40% of your Physical Power and gain +1 Energy regeneration next turn.", energyCost: 0,
-    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.4, nextTurnEnergyRegenOnHit: 1, icon: "✦", branch: "brute", vfx: "swift_blade",
+    id: "SwiftBlade", name: "Swift Blade", description: "Deal Physical Damage equal to 50% of your Physical Power and gain +1 Energy regeneration next turn.", energyCost: 0,
+    cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.5, nextTurnEnergyRegenOnHit: 1, icon: "✦", branch: "brute", vfx: "swift_blade",
   },
   FlameCleave: {
     range: "melee",

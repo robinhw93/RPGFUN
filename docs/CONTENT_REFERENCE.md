@@ -42,10 +42,10 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Cull the Weak | 5 | 3 | Enemy | Deals 25% Physical Power as Physical damage plus 25% Spell Power as Spell Damage. Both components gain 20% damage per unique debuff on the target. |
 | Epidemic | 3 (2 with Efficient Spread) | 10 | All enemies | Applies 4 Poison to every living, targetable enemy and grants Stealth until the end of the player's next turn. |
 | Voltage Stab | 0 | 2 (1 with New Current) | Enemy | Deals 35% Spell Power as Lightning damage. Against an Electrified target, restores 2% of Max Health and grants +2 Energy regeneration next turn. |
-| Bash | 1 | 1 | Enemy | Deals 60% Physical Power as Physical damage and has a 30% chance to grant +1 Energy regeneration next turn. Granted by the Brute class node. |
+| Bash | 1 | 1 | Enemy | Deals 75% Physical Power as Physical damage and has a 30% chance to grant +1 Energy regeneration next turn. Granted by the Brute class node. |
 | Searing Strike | 3 | 3 | Enemy | Deals 90% Physical Power as Physical damage and applies 1 Burn; Fiery Weapon increases this to 2 Burn. Imbued Weapon changes the scaling to Spell Power, lowers the cost to 2, lowers the cooldown to 1, and applies 2 Burn. |
 | Wounding Strike | 2 | 2 | Enemy | Deals 40% Physical Power as Physical damage and applies 1 Bleed. |
-| Swift Blade | 0 | 2 | Enemy | Deals 40% Physical Power as Physical damage and grants +1 Energy regeneration next turn; Light Metal increases this to +2. |
+| Swift Blade | 0 | 2 | Enemy | Deals 50% Physical Power as Physical damage and grants +1 Energy regeneration next turn; Light Metal increases this to +2. |
 | Flame Cleave | 4 | 3 | All enemies | Simultaneously deals 60% Physical Power as Physical damage and applies 1 Burn. Scorching Sweep applies 2 Burn to targets already Burning; Wildfire Cleave adds 20% damage per living Burning enemy. |
 | Shield Bash | 2 (1 with Quick Guard) | 2 | Enemy | Deals 60% Physical Power as Physical damage and grants Guard equal to 10% of Armor. Concussive Bash adds a 5% Stun chance plus 0.1 percentage points per Armor. |
 | Bloodletting | 3 | 2 | Enemy | Deals 75% Physical Power as Physical damage and applies 1 Bleed per 3 existing Bleed, or per 2 with Bloodier-Letting. Hemorrhage immediately triggers Bleed damage when at least 3 stacks are applied. |
