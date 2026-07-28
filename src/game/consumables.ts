@@ -3,6 +3,7 @@ import { describeConsumableEffect, removeOneConsumable } from "./items";
 import { STATUS_EFFECTS, absorbIncomingDamage, addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "./statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, ConsumableEffect, ConsumableItem, EnemyState, InspectableInfo } from "./types";
 import { makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamageAtEvent, queueEnergyChange, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation } from "./combat/eventQueue";
+import { runPlayerTriggerEvent } from "./combat/flow";
 import { isEnemyStealthed, isEnemyTargetable } from "./combat/state";
 
 function effectTargets(effect: ConsumableEffect, enemies: EnemyState[], selectedEnemyId: string): Array<"player" | string> {
@@ -34,6 +35,8 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
   let playerHp = combat.playerHp;
   let playerStatuses = [...combat.playerStatuses];
   let energy = combat.energy;
+  let abilityCooldowns = { ...combat.abilityCooldowns };
+  let procUsage = { ...(combat.procUsage ?? {}) };
   let enemies = combat.enemies.map((enemy) => ({ ...enemy, statuses: [...enemy.statuses] }));
   const vfxTargets = new Set<"player" | string>();
 
@@ -48,6 +51,26 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
         queueHealAtEvent(pendingEffects, eventIndex, "player", restored);
         queuePassiveAnimation(pendingEffects, eventIndex, "player", `+${restored} Health`);
         vfxTargets.add("player");
+        const energyBeforeTriggers = energy;
+        const healingTriggers = runPlayerTriggerEvent(
+          "health_restored",
+          { damage: restored, healthRestored: restored, sourceKind: "player", selfStatusIds: playerStatuses.map((status) => status.id) },
+          "player",
+          character,
+          combat,
+          derived,
+          { enemies, playerStatuses, playerHp, energy, abilityCooldowns },
+          procUsage,
+          logs,
+          events,
+          pendingEffects,
+          eventIndex,
+        );
+        procUsage = healingTriggers.procUsage;
+        ({ enemies, playerStatuses, playerHp, energy } = healingTriggers.state);
+        abilityCooldowns = healingTriggers.state.abilityCooldowns ?? abilityCooldowns;
+        const triggeredEnergy = energy - energyBeforeTriggers;
+        if (triggeredEnergy !== 0) queueEnergyChange(pendingEffects, eventIndex, triggeredEnergy);
       }
       return;
     }
@@ -146,6 +169,8 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
       eventId: (combat.eventId ?? 0) + 1,
       floatingEvents: events,
       pendingEffects,
+      procUsage,
+      abilityCooldowns,
       playerActed: true,
       playerActionSurvivalPending: false,
       damagedTargets: [],

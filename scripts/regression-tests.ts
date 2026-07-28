@@ -1950,6 +1950,40 @@ function testCombatConsumable() {
   assert.equal(poison?.stacks, 2, "Consumable statuses must reach the selected enemy.");
   assert.equal(poison?.duration, 3, "Consumable status duration must be preserved.");
 
+  const healingPotion: ConsumableItem = {
+    kind: "consumable",
+    id: "regression-healing-potion",
+    name: "Regression Healing Potion",
+    rarity: "common",
+    description: "Restore 12 Health.",
+    effects: [{ type: "heal", amount: 12 }],
+  };
+  const smittenTarget = {
+    ...created.enemies[0],
+    magicResistance: 0,
+    statuses: [createStatusEffect("smite")],
+  };
+  const smiteCombat = {
+    ...created,
+    playerHp: created.playerMaxHp - 5,
+    enemies: [smittenTarget],
+    selectedEnemyId: smittenTarget.instanceId,
+    turnOrder: [playerEntry, ...created.turnOrder.filter((entry) => entry.kind === "enemy")],
+    activeTurnIndex: 0,
+    initiativeRevealed: true,
+  };
+  const potionCharacter = { ...character, inventory: [structuredClone(healingPotion)] };
+  const potionUsed = useConsumable(smiteCombat, potionCharacter, healingPotion);
+  const smiteDamage = potionUsed.combat.pendingEffects.find((effect) => effect.type === "damage" && effect.sourceLabel === "Smite");
+  assert.equal(smiteDamage?.type === "damage" ? smiteDamage.damage : 0, 3, "A Healing Potion must make Smite deal 50% of the 5 Health actually restored, rounded to a whole number.");
+  const potionResolved = resolveCombatEvent(potionUsed.combat, potionUsed.combat.eventId, 0);
+  assert.equal(potionResolved.playerHp, created.playerMaxHp, "Healing Potion restoration must still resolve normally when it triggers Smite.");
+  assert.equal(potionResolved.enemies[0].hp, smittenTarget.hp - 3, "Smite damage from a Healing Potion must resolve at the potion's presentation event.");
+
+  const fullHealthCharacter = { ...character, inventory: [structuredClone(healingPotion)] };
+  const fullHealthUsed = useConsumable({ ...smiteCombat, playerHp: created.playerMaxHp }, fullHealthCharacter, healingPotion);
+  assert.equal(fullHealthUsed.combat.pendingEffects.some((effect) => effect.type === "damage" && effect.sourceLabel === "Smite"), false, "Potion overhealing must not trigger Smite when no Health is restored.");
+
   const remedy: ConsumableItem = {
     kind: "consumable",
     id: "regression-antivenom",
