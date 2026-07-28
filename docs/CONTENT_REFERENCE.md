@@ -213,7 +213,7 @@ Unlocking the first non-origin class node locks the other class nodes until leve
 | talent_93 | Glacial Plating | Passive | Frozen Armor | Any | +2 Armor. |
 | talent_94 | Engulf | Passive | Kindled Precision | Any | Critical strikes with Arcanist spells apply 1 Burn. |
 | talent_95 | Elemental Surprise | Passive | Charged Reflexes | Any | Deals 20% more damage until the player first takes damage each combat. |
-| talent_96 | Invigorate | Passive | Aimed Spells | Any | Hits against an enemy with Arcane Wound have a 20% base chance to restore 2 Energy. |
+| talent_96 | Invigorate | Passive | Aimed Spells | Any | Once per turn, hits against an enemy with Arcane Wound have a 20% base chance to restore 2 Energy. |
 | talent_97 | Comparative Momentum | Passive | Frozen Armor | Any | Applying Slowed has a 30% base chance to restore 1 Energy. |
 | talent_98 | Confidence | Passive | Arcane Accuracy | Any | Deals 20% more damage until the player's first miss each combat. |
 | talent_99 | Weight of Frost | Passive | Glacial Plating | Any | −10 Initiative; direct hits gain flat damage equal to 5% of Armor, rounded up. |
@@ -272,7 +272,7 @@ Unlocking the first non-origin class node locks the other class nodes until leve
 | talent_151 | Charge | Ability | Blinding Light | Any | Unlocks Charge. |
 | talent_152 | Phoenix Heart | Passive | Rapid Fire | Any | The first lethal hit each combat while Burning consumes the player's Burn and restores Health equal to its remaining damage. |
 | talent_153 | Charged Up | Passive | Charge | Any | Applying Electrified grants +2 Initiative until combat ends. |
-| talent_154 | Perfect Calculation | Passive | Focused Blast | Any | Cannot miss enemies with at least 3 Arcane Wounds. |
+| talent_154 | Perfect Calculation | Passive | Focused Blast | Any | Cannot miss enemies with at least 10 Arcane Wounds. |
 | talent_155 | Deep Chill | Passive | Absolute Zero | Any | Every enemy attack, hit or miss, has a 3% chance to apply Frozen to its attacker. |
 | talent_156 | Elemental Fury | Ability | Perfect Calculation or Deep Chill | Any | Unlocks Elemental Fury. |
 | talent_157 | Brute Force | Passive | Brute | Any | +2 Strength, +2 Vitality, and +1 Energy regeneration. |
@@ -429,7 +429,7 @@ The duration is the default duration created by the status library. Ability or t
 | Blind | 3 turns | No | Raw Hit Chance is reduced by 75% before the target's Dodge Chance and the global 20% minimum final Hit Chance are applied. |
 | Nullify | Until the end of your next turn | No | Spell Power is reduced by 90%. |
 | Disarm | Until the end of your next turn | No | Physical Power is reduced by 90%. |
-| Arcane Wound | 3 turns | Yes | Each existing stack adds 10% of the caster's Spell Power to Arcane Blast against the afflicted target; Arcane Knowledge raises this to 15%. |
+| Arcane Wound | 3 turns | Yes | Each stack grants the afflicted target +2 percentage points of Dodge Chance and adds 10% of the caster's Spell Power to Arcane Blast against it; Arcane Knowledge raises the damage scaling to 15%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
 | Smite | 3 turns | No | Whenever the player restores Health, takes Magic damage equal to 50% of the Health actually restored. |
 | Sleep | 3 turns | No | Cannot act and has a 20% chance to wake at turn start. Enemies wake upon taking damage; the player wakes when damage leaves them below 30% Health. |

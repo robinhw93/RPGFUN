@@ -15,7 +15,7 @@ import { canStartStoryAdventure, entryToNode, getAdventureStartingHp, getAdventu
 import { ARENA_CHAMPION_MAX_HP, ARENA_SCORE_LIMIT, ARENA_TURN_LIMIT, getArenaExperience, getArenaScores, grantArenaChallengeReward, resetArenaAttemptAfterAdventure, startArenaChallenge } from "../src/game/arena";
 import { getDerivedStats, INITIAL_GAME } from "../src/game/character";
 import { chooseStartingClass, getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../src/game/characterIntroduction";
-import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
+import { getCharacterCombatFeatures, resolveCharacterTriggers } from "../src/game/combatFeatures";
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
@@ -29,7 +29,7 @@ import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getI
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
-import { addOrRefreshStatus, advanceTurnStartStatuses, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getStatusDamage } from "../src/game/statusEffects";
+import { addOrRefreshStatus, advanceTurnStartStatuses, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getDodgeChanceBonus, getStatusDamage } from "../src/game/statusEffects";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, CombatState, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
@@ -1418,6 +1418,44 @@ function testStatusAdjustedCombatStats() {
   assert.equal(adjusted.critChance, 0.25, "Combat stat display must include Fierce.");
   assert.equal(adjusted.energyRegen, 1, "Combat stat display must include Exhausted.");
   assert.equal(adjusted.initiativeBonus, 0, "Combat stat display must include Slowed.");
+  const arcaneWoundAdjusted = getStatusAdjustedCombatStats({
+    armor: 0,
+    hitChance: 1,
+    dodgeChance: 0.1,
+    critChance: 0,
+    energyRegen: 1,
+  }, [createStatusEffect("arcaneWound", { stacks: 5 })]);
+  assert.ok(Math.abs(arcaneWoundAdjusted.dodgeChance - 0.2) < 1e-10, "Five Arcane Wounds must grant their target +10 percentage points of Dodge Chance.");
+}
+
+function testArcaneWoundRiskBalance() {
+  const invigorate = TALENTS.find((talent) => talent.id === "talent_96")!;
+  const invigorateTrigger = invigorate.combat?.triggers?.find((trigger) => trigger.id === "invigorate");
+  assert.equal(invigorateTrigger?.chance, 0.2, "Invigorate must retain its 20% trigger chance.");
+  assert.equal(invigorateTrigger?.oncePerTurn, true, "Invigorate must trigger at most once per player turn.");
+  assert.equal(invigorateTrigger?.effects[0]?.type === "gain_energy" ? invigorateTrigger.effects[0].amount : 0, 2, "Invigorate must retain its 2 Energy restoration.");
+
+  const perfectCalculation = TALENTS.find((talent) => talent.id === "talent_154")!;
+  assert.equal(perfectCalculation.combat?.passive?.guaranteedHitAgainstStatusStacks?.arcaneWound, 10, "Perfect Calculation must require 10 Arcane Wounds.");
+  assert.ok(Math.abs(getDodgeChanceBonus([createStatusEffect("arcaneWound", { stacks: 10 })]) - 0.2) < 1e-10, "Each Arcane Wound must grant its target +2 percentage points of Dodge Chance.");
+
+  const character = {
+    ...structuredClone(INITIAL_GAME.character),
+    unlockedTalents: ["talent_96"],
+  };
+  const combat = { ...createCombat(character, ["dummy"]), turn: 4 };
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+  try {
+    const first = resolveCharacterTriggers(character, combat, "on_hit", { targetStatusIds: ["arcaneWound"] }, {});
+    const second = resolveCharacterTriggers(character, combat, "on_hit", { targetStatusIds: ["arcaneWound"] }, first.procUsage);
+    const nextTurn = resolveCharacterTriggers(character, { ...combat, turn: 5 }, "on_hit", { targetStatusIds: ["arcaneWound"] }, second.procUsage);
+    assert.equal(first.triggered.some((trigger) => trigger.id === "invigorate"), true, "Invigorate must be able to trigger on the first matching hit of a turn.");
+    assert.equal(second.triggered.some((trigger) => trigger.id === "invigorate"), false, "Invigorate must not trigger twice in the same player turn.");
+    assert.equal(nextTurn.triggered.some((trigger) => trigger.id === "invigorate"), true, "Invigorate must become available again on the next player turn.");
+  } finally {
+    Math.random = originalRandom;
+  }
 }
 
 function testAdventureEditorRepairsInternalIds() {
@@ -2102,6 +2140,7 @@ testCompletedAdventureAvailability();
 testStoryReplayRewards();
 testOpposedHitAndDodge();
 testStatusAdjustedCombatStats();
+testArcaneWoundRiskBalance();
 testAdventureEditorRepairsInternalIds();
 testHighfallMountainTheme();
 testHighfallMountainsAdventureContent();
