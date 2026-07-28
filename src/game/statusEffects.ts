@@ -17,7 +17,7 @@ export interface StatusEffectDefinition {
 }
 
 export const STATUS_EFFECTS: Record<StatusEffectId, StatusEffectDefinition> = {
-  guard: { id: "guard", name: "Guard", kind: "buff", duration: 1, stackable: true, description: "Absorbs incoming damage before Health is lost." },
+  guard: { id: "guard", name: "Guard", kind: "buff", duration: 1, stackable: true, description: "Absorbs incoming damage before Health is lost. Expires at the start of the owner's next turn unless extended." },
   barrier: { id: "barrier", name: "Barrier", kind: "buff", duration: DEFAULT_STATUS_DURATION, stackable: true, description: "Absorbs incoming damage before Health is lost. Incoming damage reduces the remaining Barrier amount." },
   strengthened: { id: "strengthened", name: "Strengthened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Physical Damage." },
   enlightened: { id: "enlightened", name: "Enlightened", kind: "buff", duration: DEFAULT_STATUS_DURATION, description: "Deals 20% more Magic Damage." },
@@ -112,6 +112,26 @@ export function canApplyStatusEffect(statuses: StatusEffect[], id: StatusEffectI
 export function grantDiminishingReturnsAfterStun(previousStatuses: StatusEffect[], nextStatuses: StatusEffect[]): StatusEffect[] {
   if (!hasStatus(previousStatuses, "stunned") || hasStatus(nextStatuses, "stunned")) return nextStatuses;
   return addOrRefreshStatus(nextStatuses, createStatusEffect("diminishingReturns"));
+}
+
+export function getStatusDurationWithBonus(
+  statusId: StatusEffectId,
+  baseDuration: number,
+  bonuses: Partial<Record<StatusEffectId, number>>,
+): number {
+  return Math.max(1, Math.round(baseDuration + (bonuses[statusId] ?? 0)));
+}
+
+/** Guard counts down at turn start; its default duration of 1 therefore lasts until the owner's next turn. */
+export function advanceTurnStartStatuses(statuses: StatusEffect[]): StatusEffect[] {
+  return statuses.flatMap((status) => {
+    if (status.id === "guard") {
+      const duration = status.duration - 1;
+      return duration > 0 ? [{ ...status, duration }] : [];
+    }
+    if (status.expiresAtTurnStart === true || (status.id === "stealth" && status.expiresAtTurnStart !== false)) return [];
+    return [status];
+  });
 }
 
 export function decrementStatusDurations(statuses: StatusEffect[]): StatusEffect[] {

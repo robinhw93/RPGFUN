@@ -2,6 +2,7 @@ import { getDerivedStats } from "../character";
 import type { CombatTriggerContext, ResolvedCombatTrigger } from "../combatFeatures";
 import { resolveCharacterTriggers } from "../combatFeatures";
 import {
+  advanceTurnStartStatuses,
   absorbIncomingDamage,
   addOrRefreshStatus,
   canApplyStatusEffect,
@@ -13,7 +14,7 @@ import {
   hasStatus
 } from "../statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, EnemyState, InspectableInfo, StatusEffect, TurnOrderEntry } from "../types";
-import { applyDamageToPlayer, createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
+import { applyDamageToPlayer, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, wakeFromDamage } from "./damage";
 import { absorptionSuffix, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queueOutcome, queuePassiveAnimation, queuePlayerSurvivalWindow, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueTurn, queueTurnAtEvent, statusInfo } from "./eventQueue";
 import { reorderCombat } from "./state";
 
@@ -51,8 +52,8 @@ export function processTurnStart(
   let healing = 0;
   let healingEventIndex: number | null = null;
   let survivalPending = playerActionSurvivalPending;
-  // One-round defensive effects protect the owner until their next turn begins.
-  nextStatuses = nextStatuses.filter((status) => status.expiresAtTurnStart !== true && (status.id !== "stealth" || status.expiresAtTurnStart === false) && status.id !== "guard");
+  // Guard counts down here so its normal duration lasts until this turn starts, while explicit duration bonuses can extend it.
+  nextStatuses = advanceTurnStartStatuses(nextStatuses);
   const burn = nextStatuses.find((status) => status.id === "burn");
   if (burn) {
     const sourceMultiplier = burn.sourceId === "player" ? playerStatusDamageMultiplier : 1;
@@ -609,7 +610,7 @@ export function applyPlayerProcs(
 
       if (effect.type === "gain_guard") {
         const amount = Math.max(1, Math.round(effect.amount * derived.guardMultiplier));
-        const guard = createStatusEffect("guard", { duration: effect.duration ?? 1, stacks: amount, description: `Absorbs ${amount} incoming damage.` });
+        const guard = createPlayerGuardStatus(amount, derived, { duration: effect.duration ?? 1 });
         playerStatuses = addOrRefreshStatus(playerStatuses, guard);
         logs.push(makeLog(`You gain ${amount} Guard.`, statusInfo(guard)));
         markPassive("player", proc.name);
@@ -619,7 +620,9 @@ export function applyPlayerProcs(
       if (effect.type === "gain_absorption") {
         const power = effect.scalingPower === "magical" ? derived.magicalPower : effect.scalingPower === "physical" ? derived.physicalPower : 0;
         const amount = Math.max(1, Math.round((effect.amount ?? 0) + power * (effect.scaling ?? 0) + (context.damage ?? 0) * (effect.triggerDamageRatio ?? 0)));
-        const absorption = createStatusEffect(effect.status, { duration: effect.duration, stacks: amount, description: `Absorbs ${amount} incoming damage.` });
+        const absorption = effect.status === "guard"
+          ? createPlayerGuardStatus(amount, derived, { duration: effect.duration ?? 1 })
+          : createStatusEffect(effect.status, { duration: effect.duration, stacks: amount, description: `Absorbs ${amount} incoming damage.` });
         playerStatuses = addOrRefreshStatus(playerStatuses, absorption);
         markPassive("player", proc.name);
         queueStatus(events, pendingEffects, `You gain ${amount} ${absorption.name}.`, "player", absorption, false, passiveEventIndex);

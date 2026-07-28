@@ -19,7 +19,7 @@ import { getCharacterCombatFeatures } from "../src/game/combatFeatures";
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
-import { applyAbilityFlatDamage, applyDamageToPlayer, wakeFromDamage } from "../src/game/combat/damage";
+import { applyAbilityFlatDamage, applyDamageToPlayer, createPlayerGuardStatus, wakeFromDamage } from "../src/game/combat/damage";
 import { moveToNextActor } from "../src/game/combat/flow";
 import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
 import { CHAINED_ENEMY_MIN_LEVEL, CHAINED_ON_ATTACK_CHANCE, getReadyEnemyAbility, shouldApplyChainedOnEnemyAttack, type EnemyAiContext } from "../src/game/combat/enemyActions";
@@ -29,7 +29,7 @@ import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getI
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
-import { addOrRefreshStatus, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getStatusDamage } from "../src/game/statusEffects";
+import { addOrRefreshStatus, advanceTurnStartStatuses, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getStatusDamage } from "../src/game/statusEffects";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, CombatState, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
@@ -1533,6 +1533,30 @@ function testStatusContracts() {
   assert.equal(stealth.stacks, 1, "Stealth must never stack.");
   const protectedStatuses = addOrRefreshStatus([], createStatusEffect("diminishingReturns"));
   assert.equal(canApplyStatusEffect(protectedStatuses, "stunned"), false, "Diminishing Returns must block Stunned.");
+
+  const guard = createStatusEffect("guard", { stacks: 10 });
+  assert.deepEqual(decrementStatusDurations([guard]), [guard], "Normal Guard must not expire at turn end.");
+  assert.deepEqual(advanceTurnStartStatuses([guard]), [], "Normal Guard must expire at the start of the owner's next turn.");
+  const extendedGuardAfterOneStart = advanceTurnStartStatuses([createStatusEffect("guard", { duration: 2, stacks: 10 })]);
+  assert.equal(extendedGuardAfterOneStart[0]?.duration, 1, "Explicitly extended Guard must survive one additional turn start.");
+  assert.deepEqual(advanceTurnStartStatuses(extendedGuardAfterOneStart), [], "Extended Guard must expire when its remaining turn-start duration reaches zero.");
+
+  const guardDurationGear: GearItem = {
+    kind: "gear",
+    id: "guard-duration-test-ring",
+    name: "Guard Duration Test Ring",
+    slot: "ring",
+    rarity: "common",
+    description: "",
+    stats: {},
+    combat: { passive: { statusDurationBonuses: { guard: 1 } } },
+  };
+  const guardCharacter = {
+    ...structuredClone(INITIAL_GAME.character),
+    equipment: { ...INITIAL_GAME.character.equipment, ring1: guardDurationGear },
+  };
+  const gearExtendedGuard = createPlayerGuardStatus(10, getDerivedStats(guardCharacter));
+  assert.equal(gearExtendedGuard.duration, 2, "A talent or gear Guard-duration bonus must extend player-created Guard.");
 }
 
 function testPlayerControlBreakSurvival() {

@@ -18,7 +18,7 @@ import {
   isStatusEffectId
 } from "../statusEffects";
 import type { Ability, CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, InspectableInfo, StatusEffect, StatusEffectId } from "../types";
-import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, createPlayerAppliedStatus, createPlayerCompanionStatuses, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
+import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
 import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueEnergyChange, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, applyPlayerDeathPrevention, moveToNextActor, processTurnEnd, processTurnStart, runDeathPreventionHealingTriggers, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyStealthed, isEnemyTargetable, normalizeEnemies, orderTurnEntries } from "./state";
@@ -243,7 +243,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         queueHealAtEvent(pendingEffects, resultEventIndex, "player", healing);
       }
       if (guardAmount > 0) {
-        const guard = createStatusEffect("guard", { duration: ability.selfGuard?.duration ?? 1, stacks: guardAmount, sourceId: ability.id, description: `Absorbs ${guardAmount} incoming damage.` });
+        const guard = createPlayerGuardStatus(guardAmount, derived, { duration: ability.selfGuard?.duration ?? 1, sourceId: ability.id });
         playerStatuses = addOrRefreshStatus(playerStatuses, guard);
         queueStatus(events, pendingEffects, resultText, "player", guard, false, resultEventIndex);
       }
@@ -285,7 +285,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       if (ability.vfx) queueAbilityVfx(pendingEffects, resetEventIndex, ability.vfx, "player", "player");
     } else if (ability.effect === "guard") {
       const guardAmount = Math.max(1, Math.round(6 * derived.guardMultiplier));
-      playerStatuses = addOrRefreshStatus(playerStatuses, createStatusEffect("guard", { stacks: guardAmount, description: `Absorbs ${guardAmount} incoming damage.` }));
+      playerStatuses = addOrRefreshStatus(playerStatuses, createPlayerGuardStatus(guardAmount, derived));
       const guardStatus = playerStatuses.find((status) => status.id === "guard")!;
       logs.push(makeLog(`You gain ${guardAmount} Guard.`, statusInfo(guardStatus)));
       const guardEventIndex = events.length;
@@ -551,7 +551,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
           ? Math.max(1, Math.round(combat.playerMaxHp * ability.guardPerConsumedTargetStatusStackMaxHpRatio * consumedStacks * derived.guardMultiplier))
           : 0;
         if (gainedGuard > 0) {
-          const guard = createStatusEffect("guard", { duration: 1, stacks: gainedGuard, sourceId: ability.id, description: `Absorbs ${gainedGuard} incoming damage.` });
+          const guard = createPlayerGuardStatus(gainedGuard, derived, { sourceId: ability.id });
           playerStatuses = addOrRefreshStatus(playerStatuses, guard);
           queueStatus(events, pendingEffects, `You gain ${gainedGuard} Guard.`, "player", guard, false, eventIndex);
           logs.push(makeLog(`${ability.name} grants ${gainedGuard} Guard.`, statusInfo(guard)));
@@ -991,7 +991,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       }
       if (ability.selfGuardFromArmorRatio && ability.selfGuardFromArmorRatio > 0) {
         gainedGuard = Math.max(1, Math.round(derived.armor * ability.selfGuardFromArmorRatio * derived.guardMultiplier));
-        const guard = createStatusEffect("guard", { duration: 1, stacks: gainedGuard, sourceId: ability.id, description: `Absorbs ${gainedGuard} incoming damage.` });
+        const guard = createPlayerGuardStatus(gainedGuard, derived, { sourceId: ability.id });
         playerStatuses = addOrRefreshStatus(playerStatuses, guard);
         logs.push(makeLog(`${ability.name} grants ${gainedGuard} Guard.`, statusInfo(guard)));
         queueStatus(events, pendingEffects, `You gain ${gainedGuard} Guard.`, "player", guard, false, damageEventIndex);

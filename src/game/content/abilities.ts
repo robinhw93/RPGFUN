@@ -422,7 +422,7 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   ShieldBash: {
     range: "melee",
-    id: "ShieldBash", name: "Shield Bash", description: "Deal Physical Damage equal to 60% of your Physical Power and gain Guard equal to 10% of your Armor.", energyCost: 2,
+    id: "ShieldBash", name: "Shield Bash", description: "Deal Physical Damage equal to 60% of your Physical Power and gain Guard equal to 10% of your Armor until the start of your next turn.", energyCost: 2,
     cooldownTurns: 2, target: "enemy", damageType: "physical", powerScaling: 0.6, selfGuardFromArmorRatio: 0.1, icon: "✦", branch: "brute", vfx: "shield_bash",
   },
   Bloodletting: {
@@ -437,18 +437,18 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   Unbreakable: {
     range: "melee",
-    id: "Unbreakable", name: "Unbreakable", description: "Gain Guard equal to 100% of your Armor.", energyCost: 3,
+    id: "Unbreakable", name: "Unbreakable", description: "Gain Guard equal to 100% of your Armor until the start of your next turn.", energyCost: 3,
     cooldownTurns: 5, target: "self", dealsDamage: false, selfGuard: { armorScaling: 1, duration: 1 }, icon: "✦", branch: "brute", vfx: "unbreakable",
   },
   BloodBarrier: {
     range: "melee",
-    id: "BloodBarrier", name: "Blood Barrier", description: "Consume up to 5 Bleed from the target. Gain Guard equal to 10% of your maximum Health per stack consumed.", energyCost: 2,
+    id: "BloodBarrier", name: "Blood Barrier", description: "Consume up to 5 Bleed from the target. Gain Guard equal to 10% of your maximum Health per stack consumed until the start of your next turn.", energyCost: 2,
     cooldownTurns: 3, target: "enemy", dealsDamage: false, requiredTargetStatus: "bleed", consumeTargetStatus: "bleed", consumeTargetStatusStacks: 5,
     guardPerConsumedTargetStatusStackMaxHpRatio: 0.1, icon: "✦", branch: "brute", vfx: "blood_barrier", vfxDirection: "to_player",
   },
   BurningGuard: {
     range: "melee",
-    id: "BurningGuard", name: "Burning Guard", description: "Gain Guard equal to 50% of your Physical Power for 1 turn. If this Guard is destroyed, apply 3 Burn to the attacker.", energyCost: 2,
+    id: "BurningGuard", name: "Burning Guard", description: "Gain Guard equal to 50% of your Physical Power until the start of your next turn. If this Guard is destroyed, apply 3 Burn to the attacker.", energyCost: 2,
     cooldownTurns: 4, target: "self", dealsDamage: false, selfGuard: { physicalPowerScaling: 0.5, duration: 1 }, icon: "✦", branch: "brute", vfx: "burning_guard",
   },
   LayOnHands: {
@@ -504,7 +504,7 @@ const ABILITY_DEFINITIONS: Record<string, AbilityDefinition> = {
   },
   BruteGuard: {
     range: "melee",
-    id: "BruteGuard", name: "Guard", description: "Gain Guard equal to 5% of your Armor.", energyCost: 1,
+    id: "BruteGuard", name: "Guard", description: "Gain Guard equal to 5% of your Armor until the start of your next turn.", energyCost: 1,
     target: "self", dealsDamage: false, selfGuard: { armorScaling: 0.05, duration: 1 }, icon: "✦", branch: "brute", vfx: "brute_guard",
   },
   Vampirism: {

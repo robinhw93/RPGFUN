@@ -47,12 +47,12 @@ Every ability is classified as **Melee** or **Ranged**. The current obtainable R
 | Wounding Strike | 2 | 2 | Enemy | Deals 40% Physical Power as Physical damage and applies 1 Bleed. |
 | Swift Blade | 0 | 2 | Enemy | Deals 50% Physical Power as Physical damage and grants +1 Energy regeneration next turn; Light Metal increases this to +2. |
 | Flame Cleave | 4 | 3 | All enemies | Simultaneously deals 60% Physical Power as Physical damage and applies 1 Burn. Scorching Sweep applies 2 Burn to targets already Burning; Wildfire Cleave adds 20% damage per living Burning enemy. |
-| Shield Bash | 2 (1 with Quick Guard) | 2 | Enemy | Deals 60% Physical Power as Physical damage and grants Guard equal to 10% of Armor. Concussive Bash adds a 5% Stun chance plus 0.1 percentage points per Armor. |
+| Shield Bash | 2 (1 with Quick Guard) | 2 | Enemy | Deals 60% Physical Power as Physical damage and grants Guard equal to 10% of Armor until the start of the player's next turn. Concussive Bash adds a 5% Stun chance plus 0.1 percentage points per Armor. |
 | Bloodletting | 3 | 2 | Enemy | Deals 75% Physical Power as Physical damage and applies 1 Bleed per 3 existing Bleed, or per 2 with Bloodier-Letting. Hemorrhage immediately triggers Bleed damage when at least 3 stacks are applied. |
 | Holy Strike | 2 | 2 | Enemy | Deals 50% Physical Power as Physical damage plus 50% Spell Power as Arcane damage, then restores 8% Max Health. Improved Holy Strike adds a 10% chance to apply Smite. |
-| Unbreakable | 3 | 5 | Self | Grants Guard equal to 100% of Armor. Counter also grants +2 Energy regeneration next turn. |
-| Blood Barrier | 2 | 3 | Bleeding enemy | Consumes up to 5 Bleed and grants Guard equal to 10% Max Health per stack. Thick Blood calculates the same Guard without consuming Bleed. |
-| Burning Guard | 2 | 4 | Self | Grants Guard equal to 50% Physical Power for 1 turn. If that Guard is destroyed, applies 3 Burn to the attacker. Magical Fires adds 50% Spell Power to the Guard amount. |
+| Unbreakable | 3 | 5 | Self | Grants Guard equal to 100% of Armor until the start of the player's next turn. Counter also grants +2 Energy regeneration next turn. |
+| Blood Barrier | 2 | 3 | Bleeding enemy | Consumes up to 5 Bleed and grants Guard equal to 10% Max Health per stack until the start of the player's next turn. Thick Blood calculates the same Guard without consuming Bleed. |
+| Burning Guard | 2 | 4 | Self | Grants Guard equal to 50% Physical Power until the start of the player's next turn. If that Guard is destroyed, applies 3 Burn to the attacker. Magical Fires adds 50% Spell Power to the Guard amount. |
 | Lay on Hands | 5 | 5 | Self | Restores 10% Max Health and grants Barrier equal to the Health actually restored. Cleansing Hands also removes every debuff from the player. |
 | Shield Charge | 4 | 3 | Enemy | Deals Physical damage equal to 25% Physical Power plus 50% Armor. Applies Stunned if the player has Guard when the hit resolves. |
 | Bloodbath | 4 | 2 | Random enemies | Strikes five times. Each hit independently chooses a living enemy, deals 50% Physical Power as Physical damage, and applies 1 Bleed. |
@@ -388,7 +388,7 @@ The duration is the default duration created by the status library. Ability or t
 
 | Status | Duration | Stackable | Effect |
 | --- | ---: | --- | --- |
-| Guard | 1 turn | Yes | Absorbs incoming damage before Health and normally expires at the owner's next turn start. |
+| Guard | Until next turn start | Yes | Absorbs incoming damage before Health. Its duration counts down at the owner's turn start, so the normal duration of 1 expires there; explicit talent or gear duration bonuses can extend it. |
 | Barrier | 3 turns | Yes | Absorbs incoming damage before Health. Its displayed amount is reduced by absorbed damage and it disappears at zero. |
 | Strengthened | 3 turns | No | Deals 20% more Physical damage. |
 | Enlightened | 3 turns | No | Deals 20% more Arcane, Fire, Frost, and Lightning damage. |

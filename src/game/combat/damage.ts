@@ -4,6 +4,7 @@ import {
   getEffectiveArmor,
   getIncomingDamageMultiplier,
   getOutgoingDamageMultiplier,
+  getStatusDurationWithBonus,
   getStatusDamage,
   grantDiminishingReturnsAfterStun,
   hasStatus,
@@ -144,8 +145,24 @@ export function createPlayerAppliedStatus(
       : undefined;
   const stacks = (options.stacks ?? 1) + (derived.statusApplicationStacks[statusId] ?? 0);
   const base = createStatusEffect(statusId);
-  const duration = (options.duration ?? base.duration) + (derived.statusDurationBonuses[statusId] ?? 0);
+  const duration = getStatusDurationWithBonus(statusId, options.duration ?? base.duration, derived.statusDurationBonuses);
   return createStatusEffect(statusId, { sourcePower, sourceId: "player", ...options, duration, stacks });
+}
+
+export function createPlayerGuardStatus(
+  amount: number,
+  derived: ReturnType<typeof getDerivedStats>,
+  options: Partial<Pick<StatusEffect, "duration" | "description" | "sourceId">> = {},
+): StatusEffect {
+  const stacks = Math.max(1, Math.round(amount));
+  const duration = getStatusDurationWithBonus("guard", options.duration ?? 1, derived.statusDurationBonuses);
+  return createStatusEffect("guard", {
+    ...options,
+    duration,
+    stacks,
+    sourceId: options.sourceId ?? "player",
+    description: options.description ?? `Absorbs ${stacks} incoming damage.`,
+  });
 }
 
 export function createPlayerCompanionStatuses(statusId: StatusEffect["id"], derived: ReturnType<typeof getDerivedStats>): StatusEffect[] {

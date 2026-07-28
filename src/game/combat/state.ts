@@ -6,6 +6,7 @@ import {
   canApplyStatusEffect,
   createStatusEffect,
   getStatusInitiativeBonus,
+  getStatusDurationWithBonus,
   hasStatus,
   isStatusEffectId,
   STATUS_EFFECTS
@@ -13,6 +14,7 @@ import {
 import type { AdventureCombatStartStatus, CharacterState, CombatState, EnemyState, EnemyTemplate, StatusEffect, TurnOrderEntry } from "../types";
 
 import { makeLog } from "./eventQueue";
+import { createPlayerGuardStatus } from "./damage";
 
 export interface CombatStartEffects {
   playerStatuses?: AdventureCombatStartStatus[];
@@ -72,9 +74,14 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
   const martyrdomDamage = Math.max(0, Math.round(derived.maxHp * martyrdomRatio));
   let startingStatuses = features.passive.startingStatuses
     .filter((status) => !derived.statusImmunities.includes(status.id))
-    .map((status) => ({ ...status }));
+    .map((status) => status.id === "guard"
+      ? { ...status, duration: getStatusDurationWithBonus("guard", status.duration, derived.statusDurationBonuses) }
+      : { ...status });
   startingStatuses = (startEffects.playerStatuses ?? []).reduce((current, effect) => {
-    const status = createEventStartStatus(effect);
+    const createdStatus = createEventStartStatus(effect);
+    const status = createdStatus?.id === "guard"
+      ? { ...createdStatus, duration: getStatusDurationWithBonus("guard", createdStatus.duration, derived.statusDurationBonuses) }
+      : createdStatus;
     if (!status || derived.statusImmunities.includes(status.id) || STATUS_EFFECTS[status.id].kind !== status.kind) return current;
     return addOrRefreshStatus(current, status);
   }, startingStatuses);
@@ -82,11 +89,13 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
     const ratio = features.passive.startingAbsorptionMaxHpRatios[statusId] ?? 0;
     if (ratio <= 0) return;
     const amount = Math.max(1, Math.round(derived.maxHp * ratio));
-    startingStatuses = addOrRefreshStatus(startingStatuses, createStatusEffect(statusId, {
-      stacks: amount,
-      sourceId: "combat-start",
-      description: `Absorbs ${amount} incoming damage.`,
-    }));
+    startingStatuses = addOrRefreshStatus(startingStatuses, statusId === "guard"
+      ? createPlayerGuardStatus(amount, derived, { sourceId: "combat-start" })
+      : createStatusEffect(statusId, {
+        stacks: amount,
+        sourceId: "combat-start",
+        description: `Absorbs ${amount} incoming damage.`,
+      }));
   });
   return {
     turn: 1,
