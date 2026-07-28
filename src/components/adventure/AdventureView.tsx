@@ -24,9 +24,12 @@ import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { getStatusAdjustedCombatStats } from "../../game/combatStats";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "../../game/combatFeatures";
+import { MAX_CONSUMABLES_PER_TURN, MAX_PLAYER_ACTIONS_PER_TURN } from "../../game/combatLimits";
+import { consumableRemovesActiveControl } from "../../game/consumables";
 import { eventRevealsPlayerTurn, getCombatEventDurationMs, isCombatSequencePending, isHiddenDamageEvent, isHiddenPlayerAbilityEvent } from "../../game/combatSequence";
 import { ABILITIES, ADVENTURE_EVENTS, ADVENTURES, ENEMIES } from "../../game/data";
 import { getGearCategoryLabel } from "../../game/gear";
+import { getGearRating } from "../../game/itemScaling";
 import { consumableCount, describeConsumableEffect, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceProgressAfterGain, MAX_LEVEL } from "../../game/progression";
 import { COMBAT_TIMING } from "../../game/timing";
@@ -412,10 +415,12 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           const effectiveEnergyCost = queueProjection.nextAbilityIsFree ? 0 : modifiedEnergyCost;
           const effectiveCooldownTurns = getCharacterAbilityCooldownTurns(game.character, ability);
           const queuedCount = queuedActions.filter((action) => action.type === "ability" && action.abilityId === id).length;
-          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={abilityInputUnavailable || !isPlayerTurn || queueProjection.closed || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !targetStackRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
+          return <HoldAbilityButton key={id} ability={ability} description={getCharacterAbilityDescription(game.character, ability)} energyCost={effectiveEnergyCost} baseCooldown={effectiveCooldownTurns} cooldown={cooldown} queuedCount={queuedCount} disabled={abilityInputUnavailable || !isPlayerTurn || queueProjection.closed || queueProjection.playerActionsUsed >= MAX_PLAYER_ACTIONS_PER_TURN || cooldown > 0 || queueProjection.cooldownAbilityIds.has(id) || combat.outcome !== "active" || effectiveEnergyCost > queueProjection.energy || !targetRequirementMet || !targetStackRequirementMet || !spreadTargetAvailable || !selfRequirementMet} onUse={() => onAbility(id)} />;
         })}
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
+
+      <div className="combat-action-budget" aria-live="polite"><span>Actions <strong>{Math.min(MAX_PLAYER_ACTIONS_PER_TURN, queueProjection.playerActionsUsed)}/{MAX_PLAYER_ACTIONS_PER_TURN}</strong></span><span>Consumable <strong>{Math.min(MAX_CONSUMABLES_PER_TURN, queueProjection.consumablesUsed)}/{MAX_CONSUMABLES_PER_TURN}</strong></span></div>
 
       <div className="combat-footer-controls">
         <button className="combat-flee-button" data-game-tooltip={!isArenaChallenge && playerChained ? "Chained prevents you from fleeing." : undefined} disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active" || (!isArenaChallenge && playerChained)} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : playerChained ? "Chained" : "Flee"}</button>
@@ -445,7 +450,8 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           availableCounts={queueProjection.consumableCounts}
           selectedTargetAvailable={Boolean(queueProjection.targetStatusIds.get(combat.selectedEnemyId) && !queueProjection.targetStatusIds.get(combat.selectedEnemyId)?.has("stealth"))}
           visibleEnemyAvailable={combat.enemies.some((enemy) => enemy.hp > 0 && !enemy.statuses.some((status) => status.id === "stealth"))}
-          disabled={abilityInputUnavailable || !isPlayerTurn || queueProjection.closed || combat.outcome !== "active"}
+          activePlayerStatusIds={queueProjection.playerStatusIds}
+          disabled={initiativePlaying || !isPlayerTurn || queueProjection.closed || queueProjection.playerActionsUsed >= MAX_PLAYER_ACTIONS_PER_TURN || queueProjection.consumablesUsed >= MAX_CONSUMABLES_PER_TURN || combat.outcome !== "active"}
           onUse={(itemId) => { onConsumable(itemId); setCombatInventoryOpen(false); }}
           onClose={() => setCombatInventoryOpen(false)}
         />
@@ -514,13 +520,14 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   );
 }
 
-function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts, selectedTargetAvailable, visibleEnemyAvailable, disabled, onUse, onClose }: {
+function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts, selectedTargetAvailable, visibleEnemyAvailable, activePlayerStatusIds, disabled, onUse, onClose }: {
   inventory: ConsumableItem[];
   gold: number;
   queuedActions: QueuedCombatAction[];
   availableCounts: Map<string, number>;
   selectedTargetAvailable: boolean;
   visibleEnemyAvailable: boolean;
+  activePlayerStatusIds: Set<StatusEffectId>;
   disabled: boolean;
   onUse: (itemId: string) => void;
   onClose: () => void;
@@ -550,8 +557,9 @@ function CombatInventoryModal({ inventory, gold, queuedActions, availableCounts,
             const queued = queuedActions.filter((action) => action.type === "item" && action.itemId === item.id).length;
             const targetUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "target") && !selectedTargetAvailable;
             const groupUnavailable = item.effects.some((effect) => "target" in effect && effect.target === "all_enemies") && !visibleEnemyAvailable;
-            const unavailable = targetUnavailable || groupUnavailable;
-            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><ItemIcon item={item} size={42} /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{unavailable && <em>No valid enemy target.</em>}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
+            const controlUnavailable = !consumableRemovesActiveControl(activePlayerStatusIds, item);
+            const unavailable = targetUnavailable || groupUnavailable || controlUnavailable;
+            return <article className={`combat-consumable-card ${item.rarity}`} key={item.id}><span className="combat-consumable-icon"><ItemIcon item={item} size={42} /></span><div><small>{item.rarity} · {count} owned{queued > 0 ? ` · ${queued} queued` : ""}</small><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><ul>{item.effects.map((effect, index) => <li key={`${effect.type}-${index}`}>{describeConsumableEffect(effect)}</li>)}</ul>{controlUnavailable ? <em>Your control effect permits only a matching remedy.</em> : (targetUnavailable || groupUnavailable) ? <em>No valid enemy target.</em> : null}</div><button type="button" disabled={disabled || available <= 0 || unavailable} onClick={() => onUse(item.id)}>{available <= 0 ? "Queued" : "Use"}</button></article>;
           })}
         </div>
       </section>
@@ -655,7 +663,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
           {groupedLoot.map(({ item, count }) => {
             const content = <>
               <span className="score-loot-glyph"><ItemIcon item={item} size={40} /></span>
-              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : getGearCategoryLabel(item)}</small><strong className={getItemNameClass(item)}>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
+              <span><small>{item.rarity} · {isConsumableItem(item) ? "Consumable" : isMiscItem(item) ? "Item" : `${getGearCategoryLabel(item)} · Rating ${getGearRating(item)}`}</small><strong className={getItemNameClass(item)}>{item.name}{count > 1 ? ` x ${count}` : ""}</strong><em>{item.description}</em></span>
             </>;
             return isGearItem(item)
               ? <button type="button" className={`score-loot-card inspectable ${item.rarity}`} key={item.id} onClick={() => setInspectedGear(getScoreGearInspection(item, character))}>{content}</button>

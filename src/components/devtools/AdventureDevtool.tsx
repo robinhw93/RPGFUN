@@ -92,7 +92,7 @@ export function XpGuideDialog({ onClose }: { onClose: () => void }) {
   useModalScrollLock();
   return <div className="xp-guide-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="xp-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="xp-guide-title">
-      <header className="xp-guide-header"><div><p className="eyebrow">Adventure Rewards</p><h2 id="xp-guide-title">XP Guide</h2><p>Level 50 is the maximum level. Total XP is counted from the start of level 1.</p></div><button type="button" className="xp-guide-close" onClick={onClose} aria-label="Close XP guide"><X size={17} /></button></header>
+      <header className="xp-guide-header"><div><p className="eyebrow">Adventure Rewards</p><h2 id="xp-guide-title">XP Guide</h2><p>Level 70 is the maximum level. Total XP is counted from the start of level 1.</p></div><button type="button" className="xp-guide-close" onClick={onClose} aria-label="Close XP guide"><X size={17} /></button></header>
       <div className="xp-guide-table-wrap"><table className="xp-guide-table"><thead><tr><th>Level</th><th>XP from previous level</th><th>Total XP</th></tr></thead><tbody>{XP_GUIDE_ROWS.map((row) => <tr key={row.level} className={row.level === MAX_LEVEL ? "max-level" : ""}><th scope="row">{row.level}</th><td>{row.level === 1 ? "Starting level" : row.xpFromPreviousLevel.toLocaleString("en-US")}</td><td>{row.totalXp.toLocaleString("en-US")}{row.level === MAX_LEVEL ? " · Max Level" : ""}</td></tr>)}</tbody></table></div>
     </section>
   </div>;

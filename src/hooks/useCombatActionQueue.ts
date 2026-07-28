@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { ABILITIES, ITEMS } from "../game/data";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers } from "../game/combatFeatures";
+import { MAX_CONSUMABLES_PER_TURN, MAX_PLAYER_ACTIONS_PER_TURN } from "../game/combatLimits";
+import { consumableRemovesActiveControl } from "../game/consumables";
 import { endPlayerTurn, selectEnemyTarget, useAbility, useConsumable } from "../game/engine";
 import { consumableCount, isConsumableItem } from "../game/items";
 import { isCombatSequencePending } from "../game/combatSequence";
@@ -22,6 +24,8 @@ export interface CombatActionQueueProjection {
   playerStatusStacks: Map<StatusEffectId, number>;
   nextAbilityIsFree: boolean;
   consumableCounts: Map<string, number>;
+  playerActionsUsed: number;
+  consumablesUsed: number;
   closed: boolean;
 }
 
@@ -35,6 +39,8 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
   const playerStatusIds = new Set(combat.playerStatuses.map((status) => status.id));
   const playerStatusStacks = new Map(combat.playerStatuses.map((status) => [status.id, status.stacks]));
   const consumableCounts = new Map(ITEMS.filter(isConsumableItem).map((item) => [item.id, consumableCount(character.inventory, item.id)]));
+  let playerActionsUsed = combat.playerActionsThisTurn ?? 0;
+  let consumablesUsed = combat.consumablesUsedThisTurn ?? 0;
   let closed = false;
 
   actions.forEach((action) => {
@@ -47,10 +53,25 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
       const item = ITEMS.find((candidate) => candidate.id === action.itemId);
       if (!item || !isConsumableItem(item) || (consumableCounts.get(item.id) ?? 0) <= 0) return;
       consumableCounts.set(item.id, (consumableCounts.get(item.id) ?? 0) - 1);
+      playerActionsUsed += 1;
+      consumablesUsed += 1;
       item.effects.forEach((effect) => {
         if (effect.type === "gain_energy" || effect.type === "change_energy") {
           const change = effect.type === "gain_energy" ? Math.abs(effect.amount) : effect.amount;
           energy = Math.max(0, Math.min(combat.maxEnergy, energy + Math.round(change)));
+          return;
+        }
+        if (effect.type === "remove_status") {
+          const affectedTargetIds = effect.target === "self" ? ["player"] : effect.target === "all_enemies" ? [...targetStatusIds.keys()] : [action.targetId];
+          affectedTargetIds.forEach((targetId) => {
+            if (targetId === "player") {
+              playerStatusIds.delete(effect.status);
+              playerStatusStacks.delete(effect.status);
+            } else {
+              targetStatusIds.get(targetId)?.delete(effect.status);
+              targetStatusStacks.get(targetId)?.delete(effect.status);
+            }
+          });
           return;
         }
         if (effect.type !== "apply_status") return;
@@ -79,6 +100,7 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     }
     const ability = ABILITIES[action.abilityId];
     if (!ability) return;
+    playerActionsUsed += 1;
     const modifiers = getCharacterAbilityModifiers(character, ability.id);
     const targetStatuses = targetStatusIds.get(action.targetId) ?? new Set<StatusEffectId>();
     const cost = nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(character, ability, targetStatuses);
@@ -186,7 +208,7 @@ export function projectCombatActionQueue(combat: CombatState, character: GameSta
     }
   });
 
-  return { energy, cooldownAbilityIds: new Set(projectedCooldowns.keys()), targetStatusIds, targetStatusStacks, playerStatusIds, playerStatusStacks, nextAbilityIsFree, consumableCounts, closed };
+  return { energy, cooldownAbilityIds: new Set(projectedCooldowns.keys()), targetStatusIds, targetStatusStacks, playerStatusIds, playerStatusStacks, nextAbilityIsFree, consumableCounts, playerActionsUsed, consumablesUsed, closed };
 }
 
 export function useCombatActionQueue(
@@ -217,7 +239,7 @@ export function useCombatActionQueue(
       const energyCost = projection.nextAbilityIsFree ? 0 : getCharacterAbilityEnergyCostForTarget(currentGame.character, ability, targetStatuses);
       const requiredMinimum = getCharacterAbilityModifiers(currentGame.character, ability.id).find((modifier) => modifier.requiredTargetStatusStacksMinimum !== undefined)?.requiredTargetStatusStacksMinimum ?? ability.requiredTargetStatusStacks?.minimum;
       const targetStackRequirementMet = !ability.requiredTargetStatusStacks || (projection.targetStatusStacks.get(combat.selectedEnemyId)?.get(ability.requiredTargetStatusStacks.status) ?? 0) >= (requiredMinimum ?? 0);
-      if (projection.closed || projection.cooldownAbilityIds.has(abilityId) || energyCost > projection.energy || !targetStackRequirementMet || !selfRequirementMet) return current;
+      if (projection.closed || projection.playerActionsUsed >= MAX_PLAYER_ACTIONS_PER_TURN || projection.cooldownAbilityIds.has(abilityId) || energyCost > projection.energy || !targetStackRequirementMet || !selfRequirementMet) return current;
       nextActionId.current += 1;
       return [...current, { id: nextActionId.current, type: "ability", abilityId, targetId: combat.selectedEnemyId }];
     });
@@ -242,8 +264,8 @@ export function useCombatActionQueue(
       const item = ITEMS.find((candidate) => candidate.id === itemId);
       if (!combat || !item || !isConsumableItem(item) || combat.outcome !== "active" || !combat.initiativeRevealed || activeActor?.kind !== "player") return current;
       const projection = projectCombatActionQueue(combat, currentGame.character, current);
-      if (projection.closed || (projection.consumableCounts.get(item.id) ?? 0) <= 0) return current;
-      if (projection.playerStatusIds.has("stunned") || projection.playerStatusIds.has("sleep") || projection.playerStatusIds.has("frozen")) return current;
+      if (projection.closed || projection.playerActionsUsed >= MAX_PLAYER_ACTIONS_PER_TURN || projection.consumablesUsed >= MAX_CONSUMABLES_PER_TURN || (projection.consumableCounts.get(item.id) ?? 0) <= 0) return current;
+      if (!consumableRemovesActiveControl(projection.playerStatusIds, item)) return current;
       const needsSelectedTarget = item.effects.some((effect) => "target" in effect && effect.target === "target");
       const selectedStatuses = projection.targetStatusIds.get(combat.selectedEnemyId);
       if (needsSelectedTarget && (!selectedStatuses || selectedStatuses.has("stealth"))) return current;
@@ -260,7 +282,11 @@ export function useCombatActionQueue(
     if (!action || !combat || combat.outcome !== "active" || !combat.initiativeRevealed) return;
     const activeActor = combat.turnOrder[combat.activeTurnIndex];
     if (activeActor?.kind !== "player") return;
-    if (action.type !== "end_turn" && combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
+    if (action.type === "ability" && combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return;
+    if (action.type === "item") {
+      const item = ITEMS.find((candidate) => candidate.id === action.itemId);
+      if (!item || !isConsumableItem(item) || !consumableRemovesActiveControl(combat.playerStatuses.map((status) => status.id), item)) return;
+    }
     const sequencePending = isCombatSequencePending(combat);
     const canInterruptTurnAnnouncement = sequencePending && playerTurnReadyEventId === combat.eventId;
     if ((sequencePending && !canInterruptTurnAnnouncement) || combat.attackingActorId) return;

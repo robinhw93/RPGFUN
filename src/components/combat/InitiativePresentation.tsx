@@ -101,6 +101,7 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: C
         } as React.CSSProperties}>
           {participants.map((actor, index) => {
             const geometry = flightGeometry[actor.actorId];
+            const enemy = actor.kind === "enemy" ? combat.enemies.find((candidate) => candidate.instanceId === actor.actorId) : null;
             return (
               <article
                 className={`initiative-contestant ${actor.kind}`}
@@ -115,6 +116,9 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: C
                 } as React.CSSProperties}
               >
                 <strong className="initiative-name">{actor.kind === "player" ? "You" : actor.name}</strong>
+                <div className={`initiative-visual ${actor.kind}`} aria-hidden="true">
+                  {enemy ? <img src={enemy.imageUrl} alt="" /> : <span>Your move</span>}
+                </div>
                 <div className={`initiative-counter ${phase}`} aria-label={`D100 result ${displayedRolls[actor.actorId]}`}>
                   <span>{displayedRolls[actor.actorId]}</span>
                 </div>

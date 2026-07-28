@@ -10,6 +10,7 @@ import { getCharacterAvatar } from "../../game/avatars";
 import { getDerivedStats } from "../../game/character";
 import { GEAR_SET_BONUSES } from "../../game/data";
 import { canEquipItemInSlot, getGearCategoryLabel, getWeaponEquipType, isEquipmentSlotLocked, slotForItem } from "../../game/gear";
+import { getGearRating } from "../../game/itemScaling";
 import { describeConsumableEffect, isConsumableItem, isGearItem, isMiscItem } from "../../game/items";
 import { experienceToNextLevel, MAX_LEVEL } from "../../game/progression";
 import type { CharacterState, ConsumableItem, GearItem, GearSlot, MiscItem, StatName } from "../../game/types";
@@ -205,7 +206,7 @@ export function CharacterView({ mode, character, locked, introduction = false, l
           ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedConsumable(item)}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · Consumable</span><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
           : isMiscItem(item)
             ? <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedMiscItem(item)}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · Item</span><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>
-            : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)}</span><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? activeInventoryFilter.id === "misc" ? "No other items in your inventory." : `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
+            : <button key={`${item.id}-${index}`} className={`item-card ${item.rarity}`} onClick={() => setInspectedItem({ item })}><span className="item-glyph"><ItemIcon item={item} size={42} /></span><span className="rarity">{item.rarity} · {getGearCategoryLabel(item)} · Rating {getGearRating(item)}</span><strong className={getItemNameClass(item)}>{item.name}</strong><p>{item.description}</p><span className="equip-cta">View Details <ChevronRight size={14} /></span></button>) : <div className="empty-inventory">{character.inventory.length ? activeInventoryFilter.id === "misc" ? "No other items in your inventory." : `No ${activeInventoryFilter.label.toLowerCase()} items in your inventory.` : "Your pack is empty. Adventure awaits."}</div>}
       </div>
       </>}
       {selectedGearSlot && (
@@ -304,7 +305,7 @@ export function GearSlotPickerModal({ slot, character, locked, onClose, onInspec
   const itemRow = (item: GearItem, current = false) => (
     <button type="button" className={`gear-choice-row ${item.rarity}`} key={`${current ? "equipped" : "inventory"}-${item.id}`} onClick={() => onInspect(item, current ? slot : undefined)}>
       <span className="gear-choice-icon"><ItemIcon item={item} size={46} /></span>
-      <span><small>{item.rarity} · {getGearCategoryLabel(item)}</small><strong className={getItemNameClass(item)}>{item.name}</strong><em>{item.description}</em></span>
+      <span><small>{item.rarity} · {getGearCategoryLabel(item)} · Rating {getGearRating(item)}</small><strong className={getItemNameClass(item)}>{item.name}</strong><em>{item.description}</em></span>
       <span className="gear-choice-action">{current ? "View Equipped" : locked || slotLocked ? "View Details" : "Select"}<ChevronRight size={15} /></span>
     </button>
   );
@@ -395,7 +396,7 @@ export function ItemDetailModal({ item, equippedSlot, preferredSlot, character, 
         <header className="item-detail-header">
           <span className={`item-detail-icon ${item.rarity}`}><ItemIcon item={item} size={76} /></span>
           <span>
-            <small>{item.rarity} · {getGearCategoryLabel(item)}</small>
+            <small>{item.rarity} · {getGearCategoryLabel(item)} · Rating {getGearRating(item)}</small>
             <h2 className={getItemNameClass(item)}>{item.name}</h2>
             <p>{item.description}</p>
           </span>

@@ -1,10 +1,19 @@
 import { getDerivedStats } from "./character";
+import { MAX_CONSUMABLES_PER_TURN, MAX_PLAYER_ACTIONS_PER_TURN } from "./combatLimits";
 import { describeConsumableEffect, removeOneConsumable } from "./items";
 import { STATUS_EFFECTS, absorbIncomingDamage, addOrRefreshStatus, canApplyStatusEffect, createStatusEffect } from "./statusEffects";
 import type { CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, ConsumableEffect, ConsumableItem, EnemyState, InspectableInfo } from "./types";
 import { makeLog, queueAbilityVfx, queueAbsorptionChanges, queueDamageAtEvent, queueEnergyChange, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation } from "./combat/eventQueue";
 import { runPlayerTriggerEvent } from "./combat/flow";
 import { isEnemyStealthed, isEnemyTargetable } from "./combat/state";
+
+const PLAYER_CONTROL_STATUS_IDS = new Set(["stunned", "sleep", "frozen"]);
+
+export function consumableRemovesActiveControl(statusIds: Iterable<string>, item: ConsumableItem): boolean {
+  const active = new Set([...statusIds].filter((statusId) => PLAYER_CONTROL_STATUS_IDS.has(statusId)));
+  if (active.size === 0) return true;
+  return item.effects.some((effect) => effect.type === "remove_status" && effect.target === "self" && active.has(effect.status));
+}
 
 function effectTargets(effect: ConsumableEffect, enemies: EnemyState[], selectedEnemyId: string): Array<"player" | string> {
   if (!("target" in effect) || effect.target === "self") return ["player"];
@@ -16,7 +25,8 @@ function effectTargets(effect: ConsumableEffect, enemies: EnemyState[], selected
 export function canUseConsumable(combat: CombatState, item: ConsumableItem, selectedEnemyId = combat.selectedEnemyId): boolean {
   const actor = combat.turnOrder[combat.activeTurnIndex];
   if (combat.outcome !== "active" || !combat.initiativeRevealed || actor?.kind !== "player") return false;
-  if (combat.playerStatuses.some((status) => status.id === "stunned" || status.id === "sleep" || status.id === "frozen")) return false;
+  if (combat.playerActionsThisTurn >= MAX_PLAYER_ACTIONS_PER_TURN || combat.consumablesUsedThisTurn >= MAX_CONSUMABLES_PER_TURN) return false;
+  if (!consumableRemovesActiveControl(combat.playerStatuses.map((status) => status.id), item)) return false;
   return item.effects.every((effect) => effectTargets(effect, combat.enemies, selectedEnemyId).length > 0);
 }
 
@@ -172,6 +182,8 @@ export function useConsumable(combat: CombatState, character: CharacterState, it
       procUsage,
       abilityCooldowns,
       playerActed: true,
+      playerActionsThisTurn: combat.playerActionsThisTurn + 1,
+      consumablesUsedThisTurn: combat.consumablesUsedThisTurn + 1,
       playerActionSurvivalPending: false,
       damagedTargets: [],
       missedTargets: [],

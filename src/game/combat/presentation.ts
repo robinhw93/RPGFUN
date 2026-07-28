@@ -19,6 +19,8 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   let activeTurnIndex = combat.activeTurnIndex;
   let turn = combat.turn;
   let playerActed = combat.playerActed;
+  let playerActionsThisTurn = combat.playerActionsThisTurn ?? 0;
+  let consumablesUsedThisTurn = combat.consumablesUsedThisTurn ?? 0;
   let energy = combat.energy;
   let abilityCooldowns = combat.abilityCooldowns;
   let nextTurnEnergyRegenBonus = combat.nextTurnEnergyRegenBonus ?? 0;
@@ -128,6 +130,8 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
       activeActorId = effect.activeActorId ?? combat.turnOrder[effect.activeTurnIndex]?.actorId ?? activeActorId;
       turn = effect.turn;
       playerActed = effect.playerActed ?? playerActed;
+      playerActionsThisTurn = effect.playerActionsThisTurn ?? playerActionsThisTurn;
+      consumablesUsedThisTurn = effect.consumablesUsedThisTurn ?? consumablesUsedThisTurn;
       playerStatuses = effect.playerStatuses ?? playerStatuses;
       energy = effect.energy ?? energy;
       abilityCooldowns = effect.abilityCooldowns ?? abilityCooldowns;
@@ -191,7 +195,7 @@ export function resolveCombatEvent(combat: CombatState, eventId: number, eventIn
   const stableActiveTurnIndex = activeActorId
     ? Math.max(0, combat.turnOrder.findIndex((actor) => actor.actorId === activeActorId))
     : activeTurnIndex;
-  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerActionSurvivalPending, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageAmounts, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
+  return reorderCombat({ ...combat, playerHp, playerStatuses, enemies, activeTurnIndex: stableActiveTurnIndex, turn, playerActed, playerActionsThisTurn, consumablesUsedThisTurn, energy, abilityCooldowns, nextTurnEnergyRegenBonus, playerActionSurvivalPending, playerHasTakenDamage, attackingActorId, attackAnimationId, attackEffectId, pendingEffects, damagedTargets, missedTargets, damageAmounts, damageSourceLabels, statusAnimations: visibleStatusAnimations, abilityAnimations, passiveAnimations: [...(combat.passiveAnimations ?? []), ...passiveAnimations].slice(-16), selectedEnemyId, outcome });
 }
 
 export function finishCombatAttack(combat: CombatState, eventId: number, animationId: number): CombatState {

@@ -24,7 +24,7 @@ import { equipGearItem, unequipGearItem } from "./game/gear";
 import { grantCombatReward } from "./game/rewards";
 import { acceptQuest, recordQuestAdventureCompletion, turnInQuest, type QuestActionResult } from "./game/quests";
 import { clearSave, loadGame, saveGame } from "./game/save";
-import { areTalentRequirementsMet, isAdditionalClassTalentLocked } from "./game/talentRequirements";
+import { areTalentRequirementsMet, canRespecTalent, getTalentRespecCost, isAdditionalClassTalentLocked } from "./game/talentRequirements";
 import { ADVENTURE_TRANSITION_TIMING, COMBAT_TIMING } from "./game/timing";
 import { craftTownItem, gambleAtArkenfallTavern, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, type TavernGamblingResult, type TavernMealId, type TownActionResult } from "./game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, GearItem, GearSlot, StatName } from "./game/types";
@@ -524,6 +524,28 @@ function App() {
     });
   };
 
+  const respecTalent = (talentId: string) => {
+    setGame((current) => {
+      if (current.adventure.combat?.outcome === "active") return current;
+      const talent = TALENTS.find((item) => item.id === talentId);
+      const cost = getTalentRespecCost(current.character.talentRespecCount);
+      if (!talent || current.character.gold < cost || !canRespecTalent(talentId, current.character.unlockedTalents, TALENTS)) return current;
+      return {
+        ...current,
+        character: {
+          ...current.character,
+          gold: current.character.gold - cost,
+          talentPoints: current.character.talentPoints + talent.cost,
+          talentRespecCount: current.character.talentRespecCount + 1,
+          unlockedTalents: current.character.unlockedTalents.filter((id) => id !== talentId),
+          equippedAbilities: talent.abilityId
+            ? current.character.equippedAbilities.filter((id) => id !== talent.abilityId)
+            : current.character.equippedAbilities,
+        },
+      };
+    });
+  };
+
   const toggleAbility = (abilityId: string) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
@@ -761,7 +783,7 @@ function App() {
               </CharacterAssetBoundary>
             ) : (
               <Suspense fallback={null}>
-                <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} levelUpFlow={levelUpFlowStep === "talents"} onNext={levelUpFlowStep === "talents" ? continueLevelUpToAttributes : continueIntroductionToAttributes} onUnlock={unlockTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
+                <TalentsView character={game.character} locked={combatLocked} introduction={game.characterIntroductionStep === "talents"} levelUpFlow={levelUpFlowStep === "talents"} onNext={levelUpFlowStep === "talents" ? continueLevelUpToAttributes : continueIntroductionToAttributes} onUnlock={unlockTalent} onRespec={respecTalent} onToggleAbility={toggleAbility} onSetAbilitySlot={setAbilitySlot} />
               </Suspense>
             )}
             </>}

@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCost } from "../../game/combatFeatures";
 import { ABILITIES, TALENT_TREE_CANVAS, TALENTS } from "../../game/data";
 import { getUnlockedStartingClass, hasSpentIntroductionTalentPoint } from "../../game/characterIntroduction";
-import { areTalentRequirementsMet, getTalentConnectionIds, isAdditionalClassTalentLocked } from "../../game/talentRequirements";
+import { areTalentRequirementsMet, canRespecTalent, getTalentConnectionIds, getTalentRespecCost, isAdditionalClassTalentLocked } from "../../game/talentRequirements";
 import type { CharacterState } from "../../game/types";
 
 import { AbilityTypeIcon, getAbilityTypeLabel, getAvailableCharacterAbilities } from "../../ui/gameUi";
@@ -31,12 +31,14 @@ export type RuntimeTalentGesture = {
   moved: boolean;
 };
 
-export function TalentDetailModal({ talent, character, locked, onClose, onUnlock, onToggleAbility }: {
+export function TalentDetailModal({ talent, character, locked, allowRespec, onClose, onUnlock, onRespec, onToggleAbility }: {
   talent: (typeof TALENTS)[number];
   character: CharacterState;
   locked: boolean;
+  allowRespec: boolean;
   onClose: () => void;
   onUnlock: (id: string) => void;
+  onRespec: (id: string) => void;
   onToggleAbility: (id: string) => void;
 }) {
   const ability = talent.abilityId ? ABILITIES[talent.abilityId] : null;
@@ -54,6 +56,9 @@ export function TalentDetailModal({ talent, character, locked, onClose, onUnlock
     .filter((id) => !character.unlockedTalents.includes(id))
     .map((id) => TALENTS.find((candidate) => candidate.id === id)?.name ?? id);
   const canUnlock = !locked && available && character.talentPoints >= talent.cost && !unlocked;
+  const respecCost = getTalentRespecCost(character.talentRespecCount);
+  const preservesTree = canRespecTalent(talent.id, character.unlockedTalents, TALENTS);
+  const canRespec = allowRespec && !locked && preservesTree && character.gold >= respecCost;
   const typeLabel = talent.kind === "ability" ? "Ability" : talent.kind === "passive" ? "Passive" : "Class";
 
   useEffect(() => {
@@ -126,6 +131,7 @@ export function TalentDetailModal({ talent, character, locked, onClose, onUnlock
         <div className="talent-detail-actions">
           {talent.id !== "origin" && !unlocked && <button type="button" className="talent-detail-primary" disabled={!canUnlock} onClick={() => onUnlock(talent.id)}>{unlockLabel}</button>}
           {unlocked && ability && <button type="button" className="talent-detail-primary" disabled={locked || (!abilityEquipped && loadoutFull)} onClick={() => onToggleAbility(ability.id)}>{abilityEquipped ? "Unequip Ability" : loadoutFull ? "Loadout Full" : "Equip Ability"}</button>}
+          {unlocked && talent.id !== "origin" && <button type="button" className="talent-detail-respec" disabled={!canRespec} data-game-tooltip={!allowRespec ? "Finish the guided level-up first." : !preservesTree ? "Refund connected outer nodes first." : character.gold < respecCost ? `Requires ${respecCost} Gold.` : undefined} onClick={() => onRespec(talent.id)}>{!preservesTree ? "Connected Nodes Remain" : `Respec for ${respecCost} Gold`}</button>}
         </div>
       </article>
     </div>
@@ -266,13 +272,14 @@ export function AbilityLoadoutModal({ character, locked, onClose, onSelectSlot }
   );
 }
 
-export function TalentsView({ character, locked, introduction = false, levelUpFlow = false, onNext, onUnlock, onToggleAbility, onSetAbilitySlot }: {
+export function TalentsView({ character, locked, introduction = false, levelUpFlow = false, onNext, onUnlock, onRespec, onToggleAbility, onSetAbilitySlot }: {
   character: CharacterState;
   locked: boolean;
   introduction?: boolean;
   levelUpFlow?: boolean;
   onNext?: () => void;
   onUnlock: (id: string) => void;
+  onRespec: (id: string) => void;
   onToggleAbility: (id: string) => void;
   onSetAbilitySlot: (slotIndex: number, abilityId: string | null) => void;
 }) {
@@ -560,9 +567,14 @@ export function TalentsView({ character, locked, introduction = false, levelUpFl
         talent={selectedTalent}
         character={character}
         locked={locked}
+        allowRespec={!introduction && !levelUpFlow}
         onClose={closeTalentDetails}
         onUnlock={(talentId) => {
           onUnlock(talentId);
+          closeTalentDetails();
+        }}
+        onRespec={(talentId) => {
+          onRespec(talentId);
           closeTalentDetails();
         }}
         onToggleAbility={onToggleAbility}

@@ -2309,8 +2309,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 1
     },
     "magicalPower": 8,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "mirefen-marsh",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -3004,8 +3004,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 3
     },
     "magicalPower": 16,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "sunken-reliquary",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -3374,8 +3374,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 4
     },
     "magicalPower": 20,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "nightglass-citadel",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -3719,8 +3719,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 5
     },
     "magicalPower": 24,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "frostbound-expanse",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -4089,8 +4089,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 6
     },
     "magicalPower": 28,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "stormspire-aerie",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -4580,8 +4580,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 7
     },
     "magicalPower": 32,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "hollow-crown",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -5066,8 +5066,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 8
     },
     "magicalPower": 36,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "astral-scar",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [
@@ -5557,8 +5557,8 @@ export const ITEMS: InventoryItem[] = [
       "intelligence": 9
     },
     "magicalPower": 40,
-    "arkenfallVendor": null,
-    "vendorPrerequisiteAdventureId": null,
+    "arkenfallVendor": "jeweler",
+    "vendorPrerequisiteAdventureId": "world-below",
     "craftingRecipe": {
       "station": "jeweler",
       "ingredients": [

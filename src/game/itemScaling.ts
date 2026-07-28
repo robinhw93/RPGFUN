@@ -97,6 +97,11 @@ export function calculateGearScalingValue(item: GearItem): GearScalingValue {
   };
 }
 
+/** Compact player-facing comparison number derived from the item's visible stat budget. */
+export function getGearRating(item: GearItem): number {
+  return calculateGearScalingValue(item).value;
+}
+
 export function getGearScalingRank(item: GearItem, catalog: GearItem[]): { rank: number; total: number; average: number } {
   const sameSlot = catalog.filter((candidate) => candidate.slot === item.slot);
   const currentValue = calculateGearScalingValue(item).value;

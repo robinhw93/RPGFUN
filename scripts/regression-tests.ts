@@ -19,6 +19,7 @@ import { getCharacterCombatFeatures, resolveCharacterTriggers } from "../src/gam
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
+import { MAX_CONSUMABLES_PER_TURN, MAX_PLAYER_ACTIONS_PER_TURN } from "../src/game/combatLimits";
 import { applyAbilityFlatDamage, applyDamageToPlayer, createPlayerGuardStatus, wakeFromDamage } from "../src/game/combat/damage";
 import { moveToNextActor, processTurnStart } from "../src/game/combat/flow";
 import { createCombat, endPlayerTurn, getEnemyStartingEnergy, resolveCombatEvent, takeEnemyTurn, useAbility, useConsumable } from "../src/game/engine";
@@ -28,8 +29,10 @@ import { fleeCombat } from "../src/game/flee";
 import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem, isMiscItem } from "../src/game/items";
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
+import { MAX_LEVEL } from "../src/game/progression";
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
 import { addOrRefreshStatus, advanceTurnStartStatuses, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getDodgeChanceBonus, getStatusDamage } from "../src/game/statusEffects";
+import { canRespecTalent, getTalentRespecCost } from "../src/game/talentRequirements";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
 import type { AdventureEventChoice, CombatState, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
@@ -123,6 +126,8 @@ function testNewCharacterIntroductionDefaults() {
   assert.equal(INITIAL_GAME.characterIntroductionStep, "class", "A new character must begin at the class-selection introduction step.");
   assert.equal(INITIAL_GAME.character.unspentStatPoints, 2, "A new character must receive two starting Attribute Points.");
   assert.equal(INITIAL_GAME.character.talentPoints, 1, "A new character must receive one starting Talent Point.");
+  assert.equal(INITIAL_GAME.character.talentRespecCount, 0, "A new character must begin with the base Talent respec price.");
+  assert.equal(MAX_LEVEL, 70, "The live character level cap must be 70.");
   assert.deepEqual(INITIAL_GAME.character.unlockedTalents, ["origin"], "Only Wayfarer's Spark may be unlocked before choosing a class.");
   assert.equal(Object.values(INITIAL_GAME.character.equipment).filter(Boolean).length, 0, "The starting-item recommendation requires a new character to begin without equipped gear.");
   const startingClasses = TALENTS.filter((talent) => talent.id !== "origin" && talent.kind === "class" && talent.requires.includes("origin"));
@@ -146,6 +151,18 @@ function testNewCharacterIntroductionDefaults() {
     unlockedTalents: [...arcanist.unlockedTalents, connectedTalent.id],
   };
   assert.equal(hasSpentIntroductionTalentPoint(afterFirstTalent), true, "Spending the post-class Talent Point must complete the Talent step.");
+}
+
+function testTalentRespecRules() {
+  const classTalent = TALENTS.find((talent) => talent.kind === "class" && talent.id !== "origin" && talent.requires.includes("origin"));
+  assert.ok(classTalent, "Talent respec regression requires a class connected to Origin.");
+  const outerTalent = TALENTS.find((talent) => talent.requires.includes(classTalent.id));
+  assert.ok(outerTalent, "Talent respec regression requires an outer node connected through the class.");
+  const unlocked = ["origin", classTalent.id, outerTalent.id];
+  assert.equal(canRespecTalent(classTalent.id, unlocked, TALENTS), false, "A respec must not strand an unlocked outer node away from Origin.");
+  assert.equal(canRespecTalent(outerTalent.id, unlocked, TALENTS), true, "An unlocked outer leaf may be refunded.");
+  assert.equal(getTalentRespecCost(0), 100, "The first node respec must cost 100 Gold.");
+  assert.equal(getTalentRespecCost(4), 500, "Each refunded node must raise the next cost by 100 Gold.");
 }
 
 function testAttributeAndAfflictionScaling() {
@@ -375,6 +392,9 @@ function testContentIntegrity() {
   const expectedAdventureEnemyPower = (generatedPower: number, adventureNumber: number) => adventureNumber >= 9
     ? Math.round(generatedPower * 1.3)
     : generatedPower;
+  const expectedAdventureEnemyDefense = (generatedDefense: number, adventureNumber: number) => adventureNumber >= 7
+    ? Math.round(generatedDefense * 0.5)
+    : generatedDefense;
   const expectedEnemyDefenseBonuses: Record<number, { armor: number; magicResistance: number }> = {
     5: { armor: 10, magicResistance: 10 },
     6: { armor: 20, magicResistance: 15 },
@@ -413,8 +433,8 @@ function testContentIntegrity() {
     assert.equal(bossEnemy.maxHp, expectedAdventureEnemyHp(generatedBossHp, adventureNumber), `${bossEnemy.name} must retain its intended late-campaign Health scaling.`);
     const defenseBonus = expectedEnemyDefenseBonuses[adventureNumber] ?? { armor: 0, magicResistance: 0 };
     const scale = adventureNumber - 3;
-    assert.equal(bossEnemy.armor, Math.floor(scale * 1.2) + defenseBonus.armor * 2, `${bossEnemy.name} must receive double its adventure Armor bonus.`);
-    assert.equal(bossEnemy.magicResistance, Math.floor(scale * 1.1) + 1 + defenseBonus.magicResistance * 2, `${bossEnemy.name} must receive double its adventure Magic Resistance bonus.`);
+    assert.equal(bossEnemy.armor, expectedAdventureEnemyDefense(Math.floor(scale * 1.2) + defenseBonus.armor * 2, adventureNumber), `${bossEnemy.name} must use the current late-campaign Armor curve.`);
+    assert.equal(bossEnemy.magicResistance, expectedAdventureEnemyDefense(Math.floor(scale * 1.1) + 1 + defenseBonus.magicResistance * 2, adventureNumber), `${bossEnemy.name} must use the current late-campaign Magic Resistance curve.`);
     const regularEnemies = Array.from(enemyIds)
       .filter((enemyId) => enemyId !== bossEnemyId)
       .map((enemyId) => ENEMIES[enemyId])
@@ -423,8 +443,8 @@ function testContentIntegrity() {
     regularEnemies.forEach((enemy, enemyIndex) => {
       const generatedHp = 55 + (adventureNumber - 3) * 28 + enemyIndex * 9;
       assert.equal(enemy.maxHp, expectedAdventureEnemyHp(generatedHp, adventureNumber), `${enemy.name} must retain its intended late-campaign Health scaling.`);
-      assert.equal(enemy.armor, Math.floor(scale * 1.2) + (enemyIndex % 3) + defenseBonus.armor, `${enemy.name} must receive its adventure Armor bonus.`);
-      assert.equal(enemy.magicResistance, Math.floor(scale * 1.1) + ((enemyIndex + 1) % 3) + defenseBonus.magicResistance, `${enemy.name} must receive its adventure Magic Resistance bonus.`);
+      assert.equal(enemy.armor, expectedAdventureEnemyDefense(Math.floor(scale * 1.2) + (enemyIndex % 3) + defenseBonus.armor, adventureNumber), `${enemy.name} must use the current late-campaign Armor curve.`);
+      assert.equal(enemy.magicResistance, expectedAdventureEnemyDefense(Math.floor(scale * 1.1) + ((enemyIndex + 1) % 3) + defenseBonus.magicResistance, adventureNumber), `${enemy.name} must use the current late-campaign Magic Resistance curve.`);
     });
     [...regularEnemies, bossEnemy].forEach((enemy, enemyIndex) => {
       const generatedPower = 9 + (adventureNumber - 3) * 5 + enemyIndex;
@@ -881,6 +901,10 @@ function testTacticalEnemyAiCatalogAndSelection() {
     assert.equal(application?.chance, chance, `${ENEMIES[enemyId].name}'s ${status} proc chance must remain rare.`);
     assert.equal(application?.duration, duration, `${ENEMIES[enemyId].name}'s ${status} duration changed unexpectedly.`);
   });
+
+  const auroraMantle = ENEMIES["enemy-a8-aurora-wisp"].abilities.find((ability) => ability.name === "Boreal Mantle");
+  const auroraBarrier = auroraMantle?.friendlyStatusApplications?.find((application) => application.status === "barrier");
+  assert.equal(auroraBarrier?.stacks, 11, "Aurora Wisp's Boreal Mantle must absorb 11 damage rather than recreating the old 22-point wall.");
 
   const expectedPowerSuppressionSources = [
     { enemyId: "enemy-a7-shard-magus", status: "nullify" },
@@ -1621,6 +1645,11 @@ function testStatusContracts() {
   };
   const gearExtendedGuard = createPlayerGuardStatus(10, getDerivedStats(guardCharacter));
   assert.equal(gearExtendedGuard.duration, 2, "A talent or gear Guard-duration bonus must extend player-created Guard.");
+
+  const frozenPlayerStart = processTurnStart(100, 100, [createStatusEffect("frozen")], "player", "Player", [], [], []);
+  assert.equal(frozenPlayerStart.skipTurn, false, "A Frozen player turn must remain open so a Frozen-removal consumable can be used.");
+  const frozenEnemyStart = processTurnStart(100, 100, [createStatusEffect("frozen")], "enemy-test", "Frozen Enemy", [], [], []);
+  assert.equal(frozenEnemyStart.skipTurn, true, "Frozen must continue to skip enemy turns.");
 }
 
 function testPlayerControlBreakSurvival() {
@@ -2003,6 +2032,31 @@ function testCombatConsumable() {
   const remedyUsed = useConsumable(poisonedCombat, remedyCharacter, remedy);
   const remedyResolved = resolveCombatEvent(remedyUsed.combat, remedyUsed.combat.eventId, 0);
   assert.equal(remedyResolved.playerStatuses.some((status) => status.id === "poison"), false, "A status-removal consumable must clear its configured status at presentation time.");
+  assert.equal(remedyUsed.combat.playerActionsThisTurn, 1, "A consumable must spend one of the player's six actions.");
+  assert.equal(remedyUsed.combat.consumablesUsedThisTurn, MAX_CONSUMABLES_PER_TURN, "A consumable must spend the turn's single item use.");
+  assert.equal(useConsumable(remedyUsed.combat, remedyUsed.character, remedy).combat, remedyUsed.combat, "A second consumable in the same player turn must be rejected.");
+
+  const thaw: ConsumableItem = {
+    kind: "consumable",
+    id: "regression-thaw",
+    name: "Regression Thaw",
+    rarity: "rare",
+    description: "Removes Frozen.",
+    effects: [{ type: "remove_status", target: "self", status: "frozen" }],
+  };
+  const frozenCombat = { ...poisonedCombat, playerStatuses: [createStatusEffect("frozen")], playerActionsThisTurn: 0, consumablesUsedThisTurn: 0 };
+  const frozenCharacter = { ...character, inventory: [structuredClone(thaw), structuredClone(healingPotion)] };
+  assert.equal(useConsumable(frozenCombat, frozenCharacter, healingPotion).combat, frozenCombat, "Frozen must still block unrelated consumables.");
+  const thawed = useConsumable(frozenCombat, frozenCharacter, thaw);
+  const thawedResolved = resolveCombatEvent(thawed.combat, thawed.combat.eventId, 0);
+  assert.equal(thawedResolved.playerStatuses.some((status) => status.id === "frozen"), false, "A Frozen remedy must be usable while Frozen and remove it at presentation time.");
+
+  const cappedCombat = { ...combat, playerActionsThisTurn: MAX_PLAYER_ACTIONS_PER_TURN };
+  const cappedAbility = Object.values(ABILITIES).find((ability) => ability.id !== "wait");
+  assert.ok(cappedAbility, "Action-cap regression requires a live ability.");
+  const cappedAbilityResult = useAbility(cappedCombat, character, cappedAbility.id);
+  assert.equal(cappedAbilityResult.eventId, cappedCombat.eventId, "The engine must reject abilities after six player actions regardless of Energy.");
+  assert.equal(cappedAbilityResult.playerActionsThisTurn, MAX_PLAYER_ACTIONS_PER_TURN, "Rejected abilities must not exceed the action cap.");
 }
 
 function testStealthPotionLastsThroughNextTurn() {
@@ -2150,6 +2204,7 @@ testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
 testAutomaticGearAcquisition();
 testNewCharacterIntroductionDefaults();
+testTalentRespecRules();
 testAttributeAndAfflictionScaling();
 testEnemyStartingEnergy();
 testEnemyChainedAttacks();

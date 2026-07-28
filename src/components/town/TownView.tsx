@@ -5,6 +5,7 @@ import { ItemDetailModal } from "../character/CharacterView";
 import { ITEMS, QUESTLINES, QUESTS } from "../../game/data";
 import { getArenaExperience } from "../../game/arena";
 import { getGearCategoryLabel } from "../../game/gear";
+import { getGearRating } from "../../game/itemScaling";
 import { describeConsumableEffect, getItemGoldCost, getItemSellValue, groupInventoryItems, isConsumableItem, isGearItem } from "../../game/items";
 import { STATUS_EFFECTS } from "../../game/statusEffects";
 import { describeQuestObjective, getQuestAvailability, getQuestBoardPostings, getQuestObjectiveProgress, MAX_QUEST_BOARD_POSTINGS, type QuestActionResult } from "../../game/quests";
@@ -164,7 +165,7 @@ function VendorItemCard({ item, mode, game, station, ownedCount, actionItemId, o
   return (
     <article className={`town-item-card rarity-${item.rarity} ${actionItemId === item.id ? "item-acquired" : ""}`}>
       <button type="button" className="town-item-inspect" onClick={onInspect} aria-label={`Inspect ${item.name}`}><ItemIcon item={item} /></button>
-      <div className="town-item-copy"><p className="eyebrow">{item.rarity} · {itemSubtitle(item)}{mode === "sell" && ownedCount ? ` · ${ownedCount} owned` : ""}</p><h3 className={getItemNameClass(item)}>{item.name}</h3>{item.description && <p>{item.description}</p>}</div>
+      <div className="town-item-copy"><p className="eyebrow">{item.rarity} · {itemSubtitle(item)}{isGearItem(item) ? ` · Rating ${getGearRating(item)}` : ""}{mode === "sell" && ownedCount ? ` · ${ownedCount} owned` : ""}</p><h3 className={getItemNameClass(item)}>{item.name}</h3>{item.description && <p>{item.description}</p>}</div>
       {mode === "craft" && recipe && <div className="town-recipe-list">{recipe.ingredients.map((ingredient) => {
         const material = ITEM_BY_ID.get(ingredient.itemId);
         const owned = getInventoryItemCount(game.character.inventory, ingredient.itemId);

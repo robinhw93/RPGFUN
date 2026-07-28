@@ -9,7 +9,7 @@ export interface ExperienceResult {
   levelsGained: number;
 }
 
-export const MAX_LEVEL = 50;
+export const MAX_LEVEL = 70;
 
 export function experienceToNextLevel(level: number): number {
   if (level >= MAX_LEVEL) return 0;

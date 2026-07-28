@@ -106,6 +106,7 @@ export function loadGame(): GameState | null {
         xp: normalizedLevel >= MAX_LEVEL ? 0 : Math.max(0, state.character.xp ?? 0),
         unspentStatPoints: state.character.unspentStatPoints ?? Math.max(0, (normalizedLevel - 1) * 3),
         talentPoints: normalizedTalentPoints,
+        talentRespecCount: Math.max(0, Math.floor(state.character.talentRespecCount ?? 0)),
         unlockedTalents,
         equippedAbilities: state.character.equippedAbilities.filter((id) => validAbilities.has(id)),
         inventory,

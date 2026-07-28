@@ -72,7 +72,7 @@ There is no server authority. React owns the current `GameState`, and every non-
 - `src/game/talentRequirements.ts` owns bidirectional ANY-connection evaluation for both UI state and unlock authorization.
 - `src/game/gear.ts` owns slot compatibility, hand classification, equip/unequip transfer, and item category normalization.
 - `src/game/items.ts` owns the explicit gear, consumable, and ordinary-item classification plus prices, inventory grouping, shared item acquisition with automatic empty-slot equipping, consumable counts/removal, and effect descriptions. `src/game/consumables.ts` translates standard consumable effects into presentation-timed combat effects without ending the turn.
-- `src/game/itemScaling.ts` owns Item Editor's pure, non-persistent gear comparison index, its centralized stat weights, contribution breakdown, excluded-effect detection, and same-slot ranking.
+- `src/game/itemScaling.ts` owns the shared player-facing Gear Rating and Item Editor comparison index, its centralized stat weights, contribution breakdown, excluded-effect detection, and same-slot ranking.
 - `src/game/itemIcons.ts` maps stable live item IDs to their generated, optimized artwork under `public/assets/items/` and exposes that complete artwork library to Item Editor pickers. Consumables and Other Items persist an optional selected item-art URL; explicit editor selections override their legacy ID mapping at presentation time.
 - `src/components/GearSlotIcon.tsx` owns gear-art fallback resolution and the complete generated gear-icon catalog. Item Editor asks it for the current slot or weapon-kind category, so its picker remains focused while the global URL list still preloads and validates every icon.
 - `src/game/progression.ts` owns experience thresholds and level rewards.
@@ -94,12 +94,12 @@ There is no server authority. React owns the current `GameState`, and every non-
 
 - `characterCreated`: whether creation has completed.
 - `characterIntroductionStep`: the saved new-character route through class selection, the first connected Talent, starting Attributes, and the optional starting-item recommendation in Town. Older saves normalize safely around the current step.
-- `character`: persistent identity, progression, inventory, equipment, talents, ability loadout, accepted/completed quest IDs, non-item quest progress, and the tavern's current gambling-pressure counter.
+- `character`: persistent identity, progression, inventory, equipment, talents, escalating talent-respec count, ability loadout, accepted/completed quest IDs, non-item quest progress, and the tavern's current gambling-pressure counter.
 - `adventure`: current node, carried Health, combat, event state, reward snapshot, loot, and completion.
 
 `CombatState` contains both authoritative logical results and presentation synchronization state:
 
-- Turn number, sorted initiative entries, active index, per-round acted-actor IDs, the active enemy's resolved-action count, and initiative-reveal state.
+- Turn number, sorted initiative entries, active index, per-round acted-actor IDs, the active enemy's resolved-action count, player action/consumable budgets for the current turn, and initiative-reveal state.
 - Player/enemy Health, Energy, statuses, targeting, and cooldowns.
 - `floatingEvents`: ordered player-facing messages for the current sequence.
 - `pendingEffects`: state changes indexed to those messages.
@@ -436,7 +436,7 @@ An exported draft is design input. Advanced effect notes are not executable unti
 
 Enemy, Event, Adventure, and Item editors retain browser-local drafts under legacy-compatible `emberfall.*-devtool.v1` keys. New files and exchange-format labels use the Arkenfall name. Event Manager uses exchange version 2 and supports checked choices, direct choices, and item-referenced Wandering Merchants. Item Editor uses `arkenfall-items` version 1 for the combined item and set catalogs, including each item's Gold Cost, optional Arkenfall vendor, typed crafting recipe, executable set-passive JSON, and status-removal consumables. An explicit null disables legacy vendor or recipe defaults. Internal IDs remain stable or are regenerated from readable names when missing, invalid, or duplicated. While local Vite is running, Enemy Save replaces `ENEMIES` in `src/game/content/enemies.ts`; Event and Adventure Save write the appropriate initializer in `src/game/content/adventures.ts`; and Item Save writes `ITEMS` plus `GEAR_SETS` in `src/game/content/gear.ts`. Adventure definitions can select data-owned custom card/combat artwork. Existing enemy numeric fields and drop tables retain narrow writes for rapid edits, while the complete catalog route preserves executable abilities, behavior, artwork, action limits, and advanced fields. Standard gear stats, set passives, consumable effects, prices, town and event merchant catalogs, crafting recipes, and enemy/stage item drops are executable immediately; free-form special notes remain design input. Validation completes before any file changes.
 
-The password-gated launcher also contains **Level up** and **Grant item**. These mutate only the current browser-owned `GameState`, so they work without the Vite source-sync route and persist through the normal save effect. Level up is blocked during active combat and at level 50. Grant item accepts a live catalog ID plus a clamped quantity of 1-99 and remains available during combat for consumable testing. Neither action changes canonical content source.
+The password-gated launcher also contains **Level up** and **Grant item**. These mutate only the current browser-owned `GameState`, so they work without the Vite source-sync route and persist through the normal save effect. Level up is blocked during active combat and at level 70. Grant item accepts a live catalog ID plus a clamped quantity of 1-99 and remains available during combat for consumable testing. Neither action changes canonical content source.
 
 ## Regression protection
 
@@ -458,7 +458,7 @@ The game save key remains `emberfall-save-v1` as a legacy compatibility contract
 - Item metadata is hydrated from current definitions.
 - Invalid legacy Two-Hand plus Off Hand combinations are repaired.
 - Avatar, stat points, and pending rewards receive fallbacks.
-- Character level is clamped to the level-50 cap, with no stored experience retained at max level.
+- Character level is clamped to the level-70 cap, with no stored experience retained at max level.
 - Missing adventure mode is normalized to `story`.
 
 `ensureCombatState` performs the separate in-combat migration because combat definitions and animation fields evolve more frequently.

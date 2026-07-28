@@ -918,7 +918,7 @@ export type CombatPendingEffect =
   | { id: string; eventIndex: number; type: "enemy_flee"; targetId: string }
   | { id: string; eventIndex: number; type: "player_survival_window"; removedStatusIds: StatusEffectId[] }
   | { id: string; eventIndex: number; type: "outcome"; outcome: "victory" | "defeat" }
-  | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
+  | { id: string; eventIndex: number; type: "turn"; activeTurnIndex: number; activeActorId?: string; turn: number; playerActed?: boolean; playerActionsThisTurn?: number; consumablesUsedThisTurn?: number; playerStatuses?: StatusEffect[]; energy?: number; nextTurnEnergyRegenBonus?: number; abilityCooldowns?: Record<string, number> };
 
 export interface CombatDamageTrialState {
   kind: "damage_trial";
@@ -936,6 +936,10 @@ export interface CombatState {
   actedActorIds: string[];
   initiativeRevealed: boolean;
   playerActed: boolean;
+  /** Successful abilities and consumables resolved during the current player turn. */
+  playerActionsThisTurn: number;
+  /** Successful consumables resolved during the current player turn. */
+  consumablesUsedThisTurn: number;
   /** Number of separate abilities the active enemy has resolved during its current turn. */
   enemyActionsTaken: number;
   /** Total Gold already stolen and applied to the character during this combat. */
@@ -997,6 +1001,8 @@ export interface CharacterState {
   gold: number;
   baseStats: Stats;
   talentPoints: number;
+  /** Lifetime number of individually refunded Talent nodes; raises the next Gold cost. */
+  talentRespecCount: number;
   unlockedTalents: string[];
   equippedAbilities: string[];
   inventory: InventoryItem[];

@@ -113,8 +113,14 @@ export function processTurnStart(
 
   const frozen = nextStatuses.find((status) => status.id === "frozen");
   if (frozen) {
-    const logText = targetId === "player" ? "You are Frozen and cannot act." : `${targetName} is Frozen and cannot act.`;
-    const eventText = targetId === "player" ? "You are Frozen and skip the turn." : `${targetName} is Frozen and skips the turn.`;
+    if (targetId === "player") {
+      const text = "You are Frozen. Use a Frozen remedy or end your turn.";
+      logs.push(makeLog(text, statusInfo(frozen)));
+      events.push(text);
+      return { hp: nextHp, statuses: nextStatuses, skipTurn: false, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
+    }
+    const logText = `${targetName} is Frozen and cannot act.`;
+    const eventText = `${targetName} is Frozen and skips the turn.`;
     logs.push(makeLog(logText, statusInfo(frozen)));
     events.push(eventText);
     return { hp: nextHp, statuses: nextStatuses, skipTurn: true, burnDamage, burnEventIndex, healing, healingEventIndex, playerActionSurvivalPending: survivalPending };
@@ -320,7 +326,7 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
         .filter(([, turns]) => turns > 0),
     );
     const playerTurnEventIndex = events.length;
-    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy, 0, refreshedCooldowns, nextActor.actorId);
+    queueTurn(events, pendingEffects, "Your turn.", nextIndex, nextTurn, false, next.playerStatuses, next.energy, 0, refreshedCooldowns, nextActor.actorId, 0, 0);
     const playerStart = processTurnStart(next.playerHp, next.playerMaxHp, next.playerStatuses, "player", "You", logs, events, pendingEffects, derived.healingReceivedMultiplier, getEnergyDefenseMultiplier(derived, next.energy, next.playerStatuses), derived.armor, derived.magicResistance, derived.statusDamageMultipliers.burn ?? 1, next.playerActionSurvivalPending);
     const burnTriggers = playerStart.burnDamage > 0 && playerStart.burnEventIndex !== null
       ? runPlayerTriggerEvent(
@@ -379,6 +385,8 @@ export function moveToNextActor(combat: CombatState, character: CharacterState, 
       deathPreventionUsed: startSaved.used,
       nextTurnEnergyRegenBonus: 0,
       playerActed: false,
+      playerActionsThisTurn: 0,
+      consumablesUsedThisTurn: 0,
       abilityCooldowns: startSavedTriggers.state.abilityCooldowns ?? refreshedCooldowns,
     };
     if (next.playerHp <= 0) {

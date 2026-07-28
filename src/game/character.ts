@@ -12,6 +12,7 @@ export const INITIAL_CHARACTER: CharacterState = {
   gold: 18,
   baseStats: { strength: 5, agility: 5, intelligence: 5, vitality: 5, luck: 5 },
   talentPoints: 1,
+  talentRespecCount: 0,
   unlockedTalents: ["origin"],
   equippedAbilities: [],
   inventory: [],

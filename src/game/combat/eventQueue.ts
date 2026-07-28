@@ -201,15 +201,15 @@ export function preserveBarrierUntilDamageEvent(
   ];
 }
 
-export function queueTurnAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>, activeActorId?: string): void {
+export function queueTurnAtEvent(pendingEffects: CombatPendingEffect[], eventIndex: number, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>, activeActorId?: string, playerActionsThisTurn?: number, consumablesUsedThisTurn?: number): void {
   combatEffectSequence += 1;
-  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, activeActorId, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns });
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "turn", activeTurnIndex, activeActorId, turn, playerActed, playerActionsThisTurn, consumablesUsedThisTurn, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns });
 }
 
-export function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>, activeActorId?: string): void {
+export function queueTurn(events: string[], pendingEffects: CombatPendingEffect[], text: string, activeTurnIndex: number, turn: number, playerActed?: boolean, playerStatuses?: StatusEffect[], energy?: number, nextTurnEnergyRegenBonus?: number, abilityCooldowns?: Record<string, number>, activeActorId?: string, playerActionsThisTurn?: number, consumablesUsedThisTurn?: number): void {
   const eventIndex = events.length;
   events.push(text);
-  queueTurnAtEvent(pendingEffects, eventIndex, activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns, activeActorId);
+  queueTurnAtEvent(pendingEffects, eventIndex, activeTurnIndex, turn, playerActed, playerStatuses, energy, nextTurnEnergyRegenBonus, abilityCooldowns, activeActorId, playerActionsThisTurn, consumablesUsedThisTurn);
 }
 
 export function queueOutcome(events: string[], pendingEffects: CombatPendingEffect[], text: string, outcome: "victory" | "defeat"): void {

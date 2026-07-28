@@ -2,6 +2,7 @@ import { getDerivedStats } from "../character";
 import { getStatusAdjustedCombatStats } from "../combatStats";
 import { getCharacterAbilityCooldownTurns, getCharacterAbilityDescription, getCharacterAbilityEnergyCostForTarget, getCharacterAbilityModifiers, getCharacterDamageMultiplier, getCharacterStatusDamageMultiplier, getDamageModifierMultiplier } from "../combatFeatures";
 import { getEffectiveDodgeChance, rollHit } from "../combatMath";
+import { MAX_PLAYER_ACTIONS_PER_TURN } from "../combatLimits";
 import { ABILITIES } from "../data";
 import {
   absorbIncomingDamage,
@@ -28,7 +29,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const ability = ABILITIES[abilityId];
   const activeActor = combat.turnOrder[combat.activeTurnIndex];
   const remainingCooldown = combat.abilityCooldowns?.[abilityId] ?? 0;
-  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0) return combat;
+  if (!ability || combat.outcome !== "active" || activeActor?.kind !== "player" || remainingCooldown > 0 || combat.playerActionsThisTurn >= MAX_PLAYER_ACTIONS_PER_TURN) return combat;
   const abilityIsFree = hasStatus(combat.playerStatuses, "distraction");
   const selectedTargetStatuses = combat.enemies.find((enemy) => enemy.instanceId === combat.selectedEnemyId)?.statuses ?? [];
   const targetMakesAbilityFree = Boolean(ability.freeAgainstTargetStatus && hasStatus(selectedTargetStatuses, ability.freeAgainstTargetStatus));
@@ -1328,7 +1329,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   if (enemies.every((enemy) => enemy.hp <= 0)) {
     events.push("Victory.");
     const displayedEnemies = enemies.map((enemy) => ({ ...enemy, hp: displayedEnemyHp.get(enemy.instanceId) ?? enemy.hp, statuses: displayedEnemyStatuses.get(enemy.instanceId) ?? enemy.statuses }));
-    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: displayedPlayerHp, playerStatuses: displayedPlayerStatuses, energy, procUsage, deathPreventionUsed, playerActionSurvivalPending: false, playerHasMissed, nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0, abilityCooldowns, playerActed: true, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
+    return { ...combat, eventId: (combat.eventId ?? 0) + 1, floatingEvents: events, pendingEffects, damagedTargets, enemies: displayedEnemies, playerHp: displayedPlayerHp, playerStatuses: displayedPlayerStatuses, energy, procUsage, deathPreventionUsed, playerActionSurvivalPending: false, playerHasMissed, nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0, abilityCooldowns, playerActed: true, playerActionsThisTurn: combat.playerActionsThisTurn + 1, attackingActorId: null, log: [...logs, makeLog("Victory. The path ahead is clear."), ...combat.log].slice(0, 24), outcome: "active" };
   }
 
   if (ability.grantsImmediateTurn) {
@@ -1363,7 +1364,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         .filter(([, turns]) => turns > 0),
     );
     const turnEventIndex = events.length;
-    queueTurn(events, pendingEffects, "Your turn.", combat.activeTurnIndex, combat.turn + 1, false, playerStatuses, energy, 0, refreshedCooldowns, "player");
+    queueTurn(events, pendingEffects, "Your turn.", combat.activeTurnIndex, combat.turn + 1, false, playerStatuses, energy, 0, refreshedCooldowns, "player", 0, 0);
     abilityCooldowns = refreshedCooldowns;
     if (ability.immediateTurnVfx) queueAbilityVfx(pendingEffects, turnEventIndex, ability.immediateTurnVfx, "player", "player");
     const statusesBeforeStart = playerStatuses;
@@ -1456,6 +1457,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
       nextTurnEnergyRegenBonus,
       abilityCooldowns,
       playerActed: true,
+      playerActionsThisTurn: combat.playerActionsThisTurn + 1,
       attackingActorId: null,
       selectedEnemyId: nextSelected,
       log: [...logs, ...combat.log].slice(0, 24),
@@ -1483,6 +1485,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
     nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0,
     abilityCooldowns,
     playerActed: true,
+    playerActionsThisTurn: combat.playerActionsThisTurn + 1,
     attackingActorId: null,
     selectedEnemyId: nextSelected,
     log: [...logs, ...combat.log].slice(0, 24),
