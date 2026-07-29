@@ -18,11 +18,37 @@ function LocationHeader({ eyebrow, title, description, onBack, resource }: { eye
 export function EchoTowerView({ game, onBack, onStart }: { game: GameState; onBack: () => void; onStart: () => void }) {
   const unlocked = isEchoTowerUnlocked(game);
   const unlockName = ADVENTURES.find((adventure) => adventure.id === ECHO_TOWER_UNLOCK_ADVENTURE_ID)?.name ?? "the final adventure";
+  const bestFloor = game.character.echoTowerBestFloor || 0;
+  const startingFloor = getEchoTowerCheckpoint(bestFloor);
+  const nextCheckpoint = Math.max(5, Math.ceil((startingFloor + 1) / 5) * 5);
   return <section className="town-location progression-view echo-tower-view">
+    <div className="echo-tower-shade" aria-hidden="true" />
     <LocationHeader eyebrow="Endless Challenge" title="Tower of Echoes" description="Climb an endless chain of increasingly dangerous echoes." onBack={onBack} resource={<span className="town-gold"><Sparkles /> {game.character.salvageEssence} Essence</span>} />
-    <div className="progression-hero-card"><Trophy /><div><p className="eyebrow">Personal record</p><h2>Floor {game.character.echoTowerBestFloor || 0}</h2><p>Begin at Floor {getEchoTowerCheckpoint(game.character.echoTowerBestFloor)}. Every fifth floor is a checkpoint and fully restores Health.</p></div></div>
-    {!unlocked ? <div className="progression-locked"><LockKeyhole /><h2>The tower remains silent</h2><p>Complete {unlockName} to awaken it.</p></div> : <button type="button" className="progression-primary" onClick={onStart}><Flame /> Enter the Tower</button>}
-    <section className="progression-list"><h2>Recent Expeditions</h2>{game.character.echoTowerRuns.length === 0 ? <p className="progression-empty">No expeditions recorded.</p> : game.character.echoTowerRuns.map((run) => <article key={run.id}><strong>Floor {run.floorReached}</strong><span>{run.essenceEarned} Essence</span><small>{new Date(run.completedAt).toLocaleDateString()}</small></article>)}</section>
+    <div className="echo-tower-panel">
+      <header className="echo-tower-panel-heading">
+        <span className="echo-tower-panel-icon"><Flame /></span>
+        <div><p className="eyebrow">The Endless Ascent</p><h2>Answer the Echo</h2><p>Each victory calls forth a stronger memory of battles past.</p></div>
+        <div className="echo-tower-record"><small>Personal Record</small><strong>{bestFloor > 0 ? `Floor ${bestFloor}` : "Unranked"}</strong></div>
+      </header>
+      <div className="echo-tower-menu-layout">
+        <section className="echo-tower-ascent-card">
+          <span className="echo-tower-ascent-sigil"><Trophy /></span>
+          <p className="eyebrow">Your Next Ascent</p>
+          <h3>{unlocked ? `Begin at Floor ${startingFloor}` : "The Stair Is Sealed"}</h3>
+          <p>{unlocked ? "Health carries between battles. Reach a fifth-floor checkpoint to recover fully and secure a new starting point." : `Complete ${unlockName} before the tower will answer your challenge.`}</p>
+          <div className="echo-tower-rules">
+            <span><small>Starting Floor</small><strong>{startingFloor}</strong></span>
+            <span><small>Next Checkpoint</small><strong>Floor {nextCheckpoint}</strong></span>
+            <span><small>Recovery</small><strong>Every 5 Floors</strong></span>
+          </div>
+          {unlocked ? <button type="button" className="echo-tower-enter-button" onClick={onStart}><Flame /> Enter the Tower</button> : <div className="echo-tower-lock-notice"><LockKeyhole /><span><strong>The tower remains silent</strong><small>Finish the final story chapter to awaken it.</small></span></div>}
+        </section>
+        <section className="echo-tower-ledger">
+          <header><span><Trophy /></span><div><p className="eyebrow">Expedition Ledger</p><h3>Recent Ascents</h3></div></header>
+          {game.character.echoTowerRuns.length === 0 ? <div className="echo-tower-empty"><Flame /><strong>No expeditions recorded</strong><p>Your completed runs will be preserved here.</p></div> : <ol>{game.character.echoTowerRuns.map((run, index) => <li key={run.id}><b>{index + 1}</b><span><strong>Floor {run.floorReached}</strong><small>{new Date(run.completedAt).toLocaleDateString()}</small></span><em>{run.essenceEarned} Essence</em></li>)}</ol>}
+        </section>
+      </div>
+    </div>
   </section>;
 }
 
