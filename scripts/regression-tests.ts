@@ -19,6 +19,7 @@ import { getCharacterCombatFeatures, resolveCharacterTriggers } from "../src/gam
 import { grantItemForTesting, levelUpCharacterForTesting } from "../src/game/developerTools";
 import { getEffectiveDodgeChance, getFinalHitChance, rollHit } from "../src/game/combatMath";
 import { getStatusAdjustedCombatStats } from "../src/game/combatStats";
+import { normalizeFallenHeroes } from "../src/game/fallenHeroes";
 import { MAX_CONSUMABLES_PER_TURN, MAX_PLAYER_ACTIONS_PER_TURN } from "../src/game/combatLimits";
 import { applyAbilityFlatDamage, applyDamageToPlayer, applyHealthDamageToEnemy, createPlayerGuardStatus, wakeFromDamage } from "../src/game/combat/damage";
 import { moveToNextActor, processTurnStart } from "../src/game/combat/flow";
@@ -30,10 +31,13 @@ import { acquireItem, acquireItems, getAutomaticEquipSlot, getItemGoldCost, getI
 import { CONSUMABLE_POTION_ARTWORK_URLS, CRAFTING_MATERIAL_ARTWORK_URLS, ITEM_ICON_URLS } from "../src/game/itemIcons";
 import { grantCombatReward, rollCombatDropTables, rollCombatLoot } from "../src/game/rewards";
 import { MAX_LEVEL } from "../src/game/progression";
+import { normalizeGamePreferences } from "../src/game/preferences";
 import { acceptQuest, getQuestAvailability, getQuestBoardPostings, MAX_QUEST_BOARD_POSTINGS, recordQuestAdventureCompletion, recordQuestEnemyDefeats, turnInQuest } from "../src/game/quests";
 import { addOrRefreshStatus, advanceTurnStartStatuses, canApplyStatusEffect, createStatusEffect, decrementStatusDurations, getDodgeChanceBonus, getStatusDamage } from "../src/game/statusEffects";
+import { getReforgeableSetItems, getSalvageYield, reforgeSetItem, salvageInventoryItem } from "../src/game/salvage";
 import { canRespecTalent, getTalentRespecCost } from "../src/game/talentRequirements";
 import { canCraftTownItem, craftTownItem, gambleAtArkenfallTavern, getItemCraftingRecipe, getTavernRestCost, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, isTownCraftingRecipeUnlocked, isTownVendorItemUnlocked, purchaseTavernMeal, purchaseTownItem, resetTavernGamblingAfterAdventure, restAtArkenfallTavern, sellTownItem, TAVERN_MEALS } from "../src/game/town";
+import { advanceEchoTower, grantEchoTowerFloorReward, isEchoTowerUnlocked, leaveEchoTower, startEchoTower } from "../src/game/tower";
 import type { AdventureEventChoice, CombatState, ConsumableItem, GameState, GearItem, InventoryItem, ItemDropDefinition } from "../src/game/types";
 import { getItemNameClass, getItemStatLines } from "../src/ui/gameUi";
 
@@ -1799,7 +1803,8 @@ function testBasicPlayerAbility() {
     assert.equal(result.energy, created.energy - ABILITIES.quickSlash.energyCost, "Quick Slash must spend its configured Energy cost.");
     const damageEffect = result.pendingEffects.find((effect) => "damage" in effect && effect.targetId === created.enemies[0].instanceId);
     assert.ok(damageEffect && "damage" in damageEffect, "Quick Slash must queue damage against the selected target.");
-    assert.equal(damageEffect.sourceLabel, "Crit", "Critical damage must carry the floating-number Crit label.");
+    assert.equal(damageEffect.sourceLabel, "Quick Slash", "Critical damage must retain the ability name for inspection.");
+    assert.equal(damageEffect.critical, true, "Critical damage must carry the floating-number Crit marker.");
   } finally {
     Math.random = originalRandom;
   }
@@ -2268,6 +2273,70 @@ function testArenaDamageTrial() {
   ].forEach((path) => assert.ok(existsSync(join(process.cwd(), path)), `Missing arena artwork ${path}.`));
 }
 
+function testProgressionSystems() {
+  const gear = ITEMS.find(isGearItem)!;
+  const acquired = acquireItem(structuredClone(INITIAL_GAME.character), gear).character;
+  assert.ok(acquired.discoveredItemIds.includes(gear.id), "Acquiring an item must reveal it in the Codex.");
+
+  const salvageCharacter = { ...acquired, inventory: [structuredClone(gear)] };
+  const salvaged = salvageInventoryItem(salvageCharacter, gear.id);
+  assert.equal(salvaged.success, true, "Inventory gear must be salvageable.");
+  assert.equal(salvaged.character.inventory.length, 0, "Salvaging must consume exactly one inventory item.");
+  assert.equal(salvaged.character.salvageEssence, getSalvageYield(gear), "Salvaging must grant the rarity-owned Essence yield.");
+
+  const completedCharacter = {
+    ...structuredClone(INITIAL_GAME.character),
+    completedAdventureIds: ADVENTURES.map((adventure) => adventure.id),
+    salvageEssence: 100_000,
+    gold: 100_000,
+  };
+  const setItem = getReforgeableSetItems(completedCharacter)[0];
+  assert.ok(setItem, "At least one dropped set item must be available for directed reforging after its adventure is complete.");
+  const reforged = reforgeSetItem(completedCharacter, setItem.id);
+  assert.equal(reforged.success, true, "A completed-adventure set item must be reforgeable with sufficient resources.");
+  assert.ok(reforged.character.discoveredItemIds.includes(setItem.id), "Reforging must reveal the set item in the Codex.");
+
+  const towerState = structuredClone(INITIAL_GAME);
+  towerState.characterCreated = true;
+  towerState.character.completedAdventureIds = ADVENTURES.map((adventure) => adventure.id);
+  assert.equal(isEchoTowerUnlocked(towerState), true, "Completing the final adventure must unlock the Tower of Echoes.");
+  const started = startEchoTower(towerState);
+  assert.equal(started.adventure.mode, "tower", "The Tower must use its dedicated safe adventure mode.");
+  assert.ok(started.adventure.combat && started.adventure.combat.enemies.length > 0, "A Tower floor must create a live combat formation.");
+  const won = { ...started, adventure: { ...started.adventure, combat: { ...started.adventure.combat!, outcome: "victory" as const } } };
+  const rewarded = grantEchoTowerFloorReward(won);
+  assert.ok((rewarded.adventure.towerFloorReward ?? 0) > 0, "Clearing a Tower floor must grant Echo Essence once.");
+  const advanced = advanceEchoTower(rewarded);
+  assert.equal(advanced.adventure.towerFloor, started.adventure.towerFloor + 1, "Continuing must create the next Tower floor.");
+  const returned = leaveEchoTower(rewarded);
+  assert.equal(returned.adventure.mode, "story", "Leaving the Tower must safely return to story mode.");
+  assert.ok(returned.character.echoTowerBestFloor >= started.adventure.towerFloor, "Cleared Tower floors must update the personal record.");
+
+  const reportCombat = createCombat(structuredClone(INITIAL_GAME.character), ["dummy"]);
+  const targetId = reportCombat.enemies[0].instanceId;
+  const reportReady: CombatState = {
+    ...reportCombat,
+    playerHp: reportCombat.playerMaxHp - 5,
+    floatingEvents: ["Report event"],
+    pendingEffects: [
+      { id: "report-damage", eventIndex: 0, type: "damage", targetId, damage: 10, attackerId: "player", sourceLabel: "Test Strike", critical: true },
+      { id: "report-heal", eventIndex: 0, type: "heal", targetId: "player", amount: 3 },
+      { id: "report-absorb", eventIndex: 0, type: "absorption", targetId: "player", amount: 4 },
+      { id: "report-delta", eventIndex: 0, type: "report_delta", energySpent: 2, playerTurns: 1 },
+    ],
+  };
+  const reported = resolveCombatEvent(reportReady, reportReady.eventId, 0);
+  assert.equal(reported.report.damageDealt, 10, "Combat Reports must count player damage at presentation time.");
+  assert.equal(reported.report.healingDone, 3, "Combat Reports must count effective player healing.");
+  assert.equal(reported.report.absorbedDamage, 4, "Combat Reports must count player absorption.");
+  assert.equal(reported.report.damageBySource["Test Strike"], 10, "Combat Reports must group damage by source.");
+  assert.equal(reported.report.criticalHits, 1, "Combat Reports must count critical hits.");
+
+  assert.deepEqual(normalizeGamePreferences({ combatSpeed: 2, reducedMotion: true }), { combatSpeed: 2, reducedMotion: true }, "Game preferences must preserve supported accessibility settings.");
+  assert.equal(normalizeGamePreferences({ combatSpeed: 99 }).combatSpeed, 1, "Unsupported combat speeds must migrate to normal speed.");
+  assert.equal(normalizeFallenHeroes([{ id: "fallen-1", name: "Mira", avatarId: "female-01", level: 7 }]).length, 1, "Valid fallen heroes must survive memorial normalization.");
+}
+
 testAbilityFlatDamage();
 testPassiveStatAggregationIsPure();
 testDeveloperCharacterTools();
@@ -2326,4 +2395,5 @@ testResolvedMerchantPresentation();
 testCombatConsumable();
 testStealthPotionLastsThroughNextTurn();
 testArenaDamageTrial();
+testProgressionSystems();
 console.log("Arkenfall regression checks passed.");
