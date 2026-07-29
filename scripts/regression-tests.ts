@@ -2078,10 +2078,10 @@ function testCombatConsumable() {
   const potionCharacter = { ...character, inventory: [structuredClone(healingPotion)] };
   const potionUsed = useConsumable(smiteCombat, potionCharacter, healingPotion);
   const smiteDamage = potionUsed.combat.pendingEffects.find((effect) => effect.type === "damage" && effect.sourceLabel === "Smite");
-  assert.equal(smiteDamage?.type === "damage" ? smiteDamage.damage : 0, 3, "A Healing Potion must make Smite deal 50% of the 5 Health actually restored, rounded to a whole number.");
+  assert.equal(smiteDamage?.type === "damage" ? smiteDamage.damage : 0, 5, "A Healing Potion must make Smite deal 100% of the 5 Health actually restored.");
   const potionResolved = resolveCombatEvent(potionUsed.combat, potionUsed.combat.eventId, 0);
   assert.equal(potionResolved.playerHp, created.playerMaxHp, "Healing Potion restoration must still resolve normally when it triggers Smite.");
-  assert.equal(potionResolved.enemies[0].hp, smittenTarget.hp - 3, "Smite damage from a Healing Potion must resolve at the potion's presentation event.");
+  assert.equal(potionResolved.enemies[0].hp, smittenTarget.hp - 5, "Smite damage from a Healing Potion must resolve at the potion's presentation event.");
 
   const fullHealthCharacter = { ...character, inventory: [structuredClone(healingPotion)] };
   const fullHealthUsed = useConsumable({ ...smiteCombat, playerHp: created.playerMaxHp }, fullHealthCharacter, healingPotion);

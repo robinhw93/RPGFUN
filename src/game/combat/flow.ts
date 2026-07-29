@@ -680,7 +680,7 @@ export function applySmiteRetribution(
   if (restoredHealth <= 0) return state;
   let enemies = state.enemies;
   enemies.filter((enemy) => enemy.hp > 0 && hasStatus(enemy.statuses, "smite")).forEach((target) => {
-    const rawDamage = Math.max(1, Math.round(restoredHealth * 0.5));
+    const rawDamage = Math.max(1, Math.round(restoredHealth));
     const defense = getDefense(target.armor, target.magicResistance, target.statuses, "arcane");
     const incoming = getModifiedDamage(Math.max(1, rawDamage - defense), state.playerStatuses, target.statuses, "arcane");
     const absorption = absorbIncomingDamage(target.statuses, incoming);

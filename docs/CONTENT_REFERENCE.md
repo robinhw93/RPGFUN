@@ -431,7 +431,7 @@ The duration is the default duration created by the status library. Ability or t
 | Disarm | Until the end of your next turn | No | Physical Power is reduced by 90%. |
 | Arcane Wound | 3 turns | Yes | Each stack grants the afflicted target +2 percentage points of Dodge Chance and adds 10% of the caster's Spell Power to Arcane Blast against it; Arcane Knowledge raises the damage scaling to 15%. |
 | Arcane Charge | 3 turns or until consumed | No | The next Arcane Blast used against the afflicted target costs 0 Energy, then removes Arcane Charge. |
-| Smite | 3 turns | No | Whenever the player restores Health from any combat source, including a consumable, takes Magic damage equal to 50% of the Health actually restored. |
+| Smite | 3 turns | No | Whenever the player restores Health from any combat source, including a consumable, takes Magic damage equal to 100% of the Health actually restored. |
 | Sleep | 3 turns | No | Cannot act and has a 20% chance to wake at turn start. Enemies wake upon taking damage; the player wakes when damage leaves them below 30% Health. |
 | Resilient | Permanent | No | Can lose at most 50% of maximum Health in one initiative round. The limit resets when the next round begins. |
 
