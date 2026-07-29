@@ -1,7 +1,7 @@
 import {
   Target
 } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getCombatInitiative } from "../../game/engine";
 import { calculateInitiativeFlight, getInitiativeRowBounds } from "../../game/initiativeLayout";
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "../../game/timing";
@@ -20,6 +20,8 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete, speedMultipli
     return player ? [player, ...enemies] : enemies;
   }, [combat.enemies, combat.turnOrder]);
   const participants = phase === "order" ? combat.turnOrder : neutralOrder;
+  const signalOrderStart = useEffectEvent(onOrderStart);
+  const signalComplete = useEffectEvent(onComplete);
 
   useEffect(() => {
     const captureLandingRect = () => {
@@ -63,11 +65,11 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete, speedMultipli
       });
       setFlightGeometry(nextGeometry);
       orderFrame = window.requestAnimationFrame(() => {
-        onOrderStart();
+        signalOrderStart();
         setPhase("order");
       });
     }, INITIATIVE_TIMING.orderMs / speedMultiplier);
-    const completeTimer = window.setTimeout(onComplete, INITIATIVE_TIMING.completeMs / speedMultiplier);
+    const completeTimer = window.setTimeout(() => signalComplete(), INITIATIVE_TIMING.completeMs / speedMultiplier);
     return () => {
       window.clearInterval(rollTimer);
       window.clearTimeout(landedTimer);
@@ -76,7 +78,7 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete, speedMultipli
       window.clearTimeout(completeTimer);
       window.cancelAnimationFrame(orderFrame);
     };
-  }, [combat.eventId, onComplete, onOrderStart, speedMultiplier]);
+  }, [combat.eventId, speedMultiplier]);
 
   return (
     <div
