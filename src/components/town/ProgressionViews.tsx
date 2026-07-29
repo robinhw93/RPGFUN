@@ -58,18 +58,41 @@ export function CodexView({ game, onBack }: { game: GameState; onBack: () => voi
   const discoveredEnemies = new Set(game.character.discoveredEnemyIds ?? []);
   const discoveredItems = new Set(game.character.discoveredItemIds ?? []);
   const enemies = Object.values(ENEMIES).filter((enemy) => enemy.id !== "dummy");
+  const enemyRecordsFound = enemies.filter((enemy) => discoveredEnemies.has(enemy.id)).length;
+  const itemRecordsFound = ITEMS.filter((item) => discoveredItems.has(item.id)).length;
+  const setRecordsFound = GEAR_SETS.filter((set) => ITEMS.some((item) => isGearItem(item) && item.set === set.id && discoveredItems.has(item.id))).length;
+  const statusRecords = Object.values(STATUS_EFFECTS);
+  const tabDetails: Record<CodexTab, { label: string; found: number; total: number; icon: ReactNode }> = {
+    enemies: { label: "Enemies", found: enemyRecordsFound, total: enemies.length, icon: <Skull /> },
+    items: { label: "Items", found: itemRecordsFound, total: ITEMS.length, icon: <BookOpen /> },
+    sets: { label: "Sets", found: setRecordsFound, total: GEAR_SETS.length, icon: <Shield /> },
+    statuses: { label: "Statuses", found: statusRecords.length, total: statusRecords.length, icon: <Sparkles /> },
+  };
+  const activeTab = tabDetails[tab];
   return <section className="town-location progression-view codex-view">
+    <div className="codex-archive-shade" aria-hidden="true" />
     <LocationHeader eyebrow="Lore and Collection" title="Arkenfall Codex" description="Every foe faced and treasure found leaves a mark." onBack={onBack} resource={<span className="town-gold"><BookOpen /> {discoveredItems.size + discoveredEnemies.size} Found</span>} />
-    <nav className="progression-tabs" aria-label="Codex sections">{(["enemies", "items", "sets", "statuses"] as CodexTab[]).map((name) => <button type="button" className={tab === name ? "active" : ""} onClick={() => setTab(name)} key={name}>{name}</button>)}</nav>
-    <div className="codex-grid">
-      {tab === "enemies" && enemies.map((enemy) => discoveredEnemies.has(enemy.id) ? <article className="codex-entry" key={enemy.id}><img src={enemy.portraitUrl} alt="" /><div><p className="eyebrow">Level varies</p><h3>{enemy.name}</h3><p>{enemy.title}</p><small>{enemy.maxHp} base Health · {enemy.abilities.length} {enemy.abilities.length === 1 ? "ability" : "abilities"}</small></div></article> : <article className="codex-entry locked" key={enemy.id}><Skull /><div><h3>Unknown Foe</h3><p>Encounter this enemy to reveal it.</p></div></article>)}
-      {tab === "items" && ITEMS.map((item) => discoveredItems.has(item.id) ? <article className="codex-entry" key={item.id}><ItemIcon item={item} size={42} /><div><p className="eyebrow">{item.rarity}</p><h3 className={getItemNameClass(item)}>{item.name}</h3><p>{item.description}</p></div></article> : <article className="codex-entry locked" key={item.id}><LockKeyhole /><div><h3>Unknown Item</h3><p>Find this item to reveal it.</p></div></article>)}
-      {tab === "sets" && GEAR_SETS.map((set) => {
-        const pieces = ITEMS.filter((item) => isGearItem(item) && item.set === set.id);
-        const found = pieces.filter((item) => discoveredItems.has(item.id)).length;
-        return <article className="codex-entry codex-set" key={set.id}><Shield /><div><p className="eyebrow">{found} / {pieces.length || set.pieceCount} pieces found</p><h3>{found > 0 ? set.name : "Unknown Set"}</h3>{found > 0 && set.bonuses.map((bonus) => <small key={bonus.requiredPieces}>{bonus.requiredPieces} pieces: {bonus.description}</small>)}</div></article>;
-      })}
-      {tab === "statuses" && Object.values(STATUS_EFFECTS).map((status) => <article className="codex-entry" key={status.id}><Sparkles /><div><p className="eyebrow">{status.kind}</p><h3>{status.name}</h3><p>{status.description}</p></div></article>)}
+    <div className="codex-archive-panel">
+      <header className="codex-archive-heading">
+        <span><BookOpen /></span>
+        <div><p className="eyebrow">Archive Index</p><h2>Recorded Knowledge</h2><p>Choose a registry to review what this character has uncovered.</p></div>
+        <div className="codex-archive-progress"><small>{activeTab.label} Recorded</small><strong>{activeTab.found} / {activeTab.total}</strong></div>
+      </header>
+      <nav className="codex-tabs" aria-label="Codex sections">{(["enemies", "items", "sets", "statuses"] as CodexTab[]).map((name) => {
+        const details = tabDetails[name];
+        return <button type="button" className={tab === name ? "active" : ""} onClick={() => setTab(name)} key={name}>{details.icon}<span><strong>{details.label}</strong><small>{details.found} / {details.total}</small></span></button>;
+      })}</nav>
+      <div className="codex-grid">
+        {tab === "enemies" && enemies.map((enemy) => discoveredEnemies.has(enemy.id) ? <article className="codex-entry discovered" key={enemy.id}><img src={enemy.portraitUrl} alt="" /><div><p className="eyebrow">Enemy Record</p><h3>{enemy.name}</h3><p>{enemy.title}</p><small>{enemy.maxHp} base Health · {enemy.abilities.length} {enemy.abilities.length === 1 ? "ability" : "abilities"}</small></div></article> : <article className="codex-entry locked" key={enemy.id}><Skull /><div><p className="eyebrow">Unrecorded</p><h3>Unknown Foe</h3><p>Encounter this enemy to reveal it.</p></div></article>)}
+        {tab === "items" && ITEMS.map((item) => discoveredItems.has(item.id) ? <article className="codex-entry discovered" key={item.id}><ItemIcon item={item} size={42} /><div><p className="eyebrow">{item.rarity}</p><h3 className={getItemNameClass(item)}>{item.name}</h3><p>{item.description}</p></div></article> : <article className="codex-entry locked" key={item.id}><LockKeyhole /><div><p className="eyebrow">Unrecorded</p><h3>Unknown Item</h3><p>Find this item to reveal it.</p></div></article>)}
+        {tab === "sets" && GEAR_SETS.map((set) => {
+          const pieces = ITEMS.filter((item) => isGearItem(item) && item.set === set.id);
+          const found = pieces.filter((item) => discoveredItems.has(item.id)).length;
+          const total = pieces.length || set.pieceCount;
+          return <article className={`codex-entry codex-set ${found === 0 ? "locked" : "discovered"}`} key={set.id}><Shield /><div><p className="eyebrow">{found} / {total} Pieces Recorded</p><h3>{found > 0 ? set.name : "Unknown Set"}</h3><span className="codex-piece-progress" aria-hidden="true"><i style={{ width: `${Math.min(100, (found / Math.max(1, total)) * 100)}%` }} /></span>{found > 0 && set.bonuses.map((bonus) => <small key={bonus.requiredPieces}>{bonus.requiredPieces} pieces: {bonus.description}</small>)}</div></article>;
+        })}
+        {tab === "statuses" && statusRecords.map((status) => <article className="codex-entry discovered" key={status.id}><Sparkles /><div><p className="eyebrow">{status.kind}</p><h3>{status.name}</h3><p>{status.description}</p></div></article>)}
+      </div>
     </div>
   </section>;
 }
