@@ -25,6 +25,7 @@ export interface QueueDamageOptions {
   animationDurationMultiplier?: number;
   missed?: boolean;
   sourceLabel?: string;
+  critical?: boolean;
   attachedEventIndex?: number;
 }
 
@@ -47,6 +48,7 @@ export function queueDamage(events: string[], pendingEffects: CombatPendingEffec
     animationDurationMultiplier: Math.max(0.1, options.animationDurationMultiplier ?? 1),
     missed: options.missed,
     sourceLabel: options.sourceLabel,
+    critical: options.critical,
   });
   return eventIndex;
 }
@@ -86,6 +88,17 @@ export function queueNextTurnEnergyRegeneration(pendingEffects: CombatPendingEff
 export function queueEnergyChange(pendingEffects: CombatPendingEffect[], eventIndex: number, amount: number): void {
   combatEffectSequence += 1;
   pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "energy_change", amount });
+}
+
+export function queueAbsorptionReport(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: "player" | string, amount: number): void {
+  if (amount <= 0) return;
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "absorption", targetId, amount });
+}
+
+export function queueCombatReportDelta(pendingEffects: CombatPendingEffect[], eventIndex: number, delta: { energySpent?: number; playerTurns?: number }): void {
+  combatEffectSequence += 1;
+  pendingEffects.push({ id: `combat-effect-${Date.now()}-${combatEffectSequence}`, eventIndex, type: "report_delta", ...delta });
 }
 
 export function queuePassiveAnimation(pendingEffects: CombatPendingEffect[], eventIndex: number, targetId: "player" | string, text: string): void {
@@ -170,6 +183,7 @@ export function queueAbsorptionChanges(
   targetId: "player" | string,
   result: ReturnType<typeof absorbIncomingDamage>,
 ): void {
+  queueAbsorptionReport(pendingEffects, eventIndex, targetId, result.absorbed);
   (["guard", "barrier"] as const).forEach((statusId) => {
     if (!result.absorbedBy[statusId]) return;
     const remainingStatus = result.statuses.find((status) => status.id === statusId);

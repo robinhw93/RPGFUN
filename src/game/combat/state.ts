@@ -15,6 +15,7 @@ import type { AdventureCombatStartStatus, CharacterState, CombatState, EnemyStat
 
 import { makeLog } from "./eventQueue";
 import { createPlayerGuardStatus } from "./damage";
+import { createEmptyCombatReport, normalizeCombatReport } from "../combatReport";
 
 export interface CombatStartEffects {
   playerStatuses?: AdventureCombatStartStatus[];
@@ -148,6 +149,7 @@ export function createCombat(character: CharacterState, enemyIds: string[], carr
       ...(martyrdomDamage > 0 ? [makeLog(`Martyrdom deals ${martyrdomDamage} damage to you.`, { title: "Martyrdom", description: `Entering combat at full Health sacrifices ${Math.round(martyrdomRatio * 100)}% of maximum Health. Guard and Barrier cannot absorb this damage.`, category: "ability" })] : []),
       makeLog(`The ${enemies.map((enemy) => enemy.name).join(" and ")} bar your path.`),
     ],
+    report: createEmptyCombatReport(),
     outcome: "active",
   };
 }
@@ -295,6 +297,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
       playerHasTakenDamage: combat.playerHasTakenDamage ?? false,
       playerHasMissed: combat.playerHasMissed ?? false,
       nextTurnEnergyRegenBonus: combat.nextTurnEnergyRegenBonus ?? 0,
+      report: normalizeCombatReport(combat.report),
     };
   }
   const turnOrder = rollTurnOrder(character, enemies);
@@ -334,6 +337,7 @@ export function ensureCombatState(combat: CombatState, character: CharacterState
     attackAnimationHitCount: 1,
     attackAnimationDurationMultiplier: 1,
     attackEffectId: null,
+    report: normalizeCombatReport(combat.report),
   };
 }
 

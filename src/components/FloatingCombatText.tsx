@@ -8,9 +8,10 @@ interface FloatingCombatTextProps {
   eventId: number;
   onEventShown: (eventId: number, eventIndex: number) => void;
   onSequenceComplete: (eventId: number) => void;
+  speedMultiplier?: number;
 }
 
-export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexes = [], eventId, onEventShown, onSequenceComplete }: FloatingCombatTextProps) {
+export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexes = [], eventId, onEventShown, onSequenceComplete, speedMultiplier = 1 }: FloatingCombatTextProps) {
   const [index, setIndex] = useState(0);
   const eventDurations = useRef(eventDurationsMs ?? []);
   const hiddenEvents = useRef(new Set(hiddenEventIndexes));
@@ -19,7 +20,7 @@ export function FloatingCombatText({ events, eventDurationsMs, hiddenEventIndexe
 
   useEffect(() => { eventCallback.current = onEventShown; }, [onEventShown]);
   useEffect(() => { completeCallback.current = onSequenceComplete; }, [onSequenceComplete]);
-  const eventDurationMs = eventDurations.current[index] ?? COMBAT_TIMING.floatingMessageMs;
+  const eventDurationMs = (eventDurations.current[index] ?? COMBAT_TIMING.floatingMessageMs) / speedMultiplier;
   useEffect(() => {
     if (events.length === 0 || index >= events.length - 1) return;
     const timer = window.setTimeout(() => setIndex((current) => current + 1), eventDurationMs);

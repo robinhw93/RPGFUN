@@ -1,4 +1,4 @@
-import { ArrowLeft, BedDouble, Check, CircleCheckBig, ClipboardList, Coins, Crosshair, Dumbbell, FlaskConical, Footprints, Gem, Gift, Hammer, HeartPulse, LockKeyhole, Medal, Package, Scissors, ScrollText, Shield, ShoppingBag, Sparkles, Swords, Trophy, Utensils, X } from "lucide-react";
+import { ArrowLeft, BedDouble, BookOpen, Check, CircleCheckBig, ClipboardList, Coins, Crosshair, Dumbbell, Flame, FlaskConical, Footprints, Gem, Gift, Hammer, HeartPulse, LockKeyhole, Medal, Package, Scissors, ScrollText, Shield, ShoppingBag, Skull, Sparkles, Swords, Trophy, Utensils, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ItemIcon } from "../ItemIcon";
 import { ItemDetailModal } from "../character/CharacterView";
@@ -12,8 +12,9 @@ import { describeQuestObjective, getQuestAvailability, getQuestBoardPostings, ge
 import { canCraftTownItem, getInventoryItemCount, getItemCraftingRecipe, getTavernRestOffer, getTownCraftingCatalog, getTownVendorStock, hasPreparedTavernMeal, TAVERN_GAMBLING_WAGERS, TAVERN_MEALS, type TavernGamblingResult, type TavernMealId, type TownActionResult } from "../../game/town";
 import type { ArkenfallVendorId, CharacterState, GameState, InventoryItem } from "../../game/types";
 import { formatSignedItemStatValue, getItemNameClass, getItemStatLines, GoldIcon, RARITY_SORT_WEIGHT } from "../../ui/gameUi";
+import { CodexView, EchoTowerView, HallOfFallenView, SalvageView } from "./ProgressionViews";
 
-type TownLocation = "square" | "shops" | "tavern" | "questboard" | "arena" | ArkenfallVendorId;
+type TownLocation = "square" | "shops" | "tavern" | "questboard" | "arena" | "tower" | "codex" | "salvage" | "fallen" | ArkenfallVendorId;
 type VendorTab = "shop" | "craft" | "sell";
 type VendorSort = "type" | "rarity" | "cost-asc" | "cost-desc" | "name-asc" | "name-desc";
 
@@ -335,13 +336,16 @@ function ArenaView({ game, onBack, onChallenge }: { game: GameState; onBack: () 
   );
 }
 
-export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onAdventures, onChallengeArena, onBuy, onCraft, onSell, onRest, onMeal, onGamble, onAcceptQuest, onTurnInQuest }: {
+export function TownView({ game, maxHp, initialLocation = "square", recommendStartingItem = false, onAdventures, onChallengeArena, onStartTower, onSalvage, onReforge, onBuy, onCraft, onSell, onRest, onMeal, onGamble, onAcceptQuest, onTurnInQuest }: {
   game: GameState;
   maxHp: number;
   initialLocation?: Extract<TownLocation, "square" | "tavern" | "arena">;
   recommendStartingItem?: boolean;
   onAdventures: () => void;
   onChallengeArena: () => void;
+  onStartTower: () => void;
+  onSalvage: (itemId: string) => string;
+  onReforge: (itemId: string) => string;
   onBuy: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
   onCraft: (station: ArkenfallVendorId, itemId: string) => TownActionResult;
   onSell: (vendor: ArkenfallVendorId, itemId: string) => TownActionResult;
@@ -388,6 +392,10 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
       setGamblingRolling(false);
     }, 900);
   };
+  if (location === "tower") return <EchoTowerView game={game} onBack={() => setLocation("square")} onStart={onStartTower} />;
+  if (location === "codex") return <CodexView game={game} onBack={() => setLocation("square")} />;
+  if (location === "salvage") return <SalvageView game={game} onBack={() => setLocation("shops")} onSalvage={onSalvage} onReforge={onReforge} />;
+  if (location === "fallen") return <HallOfFallenView onBack={() => setLocation("square")} />;
   if (location !== "square" && location !== "shops" && location !== "tavern" && location !== "questboard" && location !== "arena") return <VendorView vendor={location} game={game} onBack={() => setLocation("shops")} onBuy={onBuy} onCraft={onCraft} onSell={onSell} />;
   if (location === "arena") return <ArenaView game={game} onBack={() => setLocation("square")} onChallenge={onChallengeArena} />;
   if (location === "questboard") return <QuestBoardView game={game} onBack={() => setLocation("square")} onAccept={onAcceptQuest} onTurnIn={onTurnInQuest} />;
@@ -431,6 +439,7 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
           const presentation = VENDOR_PRESENTATION[vendor];
           return <button type="button" className={`town-destination ${vendor}`} onClick={() => setLocation(vendor)} key={vendor}><span><VendorIcon vendor={vendor} /></span><div><p className="eyebrow">{presentation.destinationEyebrow}</p><h2>{presentation.name}</h2><p>{presentation.destinationDescription}</p></div><Sparkles /></button>;
         })}
+        <button type="button" className="town-destination salvage" onClick={() => setLocation("salvage")}><span><Hammer /></span><div><p className="eyebrow">Salvage and Reforge</p><h2>The Echo Forge</h2><p>Turn spare equipment into Essence and recreate unlocked set pieces.</p></div><Sparkles /></button>
       </div>
     </section>
   );
@@ -444,6 +453,9 @@ export function TownView({ game, maxHp, initialLocation = "square", recommendSta
         <button type="button" className="town-destination tavern" onClick={() => setLocation("tavern")}><span><BedDouble /></span><div><p className="eyebrow">Tavern and Inn</p><h2>The Resting Hart</h2><p>Recover all Health before setting out on another adventure.</p></div><Sparkles /></button>
         <button type="button" className="town-destination questboard" onClick={() => setLocation("questboard")}><span><ClipboardList /></span><div><p className="eyebrow">Adventurers' Notices</p><h2>Quest Board</h2><p>Accept quests, follow questlines, and return to claim rewards.</p></div><Sparkles /></button>
         <button type="button" className="town-destination arena" onClick={() => setLocation("arena")}><span><Trophy /></span><div><p className="eyebrow">Ten-Turn Damage Trial</p><h2>Grand Arena</h2><p>Challenge the Arena Champion and turn your damage into Experience.</p></div><Sparkles /></button>
+        <button type="button" className="town-destination tower" onClick={() => setLocation("tower")}><span><Flame /></span><div><p className="eyebrow">Endless Challenge</p><h2>Tower of Echoes</h2><p>Climb escalating encounters and gather Echo Essence.</p></div><Sparkles /></button>
+        <button type="button" className="town-destination codex" onClick={() => setLocation("codex")}><span><BookOpen /></span><div><p className="eyebrow">Lore and Collection</p><h2>Arkenfall Codex</h2><p>Review discovered enemies, items, sets, and status effects.</p></div><Sparkles /></button>
+        <button type="button" className="town-destination fallen" onClick={() => setLocation("fallen")}><span><Skull /></span><div><p className="eyebrow">Memorial</p><h2>Hall of Fallen</h2><p>Remember heroes whose adventures ended beyond the walls.</p></div><Sparkles /></button>
       </div>
     </section>
   );

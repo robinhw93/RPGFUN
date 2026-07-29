@@ -4,7 +4,7 @@ import { finishCombatAttack, primeCombatAttack, resolveCombatEvent } from "../ga
 import { COMBAT_TIMING } from "../game/timing";
 import type { CombatPendingEffect, GameState } from "../game/types";
 
-export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetStateAction<GameState>>) {
+export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetStateAction<GameState>>, combatSpeed = 1) {
   const gameRef = useRef(game);
   const impactTimers = useRef<number[]>([]);
   const scheduledEffects = useRef(new Set<string>());
@@ -47,7 +47,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
         });
         scheduledEffects.current.delete(scheduleKey);
         impactTimers.current = impactTimers.current.filter((timer) => timer !== impactTimer);
-      }, COMBAT_TIMING.attackImpactMs * animationDurationMultiplier / animationHitCount);
+      }, COMBAT_TIMING.attackImpactMs * animationDurationMultiplier / animationHitCount / combatSpeed);
       impactTimers.current.push(impactTimer);
 
       let finishTimer = 0;
@@ -60,7 +60,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
           return { ...current, adventure: { ...current.adventure, combat: finished } };
         });
         impactTimers.current = impactTimers.current.filter((timer) => timer !== finishTimer);
-      }, COMBAT_TIMING.attackDurationMs * animationDurationMultiplier / animationHitCount);
+      }, COMBAT_TIMING.attackDurationMs * animationDurationMultiplier / animationHitCount / combatSpeed);
       impactTimers.current.push(finishTimer);
       return;
     }
@@ -72,7 +72,7 @@ export function useCombatEventSequencer(game: GameState, setGame: Dispatch<SetSt
       if (resolved === combat) return current;
       return { ...current, adventure: { ...current.adventure, combat: resolved } };
     });
-  }, [setGame]);
+  }, [combatSpeed, setGame]);
 
   const completeSequence = useCallback((eventId: number) => {
     setGame((current) => {

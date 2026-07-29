@@ -20,7 +20,7 @@ import {
 } from "../statusEffects";
 import type { Ability, CharacterState, CombatLogEntry, CombatPendingEffect, CombatState, CombatTriggerEvent, InspectableInfo, StatusEffect, StatusEffectId } from "../types";
 import { applyAbilityFlatDamage, applyAbilityPowerScalingTotals, applyHealthDamageToEnemy, createPlayerAppliedStatus, createPlayerCompanionStatuses, createPlayerGuardStatus, getAfflictionDamage, getDefense, getEnergyDefenseMultiplier, getModifiedDamage, getOffensivePower, wakeFromDamage } from "./damage";
-import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueDamage, queueDamageAtEvent, queueEnergyChange, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
+import { absorptionSuffix, getAbilityAttackPresentation, makeLog, preserveBarrierUntilDamageEvent, queueAbilityVfx, queueAbsorptionChanges, queueCombatReportDelta, queueDamage, queueDamageAtEvent, queueEnergyChange, queueHeal, queueHealAtEvent, queueNextTurnEnergyRegeneration, queuePassiveAnimation, queueStatus, queueStatusReconciliation, queueStatusRemoval, queueStatusSet, queueTurn, statusInfo } from "./eventQueue";
 import { applyBleedAfterAbility, applyPlayerDeathPrevention, moveToNextActor, processTurnEnd, processTurnStart, runDeathPreventionHealingTriggers, runPlayerTriggerEvent, runPlayerTriggerEvents } from "./flow";
 import { ensureCombatState, isEnemyStealthed, isEnemyTargetable, normalizeEnemies, orderTurnEntries } from "./state";
 
@@ -94,6 +94,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
   const events: string[] = [];
   const damagedTargets: string[] = [];
   const pendingEffects: CombatPendingEffect[] = [];
+  queueCombatReportDelta(pendingEffects, 0, { energySpent: effectiveEnergyCost });
   let energy = combat.energy - effectiveEnergyCost;
   let deferredEnergyGain = 0;
   let nextTurnEnergyRegenBonus = combat.nextTurnEnergyRegenBonus ?? 0;
@@ -736,6 +737,7 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         logs.push(makeLog(`${ability.name} misses ${target.name}.`, abilityInfo));
         const missEventIndex = queueDamage(events, pendingEffects, `It misses ${target.name}.`, target.instanceId, 0, {
           attackerId: "player",
+          sourceLabel: ability.name,
           animationHitCount: totalHits,
           animationDurationMultiplier: ability.attackSequenceDurationMultiplier,
           missed: true,
@@ -827,7 +829,8 @@ export function useAbility(combat: CombatState, character: CharacterState, abili
         animationHitCount: totalHits,
         animationDurationMultiplier: ability.attackSequenceDurationMultiplier,
         attachedEventIndex: ability.simultaneousAreaImpact ? simultaneousAreaEventIndex : undefined,
-        sourceLabel: critical ? "Crit" : undefined,
+        sourceLabel: ability.name,
+        critical,
         ...getAbilityAttackPresentation(ability),
       });
       if (ability.simultaneousAreaImpact) simultaneousAreaEventIndex ??= damageEventIndex;
@@ -1543,6 +1546,7 @@ export function endPlayerTurn(combat: CombatState, character: CharacterState): C
     queueStatusReconciliation(pendingEffects, events.length - 1, "player", combat.playerStatuses, playerStatuses);
   }
   const next = moveToNextActor({ ...combat, playerHp, playerStatuses, playerActionSurvivalPending: false, energy, abilityCooldowns, procUsage }, character, logs, events, pendingEffects);
+  queueCombatReportDelta(pendingEffects, Math.max(0, events.length - 1), { playerTurns: 1 });
   const sequencePending = events.length > 0;
   return {
     ...next,

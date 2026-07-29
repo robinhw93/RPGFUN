@@ -913,13 +913,15 @@ export interface CombatProjectileAnimation {
 }
 
 export type CombatPendingEffect =
-  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; attackRange?: AbilityRange; attackPresentation?: AbilityAttackPresentation; projectileVfx?: CombatAbilityVfxKind; projectileDamageType?: DamageType; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string }
+  | { id: string; eventIndex: number; type?: "damage"; targetId: "player" | string; damage: number; attackerId?: "player" | string; attackRange?: AbilityRange; attackPresentation?: AbilityAttackPresentation; projectileVfx?: CombatAbilityVfxKind; projectileDamageType?: DamageType; animationHitCount?: number; animationDurationMultiplier?: number; missed?: boolean; sourceLabel?: string; critical?: boolean }
   | { id: string; eventIndex: number; type: "heal"; targetId: "player" | string; amount: number }
   | { id: string; eventIndex: number; type: "status"; targetId: "player" | string; status: StatusEffect; stunned?: boolean; sourceTargetId?: "player" | string }
   | { id: string; eventIndex: number; type: "remove_status"; targetId: "player" | string; statusId: StatusEffectId }
   | { id: string; eventIndex: number; type: "set_status"; targetId: "player" | string; status: StatusEffect }
   | { id: string; eventIndex: number; type: "energy_regen_bonus"; amount: number }
   | { id: string; eventIndex: number; type: "energy_change"; amount: number }
+  | { id: string; eventIndex: number; type: "absorption"; targetId: "player" | string; amount: number }
+  | { id: string; eventIndex: number; type: "report_delta"; energySpent?: number; playerTurns?: number }
   | { id: string; eventIndex: number; type: "passive_text"; targetId: "player" | string; text: string; lane: number }
   | { id: string; eventIndex: number; type: "ability_vfx"; kind: CombatAbilityVfxKind; targetId?: "player" | string; sourceTargetId?: "player" | string; shakeSource?: boolean }
   | { id: string; eventIndex: number; type: "enemy_charge"; targetId: string; abilityId?: string }
@@ -986,7 +988,22 @@ export interface CombatState {
   enemies: EnemyState[];
   playerStatuses: StatusEffect[];
   log: Array<CombatLogEntry | string>;
+  report: CombatReport;
   outcome: "active" | "victory" | "defeat";
+}
+
+export interface CombatReport {
+  damageDealt: number;
+  damageTaken: number;
+  healingDone: number;
+  absorbedDamage: number;
+  largestHit: number;
+  criticalHits: number;
+  missedAttacks: number;
+  energySpent: number;
+  energyGained: number;
+  playerTurns: number;
+  damageBySource: Record<string, number>;
 }
 
 export interface InspectableInfo {
@@ -1022,6 +1039,11 @@ export interface CharacterState {
   /** One safe damage-trial attempt is restored whenever a story adventure is completed. */
   arenaAttemptAvailable: boolean;
   arenaScores: ArenaAttemptRecord[];
+  salvageEssence: number;
+  discoveredEnemyIds: string[];
+  discoveredItemIds: string[];
+  echoTowerBestFloor: number;
+  echoTowerRuns: EchoTowerRunRecord[];
   acceptedQuestIds: string[];
   completedQuestIds: string[];
   questProgress: Record<string, number>;
@@ -1233,7 +1255,14 @@ export interface ArenaAttemptRecord {
   completedAt: number;
 }
 
-export type AdventureMode = "story" | "arena";
+export interface EchoTowerRunRecord {
+  id: string;
+  floorReached: number;
+  essenceEarned: number;
+  completedAt: number;
+}
+
+export type AdventureMode = "story" | "arena" | "tower";
 
 export interface AdventureProgress {
   mode: AdventureMode;
@@ -1254,6 +1283,10 @@ export interface AdventureProgress {
   latestLoot: InventoryItem[] | null;
   pendingReward: CombatReward | null;
   arenaResult: ArenaAttemptRecord | null;
+  towerFloor: number;
+  towerEssenceEarned: number;
+  towerReturnCarryHp: number | null;
+  towerFloorReward: number | null;
   completed: boolean;
 }
 

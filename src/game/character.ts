@@ -21,6 +21,11 @@ export const INITIAL_CHARACTER: CharacterState = {
   tavernGamblingAttempts: 0,
   arenaAttemptAvailable: false,
   arenaScores: [],
+  salvageEssence: 0,
+  discoveredEnemyIds: [],
+  discoveredItemIds: [],
+  echoTowerBestFloor: 0,
+  echoTowerRuns: [],
   acceptedQuestIds: [],
   completedQuestIds: [],
   questProgress: {},
@@ -30,7 +35,7 @@ export const INITIAL_GAME: GameState = {
   characterCreated: false,
   characterIntroductionStep: "class",
   character: INITIAL_CHARACTER,
-  adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], carriedAbilityCooldowns: {}, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, completed: false },
+  adventure: { mode: "story", adventureId: "windsong-forest", active: false, nodeIndex: 0, stageEntryId: null, carryHp: null, combat: null, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: [], nextCombatEnemyStatuses: [], carriedAbilityCooldowns: {}, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, towerFloor: 0, towerEssenceEarned: 0, towerReturnCarryHp: null, towerFloorReward: null, completed: false },
 };
 
 export interface DerivedStats extends Stats {

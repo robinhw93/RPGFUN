@@ -54,19 +54,21 @@ export interface ItemAcquisitionResult {
 /** Adds a newly acquired independent copy, equipping gear only when its compatible slot is empty. */
 export function acquireItem(character: CharacterState, item: InventoryItem): ItemAcquisitionResult {
   const receivedItem = structuredClone(item);
+  const discoveredItemIds = [...new Set([...(character.discoveredItemIds ?? []), receivedItem.id])];
   const equippedSlot = getAutomaticEquipSlot(character, receivedItem);
   if (equippedSlot) {
     return {
       equippedSlot,
       character: {
         ...character,
+        discoveredItemIds,
         equipment: { ...character.equipment, [equippedSlot]: receivedItem },
       },
     };
   }
   return {
     equippedSlot: null,
-    character: { ...character, inventory: [...character.inventory, receivedItem] },
+    character: { ...character, discoveredItemIds, inventory: [...character.inventory, receivedItem] },
   };
 }
 

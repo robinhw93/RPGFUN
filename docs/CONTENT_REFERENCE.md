@@ -898,3 +898,11 @@ Only equipped pieces count toward a set bonus.
 | Thornbark Bulwark | Visor, Buckler | 2 pieces: +1 Vitality. |
 | Galehide | Jerkin, Striders | 2 pieces: +1 Vitality. |
 | Wispwoven | Leggings, Band | 2 pieces: +1 Vitality. |
+
+## Meta-progression content
+
+- **Tower of Echoes:** unlocked by completing The Throne Beyond Death. Endless reused formations scale from level 72 upward, use boss formations every fifth floor, and award `4 + floor × 2` Echo Essence per clear.
+- **Echo Essence:** Common, Uncommon, Rare, Epic, and Legendary gear salvage for 1, 3, 8, 20, and 50 Essence respectively. Set reforging costs 8/12/24/48/100 Essence by rarity plus at least the item's normal Gold Cost.
+- **Arkenfall Codex:** tracks all live enemy and item IDs, all 43 gear sets, and every canonical status definition.
+- **Hall of Fallen:** stores up to twenty local memorial records separately from the permadeath character save.
+- **Combat Report:** records effective combat totals and per-source player damage for every encounter.

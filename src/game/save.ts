@@ -1,5 +1,5 @@
 import type { CharacterIntroductionStep, GameState } from "./types";
-import { ITEMS, QUESTS, TALENTS } from "./data";
+import { ENEMIES, ITEMS, QUESTS, TALENTS } from "./data";
 import { normalizeCharacterAvatarId } from "./avatars";
 import { DEFAULT_ADVENTURE_ID } from "./adventures";
 import { isGearItem } from "./items";
@@ -60,6 +60,9 @@ export function loadGame(): GameState | null {
       }),
     ) as GameState["character"]["equipment"];
     const inventory = (state.character.inventory ?? []).map(hydrateInventoryItem);
+    const validEnemyIds = new Set(Object.keys(ENEMIES));
+    const validItemIds = new Set(ITEMS.map((item) => item.id));
+    const ownedItemIds = [...inventory, ...Object.values(equipment).filter((item): item is GearItem => Boolean(item))].map((item) => item.id);
     const latestLoot = hydrateLoot(state.adventure.latestLoot);
     if ((equipment.mainHand?.weaponEquipType === "twoHand" || equipment.mainHand?.weaponType === "twoHanded") && equipment.offHand) {
       inventory.push(equipment.offHand);
@@ -115,6 +118,16 @@ export function loadGame(): GameState | null {
         tavernGamblingAttempts: Math.max(0, Math.floor(state.character.tavernGamblingAttempts ?? 0)),
         arenaAttemptAvailable: state.character.arenaAttemptAvailable ?? false,
         arenaScores,
+        salvageEssence: Math.max(0, Math.floor(state.character.salvageEssence ?? 0)),
+        discoveredEnemyIds: [...new Set([...(state.character.discoveredEnemyIds ?? []), ...(state.adventure.combat?.enemies ?? []).map((enemy) => enemy.id)])].filter((id) => validEnemyIds.has(id)),
+        discoveredItemIds: [...new Set([...(state.character.discoveredItemIds ?? []), ...ownedItemIds])].filter((id) => validItemIds.has(id)),
+        echoTowerBestFloor: Math.max(0, Math.floor(state.character.echoTowerBestFloor ?? 0)),
+        echoTowerRuns: (state.character.echoTowerRuns ?? []).filter((run) => run && Number.isFinite(run.floorReached) && Number.isFinite(run.completedAt)).map((run) => ({
+          id: String(run.id),
+          floorReached: Math.max(0, Math.floor(run.floorReached)),
+          essenceEarned: Math.max(0, Math.floor(run.essenceEarned ?? 0)),
+          completedAt: Math.max(0, Math.floor(run.completedAt)),
+        })).slice(0, 10),
         acceptedQuestIds: (state.character.acceptedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         completedQuestIds: (state.character.completedQuestIds ?? []).filter((id) => validQuestIds.has(id)),
         questProgress: Object.fromEntries(Object.entries(state.character.questProgress ?? {}).flatMap(([id, progress]) => (
@@ -125,7 +138,7 @@ export function loadGame(): GameState | null {
       },
       adventure: {
         ...state.adventure,
-        mode: savedAdventureMode === "arena" ? "arena" : "story",
+        mode: savedAdventureMode === "arena" ? "arena" : savedAdventureMode === "tower" ? "tower" : "story",
         adventureId: state.adventure.adventureId ?? DEFAULT_ADVENTURE_ID,
         stageEntryId: state.adventure.stageEntryId ?? null,
         eventRollResult: state.adventure.eventRollResult ?? null,
@@ -146,6 +159,10 @@ export function loadGame(): GameState | null {
           ? { ...state.adventure.pendingReward, loot: hydrateLoot((state.adventure.pendingReward as unknown as { loot?: unknown }).loot) }
           : null,
         arenaResult: state.adventure.arenaResult ?? null,
+        towerFloor: Math.max(0, Math.floor(state.adventure.towerFloor ?? 0)),
+        towerEssenceEarned: Math.max(0, Math.floor(state.adventure.towerEssenceEarned ?? 0)),
+        towerReturnCarryHp: state.adventure.towerReturnCarryHp ?? null,
+        towerFloorReward: state.adventure.towerFloorReward ?? null,
         ...(shouldResetAdventure ? {
           adventureId: DEFAULT_ADVENTURE_ID,
           active: false,
@@ -162,6 +179,10 @@ export function loadGame(): GameState | null {
           eventMerchant: null,
           pendingReward: null,
           arenaResult: null,
+          towerFloor: 0,
+          towerEssenceEarned: 0,
+          towerReturnCarryHp: null,
+          towerFloorReward: null,
           completed: false,
         } : {}),
       },

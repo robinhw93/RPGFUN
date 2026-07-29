@@ -155,6 +155,12 @@ Do not commit `dist/` unless the hosting workflow is deliberately changed to req
 | `scripts/regression-tests.ts` | Focused rules/content regression checks run by `npm test`. |
 | `scripts/verify-docs.mjs` | Live-versus-documented talent-count verification. |
 | `src/components/FloatingCombatText.tsx` | Timed floating-message presentation. |
+| `src/components/town/ProgressionViews.tsx` | Tower, Codex, Echo Forge, and Hall of Fallen town screens. |
+| `src/game/tower.ts` | Endless Tower unlock, scaling, checkpoints, rewards, and run history. |
+| `src/game/salvage.ts` | Echo Essence salvage and directed set-item reforging. |
+| `src/game/combatReport.ts` | Combat Report defaults and migration normalization. |
+| `src/game/fallenHeroes.ts` | Memorial records that survive permadeath save deletion. |
+| `src/game/preferences.ts` | Local combat-speed and Reduced Motion preferences. |
 | `src/components/GameConfirmDialog.tsx` | Game-owned destructive-action confirmation. |
 | `src/components/GearSlotIcon.tsx` | Resolves equipment-category image assets. |
 | `src/components/ItemIcon.tsx` | Resolves per-item artwork with safe category fallbacks. |

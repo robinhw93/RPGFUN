@@ -33,12 +33,17 @@ import { useCombatEventSequencer } from "./hooks/useCombatEventSequencer";
 
 import { AdventureView } from "./components/adventure/AdventureView";
 import { FleeResultDialog } from "./components/adventure/FleeResultDialog";
+import { SettingsButton, SettingsDialog } from "./components/SettingsDialog";
 
 import { CharacterCreation } from "./components/character/CharacterCreation";
 import { ClassSelection } from "./components/character/ClassSelection";
 
 import { CharacterAssetBoundary, CharacterView } from "./components/character/CharacterView";
 import { chooseStartingClass, hasSpentIntroductionTalentPoint } from "./game/characterIntroduction";
+import { recordFallenHero } from "./game/fallenHeroes";
+import { loadGamePreferences, saveGamePreferences, type GamePreferences } from "./game/preferences";
+import { reforgeSetItem, salvageInventoryItem } from "./game/salvage";
+import { advanceEchoTower, grantEchoTowerFloorReward, leaveEchoTower, startEchoTower } from "./game/tower";
 
 import { describeEnemyEncounter, getAvailableCharacterAbilities, GoldIcon, preloadCharacterAssets, type CharacterSection } from "./ui/gameUi";
 
@@ -67,12 +72,14 @@ function loadInitialGame(): GameState {
   const combat = ensureCombatState(loaded.adventure.combat, loaded.character);
   const enemyLevel = loaded.adventure.mode === "story"
     ? getAdventureDefinition(loaded.adventure.adventureId).recommendedLevel
-    : 1;
+    : loaded.adventure.mode === "tower"
+      ? null
+      : 1;
   return {
     ...loaded,
     adventure: {
       ...loaded.adventure,
-      combat: { ...combat, enemies: combat.enemies.map((enemy) => ({ ...enemy, level: enemyLevel })) },
+      combat: { ...combat, enemies: combat.enemies.map((enemy) => ({ ...enemy, level: enemyLevel ?? enemy.level })) },
     },
   };
 }
@@ -92,14 +99,17 @@ function App() {
   const [devtoolGateOpen, setDevtoolGateOpen] = useState(false);
   const [characterAssetsReady, setCharacterAssetsReady] = useState(false);
   const [playerTurnReadyEventId, setPlayerTurnReadyEventId] = useState<number | null>(null);
+  const [preferences, setPreferences] = useState<GamePreferences>(loadGamePreferences);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const travelTimers = useRef<number[]>([]);
   const townScrollPosition = useRef(0);
   const presentedRewardIds = useRef(new Set<string>());
+  const recordedDefeatId = useRef<string | null>(null);
   const derived = useMemo(() => getDerivedStats(game.character), [game.character]);
-  const combatSequencer = useCombatEventSequencer(game, setGame);
+  const combatSequencer = useCombatEventSequencer(game, setGame, preferences.combatSpeed);
   const combatActionQueue = useCombatActionQueue(game, setGame, playerTurnReadyEventId);
   const combatLocked = game.adventure.combat?.outcome === "active";
-  const activeNode = getAdventureNode(game.adventure);
+  const activeNode = game.adventure.mode === "story" ? getAdventureNode(game.adventure) : null;
   const isCombatScreen = view === "adventure" && Boolean(game.adventure.combat) && activeNode?.type !== "event";
   const primaryView: View = game.adventure.active ? "adventure" : "town";
   const characterIntroductionActive = game.characterIntroductionStep === "class" || game.characterIntroductionStep === "talents" || game.characterIntroductionStep === "attributes";
@@ -108,13 +118,36 @@ function App() {
 
   useEffect(() => {
     if (!game.adventure.combat || game.adventure.combat.outcome === "active") return;
-    setGame((current) => current.adventure.mode === "arena" ? grantArenaChallengeReward(current) : grantCombatReward(current));
+    setGame((current) => current.adventure.mode === "arena"
+      ? grantArenaChallengeReward(current)
+      : current.adventure.mode === "tower"
+        ? grantEchoTowerFloorReward(current)
+        : grantCombatReward(current));
   }, [game.adventure.combat?.outcome, game.adventure.mode, game.adventure.nodeIndex]);
 
   useEffect(() => {
-    if (game.adventure.mode === "story" && game.adventure.combat?.outcome === "defeat") clearSave();
-    else saveGame(game);
+    if (game.adventure.mode === "story" && game.adventure.combat?.outcome === "defeat") {
+      const defeatId = `${game.adventure.adventureId}:${game.adventure.nodeIndex}:${game.adventure.combat.eventId}`;
+      if (recordedDefeatId.current !== defeatId) {
+        recordFallenHero(game);
+        recordedDefeatId.current = defeatId;
+      }
+      clearSave();
+    } else {
+      recordedDefeatId.current = null;
+      saveGame(game);
+    }
   }, [game]);
+  useEffect(() => {
+    saveGamePreferences(preferences);
+    document.body.classList.toggle("reduced-motion", preferences.reducedMotion);
+    return () => document.body.classList.remove("reduced-motion");
+  }, [preferences]);
+  useEffect(() => {
+    const enemyIds = game.adventure.combat?.enemies.map((enemy) => enemy.id) ?? [];
+    if (enemyIds.length === 0 || enemyIds.every((id) => game.character.discoveredEnemyIds.includes(id))) return;
+    setGame((current) => ({ ...current, character: { ...current.character, discoveredEnemyIds: [...new Set([...current.character.discoveredEnemyIds, ...enemyIds])] } }));
+  }, [game.adventure.combat?.eventId, game.character.discoveredEnemyIds]);
   useEffect(() => {
     document.body.classList.toggle("combat-open", isCombatScreen);
     return () => document.body.classList.remove("combat-open");
@@ -262,7 +295,7 @@ function App() {
         }) : null;
         return {
           ...current,
-          adventure: { mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, carriedAbilityCooldowns: {}, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, completed: false },
+          adventure: { ...current.adventure, mode: "story", adventureId, active: true, nodeIndex: 0, stageEntryId: entry.id, carryHp: startingHp, combat, eventResolved: false, eventRollResult: null, nextCombatPlayerStatuses: combat ? [] : current.adventure.nextCombatPlayerStatuses, nextCombatEnemyStatuses: combat ? [] : current.adventure.nextCombatEnemyStatuses, carriedAbilityCooldowns: {}, eventEncounter: null, eventMerchant: null, latestLoot: null, pendingReward: null, arenaResult: null, towerFloor: 0, towerEssenceEarned: 0, towerReturnCarryHp: null, towerFloorReward: null, completed: false },
         };
       });
     }, node?.type !== "event");
@@ -289,7 +322,7 @@ function App() {
   };
 
   const returnToArkenfall = () => {
-    setGame((current) => current.adventure.mode === "arena" ? returnFromArena(current) : ({
+    setGame((current) => current.adventure.mode === "arena" ? returnFromArena(current) : current.adventure.mode === "tower" ? leaveEchoTower(current) : ({
       ...current,
       adventure: {
         ...current.adventure,
@@ -314,6 +347,12 @@ function App() {
       setGame((current) => endArenaChallenge(current));
       return;
     }
+    if (game.adventure.mode === "tower") {
+      setGame((current) => leaveEchoTower(current));
+      setTownEntryLocation("square");
+      setView("town");
+      return;
+    }
     const result = fleeCombat(game);
     if (!result) return;
     setGame(result.state);
@@ -322,6 +361,14 @@ function App() {
 
   const challengeArenaChampion = () => {
     setGame((current) => startArenaChallenge(current));
+    setPreserveTownSession(false);
+    townScrollPosition.current = 0;
+    setView("adventure");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const challengeEchoTower = () => {
+    setGame((current) => startEchoTower(current));
     setPreserveTownSession(false);
     townScrollPosition.current = 0;
     setView("adventure");
@@ -428,6 +475,10 @@ function App() {
 
   const continueJourney = () => {
     if (travelTransition || encounterFlavor) return;
+    if (game.adventure.mode === "tower") {
+      setGame((current) => advanceEchoTower(current));
+      return;
+    }
     if (game.adventure.pendingReward?.levelsGained && (game.character.unspentStatPoints > 0 || game.character.talentPoints > 0)) return;
     if (game.adventure.eventResolved && game.adventure.eventEncounter && !game.adventure.combat) {
       const encounter = game.adventure.eventEncounter;
@@ -501,7 +552,16 @@ function App() {
   };
   const acceptTownQuest = (questId: string) => runQuestAction((current) => acceptQuest(current, questId));
   const turnInTownQuest = (questId: string) => runQuestAction((current) => turnInQuest(current, questId));
-
+  const salvageInTown = (itemId: string): string => {
+    const result = salvageInventoryItem(game.character, itemId);
+    if (result.success) setGame((current) => ({ ...current, character: result.character }));
+    return result.message;
+  };
+  const reforgeInTown = (itemId: string): string => {
+    const result = reforgeSetItem(game.character, itemId);
+    if (result.success) setGame((current) => ({ ...current, character: result.character }));
+    return result.message;
+  };
   const unlockTalent = (talentId: string) => {
     setGame((current) => {
       if (current.adventure.combat?.outcome === "active") return current;
@@ -719,7 +779,7 @@ function App() {
   return (
     <div
       className={`app-shell ${isCombatScreen ? "in-combat" : ""}`}
-      style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs * Math.max(0.1, game.adventure.combat?.attackAnimationDurationMultiplier ?? 1) / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1)}ms` } as React.CSSProperties}
+      style={{ "--attack-duration": `${COMBAT_TIMING.attackDurationMs * Math.max(0.1, game.adventure.combat?.attackAnimationDurationMultiplier ?? 1) / Math.max(1, game.adventure.combat?.attackAnimationHitCount ?? 1) / preferences.combatSpeed}ms`, "--combat-speed": preferences.combatSpeed } as React.CSSProperties}
     >
       <header className="topbar">
         <button className="brand" onClick={() => navigate(primaryView)} aria-label={characterIntroductionActive ? "Introduction in progress" : levelUpFlowStep ? "Level up in progress" : primaryView === "town" ? "Go to Arkenfall Town" : "Return to adventure"}>
@@ -732,6 +792,7 @@ function App() {
         </nav>}
         <div className="resources">
           <span><GoldIcon /> {game.character.gold}</span>
+          <SettingsButton open={settingsOpen} onOpen={() => setSettingsOpen(true)} />
           <button className="icon-button devtool-menu-button" onClick={() => setDevtoolGateOpen(true)} data-game-tooltip="Developer tools" data-tooltip-placement="bottom" aria-label="Open developer tools"><Wrench size={14} /></button>
           <button className="icon-button" onClick={() => setResetDialogOpen(true)} data-game-tooltip="Reset save" data-tooltip-placement="bottom" aria-label="Reset save"><RotateCcw size={15} /></button>
         </div>
@@ -767,6 +828,7 @@ function App() {
             onEquip={equipItem}
             rewardPresentationPlayed={Boolean(game.adventure.pendingReward && presentedRewardIds.current.has(game.adventure.pendingReward.id))}
             onRewardPresentationStart={markRewardPresented}
+            combatSpeed={preferences.combatSpeed}
           />
         )}
         {view === "character" && (
@@ -792,7 +854,7 @@ function App() {
         {(view === "town" || (view === "character" && preserveTownSession && !game.adventure.active)) && (
           <div className="town-view-host" hidden={view !== "town"}>
             <Suspense fallback={null}>
-              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onChallengeArena={challengeArenaChampion} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onGamble={gambleInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
+              <TownView game={game} maxHp={derived.maxHp} initialLocation={townEntryLocation} recommendStartingItem={recommendStartingItem} onAdventures={() => navigate("adventure")} onChallengeArena={challengeArenaChampion} onStartTower={challengeEchoTower} onSalvage={salvageInTown} onReforge={reforgeInTown} onBuy={buyTownItem} onCraft={makeTownItem} onSell={sellItemInTown} onRest={restInTown} onMeal={eatInTown} onGamble={gambleInTown} onAcceptQuest={acceptTownQuest} onTurnInQuest={turnInTownQuest} />
             </Suspense>
           </div>
         )}
@@ -812,6 +874,7 @@ function App() {
         <NavButton active={view === "character"} onClick={() => navigate("character")} icon={<UserRound size={19} />} label="Character" />
       </nav>}
       {fleeResult && <FleeResultDialog result={fleeResult} onAcknowledge={acknowledgeFleeResult} />}
+      {settingsOpen && <SettingsDialog preferences={preferences} onChange={setPreferences} onClose={() => setSettingsOpen(false)} />}
       {resetDialogOpen && (
         <GameConfirmDialog
           title="Erase this character?"

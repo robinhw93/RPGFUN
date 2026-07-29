@@ -44,8 +44,9 @@ import { InitiativeRoll, TurnOrderBar } from "../combat/InitiativePresentation";
 
 import { getItemNameClass, GoldIcon, preloadImage } from "../../ui/gameUi";
 import { EventPresentation } from "./EventPresentation";
+import { CombatReportButton } from "../combat/CombatReportDialog";
 
-export function AdventureView({ game, derived, queuedActions, onBegin, onTown, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onFlee, onReturnToArkenfall, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onCharacter, onInventory, onEquip, rewardPresentationPlayed, onRewardPresentationStart }: {
+export function AdventureView({ game, derived, queuedActions, onBegin, onTown, onSelectEnemy, onAbility, onConsumable, onEndTurn, onEnemyTurn, onCombatEvent, onCombatSequenceComplete, onPlayerTurnReady, onInitiativeOrderStart, onInitiativeComplete, onContinue, onFlee, onReturnToArkenfall, onEvent, onMerchantPurchase, onMerchantSell, onPermadeath, onCharacter, onInventory, onEquip, rewardPresentationPlayed, onRewardPresentationStart, combatSpeed }: {
   game: GameState;
   derived: ReturnType<typeof getDerivedStats>;
   queuedActions: QueuedCombatAction[];
@@ -73,6 +74,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   onEquip: (item: GearItem, preferredSlot?: GearSlot) => void;
   rewardPresentationPlayed: boolean;
   onRewardPresentationStart: (rewardId: string) => void;
+  combatSpeed: number;
 }) {
   const adventure = game.adventure;
   const [logOpen, setLogOpen] = useState(false);
@@ -168,7 +170,14 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
     );
   }
 
-  const node = getAdventureNode(adventure);
+  const isTowerChallenge = adventure.mode === "tower";
+  const node = isTowerChallenge ? {
+    id: `echo-floor-${adventure.towerFloor}`,
+    type: "combat" as const,
+    eyebrow: "Tower of Echoes",
+    title: `Echo Floor ${adventure.towerFloor}`,
+    description: "An echo of a fallen battle takes shape.",
+  } : getAdventureNode(adventure);
   if (node.type === "event") {
     const eventDefinition = node.eventId ? ADVENTURE_EVENTS[node.eventId] : undefined;
     return (
@@ -195,6 +204,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
 
   const combat = adventure.combat!;
   const isArenaChallenge = adventure.mode === "arena";
+  const combatDefinition = isTowerChallenge ? ADVENTURES.at(-1)! : getAdventureDefinition(adventure.adventureId);
   const playerChained = combat.playerStatuses.some((status) => status.id === "chained");
   const displayedPlayerStats = getStatusAdjustedCombatStats({
     ...derived,
@@ -258,15 +268,15 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
     <section
-      className={`combat-page compact-combat ${getAdventureDefinition(adventure.adventureId).theme.replaceAll("_", "-")}-combat ${isArenaChallenge ? "arena-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}
-      style={getAdventureDefinition(adventure.adventureId).combatBackgroundUrl
-        ? { "--combat-background-image": `url("${getAdventureDefinition(adventure.adventureId).combatBackgroundUrl}")` } as CSSProperties
+      className={`combat-page compact-combat ${combatDefinition.theme.replaceAll("_", "-")}-combat ${isArenaChallenge ? "arena-combat" : ""} ${isTowerChallenge ? "echo-tower-combat" : ""} ${inspectedInfo || inspectedEnemy || playerAttributesOpen ? "inspect-info-open" : ""}`}
+      style={combatDefinition.combatBackgroundUrl
+        ? { "--combat-background-image": `url("${combatDefinition.combatBackgroundUrl}")` } as CSSProperties
         : undefined}
     >
       <button type="button" className="combat-log-button combat-log-corner" onClick={() => setLogOpen(true)} aria-label="Open Combat Log"><BookOpen size={15} /></button>
-      {isArenaChallenge ? <ArenaProgressHeader combat={combat} /> : <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />}
+      {isArenaChallenge ? <ArenaProgressHeader combat={combat} /> : isTowerChallenge ? <TowerProgressHeader floor={adventure.towerFloor} essence={adventure.towerEssenceEarned} /> : <ProgressHeader index={adventure.nodeIndex} adventureId={adventure.adventureId} />}
       <TurnOrderBar combat={combat} />
-      {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onOrderStart={onInitiativeOrderStart} onComplete={onInitiativeComplete} />}
+      {initiativePlaying && <InitiativeRoll key={`${adventure.nodeIndex}-${combat.eventId}`} combat={combat} onOrderStart={onInitiativeOrderStart} onComplete={onInitiativeComplete} speedMultiplier={combatSpeed} />}
       {targetFeedback && <div key={targetFeedback.id} className="combat-target-feedback" role="status" aria-live="polite">{targetFeedback.text}</div>}
       <div className="compact-arena">
         <article
@@ -392,7 +402,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       {woundfixerHealAnimations.map((animation) => <CombatantPathEffect key={animation.id} animation={animation} className="enemy-woundfixer-heal-path"><HeartPulse /><i /><i /><b /></CombatantPathEffect>)}
       {projectileAnimations.map((animation) => <AbilityProjectileEffect key={animation.id} animation={animation} />)}
 
-      {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} />}
+      {sequencePending && <FloatingCombatText key={combat.eventId} eventId={combat.eventId} events={combat.floatingEvents} eventDurationsMs={combat.floatingEvents.map((_, eventIndex) => getCombatEventDurationMs(combat, eventIndex))} hiddenEventIndexes={combat.floatingEvents.flatMap((_, eventIndex) => isHiddenDamageEvent(combat, eventIndex) || isHiddenPlayerAbilityEvent(combat, eventIndex) ? [eventIndex] : [])} onEventShown={handleCombatEventShown} onSequenceComplete={onCombatSequenceComplete} speedMultiplier={combatSpeed} />}
 
       <div className="compact-ability-grid">
         {game.character.equippedAbilities.map((id) => {
@@ -423,7 +433,7 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       <div className="combat-action-budget" aria-live="polite"><span>Actions <strong>{Math.min(MAX_PLAYER_ACTIONS_PER_TURN, queueProjection.playerActionsUsed)}/{MAX_PLAYER_ACTIONS_PER_TURN}</strong></span><span>Consumable <strong>{Math.min(MAX_CONSUMABLES_PER_TURN, queueProjection.consumablesUsed)}/{MAX_CONSUMABLES_PER_TURN}</strong></span></div>
 
       <div className="combat-footer-controls">
-        <button className="combat-flee-button" data-game-tooltip={!isArenaChallenge && playerChained ? "Chained prevents you from fleeing." : undefined} disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active" || (!isArenaChallenge && playerChained)} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : playerChained ? "Chained" : "Flee"}</button>
+        <button className="combat-flee-button" data-game-tooltip={!isArenaChallenge && !isTowerChallenge && playerChained ? "Chained prevents you from fleeing." : undefined} disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active" || (!isArenaChallenge && !isTowerChallenge && playerChained)} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : isTowerChallenge ? "Leave Tower" : playerChained ? "Chained" : "Flee"}</button>
         {!isArenaChallenge && <button className="combat-inventory-button" disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active"} onClick={() => setCombatInventoryOpen(true)}><FlaskConical size={14} /> Inventory</button>}
         <button className={`end-turn-button ${queuedEndTurnPosition > 0 ? "queued" : ""}`} disabled={initiativePlaying || !isPlayerTurn || combat.outcome !== "active" || queueProjection.closed} onClick={onEndTurn}>
           {queuedEndTurnPosition > 0 ? `End Turn Queued` : isPlayerTurn ? "End Turn" : `${activeActor?.name ?? "Enemy"}'s Turn`} <ChevronRight size={14} />
@@ -432,11 +442,11 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
 
       {fleeDialogOpen && (
         <GameConfirmDialog
-          eyebrow={isArenaChallenge ? "Damage Trial" : "Retreat"}
-          title={isArenaChallenge ? "End the trial now?" : "Flee combat?"}
-          description={isArenaChallenge ? "Your current damage will be recorded and awarded as Experience. This attempt will remain spent." : "If you flee there is a risk that you lose items and gold while running away. Are you sure?"}
-          cancelLabel={isArenaChallenge ? "Keep Fighting" : "Fight!"}
-          confirmLabel={isArenaChallenge ? "End Trial" : "Flee!"}
+          eyebrow={isArenaChallenge ? "Damage Trial" : isTowerChallenge ? "Tower Expedition" : "Retreat"}
+          title={isArenaChallenge ? "End the trial now?" : isTowerChallenge ? "Leave the tower?" : "Flee combat?"}
+          description={isArenaChallenge ? "Your current damage will be recorded and awarded as Experience. This attempt will remain spent." : isTowerChallenge ? "Your best cleared floor and gathered Essence will be recorded. Tower defeat is safe." : "If you flee there is a risk that you lose items and gold while running away. Are you sure?"}
+          cancelLabel={isArenaChallenge ? "Keep Fighting" : isTowerChallenge ? "Keep Climbing" : "Fight!"}
+          confirmLabel={isArenaChallenge ? "End Trial" : isTowerChallenge ? "Leave Tower" : "Flee!"}
           onCancel={() => setFleeDialogOpen(false)}
           onConfirm={() => { setFleeDialogOpen(false); onFlee(); }}
         />
@@ -488,9 +498,12 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
       {playerAttributesOpen && <PlayerAttributesModal name={game.character.name} derived={displayedPlayerStats} onClose={() => setPlayerAttributesOpen(false)} />}
 
       {isArenaChallenge && combat.outcome !== "active" && !sequencePending && adventure.pendingReward && adventure.arenaResult && (
-        <ArenaResultScreen game={game} onCharacter={onCharacter} onReturn={onReturnToArkenfall} />
+        <ArenaResultScreen game={game} onCharacter={onCharacter} onReturn={onReturnToArkenfall} report={combat.report} />
       )}
-      {!isArenaChallenge && combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
+      {isTowerChallenge && combat.outcome !== "active" && !sequencePending && (
+        <TowerResultScreen game={game} victory={combat.outcome === "victory"} onContinue={onContinue} onReturn={onReturnToArkenfall} report={combat.report} />
+      )}
+      {!isArenaChallenge && !isTowerChallenge && combat.outcome === "victory" && !sequencePending && adventure.pendingReward && (
         <VictoryScoreScreen
           reward={adventure.pendingReward}
           character={game.character}
@@ -503,9 +516,10 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
           unspentAttributePoints={game.character.unspentStatPoints}
           unspentTalentPoints={game.character.talentPoints}
           onPresentationStart={onRewardPresentationStart}
+          report={combat.report}
         />
       )}
-      {!isArenaChallenge && combat.outcome === "defeat" && !sequencePending && (
+      {!isArenaChallenge && !isTowerChallenge && combat.outcome === "defeat" && !sequencePending && (
         <div className="compact-outcome defeat">
           <div className="compact-outcome-card">
             <Skull />
@@ -580,7 +594,7 @@ export function getScoreGearInspection(item: GearItem, character: CharacterState
   return { item, equippedSlot: equippedEntry?.[0], canEquip: false };
 }
 
-export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onEquip, onContinue, finalEncounter, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart }: {
+export function VictoryScoreScreen({ reward, character, encounterTitle, onCharacter, onEquip, onContinue, finalEncounter, presentationPlayed, unspentAttributePoints, unspentTalentPoints, onPresentationStart, report }: {
   reward: CombatReward;
   character: CharacterState;
   encounterTitle: string;
@@ -592,6 +606,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
   unspentAttributePoints: number;
   unspentTalentPoints: number;
   onPresentationStart: (rewardId: string) => void;
+  report: CombatState["report"];
 }) {
   const [displayedExperience, setDisplayedExperience] = useState(() => presentationPlayed ? reward.experience : 0);
   const displayedProgress = experienceProgressAfterGain(reward.levelBefore, reward.xpBefore, displayedExperience);
@@ -672,6 +687,7 @@ export function VictoryScoreScreen({ reward, character, encounterTitle, onCharac
         </div>}
 
         <div className="victory-score-actions">
+          <CombatReportButton report={report} />
           <button className={`score-character-button ${levelUpPending ? "level-up" : ""}`} onClick={onCharacter}>{levelUpPending ? <Sparkles size={16} /> : <UserRound size={16} />} {levelUpPending ? "Level up!" : "View Character"}</button>
           <button className="primary-button score-continue-button" disabled={levelUpPending} data-game-tooltip={levelUpPending ? continueTooltip : undefined} onClick={onContinue}>{finalEncounter ? "Complete Adventure" : "Continue Journey"}<ChevronRight size={16} /></button>
         </div>
@@ -695,7 +711,11 @@ function ArenaProgressHeader({ combat }: { combat: CombatState }) {
   return <div className="journey-progress arena-trial-progress"><span>Damage Trial</span><strong>{damage.toLocaleString()} Damage</strong><span>Turn {currentTurn} / {challenge?.playerTurnLimit ?? 10}</span></div>;
 }
 
-function ArenaResultScreen({ game, onCharacter, onReturn }: { game: GameState; onCharacter: () => void; onReturn: () => void }) {
+function TowerProgressHeader({ floor, essence }: { floor: number; essence: number }) {
+  return <div className="journey-progress arena-trial-progress"><span><small>Tower Floor</small><strong>{floor}</strong></span><span><small>Expedition Essence</small><strong>{essence}</strong></span></div>;
+}
+
+function ArenaResultScreen({ game, onCharacter, onReturn, report }: { game: GameState; onCharacter: () => void; onReturn: () => void; report: CombatState["report"] }) {
   const result = game.adventure.arenaResult!;
   const reward = game.adventure.pendingReward!;
   const rank = Math.max(1, (game.character.arenaScores ?? []).findIndex((score) => score.id === result.id) + 1);
@@ -708,8 +728,13 @@ function ArenaResultScreen({ game, onCharacter, onReturn }: { game: GameState; o
         <p>The Arena Champion laughs as the bell rings. You earn Experience equal to 20% of the damage dealt.</p>
         <div className="arena-result-stats"><span><small>Experience</small><strong>+{reward.experience.toLocaleString()} XP</strong></span><span><small>Personal Rank</small><strong>#{rank}</strong></span><span><small>Turns Used</small><strong>{result.turns} / 10</strong></span></div>
         {reward.levelsGained > 0 && <button type="button" className="score-character-button level-up" onClick={onCharacter}><Sparkles size={16} /> Level up!</button>}
+        <CombatReportButton report={report} />
         <button className="primary-button" onClick={onReturn}>Return to Grand Arena <ChevronRight size={17} /></button>
       </div>
     </div>
   );
+}
+
+function TowerResultScreen({ game, victory, onContinue, onReturn, report }: { game: GameState; victory: boolean; onContinue: () => void; onReturn: () => void; report: CombatState["report"] }) {
+  return <div className={`compact-outcome ${victory ? "victory" : "defeat"}`}><div className="compact-outcome-card tower-result-card">{victory ? <Trophy /> : <Skull />}<p className="eyebrow">Tower of Echoes</p><h2>{victory ? `Floor ${game.adventure.towerFloor} Cleared` : "The Echo Overwhelms You"}</h2><p>{victory ? `You gather ${game.adventure.towerFloorReward ?? 0} Echo Essence. The next floor waits.` : "The tower releases you. Your character and gathered rewards are safe."}</p><CombatReportButton report={report} />{victory && <button className="primary-button" onClick={onContinue}>Climb to Next Floor <ChevronRight size={17} /></button>}<button className="score-character-button" onClick={onReturn}>Return to Arkenfall</button></div></div>;
 }

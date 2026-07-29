@@ -7,7 +7,7 @@ import { calculateInitiativeFlight, getInitiativeRowBounds } from "../../game/in
 import { COMBAT_TIMING, INITIATIVE_TIMING } from "../../game/timing";
 import type { CombatState } from "../../game/types";
 
-export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: CombatState; onOrderStart: () => void; onComplete: () => void }) {
+export function InitiativeRoll({ combat, onOrderStart, onComplete, speedMultiplier = 1 }: { combat: CombatState; onOrderStart: () => void; onComplete: () => void; speedMultiplier?: number }) {
   const [phase, setPhase] = useState<"rolling" | "landed" | "bonus" | "order">("rolling");
   const [displayedRolls, setDisplayedRolls] = useState<Record<string, number>>(() => Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
   const [landingRect, setLandingRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
@@ -35,16 +35,16 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: C
   useEffect(() => {
     const rollTimer = window.setInterval(() => {
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, Math.floor(Math.random() * 100) + 1])));
-    }, INITIATIVE_TIMING.rollTickMs);
+    }, INITIATIVE_TIMING.rollTickMs / speedMultiplier);
     const landedTimer = window.setTimeout(() => {
       window.clearInterval(rollTimer);
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, actor.roll])));
       setPhase("landed");
-    }, INITIATIVE_TIMING.rawRollMs);
+    }, INITIATIVE_TIMING.rawRollMs / speedMultiplier);
     const bonusTimer = window.setTimeout(() => {
       setDisplayedRolls(Object.fromEntries(combat.turnOrder.map((actor) => [actor.actorId, actor.initiative])));
       setPhase("bonus");
-    }, INITIATIVE_TIMING.bonusMs);
+    }, INITIATIVE_TIMING.bonusMs / speedMultiplier);
     let orderFrame = 0;
     const orderTimer = window.setTimeout(() => {
       const targetCards = [...document.querySelectorAll<HTMLElement>(".turn-order-bar > div > span")];
@@ -66,8 +66,8 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: C
         onOrderStart();
         setPhase("order");
       });
-    }, INITIATIVE_TIMING.orderMs);
-    const completeTimer = window.setTimeout(onComplete, INITIATIVE_TIMING.completeMs);
+    }, INITIATIVE_TIMING.orderMs / speedMultiplier);
+    const completeTimer = window.setTimeout(onComplete, INITIATIVE_TIMING.completeMs / speedMultiplier);
     return () => {
       window.clearInterval(rollTimer);
       window.clearTimeout(landedTimer);
@@ -76,12 +76,12 @@ export function InitiativeRoll({ combat, onOrderStart, onComplete }: { combat: C
       window.clearTimeout(completeTimer);
       window.cancelAnimationFrame(orderFrame);
     };
-  }, [combat.eventId]);
+  }, [combat.eventId, onComplete, onOrderStart, speedMultiplier]);
 
   return (
     <div
       className={`initiative-overlay ${phase}`}
-      style={{ "--initiative-flight-duration": `${INITIATIVE_TIMING.flightMs}ms` } as React.CSSProperties}
+      style={{ "--initiative-flight-duration": `${INITIATIVE_TIMING.flightMs / speedMultiplier}ms` } as React.CSSProperties}
       role="dialog"
       aria-modal="true"
       aria-label="Rolling initiative"

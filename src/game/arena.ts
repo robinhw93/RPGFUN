@@ -46,6 +46,7 @@ export function startArenaChallenge(state: GameState): GameState {
     ...state,
     character: { ...state.character, arenaAttemptAvailable: false },
     adventure: {
+      ...state.adventure,
       mode: "arena",
       adventureId: ARENA_ADVENTURE.id,
       active: true,
@@ -63,6 +64,10 @@ export function startArenaChallenge(state: GameState): GameState {
       latestLoot: null,
       pendingReward: null,
       arenaResult: null,
+      towerFloor: 0,
+      towerEssenceEarned: 0,
+      towerReturnCarryHp: null,
+      towerFloorReward: null,
       completed: false,
     },
   };
