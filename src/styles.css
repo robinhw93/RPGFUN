@@ -616,8 +616,22 @@ main { min-height: calc(100vh - 68px); }
 .ability-hold-tooltip b { color: var(--gold-bright); font-family: Georgia, serif; }.ability-hold-tooltip small { color: #c0beb7; font-size: .72rem; line-height: 1.4; }.ability-hold-tooltip em { color: var(--gold); font-size: .6rem; font-style: normal; letter-spacing: .08em; text-transform: uppercase; }
 
 .combat-footer-controls { min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem; }
-.combat-action-budget { display: flex; justify-content: center; gap: .8rem; color: #858d87; font-size: .52rem; letter-spacing: .08em; text-transform: uppercase; }
-.combat-action-budget strong { color: #d8c27f; font-variant-numeric: tabular-nums; }
+.combat-action-budget { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .9fr); align-items: stretch; gap: .35rem; padding: .25rem; color: #d7dbd5; border: 1px solid #4b514a; background: linear-gradient(180deg, rgba(16,20,17,.98), rgba(7,10,8,.98)); box-shadow: inset 0 1px rgba(232,218,177,.07), 0 5px 18px rgba(0,0,0,.52); backdrop-filter: blur(10px); }
+.combat-budget-meter { min-width: 0; display: grid; grid-template-columns: auto minmax(32px, 1fr) auto; align-items: center; gap: .42rem; padding: 0 .48rem; border: 1px solid #303731; background: linear-gradient(90deg, rgba(44,49,42,.72), rgba(18,23,19,.82)); }
+.combat-budget-label { min-width: 0; display: flex; align-items: center; gap: .28rem; color: #b7bdb6; font-size: .53rem; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.combat-budget-label svg { flex: 0 0 auto; color: #e2c574; filter: drop-shadow(0 0 5px rgba(226,197,116,.34)); }
+.combat-budget-meter.consumables .combat-budget-label svg { color: #8bcda5; filter: drop-shadow(0 0 5px rgba(104,190,139,.32)); }
+.combat-budget-meter strong { color: #f0d98f; font-size: .57rem; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.combat-budget-meter.consumables strong { color: #a9ddb9; }
+.combat-budget-pips { min-width: 0; display: grid; align-items: center; gap: 3px; }
+.combat-budget-pips.action-pips { grid-template-columns: repeat(6, minmax(4px, 1fr)); }
+.combat-budget-pips.consumable-pips { grid-template-columns: repeat(1, minmax(8px, 24px)); justify-content: center; }
+.combat-budget-pips i { height: 7px; display: block; border: 1px solid #343a35; border-radius: 1px; background: #202521; transform: skewX(-12deg); transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.combat-budget-pips i.available { border-color: #a98d4f; background: linear-gradient(180deg, #f0d47f, #9d7937); box-shadow: 0 0 7px rgba(224,190,96,.38); }
+.combat-budget-meter.consumables .combat-budget-pips i.available { border-color: #54976c; background: linear-gradient(180deg, #9ee0b4, #3f875c); box-shadow: 0 0 7px rgba(91,184,123,.38); }
+.combat-budget-meter.is-spent { background: rgba(17,20,18,.9); }
+.combat-budget-meter.is-spent .combat-budget-label { color: #777f78; }
+.combat-budget-meter.is-spent .combat-budget-label svg, .combat-budget-meter.is-spent strong { color: #8b938c; filter: none; }
 .combat-log-button, .combat-flee-button, .combat-inventory-button, .end-turn-button { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: .45rem; border: 1px solid var(--line); font-size: .63rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
 .combat-log-button { color: #a9ada8; background: #121613; }.combat-log-button:hover { color: var(--gold-bright); border-color: #554b37; }
 .combat-log-corner { width: 32px; height: 32px; min-height: 0; position: absolute; z-index: 20; top: 1rem; left: 0; padding: 0; }
@@ -1293,6 +1307,13 @@ main { min-height: calc(100vh - 68px); }
   .ability-hold-tooltip { bottom: calc(max(6px, env(safe-area-inset-bottom)) + 10.3rem); }
   .initiative-overlay { padding: .7rem; }.initiative-caption { margin-bottom: 1rem; }.initiative-contestants { gap: 5px; }.initiative-contestant { gap: .4rem; padding: .75rem .28rem; }.initiative-name { font-size: .72rem; }.initiative-visual { height: min(24vh, 132px); }.initiative-counter { width: min(22vw, 82px); height: min(18vw, 68px); }.initiative-math { font-size: .48rem; }
   .initiative-overlay.order .initiative-contestants { gap: 2px; }.initiative-overlay.order .initiative-contestant { gap: 2px; padding: 3px 4px; }.initiative-overlay.order .initiative-name { font-size: .5rem; }.initiative-overlay.order .initiative-counter span { font-size: .46rem; }
+  .combat-action-budget { gap: 3px; padding: 3px; }
+  .combat-budget-meter { gap: .28rem; padding: 0 .35rem; }
+  .combat-budget-label { gap: .2rem; font-size: .47rem; letter-spacing: .05em; }
+  .combat-budget-label svg { width: 11px; height: 11px; }
+  .combat-budget-meter strong { font-size: .49rem; }
+  .combat-budget-pips { gap: 2px; }
+  .combat-budget-pips i { height: 6px; }
   .arena-result-stats{grid-template-columns:1fr}.arena-result-card{max-height:calc(100dvh - 1rem);overflow:auto;padding:1rem}
   .enemy-stats-content { grid-template-columns: 1fr; gap: .7rem; }
   .enemy-full-art { display: grid; place-items: center; }
@@ -1304,6 +1325,9 @@ main { min-height: calc(100vh - 68px); }
   .compact-combatant { padding: .42rem; }.compact-combatant h2 { margin-bottom: .35rem; padding-right: 2.6rem; font-size: .75rem; }.combatant-portrait { width: 30px; height: 30px; top: .3rem; right: .3rem; }
   .compact-status-row { min-height: 18px; max-height: 34px; margin-top: .28rem; }.energy-label { margin-top: .3rem; }
   .compact-ability { grid-template-columns: 24px minmax(0, 1fr); padding: .25rem; }.compact-ability-icon { width: 24px; height: 24px; }.compact-ability strong { font-size: .59rem; }
+  .combat-budget-meter { padding: 0 .25rem; }
+  .combat-budget-label { font-size: .43rem; }
+  .combat-budget-meter strong { font-size: .45rem; }
   .ability-hold-tooltip { bottom: calc(max(4px, env(safe-area-inset-bottom)) + 8.6rem); }
   .initiative-panel .eyebrow { margin-bottom: .35rem; }.initiative-panel h2 { margin-bottom: .2rem; font-size: 1.35rem; }.initiative-caption { margin-bottom: .65rem; }.initiative-contestant { gap: .25rem; padding-top: .55rem; padding-bottom: .55rem; }.initiative-visual { height: min(18vh, 90px); }.initiative-counter { width: 64px; height: 52px; }
 }

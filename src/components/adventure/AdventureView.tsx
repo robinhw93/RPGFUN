@@ -265,6 +265,8 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
     setTargetFeedback({ id: nextTargetFeedbackId.current, text: "You cannot target enemies with stealth." });
   };
   const queueProjection = projectCombatActionQueue(combat, game.character, queuedActions);
+  const actionsRemaining = Math.max(0, MAX_PLAYER_ACTIONS_PER_TURN - Math.min(MAX_PLAYER_ACTIONS_PER_TURN, queueProjection.playerActionsUsed));
+  const consumablesRemaining = Math.max(0, MAX_CONSUMABLES_PER_TURN - Math.min(MAX_CONSUMABLES_PER_TURN, queueProjection.consumablesUsed));
   const queuedEndTurnPosition = queuedActions.findIndex((action) => action.type === "end_turn") + 1;
   return (
     <section
@@ -430,7 +432,27 @@ export function AdventureView({ game, derived, queuedActions, onBegin, onTown, o
         {Array.from({ length: Math.max(0, 6 - game.character.equippedAbilities.length) }).map((_, index) => <div className="compact-ability-empty" key={index}>Empty</div>)}
       </div>
 
-      <div className="combat-action-budget" aria-live="polite"><span>Actions <strong>{Math.min(MAX_PLAYER_ACTIONS_PER_TURN, queueProjection.playerActionsUsed)}/{MAX_PLAYER_ACTIONS_PER_TURN}</strong></span><span>Consumable <strong>{Math.min(MAX_CONSUMABLES_PER_TURN, queueProjection.consumablesUsed)}/{MAX_CONSUMABLES_PER_TURN}</strong></span></div>
+      <div
+        className="combat-action-budget"
+        role="status"
+        aria-live="polite"
+        aria-label={`${actionsRemaining} of ${MAX_PLAYER_ACTIONS_PER_TURN} actions remaining. Consumable ${consumablesRemaining > 0 ? "ready" : "used"}.`}
+      >
+        <div className={`combat-budget-meter actions ${actionsRemaining === 0 ? "is-spent" : ""}`} aria-hidden="true">
+          <span className="combat-budget-label"><Zap size={13} /><b>Actions</b></span>
+          <span className="combat-budget-pips action-pips">
+            {Array.from({ length: MAX_PLAYER_ACTIONS_PER_TURN }, (_, index) => <i className={index < actionsRemaining ? "available" : "spent"} key={index} />)}
+          </span>
+          <strong>{actionsRemaining} left</strong>
+        </div>
+        <div className={`combat-budget-meter consumables ${consumablesRemaining === 0 ? "is-spent" : ""}`} aria-hidden="true">
+          <span className="combat-budget-label"><FlaskConical size={13} /><b>Consumable</b></span>
+          <span className="combat-budget-pips consumable-pips">
+            {Array.from({ length: MAX_CONSUMABLES_PER_TURN }, (_, index) => <i className={index < consumablesRemaining ? "available" : "spent"} key={index} />)}
+          </span>
+          <strong>{consumablesRemaining > 0 ? "Ready" : "Used"}</strong>
+        </div>
+      </div>
 
       <div className="combat-footer-controls">
         <button className="combat-flee-button" data-game-tooltip={!isArenaChallenge && !isTowerChallenge && playerChained ? "Chained prevents you from fleeing." : undefined} disabled={initiativePlaying || sequencePending || Boolean(combat.attackingActorId) || queuedActions.length > 0 || combat.outcome !== "active" || (!isArenaChallenge && !isTowerChallenge && playerChained)} onClick={() => setFleeDialogOpen(true)}><LogOut size={14} /> {isArenaChallenge ? "End Trial" : isTowerChallenge ? "Leave Tower" : playerChained ? "Chained" : "Flee"}</button>
